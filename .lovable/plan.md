@@ -1,80 +1,88 @@
-# Painel VIP — Plano de Construção
+## Visão geral
 
-SaaS de gestão de clientes recorrentes, planos, cobranças Pix e financeiro. Stack: TanStack Start + React + TypeScript + Tailwind + shadcn/ui + Lovable Cloud (Supabase) para auth, banco e RLS.
+Aplicar o visual e a estrutura das imagens de referência ao app, mantendo todo o backend já criado (clientes, planos, charges, payments, settings). Não copiarei marca, código ou textos proprietários — apenas a arquitetura visual: dark premium, cards com bordas neon coloridas, headers compactos, ações em pílulas com gradiente.
 
-Por ser um sistema grande, vou entregar em **5 fases sequenciais**, cada uma deixando o app utilizável. Após cada fase você testa e seguimos.
+## 1. Design system (src/styles.css)
 
----
+- Reforçar tema escuro como padrão (background ~ `oklch(0.14 0.03 260)`, surface levemente mais clara, borders sutis).
+- Adicionar tokens semânticos de status com glow:
+  - `--kpi-violet`, `--kpi-emerald`, `--kpi-rose`, `--kpi-cyan`, `--kpi-amber` (cor + cor-foreground + cor-glow).
+- Gradiente primário azul→ciano para botões de ação principal (`btn-premium`).
+- Utilities `@utility kpi-card` e `@utility action-pill` para cards com borda colorida e leve glow externo.
 
-## Fase 1 — Fundação (auth, layout, design system)
+## 2. Navegação (sidebar)
 
-- Habilitar Lovable Cloud.
-- Design system premium em `src/styles.css`: paleta moderna (azul-índigo profundo + verde para "ativo" + âmbar/vermelho para vencidos), tipografia, sombras suaves, cards arredondados, tokens semânticos (nada de cores hardcoded).
-- Auth: tela `/auth` com login, cadastro e recuperação de senha (email/senha + Google opcional depois).
-- Tabela `profiles` + trigger de criação automática no signup.
-- Layout `_authenticated`: sidebar fixa (Dashboard, Clientes, Planos, Financeiro, Configurações), topbar com nome do usuário e botão sair, responsivo (sidebar vira drawer no mobile).
-- Página `/reset-password`.
+Itens finais, na ordem das referências:
+1. Dashboard
+2. Clientes
+3. Planos
+4. Servidores  *(novo)*
+5. Financeiro
+6. Renovação  *(novo)*
+7. Configurações
 
-## Fase 2 — Planos e Clientes
+## 3. Páginas — restruturação visual
 
-- Tabelas `plans` e `clients` com RLS por `user_id` + grants.
-- Página **Planos**: listar, criar, editar, excluir, status ativo/inativo, contagem de clientes vinculados.
-- Página **Clientes**: tabela com busca e filtros (ativo/vencido/vence hoje/suspenso/cancelado), modais de criar/editar, exclusão com confirmação, página de detalhes com histórico.
-- Ao selecionar plano no cadastro, preenche valor e calcula próximo vencimento.
-- Validações com zod (nome, telefone e vencimento obrigatórios).
-- Badges de status com cores semânticas.
+### Dashboard (`/dashboard`)
+- Faixa superior com aviso "Sua assinatura — vence em X" (lê de `settings`/placeholder).
+- 5 KPI cards coloridos: Total de clientes, Ativos, Vencidos, Vencem hoje, A vencer no mês.
+- Grid: gráfico de Receita (6 meses, recharts) + card "Status dos clientes" (donut).
+- Card "Próximos vencimentos" (próximos 7 dias).
 
-## Fase 3 — Financeiro e Cobranças
+### Clientes (`/clientes`)
+- Header com título "Clientes" + contagem + fila horizontal de ações em pílulas com gradiente:
+  - Cobrar Antecipado (5d), Cobrar Vencidos, Cobrar Vencendo Amanhã, Cobrar vence hoje, **+ Novo cliente**.
+- Linha de busca + chips de filtro: Todos / Em dia / A vencer / Vencem hoje / Vencidos / Bloqueados.
+- Tabela atual mantida; estado vazio "Cadastrar primeiro cliente".
+- **Dialog "Novo cliente"** ganha campos: `Login IPTV`, `Senha IPTV`, `Servidor` (select), `Cobrança Automática` (toggle). WhatsApp e Vencimento permanecem obrigatórios. Telefone mantém máscara.
 
-- Tabelas `charges` e `payments` com RLS + grants.
-- Página **Financeiro**: lista de cobranças, filtros (período, status), totais (recebido/pendente/vencido no mês), exportação CSV.
-- Ações: criar cobrança manual, marcar como paga (gera payment + renova vencimento do cliente conforme duração do plano), cancelar.
-- Status automático: cobrança vira "vencida" quando passa da data.
+### Planos (`/planos`)
+- Header + linha "Novo plano" inline (Nome / Preço / Duração / + Adicionar).
+- Lista em cards (em vez de tabela), com editar/excluir e badge ativo.
 
-## Fase 4 — Dashboard e Cobrança Pix/WhatsApp
+### Servidores (`/servidores`) — NOVO
+- Header + linha inline "Novo servidor" (Nome / Custo do crédito / + Adicionar).
+- Lista em cards. Cliente passa a referenciar `server_id` opcional.
 
-- **Dashboard** com cards (total/ativos/vencidos/vencem hoje/próx 7 dias, receita prevista/recebida/em atraso), gráfico de faturamento mensal (recharts), gráfico de clientes por status, lista de pendentes, atalhos rápidos.
-- **Cobrança Pix simulada**: gerador de payload BR Code (EMV) a partir das configs Pix do usuário + QR Code (lib `qrcode`), modal com "copia e cola" + botão copiar + botão enviar WhatsApp (`wa.me` com mensagem template).
-- **Ações em massa**: cobrar todos vencidos, cobrar todos que vencem hoje, copiar lista, abrir WhatsApp em sequência.
-- Estrutura preparada para integração futura com Mercado Pago/Asaas/Efi (camada `pix-provider` com modo `manual` ativo).
+### Financeiro (`/financeiro`)
+- 3 KPIs grandes: Lucro do mês, Lucro do ano, Lucro total (gradientes violeta/azul/emerald).
+- 2 KPIs: Receitas do mês, Despesas de crédito do mês.
+- Gráfico "Recebimentos — 12 meses" (recharts).
+- Tabela "Histórico de pagamentos".
+- Card final "Clientes no valor do mês".
 
-## Fase 5 — Configurações e polimento
+### Renovação (`/renovacao`) — NOVO
+- Card "Status" da revenda (dias restantes, expira em, valor mensal) — vindo de `settings`.
+- 4 cards de período: Pix +30 / +90 / +180 / +1 ano com valores.
+- Esta é uma vitrine local (sem Pix real ainda); marca como "Em breve" ao clicar.
 
-- Tabela `settings` (1 linha por usuário): empresa, chave Pix + tipo, recebedor, cidade, mensagem padrão, dias de renovação padrão.
-- Página **Configurações**: dados da empresa, Pix, perfil do usuário, mensagem padrão (com placeholders `[nome] [plano] [valor] [data] [pix]`).
-- Preparar estrutura para tema escuro (tokens já semânticos).
-- Toasts de sucesso/erro em todas as ações, estados vazios, skeletons.
-- Seed de exemplo quando o banco está vazio (apenas visual no dashboard, não escreve dados).
+### Configurações (`/configuracoes`)
+- Cards verticais empilhados:
+  1. Perfil (email, nome de exibição) — salva em `profiles`.
+  2. Conectar WhatsApp (placeholder + campo "Instância Evolution").
+  3. Cadastrar PIX (chave, nome, banco, mensagem) — `settings`.
+  4. Mensagem padrão de suporte — `settings`.
+  5. Alterar senha — supabase auth.
 
----
+## 4. Banco de dados (1 migração)
 
-## Detalhes técnicos
+```
+CREATE TABLE public.servers (id, user_id, name, credit_cost_cents, created_at, updated_at)
+ALTER TABLE public.clients ADD COLUMN iptv_login text, iptv_password text, server_id uuid REFERENCES servers, auto_charge boolean DEFAULT true
+ALTER TABLE public.settings ADD COLUMN pix_key text, pix_name text, pix_bank text, pix_message text, support_message text, whatsapp_instance text, subscription_expires_at date, subscription_monthly_cents int DEFAULT 0
+```
++ RLS por `user_id` em `servers`, GRANTs, trigger updated_at.
 
-- **Backend**: Lovable Cloud (Supabase). RLS em todas as tabelas filtrando por `auth.uid() = user_id`. Roles em tabela separada `user_roles` (preparado, mesmo que só haja "admin" agora). Grants explícitos para `authenticated` e `service_role`.
-- **Server functions** TanStack para operações sensíveis (geração Pix usa apenas dados do próprio usuário via `requireSupabaseAuth`).
-- **Pix**: implementação local do BR Code estático (EMV) — não requer integração externa, gera QR válido para pagamento manual. Provedores reais ficam como interface plugável.
-- **Rotas**: tudo autenticado sob `_authenticated/` exceto `/auth` e `/reset-password`. `/` redireciona para `/dashboard` se logado, senão para `/auth`.
-- **Schema resumido**:
-  ```
-  profiles(id, full_name, company_name, created_at)
-  plans(id, user_id, name, price_cents, duration_days, description, active)
-  clients(id, user_id, plan_id, name, phone, email, doc, address,
-          price_cents, due_date, status, notes, internal_notes, created_at)
-  charges(id, user_id, client_id, amount_cents, due_date, paid_at,
-          status, method, notes, created_at)
-  payments(id, user_id, client_id, charge_id, amount_cents, paid_at, method)
-  settings(user_id PK, pix_key, pix_key_type, pix_receiver, pix_city,
-           default_message, default_renewal_days)
-  user_roles(id, user_id, role)
-  ```
+## 5. Escopo deste passo
 
----
+Vou implementar nesta entrega:
+- Tokens de design + sidebar nova (Servidores/Renovação).
+- Restruturação visual de Dashboard, Clientes, Planos, Financeiro.
+- Páginas novas Servidores e Renovação (UI + CRUD/leitura básica).
+- Novos campos no dialog de cliente.
+- Página Configurações com formulários funcionais (perfil, PIX, mensagens).
+- Migração descrita acima.
 
-## O que NÃO está incluído (pra alinhar expectativa)
+**Fora deste passo**: envio real de cobrança em massa pelos botões "Cobrar X" (apenas abrem confirmação/toast por enquanto), integração Pix real, geração de QR Code, envio automático via Evolution. Esses entram quando você pedir Fase 4.
 
-- Integração real com gateway Pix (Mercado Pago/Asaas/Efi) — fica como interface preparada; Pix gerado é BR Code estático válido.
-- Envio automático de WhatsApp (sem API oficial) — usa `wa.me` que abre o WhatsApp do usuário.
-- Multi-tenant com times/sub-usuários — cada conta é isolada (single-user por workspace).
-- Tema escuro funcional — tokens preparados, ativação fica para depois.
-
-Posso começar pela **Fase 1** assim que aprovar?
+Posso seguir?

@@ -67,51 +67,63 @@ export type Database = {
       clients: {
         Row: {
           address: string | null
+          auto_charge: boolean
           created_at: string
           doc: string | null
           due_date: string
           email: string | null
           id: string
           internal_notes: string | null
+          iptv_login: string | null
+          iptv_password: string | null
           name: string
           notes: string | null
           phone: string
           plan_id: string | null
           price_cents: number
+          server_id: string | null
           status: Database["public"]["Enums"]["client_status"]
           updated_at: string
           user_id: string
         }
         Insert: {
           address?: string | null
+          auto_charge?: boolean
           created_at?: string
           doc?: string | null
           due_date: string
           email?: string | null
           id?: string
           internal_notes?: string | null
+          iptv_login?: string | null
+          iptv_password?: string | null
           name: string
           notes?: string | null
           phone: string
           plan_id?: string | null
           price_cents?: number
+          server_id?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           updated_at?: string
           user_id: string
         }
         Update: {
           address?: string | null
+          auto_charge?: boolean
           created_at?: string
           doc?: string | null
           due_date?: string
           email?: string | null
           id?: string
           internal_notes?: string | null
+          iptv_login?: string | null
+          iptv_password?: string | null
           name?: string
           notes?: string | null
           phone?: string
           plan_id?: string | null
           price_cents?: number
+          server_id?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           updated_at?: string
           user_id?: string
@@ -122,6 +134,13 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
             referencedColumns: ["id"]
           },
         ]
@@ -240,42 +259,90 @@ export type Database = {
         }
         Relationships: []
       }
+      servers: {
+        Row: {
+          created_at: string
+          credit_cost_cents: number
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credit_cost_cents?: number
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credit_cost_cents?: number
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       settings: {
         Row: {
           company_name: string | null
           created_at: string
           default_message: string | null
           default_renewal_days: number
+          pix_bank: string | null
           pix_city: string | null
           pix_key: string | null
           pix_key_type: Database["public"]["Enums"]["pix_key_type"] | null
+          pix_message: string | null
+          pix_name: string | null
           pix_receiver: string | null
+          subscription_expires_at: string | null
+          subscription_monthly_cents: number
+          support_message: string | null
           updated_at: string
           user_id: string
+          whatsapp_instance: string | null
         }
         Insert: {
           company_name?: string | null
           created_at?: string
           default_message?: string | null
           default_renewal_days?: number
+          pix_bank?: string | null
           pix_city?: string | null
           pix_key?: string | null
           pix_key_type?: Database["public"]["Enums"]["pix_key_type"] | null
+          pix_message?: string | null
+          pix_name?: string | null
           pix_receiver?: string | null
+          subscription_expires_at?: string | null
+          subscription_monthly_cents?: number
+          support_message?: string | null
           updated_at?: string
           user_id: string
+          whatsapp_instance?: string | null
         }
         Update: {
           company_name?: string | null
           created_at?: string
           default_message?: string | null
           default_renewal_days?: number
+          pix_bank?: string | null
           pix_city?: string | null
           pix_key?: string | null
           pix_key_type?: Database["public"]["Enums"]["pix_key_type"] | null
+          pix_message?: string | null
+          pix_name?: string | null
           pix_receiver?: string | null
+          subscription_expires_at?: string | null
+          subscription_monthly_cents?: number
+          support_message?: string | null
           updated_at?: string
           user_id?: string
+          whatsapp_instance?: string | null
         }
         Relationships: []
       }
