@@ -5,13 +5,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, CalendarCheck, AlertTriangle, CalendarClock, Send } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { brl, parseBrlToCents, formatDateBR, todayISO, addDaysISO, formatPhone } from "@/lib/format";
 import { statusLabel, statusVariant, computeStatus, type ClientStatus } from "@/lib/status";
 import { useAuth } from "@/hooks/use-auth";
 
+import { PageHeader } from "@/components/page-header";
+import { ActionPillButton } from "@/components/action-pill-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,6 +25,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({ meta: [{ title: "Clientes — Painel VIP" }] }),
@@ -34,29 +37,29 @@ const schema = z.object({
   phone: z.string().trim().min(8, "Telefone inválido").max(20),
   email: z.string().trim().email("Email inválido").max(255).optional().or(z.literal("")),
   doc: z.string().trim().max(20).optional().or(z.literal("")),
-  address: z.string().trim().max(255).optional().or(z.literal("")),
+  iptv_login: z.string().trim().max(80).optional().or(z.literal("")),
+  iptv_password: z.string().trim().max(80).optional().or(z.literal("")),
   plan_id: z.string().optional(),
+  server_id: z.string().optional(),
   price: z.string().min(1, "Informe o valor"),
   due_date: z.string().min(1, "Informe o vencimento"),
   status: z.enum(["ativo", "vencido", "suspenso", "cancelado"]),
+  auto_charge: z.boolean(),
   notes: z.string().max(500).optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
 
 type Plan = { id: string; name: string; price_cents: number; duration_days: number; active: boolean };
+type Server = { id: string; name: string };
 type Client = {
-  id: string;
-  name: string;
-  phone: string;
-  email: string | null;
-  doc: string | null;
-  address: string | null;
-  plan_id: string | null;
-  price_cents: number;
-  due_date: string;
-  status: ClientStatus;
-  notes: string | null;
+  id: string; name: string; phone: string; email: string | null; doc: string | null;
+  iptv_login: string | null; iptv_password: string | null;
+  plan_id: string | null; server_id: string | null;
+  price_cents: number; due_date: string; status: ClientStatus;
+  auto_charge: boolean; notes: string | null;
 };
+
+type FilterChip = "todos" | "em_dia" | "a_vencer" | "vencem_hoje" | "vencidos" | "bloqueados";
 
 function ClientesPage() {
   const { user } = useAuth();
@@ -64,7 +67,7 @@ function ClientesPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
   const [q, setQ] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"todos" | ClientStatus>("todos");
+  const [chip, setChip] = useState<FilterChip>("todos");
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -74,7 +77,6 @@ function ClientesPage() {
       return data as Client[];
     },
   });
-
   const { data: plans } = useQuery({
     queryKey: ["plans", "active"],
     queryFn: async () => {
@@ -83,30 +85,41 @@ function ClientesPage() {
       return data as Plan[];
     },
   });
+  const { data: servers } = useQuery({
+    queryKey: ["servers", "select"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("servers").select("id,name").order("name");
+      if (error) throw error;
+      return data as Server[];
+    },
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: "", phone: "", email: "", doc: "", address: "",
-      plan_id: undefined, price: "", due_date: todayISO(), status: "ativo", notes: "",
+      name: "", phone: "", email: "", doc: "", iptv_login: "", iptv_password: "",
+      plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
+      status: "ativo", auto_charge: true, notes: "",
     },
   });
 
   const openCreate = () => {
     setEditing(null);
     form.reset({
-      name: "", phone: "", email: "", doc: "", address: "",
-      plan_id: undefined, price: "", due_date: todayISO(), status: "ativo", notes: "",
+      name: "", phone: "", email: "", doc: "", iptv_login: "", iptv_password: "",
+      plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
+      status: "ativo", auto_charge: true, notes: "",
     });
     setOpen(true);
   };
   const openEdit = (c: Client) => {
     setEditing(c);
     form.reset({
-      name: c.name, phone: c.phone, email: c.email ?? "", doc: c.doc ?? "", address: c.address ?? "",
-      plan_id: c.plan_id ?? undefined,
+      name: c.name, phone: c.phone, email: c.email ?? "", doc: c.doc ?? "",
+      iptv_login: c.iptv_login ?? "", iptv_password: c.iptv_password ?? "",
+      plan_id: c.plan_id ?? undefined, server_id: c.server_id ?? undefined,
       price: (c.price_cents / 100).toFixed(2).replace(".", ","),
-      due_date: c.due_date, status: c.status, notes: c.notes ?? "",
+      due_date: c.due_date, status: c.status, auto_charge: c.auto_charge, notes: c.notes ?? "",
     });
     setOpen(true);
   };
@@ -128,11 +141,14 @@ function ClientesPage() {
         phone: values.phone.trim(),
         email: values.email?.trim() || null,
         doc: values.doc?.trim() || null,
-        address: values.address?.trim() || null,
+        iptv_login: values.iptv_login?.trim() || null,
+        iptv_password: values.iptv_password?.trim() || null,
         plan_id: values.plan_id || null,
+        server_id: values.server_id || null,
         price_cents: parseBrlToCents(values.price),
         due_date: values.due_date,
         status: computeStatus(values.due_date, values.status),
+        auto_charge: values.auto_charge,
         notes: values.notes?.trim() || null,
         user_id: user.id,
       };
@@ -167,110 +183,215 @@ function ClientesPage() {
   const filtered = useMemo(() => {
     if (!clients) return [];
     const term = q.trim().toLowerCase();
+    const today = todayISO();
+    const in30 = addDaysISO(today, 30);
     return clients.filter((c) => {
-      if (statusFilter !== "todos" && c.status !== statusFilter) return false;
+      if (chip === "em_dia" && c.status !== "ativo") return false;
+      if (chip === "vencidos" && c.status !== "vencido") return false;
+      if (chip === "bloqueados" && !(c.status === "suspenso" || c.status === "cancelado")) return false;
+      if (chip === "vencem_hoje" && c.due_date !== today) return false;
+      if (chip === "a_vencer" && !(c.due_date >= today && c.due_date <= in30)) return false;
       if (!term) return true;
       return (
         c.name.toLowerCase().includes(term) ||
         c.phone.toLowerCase().includes(term) ||
-        (c.email ?? "").toLowerCase().includes(term)
+        (c.email ?? "").toLowerCase().includes(term) ||
+        (c.iptv_login ?? "").toLowerCase().includes(term)
       );
     });
-  }, [clients, q, statusFilter]);
+  }, [clients, q, chip]);
+
+  const cobranca = (label: string) => toast.info(`${label}: envio em massa será habilitado em breve.`);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Clientes</h1>
-          <p className="text-muted-foreground mt-1">Cadastre e acompanhe os vencimentos dos seus clientes.</p>
-        </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={openCreate}><Plus className="size-4" /> Novo cliente</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>{editing ? "Editar cliente" : "Novo cliente"}</DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit((v) => save.mutate(v))} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField control={form.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome *</FormLabel>
-                      <FormControl><Input {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="phone" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Telefone (WhatsApp) *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="(11) 99999-9999"
-                          value={field.value}
-                          onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl><Input type="email" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="doc" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>CPF/CNPJ</FormLabel>
-                      <FormControl><Input {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                </div>
-                <FormField control={form.control} name="address" render={({ field }) => (
+      <PageHeader
+        title="Clientes"
+        description={`${clients?.length ?? 0} cliente(s) cadastrado(s)`}
+        actions={
+          <>
+            <ActionPillButton color="cyan" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("Cobrar Antecipado (5d)")}>Cobrar Antecipado (5d)</ActionPillButton>
+            <ActionPillButton color="rose" icon={<AlertTriangle className="size-4" />} onClick={() => cobranca("Cobrar Vencidos")}>Cobrar Vencidos</ActionPillButton>
+            <ActionPillButton color="amber" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("Cobrar Vencendo Amanhã")}>Cobrar Vencendo Amanhã</ActionPillButton>
+            <ActionPillButton color="emerald" icon={<Send className="size-4" />} onClick={() => cobranca("Cobrar vence hoje")}>Cobrar vence hoje</ActionPillButton>
+            <Button className="btn-premium rounded-full" onClick={openCreate}>
+              <Plus className="size-4" /> Novo cliente
+            </Button>
+          </>
+        }
+      />
+
+      <Card>
+        <CardContent className="p-4 space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto] gap-3 items-center">
+            <div className="relative min-w-0">
+              <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input className="pl-9 rounded-full" placeholder="Buscar por nome, WhatsApp, login..." value={q} onChange={(e) => setQ(e.target.value)} />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {([
+                ["todos", "Todos"], ["em_dia", "Em dia"], ["a_vencer", "A vencer"],
+                ["vencem_hoje", "Vencem hoje"], ["vencidos", "Vencidos"], ["bloqueados", "Bloqueados"],
+              ] as [FilterChip, string][]).map(([k, label]) => (
+                <button
+                  key={k}
+                  onClick={() => setChip(k)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+                    chip === k
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                  }`}
+                >{label}</button>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>WhatsApp</TableHead>
+                <TableHead>Valor</TableHead>
+                <TableHead>Vencimento</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading && Array.from({ length: 4 }).map((_, i) => (
+                <TableRow key={i}><TableCell colSpan={6}><Skeleton className="h-6 w-full" /></TableCell></TableRow>
+              ))}
+              {!isLoading && filtered.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                    <p>Nenhum cliente encontrado.</p>
+                    {clients?.length === 0 && (
+                      <Button className="btn-premium rounded-full mt-3" onClick={openCreate}>
+                        <Plus className="size-4" /> Cadastrar primeiro cliente
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              )}
+              {filtered.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {c.name}
+                      {c.auto_charge ? (
+                        <CalendarCheck className="size-3.5 text-[color:var(--kpi-emerald)]" />
+                      ) : null}
+                    </div>
+                  </TableCell>
+                  <TableCell>{c.phone}</TableCell>
+                  <TableCell className="tabular-nums">{brl(c.price_cents)}</TableCell>
+                  <TableCell>{formatDateBR(c.due_date)}</TableCell>
+                  <TableCell><Badge variant={statusVariant[c.status]}>{statusLabel[c.status]}</Badge></TableCell>
+                  <TableCell className="text-right">
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(c)}><Pencil className="size-4" /></Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="icon" variant="ghost"><Trash2 className="size-4 text-destructive" /></Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Remover {c.name}?</AlertDialogTitle>
+                          <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => remove.mutate(c.id)}>Remover</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editing ? "Editar cliente" : "Novo cliente"}</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit((v) => save.mutate(v))} className="space-y-4">
+              <FormField control={form.control} name="name" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome *</FormLabel>
+                  <FormControl><Input {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField control={form.control} name="phone" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Endereço</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
+                    <FormLabel>WhatsApp *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="(11) 99999-9999" value={field.value} onChange={(e) => field.onChange(formatPhone(e.target.value))} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField control={form.control} name="plan_id" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Plano</FormLabel>
-                      <Select value={field.value ?? ""} onValueChange={onPlanChange}>
-                        <FormControl>
-                          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {plans?.length === 0 && <div className="px-2 py-1.5 text-sm text-muted-foreground">Crie um plano primeiro</div>}
-                          {plans?.map((p) => (
-                            <SelectItem key={p.id} value={p.id}>{p.name} — {brl(p.price_cents)}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="price" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Valor (R$) *</FormLabel>
-                      <FormControl><Input inputMode="decimal" placeholder="49,90" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="due_date" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Vencimento *</FormLabel>
-                      <FormControl><Input type="date" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                </div>
+                <FormField control={form.control} name="due_date" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vencimento *</FormLabel>
+                    <FormControl><Input type="date" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="iptv_login" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Login IPTV</FormLabel>
+                    <FormControl><Input {...field} /></FormControl>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="iptv_password" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Senha IPTV</FormLabel>
+                    <FormControl><Input {...field} /></FormControl>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="plan_id" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Plano</FormLabel>
+                    <Select value={field.value ?? ""} onValueChange={onPlanChange}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="— Sem plano —" /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {(!plans || plans.length === 0) && <div className="px-2 py-1.5 text-sm text-muted-foreground">Cadastre um plano antes</div>}
+                        {plans?.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>{p.name} — {brl(p.price_cents)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="price" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Valor (R$) *</FormLabel>
+                    <FormControl><Input inputMode="decimal" placeholder="49,90" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="server_id" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Servidor</FormLabel>
+                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="— Sem servidor —" /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {(!servers || servers.length === 0) && <div className="px-2 py-1.5 text-sm text-muted-foreground">Nenhum servidor cadastrado.</div>}
+                        {servers?.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
                 <FormField control={form.control} name="status" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
@@ -283,95 +404,36 @@ function ClientesPage() {
                         <SelectItem value="cancelado">Cancelado</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="notes" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Observações</FormLabel>
-                    <FormControl><Textarea rows={3} {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <DialogFooter>
-                  <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
-                  <Button type="submit" disabled={save.isPending}>{save.isPending ? "Salvando..." : "Salvar"}</Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <Card>
-        <CardContent className="p-4 space-y-4">
-          <div className="flex gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[220px]">
-              <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input className="pl-9" placeholder="Buscar por nome, telefone ou email" value={q} onChange={(e) => setQ(e.target.value)} />
-            </div>
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
-              <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os status</SelectItem>
-                <SelectItem value="ativo">Ativos</SelectItem>
-                <SelectItem value="vencido">Vencidos</SelectItem>
-                <SelectItem value="suspenso">Suspensos</SelectItem>
-                <SelectItem value="cancelado">Cancelados</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Vencimento</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading && Array.from({ length: 4 }).map((_, i) => (
-                  <TableRow key={i}><TableCell colSpan={6}><Skeleton className="h-6 w-full" /></TableCell></TableRow>
-                ))}
-                {!isLoading && filtered.length === 0 && (
-                  <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Nenhum cliente encontrado.</TableCell></TableRow>
-                )}
-                {filtered.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.name}</TableCell>
-                    <TableCell>{c.phone}</TableCell>
-                    <TableCell>{brl(c.price_cents)}</TableCell>
-                    <TableCell>{formatDateBR(c.due_date)}</TableCell>
-                    <TableCell><Badge variant={statusVariant[c.status]}>{statusLabel[c.status]}</Badge></TableCell>
-                    <TableCell className="text-right">
-                      <Button size="icon" variant="ghost" onClick={() => openEdit(c)}><Pencil className="size-4" /></Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="icon" variant="ghost"><Trash2 className="size-4 text-destructive" /></Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Remover {c.name}?</AlertDialogTitle>
-                            <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => remove.mutate(c.id)}>Remover</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+              </div>
+              <FormField control={form.control} name="notes" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Observações</FormLabel>
+                  <FormControl><Textarea rows={3} {...field} /></FormControl>
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="auto_charge" render={({ field }) => (
+                <FormItem className="flex items-start justify-between rounded-xl border border-border p-3 gap-3">
+                  <div className="min-w-0">
+                    <FormLabel className="mb-0">Cobrança Automática</FormLabel>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Quando desativada, este cliente é ignorado no envio automático de cobranças vencidas.
+                    </p>
+                  </div>
+                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                </FormItem>
+              )} />
+              <DialogFooter>
+                <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+                <Button type="submit" className="btn-premium rounded-full" disabled={save.isPending}>
+                  {save.isPending ? "Salvando..." : "Salvar"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

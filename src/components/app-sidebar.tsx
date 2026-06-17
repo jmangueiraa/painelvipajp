@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Package, Wallet, Settings, Sparkles } from "lucide-react";
+import { LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,7 +17,9 @@ const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Planos", url: "/planos", icon: Package },
+  { title: "Servidores", url: "/servidores", icon: Server },
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
+  { title: "Renovação", url: "/renovacao", icon: RefreshCw },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
 
@@ -30,13 +32,13 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border/40">
         <div className="flex items-center gap-2 px-2 py-2">
-          <div className="size-8 shrink-0 rounded-lg bg-[image:var(--gradient-primary)] flex items-center justify-center">
-            <Sparkles className="size-4 text-primary-foreground" />
+          <div className="size-9 shrink-0 rounded-xl bg-[image:var(--gradient-primary)] flex items-center justify-center shadow-[var(--shadow-glow)]">
+            <Crown className="size-4 text-primary-foreground" />
           </div>
           {!collapsed && (
-            <div className="flex flex-col leading-tight">
-              <span className="font-bold text-sidebar-foreground">Painel VIP</span>
-              <span className="text-[10px] text-sidebar-foreground/60 uppercase tracking-wide">Gestão de clientes</span>
+            <div className="flex flex-col leading-tight min-w-0">
+              <span className="font-bold text-sidebar-foreground truncate">Painel VIP</span>
+              <span className="text-[10px] text-sidebar-foreground/60 uppercase tracking-widest">Gestão recorrente</span>
             </div>
           )}
         </div>

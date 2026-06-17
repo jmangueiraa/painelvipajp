@@ -13,6 +13,8 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedServidoresRouteImport } from './routes/_authenticated/servidores'
+import { Route as AuthenticatedRenovacaoRouteImport } from './routes/_authenticated/renovacao'
 import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -37,6 +39,16 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedServidoresRoute = AuthenticatedServidoresRouteImport.update({
+  id: '/servidores',
+  path: '/servidores',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRenovacaoRoute = AuthenticatedRenovacaoRouteImport.update({
+  id: '/renovacao',
+  path: '/renovacao',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPlanosRoute = AuthenticatedPlanosRouteImport.update({
   id: '/planos',
@@ -74,6 +86,8 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/planos': typeof AuthenticatedPlanosRoute
+  '/renovacao': typeof AuthenticatedRenovacaoRoute
+  '/servidores': typeof AuthenticatedServidoresRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -84,6 +98,8 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/planos': typeof AuthenticatedPlanosRoute
+  '/renovacao': typeof AuthenticatedRenovacaoRoute
+  '/servidores': typeof AuthenticatedServidoresRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -96,6 +112,8 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/planos': typeof AuthenticatedPlanosRoute
+  '/_authenticated/renovacao': typeof AuthenticatedRenovacaoRoute
+  '/_authenticated/servidores': typeof AuthenticatedServidoresRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -108,6 +126,8 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/financeiro'
     | '/planos'
+    | '/renovacao'
+    | '/servidores'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -118,6 +138,8 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/financeiro'
     | '/planos'
+    | '/renovacao'
+    | '/servidores'
   id:
     | '__root__'
     | '/'
@@ -129,6 +151,8 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/financeiro'
     | '/_authenticated/planos'
+    | '/_authenticated/renovacao'
+    | '/_authenticated/servidores'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -167,6 +191,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/servidores': {
+      id: '/_authenticated/servidores'
+      path: '/servidores'
+      fullPath: '/servidores'
+      preLoaderRoute: typeof AuthenticatedServidoresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/renovacao': {
+      id: '/_authenticated/renovacao'
+      path: '/renovacao'
+      fullPath: '/renovacao'
+      preLoaderRoute: typeof AuthenticatedRenovacaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/planos': {
       id: '/_authenticated/planos'
@@ -212,6 +250,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedPlanosRoute: typeof AuthenticatedPlanosRoute
+  AuthenticatedRenovacaoRoute: typeof AuthenticatedRenovacaoRoute
+  AuthenticatedServidoresRoute: typeof AuthenticatedServidoresRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -220,6 +260,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedPlanosRoute: AuthenticatedPlanosRoute,
+  AuthenticatedRenovacaoRoute: AuthenticatedRenovacaoRoute,
+  AuthenticatedServidoresRoute: AuthenticatedServidoresRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
