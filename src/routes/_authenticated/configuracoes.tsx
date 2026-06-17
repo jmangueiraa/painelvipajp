@@ -114,8 +114,18 @@ function ConfiguracoesPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  type SettingsPatch = Partial<{
+    whatsapp_instance: string | null;
+    pix_key: string | null;
+    pix_name: string | null;
+    pix_bank: string | null;
+    pix_message: string | null;
+    support_message: string | null;
+    subscription_expires_at: string | null;
+    subscription_monthly_cents: number;
+  }>;
   const saveSettings = useMutation({
-    mutationFn: async (patch: Record<string, unknown>) => {
+    mutationFn: async (patch: SettingsPatch) => {
       if (!user) throw new Error("Sem sessão");
       const { error } = await supabase.from("settings").update(patch).eq("user_id", user.id);
       if (error) throw error;
