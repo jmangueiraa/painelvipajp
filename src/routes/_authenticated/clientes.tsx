@@ -467,10 +467,10 @@ function ClientesPage() {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <CircleAction title="Renovar" color="var(--kpi-emerald)" Icon={RefreshCw} onClick={() => renew.mutate(c)} />
-                      <CircleAction title="Mensagem (WhatsApp)" color="var(--kpi-emerald)" Icon={MessageCircle} onClick={() => openWhatsApp(c)} />
-                      <CircleAction title="Ligar" color="var(--kpi-cyan)" Icon={Phone} onClick={() => callPhone(c)} />
+                      <CircleAction title="Mensagem (WhatsApp)" color="var(--kpi-emerald)" Icon={MessageCircle} href={whatsappHref(c)} />
+                      <CircleAction title="Ligar" color="var(--kpi-cyan)" Icon={Phone} href={telHref(c)} />
                       <CircleAction title="Copiar credenciais" color="var(--kpi-cyan)" Icon={Copy} onClick={() => copyCredentials(c)} />
-                      <CircleAction title="Suporte" color="var(--kpi-emerald)" Icon={LifeBuoy} onClick={() => openSupport(c)} />
+                      <CircleAction title="Suporte" color="var(--kpi-emerald)" Icon={LifeBuoy} href={supportHref(c)} />
                       <CircleAction
                         title={c.status === "suspenso" || c.status === "cancelado" ? "Desbloquear" : "Bloquear"}
                         color="var(--kpi-amber)"
