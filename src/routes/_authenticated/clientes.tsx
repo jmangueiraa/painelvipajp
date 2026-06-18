@@ -270,12 +270,6 @@ function ClientesPage() {
         const due = parseDateCell(r["vencimento"] ?? r["due_date"]);
         if (!due) { errors.push(`Linha ${lineNum}: vencimento inválido (use DD/MM/AAAA)`); return; }
 
-        const statusRaw = norm(r["status"]) as ClientStatus;
-        const status: ClientStatus = (["ativo","vencido","suspenso","cancelado"].includes(statusRaw) ? statusRaw : "ativo") as ClientStatus;
-
-        const autoRaw = norm(r["cobranca_automatica"] ?? r["auto_charge"]);
-        const auto_charge = !["nao","não","no","false","0",""].includes(autoRaw);
-
         const planName = norm(r["plano"]);
         const plan_id = planName ? planByName.get(planName)?.id ?? null : null;
         const serverName = norm(r["servidor"]);
@@ -284,16 +278,14 @@ function ClientesPage() {
         payloads.push({
           name,
           phone: formatPhone(phone),
-          email: String(r["email"] ?? "").trim() || null,
-          doc: String(r["documento"] ?? r["doc"] ?? "").trim() || null,
           iptv_login: String(r["login_iptv"] ?? r["iptv_login"] ?? "").trim() || null,
           iptv_password: String(r["senha_iptv"] ?? r["iptv_password"] ?? "").trim() || null,
           plan_id,
           server_id,
           price_cents,
           due_date: due,
-          status: computeStatus(due, status),
-          auto_charge,
+          status: computeStatus(due, "ativo"),
+          auto_charge: true,
           notes: String(r["observacoes"] ?? r["notes"] ?? "").trim() || null,
           user_id: user.id,
         });
