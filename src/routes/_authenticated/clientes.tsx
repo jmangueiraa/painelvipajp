@@ -259,7 +259,8 @@ function ClientesPage() {
       const serverByName = new Map((servers ?? []).map((s) => [s.name.trim().toLowerCase(), s]));
 
       const errors: string[] = [];
-      const payloads: Array<Parameters<typeof supabase.from<"clients">>[0] extends never ? never : Record<string, unknown>> = [];
+      type ClientInsert = Parameters<ReturnType<typeof supabase.from<"clients">>["insert"]>[0] extends readonly (infer U)[] ? U : never;
+      const payloads: ClientInsert[] = [];
 
       rows.forEach((r, idx) => {
         const lineNum = idx + 2;
