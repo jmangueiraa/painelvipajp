@@ -54,10 +54,55 @@ function ConfiguracoesPage() {
     queryKey: ["profile", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("full_name,company_name").eq("id", user!.id).maybeSingle();
+      const { data, error } = await supabase.from("profiles").select("full_name,company_name,avatar_url").eq("id", user!.id).maybeSingle();
       if (error) throw error;
       return data;
     },
+  });
+
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [avatarSigned, setAvatarSigned] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadSigned() {
+      if (!profile?.avatar_url) { setAvatarSigned(""); return; }
+      const { data } = await supabase.storage.from("avatars").createSignedUrl(profile.avatar_url, 60 * 60);
+      if (!cancelled) setAvatarSigned(data?.signedUrl ?? "");
+    }
+    setAvatarUrl(profile?.avatar_url ?? "");
+    loadSigned();
+    return () => { cancelled = true; };
+  }, [profile?.avatar_url]);
+
+  const uploadAvatar = useMutation({
+    mutationFn: async (file: File) => {
+      if (!user) throw new Error("Sem sessão");
+      if (!file.type.startsWith("image/")) throw new Error("Selecione uma imagem");
+      if (file.size > 5 * 1024 * 1024) throw new Error("Imagem muito grande (máx 5MB)");
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      if (avatarUrl) await supabase.storage.from("avatars").remove([avatarUrl]).catch(() => {});
+      const { error } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", user.id);
+      if (error) throw error;
+      return path;
+    },
+    onSuccess: () => { toast.success("Foto atualizada"); qc.invalidateQueries({ queryKey: ["profile"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removeAvatar = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Sem sessão");
+      if (avatarUrl) await supabase.storage.from("avatars").remove([avatarUrl]).catch(() => {});
+      const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Foto removida"); qc.invalidateQueries({ queryKey: ["profile"] }); },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const { data: settings } = useQuery({
