@@ -99,29 +99,29 @@ function ClientesPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: "", phone: "", email: "", doc: "", iptv_login: "", iptv_password: "",
+      name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
-      status: "ativo", auto_charge: true, notes: "",
+      notes: "",
     },
   });
 
   const openCreate = () => {
     setEditing(null);
     form.reset({
-      name: "", phone: "", email: "", doc: "", iptv_login: "", iptv_password: "",
+      name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
-      status: "ativo", auto_charge: true, notes: "",
+      notes: "",
     });
     setOpen(true);
   };
   const openEdit = (c: Client) => {
     setEditing(c);
     form.reset({
-      name: c.name, phone: c.phone, email: c.email ?? "", doc: c.doc ?? "",
+      name: c.name, phone: c.phone,
       iptv_login: c.iptv_login ?? "", iptv_password: c.iptv_password ?? "",
       plan_id: c.plan_id ?? undefined, server_id: c.server_id ?? undefined,
       price: (c.price_cents / 100).toFixed(2).replace(".", ","),
-      due_date: c.due_date, status: c.status, auto_charge: c.auto_charge, notes: c.notes ?? "",
+      due_date: c.due_date, notes: c.notes ?? "",
     });
     setOpen(true);
   };
@@ -141,16 +141,14 @@ function ClientesPage() {
       const payload = {
         name: values.name.trim(),
         phone: values.phone.trim(),
-        email: values.email?.trim() || null,
-        doc: values.doc?.trim() || null,
         iptv_login: values.iptv_login?.trim() || null,
         iptv_password: values.iptv_password?.trim() || null,
         plan_id: values.plan_id || null,
         server_id: values.server_id || null,
         price_cents: parseBrlToCents(values.price),
         due_date: values.due_date,
-        status: computeStatus(values.due_date, values.status),
-        auto_charge: values.auto_charge,
+        status: computeStatus(values.due_date, "ativo"),
+        auto_charge: true,
         notes: values.notes?.trim() || null,
         user_id: user.id,
       };
