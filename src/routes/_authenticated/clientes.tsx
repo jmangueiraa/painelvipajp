@@ -207,15 +207,23 @@ function ClientesPage() {
   });
 
   const onlyDigits = (s: string) => s.replace(/\D/g, "");
-  const openWhatsApp = (c: Client) => {
-    const d = onlyDigits(c.phone);
-    if (!d) return toast.error("WhatsApp inválido");
-    window.open(`https://wa.me/${d.length <= 11 ? "55" + d : d}`, "_blank");
+  const intlPhone = (phone: string) => {
+    const d = onlyDigits(phone);
+    if (!d) return "";
+    return d.length <= 11 ? "55" + d : d;
   };
-  const callPhone = (c: Client) => {
-    const d = onlyDigits(c.phone);
-    if (!d) return toast.error("Telefone inválido");
-    window.location.href = `tel:+${d.length <= 11 ? "55" + d : d}`;
+  const whatsappHref = (c: Client) => {
+    const p = intlPhone(c.phone);
+    return p ? `https://wa.me/${p}` : "#";
+  };
+  const telHref = (c: Client) => {
+    const p = intlPhone(c.phone);
+    return p ? `tel:+${p}` : "#";
+  };
+  const supportHref = (c: Client) => {
+    const p = intlPhone(c.phone);
+    const msg = encodeURIComponent(`Olá ${c.name}, como podemos ajudar?`);
+    return p ? `https://wa.me/${p}?text=${msg}` : "#";
   };
   const copyCredentials = async (c: Client) => {
     const txt = [c.iptv_login && `Login: ${c.iptv_login}`, c.iptv_password && `Senha: ${c.iptv_password}`].filter(Boolean).join("\n");
@@ -223,12 +231,7 @@ function ClientesPage() {
     await navigator.clipboard.writeText(txt);
     toast.success("Credenciais copiadas");
   };
-  const openSupport = (c: Client) => {
-    const d = onlyDigits(c.phone);
-    const msg = encodeURIComponent(`Olá ${c.name}, como podemos ajudar?`);
-    if (!d) return toast.info("Suporte: cadastre um WhatsApp para iniciar atendimento");
-    window.open(`https://wa.me/${d.length <= 11 ? "55" + d : d}?text=${msg}`, "_blank");
-  };
+
 
 
   const filtered = useMemo(() => {
