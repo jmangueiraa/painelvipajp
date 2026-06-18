@@ -480,8 +480,8 @@ function ClientesPage() {
                       <CircleAction title="Editar" color="var(--kpi-violet)" Icon={Pencil} onClick={() => openEdit(c)} />
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <button type="button" title="Remover" className="size-9 inline-flex items-center justify-center rounded-full border-2 transition-colors hover:bg-[color-mix(in_oklab,var(--kpi-rose)_15%,transparent)]" style={{ borderColor: "color-mix(in oklab, var(--kpi-rose) 55%, transparent)", color: "var(--kpi-rose)" }}>
-                            <Trash2 className="size-4" />
+                          <button type="button" title="Remover" className="size-7 inline-flex items-center justify-center rounded-full border transition-colors hover:bg-[color-mix(in_oklab,var(--kpi-rose)_15%,transparent)]" style={{ borderColor: "color-mix(in oklab, var(--kpi-rose) 55%, transparent)", color: "var(--kpi-rose)" }}>
+                            <Trash2 className="size-3.5" />
                           </button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
@@ -667,10 +667,10 @@ function CircleAction({ title, color, Icon, onClick }: { title: string; color: s
       title={title}
       aria-label={title}
       onClick={onClick}
-      className="size-9 inline-flex items-center justify-center rounded-full border-2 transition-colors hover:bg-[color-mix(in_oklab,var(--pill-color)_15%,transparent)]"
+      className="size-7 inline-flex items-center justify-center rounded-full border transition-colors hover:bg-[color-mix(in_oklab,var(--pill-color)_15%,transparent)]"
       style={{ ["--pill-color" as string]: color, borderColor: `color-mix(in oklab, ${color} 55%, transparent)`, color }}
     >
-      <Icon className="size-4" />
+      <Icon className="size-3.5" />
     </button>
   );
 }
