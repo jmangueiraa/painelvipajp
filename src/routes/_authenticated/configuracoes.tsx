@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { User, MessageSquare, KeyRound, LifeBuoy, Lock } from "lucide-react";
+import { User, MessageSquare, KeyRound, LifeBuoy, Lock, Camera } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -21,21 +21,23 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
 });
 
 function SectionCard({
-  title, description, icon: Icon, color, children,
-}: { title: string; description?: string; icon: React.ElementType; color: string; children: React.ReactNode }) {
+  title, description, icon: Icon, color, children, headerSlot,
+}: { title: string; description?: string; icon: React.ElementType; color: string; children: React.ReactNode; headerSlot?: React.ReactNode }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-start gap-3 space-y-0">
-        <div
-          className="size-10 rounded-xl grid place-items-center shrink-0"
-          style={{
-            background: `color-mix(in oklab, ${color} 15%, transparent)`,
-            color,
-            border: `1px solid color-mix(in oklab, ${color} 45%, transparent)`,
-          }}
-        >
-          <Icon className="size-5" />
-        </div>
+        {headerSlot ?? (
+          <div
+            className="size-10 rounded-xl grid place-items-center shrink-0"
+            style={{
+              background: `color-mix(in oklab, ${color} 15%, transparent)`,
+              color,
+              border: `1px solid color-mix(in oklab, ${color} 45%, transparent)`,
+            }}
+          >
+            <Icon className="size-5" />
+          </div>
+        )}
         <div className="min-w-0">
           <CardTitle>{title}</CardTitle>
           {description && <CardDescription>{description}</CardDescription>}
@@ -54,10 +56,42 @@ function ConfiguracoesPage() {
     queryKey: ["profile", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("full_name,company_name").eq("id", user!.id).maybeSingle();
+      const { data, error } = await supabase.from("profiles").select("full_name,company_name,avatar_url").eq("id", user!.id).maybeSingle();
       if (error) throw error;
       return data;
     },
+  });
+
+  const [avatarSigned, setAvatarSigned] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      if (!profile?.avatar_url) { setAvatarSigned(""); return; }
+      const { data } = await supabase.storage.from("avatars").createSignedUrl(profile.avatar_url, 60 * 60);
+      if (!cancelled) setAvatarSigned(data?.signedUrl ?? "");
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [profile?.avatar_url]);
+
+  const fileRef = useRef<HTMLInputElement>(null);
+  const uploadAvatar = useMutation({
+    mutationFn: async (file: File) => {
+      if (!user) throw new Error("Sem sessão");
+      if (!file.type.startsWith("image/")) throw new Error("Selecione uma imagem");
+      if (file.size > 5 * 1024 * 1024) throw new Error("Imagem muito grande (máx 5MB)");
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      if (profile?.avatar_url) {
+        await supabase.storage.from("avatars").remove([profile.avatar_url]).catch(() => {});
+      }
+      const { error } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Foto atualizada"); qc.invalidateQueries({ queryKey: ["profile"] }); },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const { data: settings } = useQuery({
@@ -148,7 +182,43 @@ function ConfiguracoesPage() {
     <div className="space-y-6">
       <PageHeader title="Configurações" description="Perfil e integrações" />
 
-      <SectionCard title="Perfil" description="Dados que aparecem no painel" icon={User} color="var(--kpi-violet)">
+      <SectionCard
+        title="Perfil"
+        description="Dados que aparecem no painel"
+        icon={User}
+        color="var(--kpi-violet)"
+        headerSlot={
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            title="Alterar foto de perfil"
+            disabled={uploadAvatar.isPending}
+            className="size-12 shrink-0 rounded-xl relative group overflow-hidden flex items-center justify-center shadow-[var(--shadow-glow)]"
+            style={{ backgroundImage: avatarSigned ? undefined : "var(--gradient-primary)" }}
+          >
+            {avatarSigned ? (
+              <img src={avatarSigned} alt="Foto de perfil" className="size-full object-cover" />
+            ) : (
+              <User className="size-6 text-primary-foreground" />
+            )}
+            <span className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Camera className="size-5 text-white" />
+            </span>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) uploadAvatar.mutate(f);
+                e.target.value = "";
+              }}
+            />
+          </button>
+        }
+      >
+
 
         <div className="grid md:grid-cols-2 gap-3">
           <div className="space-y-1">
