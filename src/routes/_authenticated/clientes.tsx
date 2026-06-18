@@ -209,12 +209,12 @@ function ClientesPage() {
     const headers = [
       "nome", "whatsapp", "vencimento",
       "login_iptv", "senha_iptv",
-      "plano", "valor", "servidor", "observacoes",
+      "plano", "valor", "servidor", "cobranca_automatica", "observacoes",
     ];
     const example = [
       "João da Silva", "(11) 99999-9999", "31/12/2026",
       "joao123", "senha123",
-      "", "49,90", "", "Cliente exemplo",
+      "", "49,90", "", "sim", "Cliente exemplo",
     ];
     const ws = XLSX.utils.aoa_to_sheet([headers, example]);
     const wb = XLSX.utils.book_new();
