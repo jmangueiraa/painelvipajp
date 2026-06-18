@@ -322,7 +322,7 @@ function ConfiguracoesPage() {
         </Button>
       </SectionCard>
 
-      <SectionCard title="Alterar senha" icon={KeyRound} color="var(--kpi-indigo)">
+      <SectionCard title="Alterar senha" icon={KeyRound} color="var(--kpi-violet)">
         <div className="space-y-1">
           <Label>Senha atual</Label>
           <Input type="password" value={currentPass} onChange={(e) => setCurrentPass(e.target.value)} />
