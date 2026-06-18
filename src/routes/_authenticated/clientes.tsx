@@ -102,7 +102,7 @@ function ClientesPage() {
     defaultValues: {
       name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
-      notes: "",
+      auto_charge: true, notes: "",
     },
   });
 
@@ -111,7 +111,7 @@ function ClientesPage() {
     form.reset({
       name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
-      notes: "",
+      auto_charge: true, notes: "",
     });
     setOpen(true);
   };
@@ -122,7 +122,7 @@ function ClientesPage() {
       iptv_login: c.iptv_login ?? "", iptv_password: c.iptv_password ?? "",
       plan_id: c.plan_id ?? undefined, server_id: c.server_id ?? undefined,
       price: (c.price_cents / 100).toFixed(2).replace(".", ","),
-      due_date: c.due_date, notes: c.notes ?? "",
+      due_date: c.due_date, auto_charge: c.auto_charge, notes: c.notes ?? "",
     });
     setOpen(true);
   };
@@ -149,7 +149,7 @@ function ClientesPage() {
         price_cents: parseBrlToCents(values.price),
         due_date: values.due_date,
         status: computeStatus(values.due_date, "ativo"),
-        auto_charge: true,
+        auto_charge: values.auto_charge,
         notes: values.notes?.trim() || null,
         user_id: user.id,
       };
