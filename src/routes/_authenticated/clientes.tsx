@@ -465,23 +465,39 @@ function ClientesPage() {
                   <TableCell>{formatDateBR(c.due_date)}</TableCell>
                   <TableCell><Badge variant={statusVariant[c.status]}>{statusLabel[c.status]}</Badge></TableCell>
                   <TableCell className="text-right">
-                    <Button size="icon" variant="ghost" onClick={() => openEdit(c)}><Pencil className="size-4" /></Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button size="icon" variant="ghost"><Trash2 className="size-4 text-destructive" /></Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Remover {c.name}?</AlertDialogTitle>
-                          <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => remove.mutate(c.id)}>Remover</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <CircleAction title="Renovar" color="var(--kpi-emerald)" Icon={RefreshCw} onClick={() => renew.mutate(c)} />
+                      <CircleAction title="Mensagem (WhatsApp)" color="var(--kpi-emerald)" Icon={MessageCircle} onClick={() => openWhatsApp(c)} />
+                      <CircleAction title="Ligar" color="var(--kpi-cyan)" Icon={Phone} onClick={() => callPhone(c)} />
+                      <CircleAction title="Copiar credenciais" color="var(--kpi-cyan)" Icon={Copy} onClick={() => copyCredentials(c)} />
+                      <CircleAction title="Suporte" color="var(--kpi-emerald)" Icon={LifeBuoy} onClick={() => openSupport(c)} />
+                      <CircleAction
+                        title={c.status === "suspenso" || c.status === "cancelado" ? "Desbloquear" : "Bloquear"}
+                        color="var(--kpi-amber)"
+                        Icon={c.status === "suspenso" || c.status === "cancelado" ? Unlock : Lock}
+                        onClick={() => toggleBlock.mutate(c)}
+                      />
+                      <CircleAction title="Editar" color="var(--kpi-violet)" Icon={Pencil} onClick={() => openEdit(c)} />
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button type="button" title="Remover" className="size-9 inline-flex items-center justify-center rounded-full border-2 transition-colors hover:bg-[color-mix(in_oklab,var(--kpi-rose)_15%,transparent)]" style={{ borderColor: "color-mix(in oklab, var(--kpi-rose) 55%, transparent)", color: "var(--kpi-rose)" }}>
+                            <Trash2 className="size-4" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Remover {c.name}?</AlertDialogTitle>
+                            <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => remove.mutate(c.id)}>Remover</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </TableCell>
+
                 </TableRow>
               ))}
             </TableBody>
