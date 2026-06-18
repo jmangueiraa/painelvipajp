@@ -519,36 +519,11 @@ function ClientesPage() {
                     </Select>
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="status" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="ativo">Ativo</SelectItem>
-                        <SelectItem value="vencido">Vencido</SelectItem>
-                        <SelectItem value="suspenso">Suspenso</SelectItem>
-                        <SelectItem value="cancelado">Cancelado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )} />
               </div>
               <FormField control={form.control} name="notes" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Observações</FormLabel>
                   <FormControl><Textarea rows={3} {...field} /></FormControl>
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="auto_charge" render={({ field }) => (
-                <FormItem className="flex items-start justify-between rounded-xl border border-border p-3 gap-3">
-                  <div className="min-w-0">
-                    <FormLabel className="mb-0">Cobrança Automática</FormLabel>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Quando desativada, este cliente é ignorado no envio automático de cobranças vencidas.
-                    </p>
-                  </div>
-                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 </FormItem>
               )} />
               <DialogFooter>
