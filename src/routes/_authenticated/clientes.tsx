@@ -277,6 +277,9 @@ function ClientesPage() {
         const serverName = norm(r["servidor"]);
         const server_id = serverName ? serverByName.get(serverName)?.id ?? null : null;
 
+        const autoRaw = norm(r["cobranca_automatica"] ?? r["auto_charge"]);
+        const auto_charge = autoRaw === "" ? true : !["nao","não","no","false","0"].includes(autoRaw);
+
         payloads.push({
           name,
           phone: formatPhone(phone),
@@ -287,7 +290,7 @@ function ClientesPage() {
           price_cents,
           due_date: due,
           status: computeStatus(due, "ativo"),
-          auto_charge: true,
+          auto_charge,
           notes: String(r["observacoes"] ?? r["notes"] ?? "").trim() || null,
           user_id: user.id,
         });
