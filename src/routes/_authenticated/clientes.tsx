@@ -6,7 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Search, CalendarCheck, AlertTriangle, CalendarClock, Send, FileSpreadsheet, Download, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, CalendarCheck, AlertTriangle, CalendarClock, Send, FileSpreadsheet, Download, Upload, RefreshCw, MessageCircle, Phone, Copy, LifeBuoy, Lock, Unlock } from "lucide-react";
+import type { ComponentType, SVGProps } from "react";
 import * as XLSX from "xlsx";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -181,6 +182,54 @@ function ClientesPage() {
     },
     onError: (e: Error) => toast.error(translateError(e)),
   });
+
+  const renew = useMutation({
+    mutationFn: async (c: Client) => {
+      const plan = plans?.find((p) => p.id === c.plan_id);
+      const days = plan?.duration_days ?? 30;
+      const base = c.due_date && c.due_date >= todayISO() ? c.due_date : todayISO();
+      const newDue = addDaysISO(base, days);
+      const { error } = await supabase.from("clients").update({ due_date: newDue, status: computeStatus(newDue, "ativo") }).eq("id", c.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Cliente renovado"); qc.invalidateQueries({ queryKey: ["clients"] }); },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  const toggleBlock = useMutation({
+    mutationFn: async (c: Client) => {
+      const next: ClientStatus = c.status === "suspenso" || c.status === "cancelado" ? computeStatus(c.due_date, "ativo") : "suspenso";
+      const { error } = await supabase.from("clients").update({ status: next }).eq("id", c.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Status atualizado"); qc.invalidateQueries({ queryKey: ["clients"] }); },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  const onlyDigits = (s: string) => s.replace(/\D/g, "");
+  const openWhatsApp = (c: Client) => {
+    const d = onlyDigits(c.phone);
+    if (!d) return toast.error("WhatsApp inválido");
+    window.open(`https://wa.me/${d.length <= 11 ? "55" + d : d}`, "_blank");
+  };
+  const callPhone = (c: Client) => {
+    const d = onlyDigits(c.phone);
+    if (!d) return toast.error("Telefone inválido");
+    window.location.href = `tel:+${d.length <= 11 ? "55" + d : d}`;
+  };
+  const copyCredentials = async (c: Client) => {
+    const txt = [c.iptv_login && `Login: ${c.iptv_login}`, c.iptv_password && `Senha: ${c.iptv_password}`].filter(Boolean).join("\n");
+    if (!txt) return toast.error("Sem credenciais cadastradas");
+    await navigator.clipboard.writeText(txt);
+    toast.success("Credenciais copiadas");
+  };
+  const openSupport = (c: Client) => {
+    const d = onlyDigits(c.phone);
+    const msg = encodeURIComponent(`Olá ${c.name}, como podemos ajudar?`);
+    if (!d) return toast.info("Suporte: cadastre um WhatsApp para iniciar atendimento");
+    window.open(`https://wa.me/${d.length <= 11 ? "55" + d : d}?text=${msg}`, "_blank");
+  };
+
 
   const filtered = useMemo(() => {
     if (!clients) return [];
@@ -416,23 +465,39 @@ function ClientesPage() {
                   <TableCell>{formatDateBR(c.due_date)}</TableCell>
                   <TableCell><Badge variant={statusVariant[c.status]}>{statusLabel[c.status]}</Badge></TableCell>
                   <TableCell className="text-right">
-                    <Button size="icon" variant="ghost" onClick={() => openEdit(c)}><Pencil className="size-4" /></Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button size="icon" variant="ghost"><Trash2 className="size-4 text-destructive" /></Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Remover {c.name}?</AlertDialogTitle>
-                          <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => remove.mutate(c.id)}>Remover</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <CircleAction title="Renovar" color="var(--kpi-emerald)" Icon={RefreshCw} onClick={() => renew.mutate(c)} />
+                      <CircleAction title="Mensagem (WhatsApp)" color="var(--kpi-emerald)" Icon={MessageCircle} onClick={() => openWhatsApp(c)} />
+                      <CircleAction title="Ligar" color="var(--kpi-cyan)" Icon={Phone} onClick={() => callPhone(c)} />
+                      <CircleAction title="Copiar credenciais" color="var(--kpi-cyan)" Icon={Copy} onClick={() => copyCredentials(c)} />
+                      <CircleAction title="Suporte" color="var(--kpi-emerald)" Icon={LifeBuoy} onClick={() => openSupport(c)} />
+                      <CircleAction
+                        title={c.status === "suspenso" || c.status === "cancelado" ? "Desbloquear" : "Bloquear"}
+                        color="var(--kpi-amber)"
+                        Icon={c.status === "suspenso" || c.status === "cancelado" ? Unlock : Lock}
+                        onClick={() => toggleBlock.mutate(c)}
+                      />
+                      <CircleAction title="Editar" color="var(--kpi-violet)" Icon={Pencil} onClick={() => openEdit(c)} />
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button type="button" title="Remover" className="size-9 inline-flex items-center justify-center rounded-full border-2 transition-colors hover:bg-[color-mix(in_oklab,var(--kpi-rose)_15%,transparent)]" style={{ borderColor: "color-mix(in oklab, var(--kpi-rose) 55%, transparent)", color: "var(--kpi-rose)" }}>
+                            <Trash2 className="size-4" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Remover {c.name}?</AlertDialogTitle>
+                            <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => remove.mutate(c.id)}>Remover</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </TableCell>
+
                 </TableRow>
               ))}
             </TableBody>
@@ -592,5 +657,20 @@ function ClientesPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function CircleAction({ title, color, Icon, onClick }: { title: string; color: string; Icon: ComponentType<SVGProps<SVGSVGElement>>; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={title}
+      onClick={onClick}
+      className="size-9 inline-flex items-center justify-center rounded-full border-2 transition-colors hover:bg-[color-mix(in_oklab,var(--pill-color)_15%,transparent)]"
+      style={{ ["--pill-color" as string]: color, borderColor: `color-mix(in oklab, ${color} 55%, transparent)`, color }}
+    >
+      <Icon className="size-4" />
+    </button>
   );
 }
