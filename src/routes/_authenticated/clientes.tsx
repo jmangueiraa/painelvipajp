@@ -44,6 +44,7 @@ const schema = z.object({
   server_id: z.string().optional(),
   price: z.string().min(1, "Informe o valor"),
   due_date: z.string().min(1, "Informe o vencimento"),
+  auto_charge: z.boolean(),
   notes: z.string().max(500).optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
