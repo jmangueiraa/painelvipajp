@@ -659,3 +659,18 @@ function ClientesPage() {
     </div>
   );
 }
+
+function CircleAction({ title, color, Icon, onClick }: { title: string; color: string; Icon: ComponentType<SVGProps<SVGSVGElement>>; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={title}
+      onClick={onClick}
+      className="size-9 inline-flex items-center justify-center rounded-full border-2 transition-colors hover:bg-[color-mix(in_oklab,var(--pill-color)_15%,transparent)]"
+      style={{ ["--pill-color" as string]: color, borderColor: `color-mix(in oklab, ${color} 55%, transparent)`, color }}
+    >
+      <Icon className="size-4" />
+    </button>
+  );
+}
