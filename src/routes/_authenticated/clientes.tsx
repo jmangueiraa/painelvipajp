@@ -210,11 +210,15 @@ function ClientesPage() {
   const intlPhone = (phone: string) => {
     const d = onlyDigits(phone);
     if (!d) return "";
-    return d.length <= 11 ? "55" + d : d;
+    if (d.length >= 12) return d; // já tem código do país
+    if (d.length === 10 || d.length === 11) return "55" + d; // BR sem DDI
+    return d;
   };
   const whatsappHref = (c: Client) => {
     const p = intlPhone(c.phone);
-    return p ? `https://wa.me/${p}` : "#";
+    if (!p) return "#";
+    const msg = encodeURIComponent(`Olá ${c.name}, tudo bem?`);
+    return `https://wa.me/${p}?text=${msg}`;
   };
   const telHref = (c: Client) => {
     const p = intlPhone(c.phone);
