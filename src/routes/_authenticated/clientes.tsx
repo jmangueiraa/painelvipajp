@@ -553,7 +553,7 @@ function ClientesPage() {
           <div className="space-y-4">
             <div className="rounded-xl border border-border p-3 text-sm text-muted-foreground space-y-2">
               <p>Baixe o modelo, preencha e envie. Colunas aceitas:</p>
-              <p className="text-xs"><strong>nome</strong>, <strong>whatsapp</strong>, <strong>vencimento</strong> (DD/MM/AAAA), login_iptv, senha_iptv, plano, <strong>valor</strong>, servidor, observacoes.</p>
+              <p className="text-xs"><strong>nome</strong>, <strong>whatsapp</strong>, <strong>vencimento</strong> (DD/MM/AAAA), login_iptv, senha_iptv, plano, <strong>valor</strong>, servidor, cobranca_automatica (sim/não), observacoes.</p>
               <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={downloadTemplate}>
                 <Download className="size-4" /> Baixar modelo
               </Button>
