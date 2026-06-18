@@ -172,11 +172,16 @@ function ConfiguracoesPage() {
 
   const changePassword = useMutation({
     mutationFn: async () => {
-      if (newPass.length < 6) throw new Error("A senha deve ter ao menos 6 caracteres");
+      if (!user?.email) throw new Error("Sem sessão");
+      if (!currentPass) throw new Error("Informe a senha atual");
+      if (newPass.length < 6) throw new Error("A nova senha deve ter ao menos 6 caracteres");
+      if (newPass !== confirmPass) throw new Error("A confirmação não confere");
+      const { error: signErr } = await supabase.auth.signInWithPassword({ email: user.email, password: currentPass });
+      if (signErr) throw new Error("Senha atual incorreta");
       const { error } = await supabase.auth.updateUser({ password: newPass });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Senha alterada"); setNewPass(""); },
+    onSuccess: () => { toast.success("Senha alterada"); setCurrentPass(""); setNewPass(""); setConfirmPass(""); },
     onError: (e: Error) => toast.error(e.message),
   });
 
