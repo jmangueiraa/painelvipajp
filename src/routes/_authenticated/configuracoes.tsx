@@ -182,7 +182,43 @@ function ConfiguracoesPage() {
     <div className="space-y-6">
       <PageHeader title="Configurações" description="Perfil e integrações" />
 
-      <SectionCard title="Perfil" description="Dados que aparecem no painel" icon={User} color="var(--kpi-violet)">
+      <SectionCard
+        title="Perfil"
+        description="Dados que aparecem no painel"
+        icon={User}
+        color="var(--kpi-violet)"
+        headerSlot={
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            title="Alterar foto de perfil"
+            disabled={uploadAvatar.isPending}
+            className="size-12 shrink-0 rounded-xl relative group overflow-hidden flex items-center justify-center shadow-[var(--shadow-glow)]"
+            style={{ backgroundImage: avatarSigned ? undefined : "var(--gradient-primary)" }}
+          >
+            {avatarSigned ? (
+              <img src={avatarSigned} alt="Foto de perfil" className="size-full object-cover" />
+            ) : (
+              <User className="size-6 text-primary-foreground" />
+            )}
+            <span className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Camera className="size-5 text-white" />
+            </span>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) uploadAvatar.mutate(f);
+                e.target.value = "";
+              }}
+            />
+          </button>
+        }
+      >
+
 
         <div className="grid md:grid-cols-2 gap-3">
           <div className="space-y-1">
