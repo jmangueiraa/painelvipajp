@@ -480,8 +480,8 @@ function ClientesPage() {
                       <CircleAction title="Editar" color="var(--kpi-violet)" Icon={Pencil} onClick={() => openEdit(c)} />
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <button type="button" title="Remover" className="size-9 inline-flex items-center justify-center rounded-full border-2 transition-colors hover:bg-[color-mix(in_oklab,var(--kpi-rose)_15%,transparent)]" style={{ borderColor: "color-mix(in oklab, var(--kpi-rose) 55%, transparent)", color: "var(--kpi-rose)" }}>
-                            <Trash2 className="size-4" />
+                          <button type="button" title="Remover" className="size-7 inline-flex items-center justify-center rounded-full border transition-colors hover:bg-[color-mix(in_oklab,var(--kpi-rose)_15%,transparent)]" style={{ borderColor: "color-mix(in oklab, var(--kpi-rose) 55%, transparent)", color: "var(--kpi-rose)" }}>
+                            <Trash2 className="size-3.5" />
                           </button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
