@@ -208,6 +208,130 @@ function ClientesPage() {
 
   const cobranca = (label: string) => toast.info(`${label}: envio em massa será habilitado em breve.`);
 
+  const downloadTemplate = () => {
+    const headers = [
+      "nome", "whatsapp", "email", "documento",
+      "login_iptv", "senha_iptv", "valor", "vencimento",
+      "status", "cobranca_automatica", "plano", "servidor", "observacoes",
+    ];
+    const example = [
+      "João da Silva", "(11) 99999-9999", "joao@email.com", "",
+      "joao123", "senha123", "49,90", "31/12/2026",
+      "ativo", "sim", "", "", "Cliente exemplo",
+    ];
+    const ws = XLSX.utils.aoa_to_sheet([headers, example]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Clientes");
+    XLSX.writeFile(wb, "modelo-clientes.xlsx");
+  };
+
+  const parseDateCell = (v: unknown): string | null => {
+    if (v == null || v === "") return null;
+    if (v instanceof Date) return v.toISOString().slice(0, 10);
+    const s = String(v).trim();
+    const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if (br) {
+      const [, d, m, y] = br;
+      const yyyy = y.length === 2 ? `20${y}` : y;
+      return `${yyyy}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    }
+    const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return s.slice(0, 10);
+    const d2 = new Date(s);
+    if (!isNaN(d2.getTime())) return d2.toISOString().slice(0, 10);
+    return null;
+  };
+
+  const norm = (s: unknown) => String(s ?? "").trim().toLowerCase();
+
+  const handleImportFile = async (file: File) => {
+    if (!user) { toast.error("Sem sessão"); return; }
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array", cellDates: true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: "" });
+      if (rows.length === 0) { toast.error("Planilha vazia"); setImporting(false); return; }
+
+      const planByName = new Map((plans ?? []).map((p) => [p.name.trim().toLowerCase(), p]));
+      const serverByName = new Map((servers ?? []).map((s) => [s.name.trim().toLowerCase(), s]));
+
+      const errors: string[] = [];
+      const payloads: Array<Record<string, unknown>> = [];
+
+      rows.forEach((r, idx) => {
+        const lineNum = idx + 2;
+        const name = String(r["nome"] ?? r["name"] ?? "").trim();
+        const phone = String(r["whatsapp"] ?? r["telefone"] ?? r["phone"] ?? "").trim();
+        if (!name) { errors.push(`Linha ${lineNum}: nome obrigatório`); return; }
+        if (!phone) { errors.push(`Linha ${lineNum}: whatsapp obrigatório`); return; }
+
+        const priceRaw = String(r["valor"] ?? r["price"] ?? "").trim();
+        const price_cents = priceRaw ? parseBrlToCents(priceRaw) : 0;
+        if (!price_cents) { errors.push(`Linha ${lineNum}: valor inválido`); return; }
+
+        const due = parseDateCell(r["vencimento"] ?? r["due_date"]);
+        if (!due) { errors.push(`Linha ${lineNum}: vencimento inválido (use DD/MM/AAAA)`); return; }
+
+        const statusRaw = norm(r["status"]) as ClientStatus;
+        const status: ClientStatus = (["ativo","vencido","suspenso","cancelado"].includes(statusRaw) ? statusRaw : "ativo") as ClientStatus;
+
+        const autoRaw = norm(r["cobranca_automatica"] ?? r["auto_charge"]);
+        const auto_charge = !["nao","não","no","false","0",""].includes(autoRaw);
+
+        const planName = norm(r["plano"]);
+        const plan_id = planName ? planByName.get(planName)?.id ?? null : null;
+        const serverName = norm(r["servidor"]);
+        const server_id = serverName ? serverByName.get(serverName)?.id ?? null : null;
+
+        payloads.push({
+          name,
+          phone: formatPhone(phone),
+          email: String(r["email"] ?? "").trim() || null,
+          doc: String(r["documento"] ?? r["doc"] ?? "").trim() || null,
+          iptv_login: String(r["login_iptv"] ?? r["iptv_login"] ?? "").trim() || null,
+          iptv_password: String(r["senha_iptv"] ?? r["iptv_password"] ?? "").trim() || null,
+          plan_id,
+          server_id,
+          price_cents,
+          due_date: due,
+          status: computeStatus(due, status),
+          auto_charge,
+          notes: String(r["observacoes"] ?? r["notes"] ?? "").trim() || null,
+          user_id: user.id,
+        });
+      });
+
+      let ok = 0;
+      if (payloads.length) {
+        const chunkSize = 100;
+        for (let i = 0; i < payloads.length; i += chunkSize) {
+          const slice = payloads.slice(i, i + chunkSize);
+          const { error } = await supabase.from("clients").insert(slice);
+          if (error) {
+            errors.push(`Lote ${Math.floor(i/chunkSize)+1}: ${translateError(error)}`);
+          } else {
+            ok += slice.length;
+          }
+        }
+      }
+
+      setImportResult({ ok, fail: rows.length - ok, errors });
+      if (ok > 0) {
+        toast.success(`${ok} cliente(s) importado(s)`);
+        qc.invalidateQueries({ queryKey: ["clients"] });
+      }
+      if (ok === 0 && errors.length) toast.error("Nenhum cliente foi importado");
+    } catch (e) {
+      toast.error(translateError(e as Error));
+    } finally {
+      setImporting(false);
+    }
+  };
+
+
   return (
     <div className="space-y-6">
       <PageHeader
