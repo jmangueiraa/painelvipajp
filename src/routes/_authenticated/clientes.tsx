@@ -660,17 +660,20 @@ function ClientesPage() {
   );
 }
 
-function CircleAction({ title, color, Icon, onClick }: { title: string; color: string; Icon: ComponentType<SVGProps<SVGSVGElement>>; onClick: () => void }) {
+function CircleAction({ title, color, Icon, onClick, href }: { title: string; color: string; Icon: ComponentType<SVGProps<SVGSVGElement>>; onClick?: () => void; href?: string }) {
+  const className = "size-7 inline-flex items-center justify-center rounded-full border transition-colors hover:bg-[color-mix(in_oklab,var(--pill-color)_15%,transparent)]";
+  const style = { ["--pill-color" as string]: color, borderColor: `color-mix(in oklab, ${color} 55%, transparent)`, color } as React.CSSProperties;
+  if (href) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" title={title} aria-label={title} className={className} style={style}>
+        <Icon className="size-3.5" />
+      </a>
+    );
+  }
   return (
-    <button
-      type="button"
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-      className="size-7 inline-flex items-center justify-center rounded-full border transition-colors hover:bg-[color-mix(in_oklab,var(--pill-color)_15%,transparent)]"
-      style={{ ["--pill-color" as string]: color, borderColor: `color-mix(in oklab, ${color} 55%, transparent)`, color }}
-    >
+    <button type="button" title={title} aria-label={title} onClick={onClick} className={className} style={style}>
       <Icon className="size-3.5" />
     </button>
   );
 }
+
