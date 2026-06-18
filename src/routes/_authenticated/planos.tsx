@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { translateError } from "@/lib/translate-error";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -95,7 +96,7 @@ function PlanosPage() {
       setQuickName(""); setQuickPrice(""); setQuickDuration("30");
       qc.invalidateQueries({ queryKey: ["plans"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(translateError(e)),
   });
 
   const saveEdit = useMutation({
@@ -115,7 +116,7 @@ function PlanosPage() {
       qc.invalidateQueries({ queryKey: ["plans"] });
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(translateError(e)),
   });
 
   const remove = useMutation({
@@ -127,7 +128,7 @@ function PlanosPage() {
       toast.success("Plano excluído");
       qc.invalidateQueries({ queryKey: ["plans"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(translateError(e)),
   });
 
   return (

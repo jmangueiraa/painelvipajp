@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { translateError } from "@/lib/translate-error";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ function ResetPasswordPage() {
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
-    if (error) return toast.error("Erro ao redefinir", { description: error.message });
+    if (error) return toast.error("Erro ao redefinir", { description: translateError(error) });
     toast.success("Senha atualizada!");
     navigate({ to: "/dashboard" });
   }

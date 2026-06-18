@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { translateError } from "@/lib/translate-error";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -91,7 +92,7 @@ function ConfiguracoesPage() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Foto atualizada"); qc.invalidateQueries({ queryKey: ["profile"] }); },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(translateError(e)),
   });
 
   const { data: settings } = useQuery({
@@ -147,7 +148,7 @@ function ConfiguracoesPage() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Perfil atualizado"); qc.invalidateQueries({ queryKey: ["profile"] }); },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(translateError(e)),
   });
 
   type SettingsPatch = Partial<{
@@ -167,7 +168,7 @@ function ConfiguracoesPage() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Salvo"); qc.invalidateQueries({ queryKey: ["settings"] }); },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(translateError(e)),
   });
 
   const changePassword = useMutation({
@@ -182,7 +183,7 @@ function ConfiguracoesPage() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Senha alterada"); setCurrentPass(""); setNewPass(""); setConfirmPass(""); },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(translateError(e)),
   });
 
   return (

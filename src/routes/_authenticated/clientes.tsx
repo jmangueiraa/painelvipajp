@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { translateError } from "@/lib/translate-error";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -165,7 +166,7 @@ function ClientesPage() {
       qc.invalidateQueries({ queryKey: ["clients"] });
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(translateError(e)),
   });
 
   const remove = useMutation({
@@ -177,7 +178,7 @@ function ClientesPage() {
       toast.success("Cliente removido");
       qc.invalidateQueries({ queryKey: ["clients"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(translateError(e)),
   });
 
   const filtered = useMemo(() => {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { translateError } from "@/lib/translate-error";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -83,7 +84,7 @@ function SidebarAvatar({ collapsed }: { collapsed: boolean }) {
       toast.success("Foto atualizada");
       qc.invalidateQueries({ queryKey: ["profile"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(translateError(e)),
   });
 
   return (

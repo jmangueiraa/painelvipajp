@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { translateError } from "@/lib/translate-error";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -54,7 +55,7 @@ function ServidoresPage() {
       setName(""); setCost("");
       qc.invalidateQueries({ queryKey: ["servers"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(translateError(e)),
   });
 
   const remove = useMutation({
@@ -66,7 +67,7 @@ function ServidoresPage() {
       toast.success("Servidor removido");
       qc.invalidateQueries({ queryKey: ["servers"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(translateError(e)),
   });
 
   return (
