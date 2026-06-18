@@ -21,21 +21,23 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
 });
 
 function SectionCard({
-  title, description, icon: Icon, color, children,
-}: { title: string; description?: string; icon: React.ElementType; color: string; children: React.ReactNode }) {
+  title, description, icon: Icon, color, children, headerSlot,
+}: { title: string; description?: string; icon: React.ElementType; color: string; children: React.ReactNode; headerSlot?: React.ReactNode }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-start gap-3 space-y-0">
-        <div
-          className="size-10 rounded-xl grid place-items-center shrink-0"
-          style={{
-            background: `color-mix(in oklab, ${color} 15%, transparent)`,
-            color,
-            border: `1px solid color-mix(in oklab, ${color} 45%, transparent)`,
-          }}
-        >
-          <Icon className="size-5" />
-        </div>
+        {headerSlot ?? (
+          <div
+            className="size-10 rounded-xl grid place-items-center shrink-0"
+            style={{
+              background: `color-mix(in oklab, ${color} 15%, transparent)`,
+              color,
+              border: `1px solid color-mix(in oklab, ${color} 45%, transparent)`,
+            }}
+          >
+            <Icon className="size-5" />
+          </div>
+        )}
         <div className="min-w-0">
           <CardTitle>{title}</CardTitle>
           {description && <CardDescription>{description}</CardDescription>}
