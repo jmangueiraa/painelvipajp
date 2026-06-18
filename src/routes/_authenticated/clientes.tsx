@@ -10,6 +10,7 @@ import { Plus, Pencil, Trash2, Search, CalendarCheck, AlertTriangle, CalendarClo
 import * as XLSX from "xlsx";
 
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { brl, parseBrlToCents, formatDateBR, todayISO, addDaysISO, formatPhone } from "@/lib/format";
 import { statusLabel, statusVariant, computeStatus, type ClientStatus } from "@/lib/status";
 import { useAuth } from "@/hooks/use-auth";
@@ -259,8 +260,7 @@ function ClientesPage() {
       const serverByName = new Map((servers ?? []).map((s) => [s.name.trim().toLowerCase(), s]));
 
       const errors: string[] = [];
-      type ClientInsert = Parameters<ReturnType<typeof supabase.from<"clients">>["insert"]>[0] extends readonly (infer U)[] ? U : never;
-      const payloads: ClientInsert[] = [];
+      const payloads: TablesInsert<"clients">[] = [];
 
       rows.forEach((r, idx) => {
         const lineNum = idx + 2;
