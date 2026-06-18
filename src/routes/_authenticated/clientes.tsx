@@ -205,14 +205,14 @@ function ClientesPage() {
 
   const downloadTemplate = () => {
     const headers = [
-      "nome", "whatsapp", "email", "documento",
-      "login_iptv", "senha_iptv", "valor", "vencimento",
-      "status", "cobranca_automatica", "plano", "servidor", "observacoes",
+      "nome", "whatsapp", "vencimento",
+      "login_iptv", "senha_iptv",
+      "plano", "valor", "servidor", "observacoes",
     ];
     const example = [
-      "João da Silva", "(11) 99999-9999", "joao@email.com", "",
-      "joao123", "senha123", "49,90", "31/12/2026",
-      "ativo", "sim", "", "", "Cliente exemplo",
+      "João da Silva", "(11) 99999-9999", "31/12/2026",
+      "joao123", "senha123",
+      "", "49,90", "", "Cliente exemplo",
     ];
     const ws = XLSX.utils.aoa_to_sheet([headers, example]);
     const wb = XLSX.utils.book_new();
