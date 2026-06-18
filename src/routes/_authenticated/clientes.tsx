@@ -28,6 +28,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 
 export const Route = createFileRoute("/_authenticated/clientes")({
@@ -44,6 +45,7 @@ const schema = z.object({
   server_id: z.string().optional(),
   price: z.string().min(1, "Informe o valor"),
   due_date: z.string().min(1, "Informe o vencimento"),
+  auto_charge: z.boolean(),
   notes: z.string().max(500).optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
@@ -101,7 +103,7 @@ function ClientesPage() {
     defaultValues: {
       name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
-      notes: "",
+      auto_charge: true, notes: "",
     },
   });
 
@@ -110,7 +112,7 @@ function ClientesPage() {
     form.reset({
       name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
-      notes: "",
+      auto_charge: true, notes: "",
     });
     setOpen(true);
   };
@@ -121,7 +123,7 @@ function ClientesPage() {
       iptv_login: c.iptv_login ?? "", iptv_password: c.iptv_password ?? "",
       plan_id: c.plan_id ?? undefined, server_id: c.server_id ?? undefined,
       price: (c.price_cents / 100).toFixed(2).replace(".", ","),
-      due_date: c.due_date, notes: c.notes ?? "",
+      due_date: c.due_date, auto_charge: c.auto_charge, notes: c.notes ?? "",
     });
     setOpen(true);
   };
@@ -148,7 +150,7 @@ function ClientesPage() {
         price_cents: parseBrlToCents(values.price),
         due_date: values.due_date,
         status: computeStatus(values.due_date, "ativo"),
-        auto_charge: true,
+        auto_charge: values.auto_charge,
         notes: values.notes?.trim() || null,
         user_id: user.id,
       };
@@ -207,12 +209,12 @@ function ClientesPage() {
     const headers = [
       "nome", "whatsapp", "vencimento",
       "login_iptv", "senha_iptv",
-      "plano", "valor", "servidor", "observacoes",
+      "plano", "valor", "servidor", "cobranca_automatica", "observacoes",
     ];
     const example = [
       "João da Silva", "(11) 99999-9999", "31/12/2026",
       "joao123", "senha123",
-      "", "49,90", "", "Cliente exemplo",
+      "", "49,90", "", "sim", "Cliente exemplo",
     ];
     const ws = XLSX.utils.aoa_to_sheet([headers, example]);
     const wb = XLSX.utils.book_new();
@@ -275,6 +277,9 @@ function ClientesPage() {
         const serverName = norm(r["servidor"]);
         const server_id = serverName ? serverByName.get(serverName)?.id ?? null : null;
 
+        const autoRaw = norm(r["cobranca_automatica"] ?? r["auto_charge"]);
+        const auto_charge = autoRaw === "" ? true : !["nao","não","no","false","0"].includes(autoRaw);
+
         payloads.push({
           name,
           phone: formatPhone(phone),
@@ -285,7 +290,7 @@ function ClientesPage() {
           price_cents,
           due_date: due,
           status: computeStatus(due, "ativo"),
-          auto_charge: true,
+          auto_charge,
           notes: String(r["observacoes"] ?? r["notes"] ?? "").trim() || null,
           user_id: user.id,
         });
@@ -518,6 +523,17 @@ function ClientesPage() {
                   <FormControl><Textarea rows={3} {...field} /></FormControl>
                 </FormItem>
               )} />
+              <FormField control={form.control} name="auto_charge" render={({ field }) => (
+                <FormItem className="flex items-start justify-between rounded-xl border border-border p-3 gap-3">
+                  <div className="min-w-0">
+                    <FormLabel className="mb-0">Cobrança Automática</FormLabel>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Quando desativada, este cliente é ignorado no envio automático de cobranças vencidas.
+                    </p>
+                  </div>
+                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                </FormItem>
+              )} />
               <DialogFooter>
                 <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
                 <Button type="submit" className="btn-premium rounded-full" disabled={save.isPending}>
@@ -537,7 +553,7 @@ function ClientesPage() {
           <div className="space-y-4">
             <div className="rounded-xl border border-border p-3 text-sm text-muted-foreground space-y-2">
               <p>Baixe o modelo, preencha e envie. Colunas aceitas:</p>
-              <p className="text-xs"><strong>nome</strong>, <strong>whatsapp</strong>, <strong>vencimento</strong> (DD/MM/AAAA), login_iptv, senha_iptv, plano, <strong>valor</strong>, servidor, observacoes.</p>
+              <p className="text-xs"><strong>nome</strong>, <strong>whatsapp</strong>, <strong>vencimento</strong> (DD/MM/AAAA), login_iptv, senha_iptv, plano, <strong>valor</strong>, servidor, cobranca_automatica (sim/não), observacoes.</p>
               <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={downloadTemplate}>
                 <Download className="size-4" /> Baixar modelo
               </Button>
