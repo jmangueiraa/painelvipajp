@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { User, MessageSquare, KeyRound, LifeBuoy, Lock, Camera } from "lucide-react";
+import { User, MessageSquare, KeyRound, LifeBuoy, Camera } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -117,7 +117,9 @@ function ConfiguracoesPage() {
   const [supportMessage, setSupportMessage] = useState("");
   const [subExpires, setSubExpires] = useState("");
   const [subMonthly, setSubMonthly] = useState("");
+  const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
 
   useEffect(() => {
     if (profile) {
@@ -170,11 +172,16 @@ function ConfiguracoesPage() {
 
   const changePassword = useMutation({
     mutationFn: async () => {
-      if (newPass.length < 6) throw new Error("A senha deve ter ao menos 6 caracteres");
+      if (!user?.email) throw new Error("Sem sessão");
+      if (!currentPass) throw new Error("Informe a senha atual");
+      if (newPass.length < 6) throw new Error("A nova senha deve ter ao menos 6 caracteres");
+      if (newPass !== confirmPass) throw new Error("A confirmação não confere");
+      const { error: signErr } = await supabase.auth.signInWithPassword({ email: user.email, password: currentPass });
+      if (signErr) throw new Error("Senha atual incorreta");
       const { error } = await supabase.auth.updateUser({ password: newPass });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Senha alterada"); setNewPass(""); },
+    onSuccess: () => { toast.success("Senha alterada"); setCurrentPass(""); setNewPass(""); setConfirmPass(""); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -315,12 +322,20 @@ function ConfiguracoesPage() {
         </Button>
       </SectionCard>
 
-      <SectionCard title="Alterar senha" icon={Lock} color="var(--kpi-rose)">
+      <SectionCard title="Alterar senha" icon={KeyRound} color="var(--kpi-violet)">
+        <div className="space-y-1">
+          <Label>Senha atual</Label>
+          <Input type="password" value={currentPass} onChange={(e) => setCurrentPass(e.target.value)} />
+        </div>
         <div className="space-y-1">
           <Label>Nova senha</Label>
           <Input type="password" value={newPass} onChange={(e) => setNewPass(e.target.value)} />
         </div>
-        <Button className="btn-premium rounded-full" onClick={() => changePassword.mutate()} disabled={changePassword.isPending}>Alterar senha</Button>
+        <div className="space-y-1">
+          <Label>Confirmar nova senha</Label>
+          <Input type="password" value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} />
+        </div>
+        <Button className="btn-premium rounded-full" onClick={() => changePassword.mutate()} disabled={changePassword.isPending}>Salvar senha</Button>
       </SectionCard>
     </div>
   );
