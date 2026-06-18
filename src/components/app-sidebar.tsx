@@ -1,5 +1,10 @@
+import { useEffect, useRef, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import {
+  LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown, Camera,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,6 +17,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -23,6 +30,95 @@ const items = [
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
 
+function SidebarAvatar({ collapsed }: { collapsed: boolean }) {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [signed, setSigned] = useState<string>("");
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      if (!profile?.avatar_url) { setSigned(""); return; }
+      const { data } = await supabase.storage.from("avatars").createSignedUrl(profile.avatar_url, 60 * 60);
+      if (!cancelled) setSigned(data?.signedUrl ?? "");
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [profile?.avatar_url]);
+
+  const upload = useMutation({
+    mutationFn: async (file: File) => {
+      if (!user) throw new Error("Sem sessão");
+      if (!file.type.startsWith("image/")) throw new Error("Selecione uma imagem");
+      if (file.size > 5 * 1024 * 1024) throw new Error("Imagem muito grande (máx 5MB)");
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
+        upsert: true,
+        contentType: file.type,
+      });
+      if (upErr) throw upErr;
+      if (profile?.avatar_url) {
+        await supabase.storage.from("avatars").remove([profile.avatar_url]).catch(() => {});
+      }
+      const { error } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Foto atualizada");
+      qc.invalidateQueries({ queryKey: ["profile"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <button
+      type="button"
+      onClick={() => fileRef.current?.click()}
+      title="Alterar foto de perfil"
+      className="size-9 shrink-0 rounded-xl relative group overflow-hidden flex items-center justify-center shadow-[var(--shadow-glow)]"
+      style={{ backgroundImage: signed ? undefined : "var(--gradient-primary)" }}
+      disabled={upload.isPending}
+    >
+      {signed ? (
+        <img src={signed} alt="Foto de perfil" className="size-full object-cover" />
+      ) : (
+        <Crown className="size-4 text-primary-foreground" />
+      )}
+      <span className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        <Camera className="size-4 text-white" />
+      </span>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) upload.mutate(f);
+          e.target.value = "";
+        }}
+      />
+      {collapsed ? null : null}
+    </button>
+  );
+}
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -32,9 +128,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border/40">
         <div className="flex items-center gap-2 px-2 py-2">
-          <div className="size-9 shrink-0 rounded-xl bg-[image:var(--gradient-primary)] flex items-center justify-center shadow-[var(--shadow-glow)]">
-            <Crown className="size-4 text-primary-foreground" />
-          </div>
+          <SidebarAvatar collapsed={collapsed} />
           {!collapsed && (
             <div className="flex flex-col leading-tight min-w-0">
               <span className="font-bold text-sidebar-foreground truncate">Painel VIP</span>

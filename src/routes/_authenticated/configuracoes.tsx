@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { User, MessageSquare, KeyRound, LifeBuoy, Lock, Upload, Trash2 } from "lucide-react";
+import { User, MessageSquare, KeyRound, LifeBuoy, Lock } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -54,55 +54,10 @@ function ConfiguracoesPage() {
     queryKey: ["profile", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("full_name,company_name,avatar_url").eq("id", user!.id).maybeSingle();
+      const { data, error } = await supabase.from("profiles").select("full_name,company_name").eq("id", user!.id).maybeSingle();
       if (error) throw error;
       return data;
     },
-  });
-
-  const [avatarUrl, setAvatarUrl] = useState<string>("");
-  const [avatarSigned, setAvatarSigned] = useState<string>("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function loadSigned() {
-      if (!profile?.avatar_url) { setAvatarSigned(""); return; }
-      const { data } = await supabase.storage.from("avatars").createSignedUrl(profile.avatar_url, 60 * 60);
-      if (!cancelled) setAvatarSigned(data?.signedUrl ?? "");
-    }
-    setAvatarUrl(profile?.avatar_url ?? "");
-    loadSigned();
-    return () => { cancelled = true; };
-  }, [profile?.avatar_url]);
-
-  const uploadAvatar = useMutation({
-    mutationFn: async (file: File) => {
-      if (!user) throw new Error("Sem sessão");
-      if (!file.type.startsWith("image/")) throw new Error("Selecione uma imagem");
-      if (file.size > 5 * 1024 * 1024) throw new Error("Imagem muito grande (máx 5MB)");
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
-      if (upErr) throw upErr;
-      if (avatarUrl) await supabase.storage.from("avatars").remove([avatarUrl]).catch(() => {});
-      const { error } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", user.id);
-      if (error) throw error;
-      return path;
-    },
-    onSuccess: () => { toast.success("Foto atualizada"); qc.invalidateQueries({ queryKey: ["profile"] }); },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const removeAvatar = useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error("Sem sessão");
-      if (avatarUrl) await supabase.storage.from("avatars").remove([avatarUrl]).catch(() => {});
-      const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", user.id);
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success("Foto removida"); qc.invalidateQueries({ queryKey: ["profile"] }); },
-    onError: (e: Error) => toast.error(e.message),
   });
 
   const { data: settings } = useQuery({
@@ -194,52 +149,6 @@ function ConfiguracoesPage() {
       <PageHeader title="Configurações" description="Perfil e integrações" />
 
       <SectionCard title="Perfil" description="Dados que aparecem no painel" icon={User} color="var(--kpi-violet)">
-        <div className="flex items-center gap-4">
-          <div className="size-20 rounded-full overflow-hidden border border-border bg-muted grid place-items-center shrink-0">
-            {avatarSigned ? (
-              <img src={avatarSigned} alt="Foto de perfil" className="size-full object-cover" />
-            ) : (
-              <User className="size-8 text-muted-foreground" />
-            )}
-          </div>
-          <div className="flex flex-col gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) uploadAvatar.mutate(f);
-                e.target.value = "";
-              }}
-            />
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                className="rounded-full"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadAvatar.isPending}
-              >
-                <Upload className="size-4 mr-2" />
-                {uploadAvatar.isPending ? "Enviando..." : "Enviar foto"}
-              </Button>
-              {avatarUrl && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="rounded-full text-rose-400 hover:text-rose-300"
-                  onClick={() => removeAvatar.mutate()}
-                  disabled={removeAvatar.isPending}
-                >
-                  <Trash2 className="size-4 mr-2" /> Remover
-                </Button>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">PNG, JPG ou WEBP até 5MB.</p>
-          </div>
-        </div>
 
         <div className="grid md:grid-cols-2 gap-3">
           <div className="space-y-1">
