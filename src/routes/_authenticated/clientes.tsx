@@ -38,16 +38,12 @@ export const Route = createFileRoute("/_authenticated/clientes")({
 const schema = z.object({
   name: z.string().trim().min(2, "Informe o nome").max(120),
   phone: z.string().trim().min(8, "Telefone inválido").max(20),
-  email: z.string().trim().email("Email inválido").max(255).optional().or(z.literal("")),
-  doc: z.string().trim().max(20).optional().or(z.literal("")),
   iptv_login: z.string().trim().max(80).optional().or(z.literal("")),
   iptv_password: z.string().trim().max(80).optional().or(z.literal("")),
   plan_id: z.string().optional(),
   server_id: z.string().optional(),
   price: z.string().min(1, "Informe o valor"),
   due_date: z.string().min(1, "Informe o vencimento"),
-  status: z.enum(["ativo", "vencido", "suspenso", "cancelado"]),
-  auto_charge: z.boolean(),
   notes: z.string().max(500).optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
