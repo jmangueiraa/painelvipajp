@@ -117,7 +117,9 @@ function ConfiguracoesPage() {
   const [supportMessage, setSupportMessage] = useState("");
   const [subExpires, setSubExpires] = useState("");
   const [subMonthly, setSubMonthly] = useState("");
+  const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
 
   useEffect(() => {
     if (profile) {
