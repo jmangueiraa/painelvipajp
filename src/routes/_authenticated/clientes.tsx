@@ -567,6 +567,53 @@ function ClientesPage() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={importOpen} onOpenChange={(o) => { if (!importing) setImportOpen(o); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Importar clientes via Excel</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-xl border border-border p-3 text-sm text-muted-foreground space-y-2">
+              <p>Baixe o modelo, preencha e envie. Colunas aceitas:</p>
+              <p className="text-xs"><strong>nome</strong>, <strong>whatsapp</strong>, email, documento, login_iptv, senha_iptv, <strong>valor</strong>, <strong>vencimento</strong> (DD/MM/AAAA), status, cobranca_automatica (sim/não), plano, servidor, observacoes.</p>
+              <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={downloadTemplate}>
+                <Download className="size-4" /> Baixar modelo
+              </Button>
+            </div>
+
+            <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border p-6 cursor-pointer hover:border-primary/50 transition">
+              <Upload className="size-6 text-muted-foreground" />
+              <span className="text-sm font-medium">{importing ? "Importando..." : "Clique para selecionar arquivo .xlsx"}</span>
+              <input
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                className="hidden"
+                disabled={importing}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleImportFile(f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+
+            {importResult && (
+              <div className="rounded-xl border border-border p-3 text-sm space-y-2">
+                <p><strong className="text-[color:var(--kpi-emerald)]">{importResult.ok}</strong> importado(s) · <strong className="text-destructive">{importResult.fail}</strong> com erro</p>
+                {importResult.errors.length > 0 && (
+                  <ul className="text-xs text-muted-foreground max-h-40 overflow-y-auto list-disc pl-4 space-y-0.5">
+                    {importResult.errors.slice(0, 50).map((er, i) => <li key={i}>{er}</li>)}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setImportOpen(false)} disabled={importing}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
