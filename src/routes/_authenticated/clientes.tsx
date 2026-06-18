@@ -523,6 +523,17 @@ function ClientesPage() {
                   <FormControl><Textarea rows={3} {...field} /></FormControl>
                 </FormItem>
               )} />
+              <FormField control={form.control} name="auto_charge" render={({ field }) => (
+                <FormItem className="flex items-start justify-between rounded-xl border border-border p-3 gap-3">
+                  <div className="min-w-0">
+                    <FormLabel className="mb-0">Cobrança Automática</FormLabel>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Quando desativada, este cliente é ignorado no envio automático de cobranças vencidas.
+                    </p>
+                  </div>
+                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                </FormItem>
+              )} />
               <DialogFooter>
                 <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
                 <Button type="submit" className="btn-premium rounded-full" disabled={save.isPending}>
