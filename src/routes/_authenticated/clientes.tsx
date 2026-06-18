@@ -70,6 +70,9 @@ function ClientesPage() {
   const [editing, setEditing] = useState<Client | null>(null);
   const [q, setQ] = useState("");
   const [chip, setChip] = useState<FilterChip>("todos");
+  const [importOpen, setImportOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ ok: number; fail: number; errors: string[] } | null>(null);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
