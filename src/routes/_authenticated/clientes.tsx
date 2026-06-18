@@ -183,6 +183,54 @@ function ClientesPage() {
     onError: (e: Error) => toast.error(translateError(e)),
   });
 
+  const renew = useMutation({
+    mutationFn: async (c: Client) => {
+      const plan = plans?.find((p) => p.id === c.plan_id);
+      const days = plan?.duration_days ?? 30;
+      const base = c.due_date && c.due_date >= todayISO() ? c.due_date : todayISO();
+      const newDue = addDaysISO(base, days);
+      const { error } = await supabase.from("clients").update({ due_date: newDue, status: computeStatus(newDue, "ativo") }).eq("id", c.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Cliente renovado"); qc.invalidateQueries({ queryKey: ["clients"] }); },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  const toggleBlock = useMutation({
+    mutationFn: async (c: Client) => {
+      const next: ClientStatus = c.status === "suspenso" || c.status === "cancelado" ? computeStatus(c.due_date, "ativo") : "suspenso";
+      const { error } = await supabase.from("clients").update({ status: next }).eq("id", c.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Status atualizado"); qc.invalidateQueries({ queryKey: ["clients"] }); },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  const onlyDigits = (s: string) => s.replace(/\D/g, "");
+  const openWhatsApp = (c: Client) => {
+    const d = onlyDigits(c.phone);
+    if (!d) return toast.error("WhatsApp inválido");
+    window.open(`https://wa.me/${d.length <= 11 ? "55" + d : d}`, "_blank");
+  };
+  const callPhone = (c: Client) => {
+    const d = onlyDigits(c.phone);
+    if (!d) return toast.error("Telefone inválido");
+    window.location.href = `tel:+${d.length <= 11 ? "55" + d : d}`;
+  };
+  const copyCredentials = async (c: Client) => {
+    const txt = [c.iptv_login && `Login: ${c.iptv_login}`, c.iptv_password && `Senha: ${c.iptv_password}`].filter(Boolean).join("\n");
+    if (!txt) return toast.error("Sem credenciais cadastradas");
+    await navigator.clipboard.writeText(txt);
+    toast.success("Credenciais copiadas");
+  };
+  const openSupport = (c: Client) => {
+    const d = onlyDigits(c.phone);
+    const msg = encodeURIComponent(`Olá ${c.name}, como podemos ajudar?`);
+    if (!d) return toast.info("Suporte: cadastre um WhatsApp para iniciar atendimento");
+    window.open(`https://wa.me/${d.length <= 11 ? "55" + d : d}?text=${msg}`, "_blank");
+  };
+
+
   const filtered = useMemo(() => {
     if (!clients) return [];
     const term = q.trim().toLowerCase();
