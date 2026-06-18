@@ -194,6 +194,53 @@ function ConfiguracoesPage() {
       <PageHeader title="Configurações" description="Perfil e integrações" />
 
       <SectionCard title="Perfil" description="Dados que aparecem no painel" icon={User} color="var(--kpi-violet)">
+        <div className="flex items-center gap-4">
+          <div className="size-20 rounded-full overflow-hidden border border-border bg-muted grid place-items-center shrink-0">
+            {avatarSigned ? (
+              <img src={avatarSigned} alt="Foto de perfil" className="size-full object-cover" />
+            ) : (
+              <User className="size-8 text-muted-foreground" />
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) uploadAvatar.mutate(f);
+                e.target.value = "";
+              }}
+            />
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                className="rounded-full"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadAvatar.isPending}
+              >
+                <Upload className="size-4 mr-2" />
+                {uploadAvatar.isPending ? "Enviando..." : "Enviar foto"}
+              </Button>
+              {avatarUrl && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-full text-rose-400 hover:text-rose-300"
+                  onClick={() => removeAvatar.mutate()}
+                  disabled={removeAvatar.isPending}
+                >
+                  <Trash2 className="size-4 mr-2" /> Remover
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">PNG, JPG ou WEBP até 5MB.</p>
+          </div>
+        </div>
+
         <div className="grid md:grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label>Email</Label>
