@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { translateError } from "@/lib/translate-error";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,7 @@ function AuthPage() {
       password: String(fd.get("password")),
     });
     setLoading(false);
-    if (error) return toast.error("Não foi possível entrar", { description: error.message });
+    if (error) return toast.error("Não foi possível entrar", { description: translateError(error) });
     toast.success("Bem-vindo!");
     navigate({ to: "/dashboard" });
   }
@@ -57,7 +58,7 @@ function AuthPage() {
       },
     });
     setLoading(false);
-    if (error) return toast.error("Erro ao criar conta", { description: error.message });
+    if (error) return toast.error("Erro ao criar conta", { description: translateError(error) });
     toast.success("Conta criada!", { description: "Verifique seu e-mail se a confirmação estiver ativa." });
     setTab("login");
   }
@@ -70,7 +71,7 @@ function AuthPage() {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
-    if (error) return toast.error("Erro", { description: error.message });
+    if (error) return toast.error("Erro", { description: translateError(error) });
     toast.success("E-mail enviado", { description: "Verifique sua caixa de entrada para redefinir a senha." });
     setForgotOpen(false);
   }
