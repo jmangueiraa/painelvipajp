@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/financeiro")({
 });
 
 type Payment = { id: string; amount_cents: number; paid_at: string; method: string | null; client_id: string };
-type Client = { id: string; name: string; price_cents: number; server_id: string | null };
+type Client = { id: string; name: string; price_cents: number; server_id: string | null; status: "ativo" | "vencido" | "suspenso" | "cancelado" };
 type Server = { id: string; credit_cost_cents: number };
 
 function FinanceiroPage() {
@@ -39,7 +39,7 @@ function FinanceiroPage() {
   const { data: clients = [] } = useQuery({
     queryKey: ["clients", "fin"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("id,name,price_cents,server_id");
+      const { data, error } = await supabase.from("clients").select("id,name,price_cents,server_id,status");
       if (error) throw error;
       return data as Client[];
     },
@@ -69,20 +69,35 @@ function FinanceiroPage() {
     const ym = (d: Date) => `${d.getFullYear()}-${d.getMonth()}`;
     const curYM = ym(now);
     const curYear = now.getFullYear();
-    let receitaMes = 0, despesaMes = 0, lucroAno = 0, lucroTotal = 0;
+
+    // Receita/Despesa do mês: baseado em clientes ativos (recorrência mensal)
+    let receitaMes = 0, despesaMes = 0;
+    for (const c of clients) {
+      if (c.status === "cancelado" || c.status === "suspenso") continue;
+      receitaMes += c.price_cents;
+      despesaMes += serverCost(c.id);
+    }
+
+    // Lucro do ano e total: baseado em pagamentos efetivos
+    let lucroAno = 0, lucroTotal = 0, lucroPagamentosMes = 0;
     for (const p of payments) {
       const d = new Date(p.paid_at);
       const cost = serverCost(p.client_id);
       const profit = p.amount_cents - cost;
       lucroTotal += profit;
       if (d.getFullYear() === curYear) lucroAno += profit;
-      if (ym(d) === curYM) {
-        receitaMes += p.amount_cents;
-        despesaMes += cost;
-      }
+      if (ym(d) === curYM) lucroPagamentosMes += profit;
     }
-    return { receitaMes, despesaMes, lucroMes: receitaMes - despesaMes, lucroAno, lucroTotal };
-  }, [payments, serverCost]);
+
+    const projecaoMes = receitaMes - despesaMes;
+    return {
+      receitaMes,
+      despesaMes,
+      lucroMes: lucroPagamentosMes > 0 ? lucroPagamentosMes : projecaoMes,
+      lucroAno: lucroAno || projecaoMes,
+      lucroTotal: lucroTotal || projecaoMes,
+    };
+  }, [payments, clients, serverCost]);
 
   const chart = useMemo(() => {
     const months: { key: string; label: string; total: number }[] = [];
