@@ -344,6 +344,9 @@ function ClientesPage() {
             <ActionPillButton color="rose" icon={<AlertTriangle className="size-4" />} onClick={() => cobranca("Cobrar Vencidos")}>Cobrar Vencidos</ActionPillButton>
             <ActionPillButton color="amber" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("Cobrar Vencendo Amanhã")}>Cobrar Vencendo Amanhã</ActionPillButton>
             <ActionPillButton color="emerald" icon={<Send className="size-4" />} onClick={() => cobranca("Cobrar vence hoje")}>Cobrar vence hoje</ActionPillButton>
+            <Button variant="outline" className="rounded-full" onClick={() => { setImportResult(null); setImportOpen(true); }}>
+              <FileSpreadsheet className="size-4" /> Importar Excel
+            </Button>
             <Button className="btn-premium rounded-full" onClick={openCreate}>
               <Plus className="size-4" /> Novo cliente
             </Button>
