@@ -56,10 +56,42 @@ function ConfiguracoesPage() {
     queryKey: ["profile", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("full_name,company_name").eq("id", user!.id).maybeSingle();
+      const { data, error } = await supabase.from("profiles").select("full_name,company_name,avatar_url").eq("id", user!.id).maybeSingle();
       if (error) throw error;
       return data;
     },
+  });
+
+  const [avatarSigned, setAvatarSigned] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      if (!profile?.avatar_url) { setAvatarSigned(""); return; }
+      const { data } = await supabase.storage.from("avatars").createSignedUrl(profile.avatar_url, 60 * 60);
+      if (!cancelled) setAvatarSigned(data?.signedUrl ?? "");
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [profile?.avatar_url]);
+
+  const fileRef = useRef<HTMLInputElement>(null);
+  const uploadAvatar = useMutation({
+    mutationFn: async (file: File) => {
+      if (!user) throw new Error("Sem sessão");
+      if (!file.type.startsWith("image/")) throw new Error("Selecione uma imagem");
+      if (file.size > 5 * 1024 * 1024) throw new Error("Imagem muito grande (máx 5MB)");
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      if (profile?.avatar_url) {
+        await supabase.storage.from("avatars").remove([profile.avatar_url]).catch(() => {});
+      }
+      const { error } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Foto atualizada"); qc.invalidateQueries({ queryKey: ["profile"] }); },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const { data: settings } = useQuery({
