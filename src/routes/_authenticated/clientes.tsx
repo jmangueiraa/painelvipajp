@@ -28,7 +28,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+
 
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({ meta: [{ title: "Clientes — Painel VIP" }] }),
@@ -38,16 +38,12 @@ export const Route = createFileRoute("/_authenticated/clientes")({
 const schema = z.object({
   name: z.string().trim().min(2, "Informe o nome").max(120),
   phone: z.string().trim().min(8, "Telefone inválido").max(20),
-  email: z.string().trim().email("Email inválido").max(255).optional().or(z.literal("")),
-  doc: z.string().trim().max(20).optional().or(z.literal("")),
   iptv_login: z.string().trim().max(80).optional().or(z.literal("")),
   iptv_password: z.string().trim().max(80).optional().or(z.literal("")),
   plan_id: z.string().optional(),
   server_id: z.string().optional(),
   price: z.string().min(1, "Informe o valor"),
   due_date: z.string().min(1, "Informe o vencimento"),
-  status: z.enum(["ativo", "vencido", "suspenso", "cancelado"]),
-  auto_charge: z.boolean(),
   notes: z.string().max(500).optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
@@ -103,29 +99,29 @@ function ClientesPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: "", phone: "", email: "", doc: "", iptv_login: "", iptv_password: "",
+      name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
-      status: "ativo", auto_charge: true, notes: "",
+      notes: "",
     },
   });
 
   const openCreate = () => {
     setEditing(null);
     form.reset({
-      name: "", phone: "", email: "", doc: "", iptv_login: "", iptv_password: "",
+      name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
-      status: "ativo", auto_charge: true, notes: "",
+      notes: "",
     });
     setOpen(true);
   };
   const openEdit = (c: Client) => {
     setEditing(c);
     form.reset({
-      name: c.name, phone: c.phone, email: c.email ?? "", doc: c.doc ?? "",
+      name: c.name, phone: c.phone,
       iptv_login: c.iptv_login ?? "", iptv_password: c.iptv_password ?? "",
       plan_id: c.plan_id ?? undefined, server_id: c.server_id ?? undefined,
       price: (c.price_cents / 100).toFixed(2).replace(".", ","),
-      due_date: c.due_date, status: c.status, auto_charge: c.auto_charge, notes: c.notes ?? "",
+      due_date: c.due_date, notes: c.notes ?? "",
     });
     setOpen(true);
   };
@@ -145,16 +141,14 @@ function ClientesPage() {
       const payload = {
         name: values.name.trim(),
         phone: values.phone.trim(),
-        email: values.email?.trim() || null,
-        doc: values.doc?.trim() || null,
         iptv_login: values.iptv_login?.trim() || null,
         iptv_password: values.iptv_password?.trim() || null,
         plan_id: values.plan_id || null,
         server_id: values.server_id || null,
         price_cents: parseBrlToCents(values.price),
         due_date: values.due_date,
-        status: computeStatus(values.due_date, values.status),
-        auto_charge: values.auto_charge,
+        status: computeStatus(values.due_date, "ativo"),
+        auto_charge: true,
         notes: values.notes?.trim() || null,
         user_id: user.id,
       };
@@ -211,14 +205,14 @@ function ClientesPage() {
 
   const downloadTemplate = () => {
     const headers = [
-      "nome", "whatsapp", "email", "documento",
-      "login_iptv", "senha_iptv", "valor", "vencimento",
-      "status", "cobranca_automatica", "plano", "servidor", "observacoes",
+      "nome", "whatsapp", "vencimento",
+      "login_iptv", "senha_iptv",
+      "plano", "valor", "servidor", "observacoes",
     ];
     const example = [
-      "João da Silva", "(11) 99999-9999", "joao@email.com", "",
-      "joao123", "senha123", "49,90", "31/12/2026",
-      "ativo", "sim", "", "", "Cliente exemplo",
+      "João da Silva", "(11) 99999-9999", "31/12/2026",
+      "joao123", "senha123",
+      "", "49,90", "", "Cliente exemplo",
     ];
     const ws = XLSX.utils.aoa_to_sheet([headers, example]);
     const wb = XLSX.utils.book_new();
@@ -276,12 +270,6 @@ function ClientesPage() {
         const due = parseDateCell(r["vencimento"] ?? r["due_date"]);
         if (!due) { errors.push(`Linha ${lineNum}: vencimento inválido (use DD/MM/AAAA)`); return; }
 
-        const statusRaw = norm(r["status"]) as ClientStatus;
-        const status: ClientStatus = (["ativo","vencido","suspenso","cancelado"].includes(statusRaw) ? statusRaw : "ativo") as ClientStatus;
-
-        const autoRaw = norm(r["cobranca_automatica"] ?? r["auto_charge"]);
-        const auto_charge = !["nao","não","no","false","0",""].includes(autoRaw);
-
         const planName = norm(r["plano"]);
         const plan_id = planName ? planByName.get(planName)?.id ?? null : null;
         const serverName = norm(r["servidor"]);
@@ -290,16 +278,14 @@ function ClientesPage() {
         payloads.push({
           name,
           phone: formatPhone(phone),
-          email: String(r["email"] ?? "").trim() || null,
-          doc: String(r["documento"] ?? r["doc"] ?? "").trim() || null,
           iptv_login: String(r["login_iptv"] ?? r["iptv_login"] ?? "").trim() || null,
           iptv_password: String(r["senha_iptv"] ?? r["iptv_password"] ?? "").trim() || null,
           plan_id,
           server_id,
           price_cents,
           due_date: due,
-          status: computeStatus(due, status),
-          auto_charge,
+          status: computeStatus(due, "ativo"),
+          auto_charge: true,
           notes: String(r["observacoes"] ?? r["notes"] ?? "").trim() || null,
           user_id: user.id,
         });
@@ -525,36 +511,11 @@ function ClientesPage() {
                     </Select>
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="status" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="ativo">Ativo</SelectItem>
-                        <SelectItem value="vencido">Vencido</SelectItem>
-                        <SelectItem value="suspenso">Suspenso</SelectItem>
-                        <SelectItem value="cancelado">Cancelado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )} />
               </div>
               <FormField control={form.control} name="notes" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Observações</FormLabel>
                   <FormControl><Textarea rows={3} {...field} /></FormControl>
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="auto_charge" render={({ field }) => (
-                <FormItem className="flex items-start justify-between rounded-xl border border-border p-3 gap-3">
-                  <div className="min-w-0">
-                    <FormLabel className="mb-0">Cobrança Automática</FormLabel>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Quando desativada, este cliente é ignorado no envio automático de cobranças vencidas.
-                    </p>
-                  </div>
-                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 </FormItem>
               )} />
               <DialogFooter>
@@ -576,7 +537,7 @@ function ClientesPage() {
           <div className="space-y-4">
             <div className="rounded-xl border border-border p-3 text-sm text-muted-foreground space-y-2">
               <p>Baixe o modelo, preencha e envie. Colunas aceitas:</p>
-              <p className="text-xs"><strong>nome</strong>, <strong>whatsapp</strong>, email, documento, login_iptv, senha_iptv, <strong>valor</strong>, <strong>vencimento</strong> (DD/MM/AAAA), status, cobranca_automatica (sim/não), plano, servidor, observacoes.</p>
+              <p className="text-xs"><strong>nome</strong>, <strong>whatsapp</strong>, <strong>vencimento</strong> (DD/MM/AAAA), login_iptv, senha_iptv, plano, <strong>valor</strong>, servidor, observacoes.</p>
               <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={downloadTemplate}>
                 <Download className="size-4" /> Baixar modelo
               </Button>
