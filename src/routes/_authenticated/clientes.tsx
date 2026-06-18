@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Search, CalendarCheck, AlertTriangle, CalendarClock, Send, FileSpreadsheet, Download, Upload, RefreshCw, MessageCircle, Phone, Copy, LifeBuoy, Lock, Unlock } from "lucide-react";
-import type { ComponentType, SVGProps } from "react";
+import type { ComponentType, CSSProperties, SVGProps } from "react";
 import * as XLSX from "xlsx";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -207,15 +207,23 @@ function ClientesPage() {
   });
 
   const onlyDigits = (s: string) => s.replace(/\D/g, "");
-  const openWhatsApp = (c: Client) => {
-    const d = onlyDigits(c.phone);
-    if (!d) return toast.error("WhatsApp inválido");
-    window.open(`https://wa.me/${d.length <= 11 ? "55" + d : d}`, "_blank");
+  const intlPhone = (phone: string) => {
+    const d = onlyDigits(phone);
+    if (!d) return "";
+    return d.length <= 11 ? "55" + d : d;
   };
-  const callPhone = (c: Client) => {
-    const d = onlyDigits(c.phone);
-    if (!d) return toast.error("Telefone inválido");
-    window.location.href = `tel:+${d.length <= 11 ? "55" + d : d}`;
+  const whatsappHref = (c: Client) => {
+    const p = intlPhone(c.phone);
+    return p ? `https://wa.me/${p}` : "#";
+  };
+  const telHref = (c: Client) => {
+    const p = intlPhone(c.phone);
+    return p ? `tel:+${p}` : "#";
+  };
+  const supportHref = (c: Client) => {
+    const p = intlPhone(c.phone);
+    const msg = encodeURIComponent(`Olá ${c.name}, como podemos ajudar?`);
+    return p ? `https://wa.me/${p}?text=${msg}` : "#";
   };
   const copyCredentials = async (c: Client) => {
     const txt = [c.iptv_login && `Login: ${c.iptv_login}`, c.iptv_password && `Senha: ${c.iptv_password}`].filter(Boolean).join("\n");
@@ -223,12 +231,7 @@ function ClientesPage() {
     await navigator.clipboard.writeText(txt);
     toast.success("Credenciais copiadas");
   };
-  const openSupport = (c: Client) => {
-    const d = onlyDigits(c.phone);
-    const msg = encodeURIComponent(`Olá ${c.name}, como podemos ajudar?`);
-    if (!d) return toast.info("Suporte: cadastre um WhatsApp para iniciar atendimento");
-    window.open(`https://wa.me/${d.length <= 11 ? "55" + d : d}?text=${msg}`, "_blank");
-  };
+
 
 
   const filtered = useMemo(() => {
@@ -467,10 +470,10 @@ function ClientesPage() {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <CircleAction title="Renovar" color="var(--kpi-emerald)" Icon={RefreshCw} onClick={() => renew.mutate(c)} />
-                      <CircleAction title="Mensagem (WhatsApp)" color="var(--kpi-emerald)" Icon={MessageCircle} onClick={() => openWhatsApp(c)} />
-                      <CircleAction title="Ligar" color="var(--kpi-cyan)" Icon={Phone} onClick={() => callPhone(c)} />
+                      <CircleAction title="Mensagem (WhatsApp)" color="var(--kpi-emerald)" Icon={MessageCircle} href={whatsappHref(c)} />
+                      <CircleAction title="Ligar" color="var(--kpi-cyan)" Icon={Phone} href={telHref(c)} />
                       <CircleAction title="Copiar credenciais" color="var(--kpi-cyan)" Icon={Copy} onClick={() => copyCredentials(c)} />
-                      <CircleAction title="Suporte" color="var(--kpi-emerald)" Icon={LifeBuoy} onClick={() => openSupport(c)} />
+                      <CircleAction title="Suporte" color="var(--kpi-emerald)" Icon={LifeBuoy} href={supportHref(c)} />
                       <CircleAction
                         title={c.status === "suspenso" || c.status === "cancelado" ? "Desbloquear" : "Bloquear"}
                         color="var(--kpi-amber)"
@@ -660,17 +663,20 @@ function ClientesPage() {
   );
 }
 
-function CircleAction({ title, color, Icon, onClick }: { title: string; color: string; Icon: ComponentType<SVGProps<SVGSVGElement>>; onClick: () => void }) {
+function CircleAction({ title, color, Icon, onClick, href }: { title: string; color: string; Icon: ComponentType<SVGProps<SVGSVGElement>>; onClick?: () => void; href?: string }) {
+  const className = "size-7 inline-flex items-center justify-center rounded-full border transition-colors hover:bg-[color-mix(in_oklab,var(--pill-color)_15%,transparent)]";
+  const style = { ["--pill-color" as string]: color, borderColor: `color-mix(in oklab, ${color} 55%, transparent)`, color } as CSSProperties;
+  if (href) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" title={title} aria-label={title} className={className} style={style}>
+        <Icon className="size-3.5" />
+      </a>
+    );
+  }
   return (
-    <button
-      type="button"
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-      className="size-7 inline-flex items-center justify-center rounded-full border transition-colors hover:bg-[color-mix(in_oklab,var(--pill-color)_15%,transparent)]"
-      style={{ ["--pill-color" as string]: color, borderColor: `color-mix(in oklab, ${color} 55%, transparent)`, color }}
-    >
+    <button type="button" title={title} aria-label={title} onClick={onClick} className={className} style={style}>
       <Icon className="size-3.5" />
     </button>
   );
 }
+
