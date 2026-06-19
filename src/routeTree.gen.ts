@@ -20,6 +20,8 @@ import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedAdminAssinantesRouteImport } from './routes/_authenticated/admin.assinantes'
+import { Route as AuthenticatedAdminAssinantesIdRouteImport } from './routes/_authenticated/admin.assinantes.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -76,6 +78,18 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminAssinantesRoute =
+  AuthenticatedAdminAssinantesRouteImport.update({
+    id: '/admin/assinantes',
+    path: '/admin/assinantes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminAssinantesIdRoute =
+  AuthenticatedAdminAssinantesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminAssinantesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -88,6 +102,8 @@ export interface FileRoutesByFullPath {
   '/planos': typeof AuthenticatedPlanosRoute
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
+  '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
+  '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -100,6 +116,8 @@ export interface FileRoutesByTo {
   '/planos': typeof AuthenticatedPlanosRoute
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
+  '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
+  '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -114,6 +132,8 @@ export interface FileRoutesById {
   '/_authenticated/planos': typeof AuthenticatedPlanosRoute
   '/_authenticated/renovacao': typeof AuthenticatedRenovacaoRoute
   '/_authenticated/servidores': typeof AuthenticatedServidoresRoute
+  '/_authenticated/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
+  '/_authenticated/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -128,6 +148,8 @@ export interface FileRouteTypes {
     | '/planos'
     | '/renovacao'
     | '/servidores'
+    | '/admin/assinantes'
+    | '/admin/assinantes/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -140,6 +162,8 @@ export interface FileRouteTypes {
     | '/planos'
     | '/renovacao'
     | '/servidores'
+    | '/admin/assinantes'
+    | '/admin/assinantes/$id'
   id:
     | '__root__'
     | '/'
@@ -153,6 +177,8 @@ export interface FileRouteTypes {
     | '/_authenticated/planos'
     | '/_authenticated/renovacao'
     | '/_authenticated/servidores'
+    | '/_authenticated/admin/assinantes'
+    | '/_authenticated/admin/assinantes/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -241,8 +267,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/assinantes': {
+      id: '/_authenticated/admin/assinantes'
+      path: '/admin/assinantes'
+      fullPath: '/admin/assinantes'
+      preLoaderRoute: typeof AuthenticatedAdminAssinantesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/assinantes/$id': {
+      id: '/_authenticated/admin/assinantes/$id'
+      path: '/$id'
+      fullPath: '/admin/assinantes/$id'
+      preLoaderRoute: typeof AuthenticatedAdminAssinantesIdRouteImport
+      parentRoute: typeof AuthenticatedAdminAssinantesRoute
+    }
   }
 }
+
+interface AuthenticatedAdminAssinantesRouteChildren {
+  AuthenticatedAdminAssinantesIdRoute: typeof AuthenticatedAdminAssinantesIdRoute
+}
+
+const AuthenticatedAdminAssinantesRouteChildren: AuthenticatedAdminAssinantesRouteChildren =
+  {
+    AuthenticatedAdminAssinantesIdRoute: AuthenticatedAdminAssinantesIdRoute,
+  }
+
+const AuthenticatedAdminAssinantesRouteWithChildren =
+  AuthenticatedAdminAssinantesRoute._addFileChildren(
+    AuthenticatedAdminAssinantesRouteChildren,
+  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
@@ -252,6 +306,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlanosRoute: typeof AuthenticatedPlanosRoute
   AuthenticatedRenovacaoRoute: typeof AuthenticatedRenovacaoRoute
   AuthenticatedServidoresRoute: typeof AuthenticatedServidoresRoute
+  AuthenticatedAdminAssinantesRoute: typeof AuthenticatedAdminAssinantesRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -262,6 +317,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlanosRoute: AuthenticatedPlanosRoute,
   AuthenticatedRenovacaoRoute: AuthenticatedRenovacaoRoute,
   AuthenticatedServidoresRoute: AuthenticatedServidoresRoute,
+  AuthenticatedAdminAssinantesRoute:
+    AuthenticatedAdminAssinantesRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =

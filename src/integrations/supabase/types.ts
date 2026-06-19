@@ -14,6 +14,151 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_plans: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          duration_days: number
+          featured: boolean
+          id: string
+          name: string
+          price_cents: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          duration_days?: number
+          featured?: boolean
+          id?: string
+          name: string
+          price_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          duration_days?: number
+          featured?: boolean
+          id?: string
+          name?: string
+          price_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      app_subscription_payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          method:
+            | Database["public"]["Enums"]["subscription_payment_method"]
+            | null
+          notes: string | null
+          paid_at: string
+          reference: string | null
+          subscription_id: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          id?: string
+          method?:
+            | Database["public"]["Enums"]["subscription_payment_method"]
+            | null
+          notes?: string | null
+          paid_at?: string
+          reference?: string | null
+          subscription_id: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          method?:
+            | Database["public"]["Enums"]["subscription_payment_method"]
+            | null
+          notes?: string | null
+          paid_at?: string
+          reference?: string | null
+          subscription_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_subscription_payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "app_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      app_subscriptions: {
+        Row: {
+          cancelled_at: string | null
+          created_at: string
+          current_period_end: string | null
+          id: string
+          notes: string | null
+          payment_method:
+            | Database["public"]["Enums"]["subscription_payment_method"]
+            | null
+          plan_id: string | null
+          price_cents: number
+          started_at: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?:
+            | Database["public"]["Enums"]["subscription_payment_method"]
+            | null
+          plan_id?: string | null
+          price_cents?: number
+          started_at?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?:
+            | Database["public"]["Enums"]["subscription_payment_method"]
+            | null
+          plan_id?: string | null
+          price_cents?: number
+          started_at?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "app_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       charges: {
         Row: {
           amount_cents: number
@@ -239,6 +384,7 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          phone: string | null
           updated_at: string
         }
         Insert: {
@@ -247,6 +393,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id: string
+          phone?: string | null
           updated_at?: string
         }
         Update: {
@@ -255,6 +402,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          phone?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -382,6 +530,19 @@ export type Database = {
       charge_status: "pendente" | "paga" | "vencida" | "cancelada"
       client_status: "ativo" | "vencido" | "suspenso" | "cancelado"
       pix_key_type: "cpf" | "cnpj" | "email" | "telefone" | "aleatoria"
+      subscription_payment_method:
+        | "pix"
+        | "cartao"
+        | "boleto"
+        | "dinheiro"
+        | "manual"
+        | "outro"
+      subscription_status:
+        | "ativa"
+        | "pendente"
+        | "cancelada"
+        | "vencida"
+        | "teste_gratis"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -513,6 +674,21 @@ export const Constants = {
       charge_status: ["pendente", "paga", "vencida", "cancelada"],
       client_status: ["ativo", "vencido", "suspenso", "cancelado"],
       pix_key_type: ["cpf", "cnpj", "email", "telefone", "aleatoria"],
+      subscription_payment_method: [
+        "pix",
+        "cartao",
+        "boleto",
+        "dinheiro",
+        "manual",
+        "outro",
+      ],
+      subscription_status: [
+        "ativa",
+        "pendente",
+        "cancelada",
+        "vencida",
+        "teste_gratis",
+      ],
     },
   },
 } as const
