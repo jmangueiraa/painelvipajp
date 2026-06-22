@@ -502,27 +502,8 @@ function ClientesPage() {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <CircleAction title="Renovar" color="var(--kpi-emerald)" Icon={RefreshCw} onClick={() => renew.mutate(c)} />
-                      {(() => {
-                        const st = getStateFromPhone(c.phone || "");
-                        const title = st ? `Mensagem (WhatsApp) - ${st.uf}` : "Mensagem (WhatsApp)";
-                        return (
-                          <a
-                            href={whatsappHref(c)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title={title}
-                            aria-label={title}
-                            className="size-7 inline-flex items-center justify-center rounded-full border transition-colors hover:bg-[color-mix(in_oklab,var(--kpi-emerald)_15%,transparent)] overflow-hidden"
-                            style={{ borderColor: "color-mix(in oklab, var(--kpi-emerald) 55%, transparent)" }}
-                          >
-                            {st ? (
-                              <img src={st.flag} alt={st.uf} className="size-full object-cover" loading="lazy" />
-                            ) : (
-                              <MessageCircle className="size-3.5" style={{ color: "var(--kpi-emerald)" }} />
-                            )}
-                          </a>
-                        );
-                      })()}
+                      <CircleAction title="Mensagem (WhatsApp)" color="var(--kpi-emerald)" Icon={MessageCircle} href={whatsappHref(c)} />
+
                       <CircleAction title="Ligar" color="var(--kpi-cyan)" Icon={Phone} href={telHref(c)} />
                       <CircleAction title="Copiar credenciais" color="var(--kpi-cyan)" Icon={Copy} onClick={() => copyCredentials(c)} />
                       <CircleAction title="Suporte" color="var(--kpi-emerald)" Icon={LifeBuoy} href={supportHref(c)} />
