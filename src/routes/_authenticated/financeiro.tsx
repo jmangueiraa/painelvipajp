@@ -40,9 +40,18 @@ function FinanceiroPage() {
   const { data: clients = [] } = useQuery({
     queryKey: ["clients", "fin"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("id,name,price_cents,server_id,status");
+      const { data, error } = await supabase.from("clients").select("id,name,price_cents,server_id,plan_id,status");
       if (error) throw error;
       return data as Client[];
+    },
+  });
+
+  const { data: plans = [] } = useQuery({
+    queryKey: ["plans", "fin"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("plans").select("id,duration_days");
+      if (error) throw error;
+      return data as Plan[];
     },
   });
 
