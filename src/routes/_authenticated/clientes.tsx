@@ -558,13 +558,13 @@ function ClientesPage() {
                             className={st ? "pr-10" : undefined}
                           />
                           {st && (
-                            <div className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center overflow-hidden rounded-none [border-radius:0!important]">
-                              <span
-                                role="img"
-                                aria-label={`Bandeira de ${st.name}`}
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                              <img
+                                src={st.flag}
+                                alt={`Bandeira de ${st.name}`}
                                 title={st.name}
-                                className="block h-6 w-6 shrink-0 rounded-none border border-border bg-cover bg-center bg-no-repeat cursor-help [border-radius:0!important] [clip-path:inset(0)]"
-                                style={{ backgroundImage: `url(${st.flag})`, borderRadius: 0 }}
+                                className="state-flag"
+                                loading="lazy"
                               />
                             </div>
                           )}
