@@ -16,6 +16,8 @@ import { brl, parseBrlToCents, formatDateBR, todayISO, addDaysISO, formatPhone }
 import { getStateFromPhone } from "@/lib/br-states";
 import { statusLabel, statusVariant, computeStatus, type ClientStatus } from "@/lib/status";
 import { useAuth } from "@/hooks/use-auth";
+import { useServerFn } from "@tanstack/react-start";
+import { sendChargesNow as sendChargesNowFn } from "@/lib/auto-charges.functions";
 
 import { PageHeader } from "@/components/page-header";
 import { ActionPillButton } from "@/components/action-pill-button";
@@ -277,7 +279,20 @@ function ClientesPage() {
     return sorted;
   }, [clients, q, chip, nameSort]);
 
-  const cobranca = (label: string) => toast.info(`${label}: envio em massa será habilitado em breve.`);
+  const sendChargesNow = useServerFn(sendChargesNowFn);
+  const sendCharges = useMutation({
+    mutationFn: async (filter: "due_today" | "due_tomorrow" | "advance_5d" | "overdue" | "auto_due_or_overdue") => {
+      return await sendChargesNow({ data: { filter } });
+    },
+    onSuccess: (r) => {
+      if (r.total === 0) toast.info("Nenhum cliente elegível para esse filtro");
+      else if (r.failed === 0) toast.success(`${r.sent} cobrança(s) enviada(s) via WhatsApp`);
+      else toast.warning(`Enviadas: ${r.sent} • Falhas: ${r.failed}${r.errors.length ? " — " + r.errors[0] : ""}`);
+    },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+  const cobranca = (filter: "due_today" | "due_tomorrow" | "advance_5d" | "overdue" | "auto_due_or_overdue") =>
+    sendCharges.mutate(filter);
 
   const downloadTemplate = () => {
     const headers = [
@@ -405,10 +420,10 @@ function ClientesPage() {
         description={`${clients?.length ?? 0} cliente(s) cadastrado(s)`}
         actions={
           <>
-            <ActionPillButton color="cyan" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("Cobrar Antecipado (5d)")}>Cobrar Antecipado (5d)</ActionPillButton>
-            <ActionPillButton color="rose" icon={<AlertTriangle className="size-4" />} onClick={() => cobranca("Cobrar Vencidos")}>Cobrar Vencidos</ActionPillButton>
-            <ActionPillButton color="amber" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("Cobrar Vencendo Amanhã")}>Cobrar Vencendo Amanhã</ActionPillButton>
-            <ActionPillButton color="emerald" icon={<Send className="size-4" />} onClick={() => cobranca("Cobrar vence hoje")}>Cobrar vence hoje</ActionPillButton>
+            <ActionPillButton color="cyan" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("advance_5d")}>Cobrar Antecipado (5d)</ActionPillButton>
+            <ActionPillButton color="rose" icon={<AlertTriangle className="size-4" />} onClick={() => cobranca("overdue")}>Cobrar Vencidos</ActionPillButton>
+            <ActionPillButton color="amber" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("due_tomorrow")}>Cobrar Vencendo Amanhã</ActionPillButton>
+            <ActionPillButton color="emerald" icon={<Send className="size-4" />} onClick={() => cobranca("due_today")}>Cobrar vence hoje</ActionPillButton>
             <Button variant="outline" className="rounded-full" onClick={() => { setImportResult(null); setImportOpen(true); }}>
               <FileSpreadsheet className="size-4" /> Importar Excel
             </Button>
