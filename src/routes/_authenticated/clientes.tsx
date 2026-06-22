@@ -563,7 +563,7 @@ function ClientesPage() {
                                 src={st.flag}
                                 alt={st.name}
                                 title={st.name}
-                                className="h-5 w-5 object-cover rounded-sm border border-border cursor-help"
+                                className="h-6 w-6 object-cover rounded-none border border-border cursor-help"
                                 loading="lazy"
                               />
                             </div>
