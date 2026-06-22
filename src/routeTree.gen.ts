@@ -23,7 +23,6 @@ import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticat
 import { Route as ApiZapiStatusRouteImport } from './routes/api/zapi/status'
 import { Route as ApiZapiQrRouteImport } from './routes/api/zapi/qr'
 import { Route as ApiZapiDisconnectRouteImport } from './routes/api/zapi/disconnect'
-import { Route as ApiZapiActionRouteImport } from './routes/api/zapi/$action'
 import { Route as AuthenticatedAdminAssinantesRouteImport } from './routes/_authenticated/admin.assinantes'
 import { Route as ApiPublicHooksAutoChargesRouteImport } from './routes/api/public/hooks/auto-charges'
 import { Route as AuthenticatedAdminAssinantesIdRouteImport } from './routes/_authenticated/admin.assinantes.$id'
@@ -98,11 +97,6 @@ const ApiZapiDisconnectRoute = ApiZapiDisconnectRouteImport.update({
   path: '/api/zapi/disconnect',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiZapiActionRoute = ApiZapiActionRouteImport.update({
-  id: '/api/zapi/$action',
-  path: '/api/zapi/$action',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedAdminAssinantesRoute =
   AuthenticatedAdminAssinantesRouteImport.update({
     id: '/admin/assinantes',
@@ -134,7 +128,6 @@ export interface FileRoutesByFullPath {
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
-  '/api/zapi/$action': typeof ApiZapiActionRoute
   '/api/zapi/disconnect': typeof ApiZapiDisconnectRoute
   '/api/zapi/qr': typeof ApiZapiQrRoute
   '/api/zapi/status': typeof ApiZapiStatusRoute
@@ -153,7 +146,6 @@ export interface FileRoutesByTo {
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
-  '/api/zapi/$action': typeof ApiZapiActionRoute
   '/api/zapi/disconnect': typeof ApiZapiDisconnectRoute
   '/api/zapi/qr': typeof ApiZapiQrRoute
   '/api/zapi/status': typeof ApiZapiStatusRoute
@@ -174,7 +166,6 @@ export interface FileRoutesById {
   '/_authenticated/renovacao': typeof AuthenticatedRenovacaoRoute
   '/_authenticated/servidores': typeof AuthenticatedServidoresRoute
   '/_authenticated/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
-  '/api/zapi/$action': typeof ApiZapiActionRoute
   '/api/zapi/disconnect': typeof ApiZapiDisconnectRoute
   '/api/zapi/qr': typeof ApiZapiQrRoute
   '/api/zapi/status': typeof ApiZapiStatusRoute
@@ -195,7 +186,6 @@ export interface FileRouteTypes {
     | '/renovacao'
     | '/servidores'
     | '/admin/assinantes'
-    | '/api/zapi/$action'
     | '/api/zapi/disconnect'
     | '/api/zapi/qr'
     | '/api/zapi/status'
@@ -214,7 +204,6 @@ export interface FileRouteTypes {
     | '/renovacao'
     | '/servidores'
     | '/admin/assinantes'
-    | '/api/zapi/$action'
     | '/api/zapi/disconnect'
     | '/api/zapi/qr'
     | '/api/zapi/status'
@@ -234,7 +223,6 @@ export interface FileRouteTypes {
     | '/_authenticated/renovacao'
     | '/_authenticated/servidores'
     | '/_authenticated/admin/assinantes'
-    | '/api/zapi/$action'
     | '/api/zapi/disconnect'
     | '/api/zapi/qr'
     | '/api/zapi/status'
@@ -247,7 +235,6 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  ApiZapiActionRoute: typeof ApiZapiActionRoute
   ApiZapiDisconnectRoute: typeof ApiZapiDisconnectRoute
   ApiZapiQrRoute: typeof ApiZapiQrRoute
   ApiZapiStatusRoute: typeof ApiZapiStatusRoute
@@ -354,13 +341,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiZapiDisconnectRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/zapi/$action': {
-      id: '/api/zapi/$action'
-      path: '/api/zapi/$action'
-      fullPath: '/api/zapi/$action'
-      preLoaderRoute: typeof ApiZapiActionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/admin/assinantes': {
       id: '/_authenticated/admin/assinantes'
       path: '/admin/assinantes'
@@ -430,7 +410,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  ApiZapiActionRoute: ApiZapiActionRoute,
   ApiZapiDisconnectRoute: ApiZapiDisconnectRoute,
   ApiZapiQrRoute: ApiZapiQrRoute,
   ApiZapiStatusRoute: ApiZapiStatusRoute,
