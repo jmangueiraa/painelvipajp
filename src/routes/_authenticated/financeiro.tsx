@@ -65,14 +65,25 @@ function FinanceiroPage() {
   });
 
   const clientMap = useMemo(() => new Map(clients.map((c) => [c.id, c])), [clients]);
+  const planMap = useMemo(() => new Map(plans.map((p) => [p.id, p])), [plans]);
+  const monthsForClient = useMemo(() => {
+    return (clientId: string) => {
+      const c = clientMap.get(clientId);
+      if (!c?.plan_id) return 1;
+      const p = planMap.get(c.plan_id);
+      if (!p) return 1;
+      return Math.max(1, Math.round(p.duration_days / 30));
+    };
+  }, [clientMap, planMap]);
   const serverCost = useMemo(() => {
     const m = new Map(servers.map((s) => [s.id, s.credit_cost_cents]));
     return (clientId: string) => {
       const c = clientMap.get(clientId);
       if (!c?.server_id) return 0;
-      return m.get(c.server_id) ?? 0;
+      const base = m.get(c.server_id) ?? 0;
+      return base * monthsForClient(clientId);
     };
-  }, [servers, clientMap]);
+  }, [servers, clientMap, monthsForClient]);
 
   const stats = useMemo(() => {
     const now = new Date();
