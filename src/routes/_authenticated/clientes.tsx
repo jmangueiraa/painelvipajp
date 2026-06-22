@@ -213,11 +213,18 @@ function ClientesPage() {
       const update: { due_date: string; status: ClientStatus; plan_id?: string; price_cents?: number } = { due_date: newDue, status: computeStatus(newDue, "ativo") };
       // Se o período escolhido for diferente do plano atual, troca para um plano com essa duração
       const currentPlan = (plans ?? []).find((p) => p.id === c.plan_id);
+      const monthsFor = (d: number) => Math.max(1, Math.round(d / 30));
+      const newMonths = monthsFor(days);
       if (!currentPlan || currentPlan.duration_days !== days) {
         const matching = (plans ?? []).find((p) => p.duration_days === days);
         if (matching) {
           update.plan_id = matching.id;
           update.price_cents = matching.price_cents;
+        } else {
+          // Sem plano correspondente: ajusta o valor proporcional aos meses escolhidos
+          const curMonths = currentPlan ? monthsFor(currentPlan.duration_days) : 1;
+          const monthly = Math.round((c.price_cents || 0) / curMonths);
+          update.price_cents = monthly * newMonths;
         }
       }
       const { error } = await supabase.from("clients").update(update).eq("id", c.id);
