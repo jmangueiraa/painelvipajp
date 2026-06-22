@@ -13,6 +13,7 @@ import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { brl, parseBrlToCents, formatDateBR, todayISO, addDaysISO, formatPhone } from "@/lib/format";
+import { getStateFromPhone } from "@/lib/br-states";
 import { statusLabel, statusVariant, computeStatus, type ClientStatus } from "@/lib/status";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -543,15 +544,39 @@ function ClientesPage() {
                 </FormItem>
               )} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField control={form.control} name="phone" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>WhatsApp *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="(11) 99999-9999" value={field.value} onChange={(e) => field.onChange(formatPhone(e.target.value))} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                <FormField control={form.control} name="phone" render={({ field }) => {
+                  const st = getStateFromPhone(field.value || "");
+                  return (
+                    <FormItem>
+                      <FormLabel>WhatsApp *</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            placeholder="(11) 99999-9999"
+                            value={field.value}
+                            onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                            className={st ? "pr-20" : undefined}
+                          />
+                          {st && (
+                            <div
+                              className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none"
+                              title={st.name}
+                            >
+                              <img
+                                src={st.flag}
+                                alt={`Bandeira de ${st.name}`}
+                                className="h-4 w-6 object-cover rounded-sm border border-border"
+                                loading="lazy"
+                              />
+                              <span className="text-xs font-medium text-muted-foreground">{st.uf}</span>
+                            </div>
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }} />
                 <FormField control={form.control} name="due_date" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Vencimento *</FormLabel>
