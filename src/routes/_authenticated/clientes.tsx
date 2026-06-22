@@ -558,12 +558,13 @@ function ClientesPage() {
                             className={st ? "pr-10" : undefined}
                           />
                           {st && (
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
+                            <div className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center overflow-hidden rounded-none [border-radius:0!important]">
                               <img
                                 src={st.flag}
                                 alt={st.name}
                                 title={st.name}
-                                className="h-6 w-6 object-cover rounded-none border border-border cursor-help"
+                                className="block h-6 w-6 max-w-none shrink-0 rounded-none border border-border object-cover cursor-help [border-radius:0!important] [clip-path:inset(0)]"
+                                style={{ borderRadius: 0 }}
                                 loading="lazy"
                               />
                             </div>
