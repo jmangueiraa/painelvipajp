@@ -248,53 +248,8 @@ function ConfiguracoesPage() {
         <Button className="btn-premium rounded-full mt-2" onClick={() => saveProfile.mutate()} disabled={saveProfile.isPending}>Salvar</Button>
       </SectionCard>
 
-      <SectionCard
-        title="Conectar WhatsApp"
-        description="Conecte sua conta do WhatsApp para enviar cobranças automáticas aos seus clientes."
-        icon={MessageSquare}
-        color="var(--kpi-emerald)"
-      >
-        <div className="flex items-center justify-end -mt-2">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-400">
-            <span className="size-2 rounded-full bg-rose-500" /> Offline
-          </span>
-        </div>
-        <Button
-          className="w-full rounded-xl h-11 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold"
-          onClick={() => toast.info("Em breve: integração Evolution. Adicione EVOLUTION_API_URL e EVOLUTION_API_KEY nos secrets.")}
-        >
-          <MessageSquare className="size-4 mr-2" /> Conectar WhatsApp
-        </Button>
+      <WhatsAppConnectSection />
 
-        <div className="h-px bg-border my-2" />
-
-        <div className="space-y-1">
-          <Label className="text-sm font-semibold">Conectar via Evolution (instância existente)</Label>
-          <p className="text-xs text-muted-foreground">
-            Já tem uma instância criada na Evolution? Digite o nome exato dela para vincular e gerar o QR Code.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Input
-            placeholder="nome-da-instancia"
-            value={whatsappInstance}
-            onChange={(e) => setWhatsappInstance(e.target.value)}
-            className="h-11"
-          />
-          <Button
-            className="h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shrink-0 px-4"
-            onClick={() => {
-              if (!whatsappInstance.trim()) {
-                toast.error("Informe o nome da instância");
-                return;
-              }
-              saveSettings.mutate({ whatsapp_instance: whatsappInstance.trim() });
-            }}
-          >
-            Vincular &<br />gerar QR
-          </Button>
-        </div>
-      </SectionCard>
 
       <SectionCard title="Cadastrar PIX" description="Dados que serão usados nas cobranças" icon={KeyRound} color="var(--kpi-cyan)">
         <div className="grid md:grid-cols-3 gap-3">
