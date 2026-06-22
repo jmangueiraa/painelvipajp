@@ -279,6 +279,7 @@ function ClientesPage() {
     return sorted;
   }, [clients, q, chip, nameSort]);
 
+  const sendChargesNow = useServerFn(sendChargesNowFn);
   const sendCharges = useMutation({
     mutationFn: async (filter: "due_today" | "due_tomorrow" | "advance_5d" | "overdue" | "auto_due_or_overdue") => {
       return await sendChargesNow({ data: { filter } });
@@ -419,10 +420,10 @@ function ClientesPage() {
         description={`${clients?.length ?? 0} cliente(s) cadastrado(s)`}
         actions={
           <>
-            <ActionPillButton color="cyan" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("Cobrar Antecipado (5d)")}>Cobrar Antecipado (5d)</ActionPillButton>
-            <ActionPillButton color="rose" icon={<AlertTriangle className="size-4" />} onClick={() => cobranca("Cobrar Vencidos")}>Cobrar Vencidos</ActionPillButton>
-            <ActionPillButton color="amber" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("Cobrar Vencendo Amanhã")}>Cobrar Vencendo Amanhã</ActionPillButton>
-            <ActionPillButton color="emerald" icon={<Send className="size-4" />} onClick={() => cobranca("Cobrar vence hoje")}>Cobrar vence hoje</ActionPillButton>
+            <ActionPillButton color="cyan" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("advance_5d")}>Cobrar Antecipado (5d)</ActionPillButton>
+            <ActionPillButton color="rose" icon={<AlertTriangle className="size-4" />} onClick={() => cobranca("overdue")}>Cobrar Vencidos</ActionPillButton>
+            <ActionPillButton color="amber" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("due_tomorrow")}>Cobrar Vencendo Amanhã</ActionPillButton>
+            <ActionPillButton color="emerald" icon={<Send className="size-4" />} onClick={() => cobranca("due_today")}>Cobrar vence hoje</ActionPillButton>
             <Button variant="outline" className="rounded-full" onClick={() => { setImportResult(null); setImportOpen(true); }}>
               <FileSpreadsheet className="size-4" /> Importar Excel
             </Button>
