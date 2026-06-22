@@ -442,7 +442,19 @@ function ClientesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome</TableHead>
+                <TableHead>
+                  <button
+                    type="button"
+                    onClick={() => setNameSort((s) => (s === "none" ? "asc" : s === "asc" ? "desc" : "none"))}
+                    className="inline-flex items-center gap-1 font-medium hover:text-foreground transition-colors"
+                    title="Ordenar por nome"
+                  >
+                    Nome
+                    {nameSort === "asc" && <ArrowUp className="size-3.5" />}
+                    {nameSort === "desc" && <ArrowDown className="size-3.5" />}
+                    {nameSort === "none" && <ArrowUpDown className="size-3.5 opacity-50" />}
+                  </button>
+                </TableHead>
                 <TableHead>WhatsApp</TableHead>
                 <TableHead>Valor</TableHead>
                 <TableHead>Vencimento</TableHead>
