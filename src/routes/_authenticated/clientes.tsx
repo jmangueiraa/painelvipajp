@@ -277,7 +277,19 @@ function ClientesPage() {
     return sorted;
   }, [clients, q, chip, nameSort]);
 
-  const cobranca = (label: string) => toast.info(`${label}: envio em massa será habilitado em breve.`);
+  const sendCharges = useMutation({
+    mutationFn: async (filter: "due_today" | "due_tomorrow" | "advance_5d" | "overdue" | "auto_due_or_overdue") => {
+      return await sendChargesNow({ data: { filter } });
+    },
+    onSuccess: (r) => {
+      if (r.total === 0) toast.info("Nenhum cliente elegível para esse filtro");
+      else if (r.failed === 0) toast.success(`${r.sent} cobrança(s) enviada(s) via WhatsApp`);
+      else toast.warning(`Enviadas: ${r.sent} • Falhas: ${r.failed}${r.errors.length ? " — " + r.errors[0] : ""}`);
+    },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+  const cobranca = (filter: "due_today" | "due_tomorrow" | "advance_5d" | "overdue" | "auto_due_or_overdue") =>
+    sendCharges.mutate(filter);
 
   const downloadTemplate = () => {
     const headers = [

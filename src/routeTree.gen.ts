@@ -21,6 +21,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedAdminAssinantesRouteImport } from './routes/_authenticated/admin.assinantes'
+import { Route as ApiPublicHooksAutoChargesRouteImport } from './routes/api/public/hooks/auto-charges'
 import { Route as AuthenticatedAdminAssinantesIdRouteImport } from './routes/_authenticated/admin.assinantes.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -84,6 +85,12 @@ const AuthenticatedAdminAssinantesRoute =
     path: '/admin/assinantes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicHooksAutoChargesRoute =
+  ApiPublicHooksAutoChargesRouteImport.update({
+    id: '/api/public/hooks/auto-charges',
+    path: '/api/public/hooks/auto-charges',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminAssinantesIdRoute =
   AuthenticatedAdminAssinantesIdRouteImport.update({
     id: '/$id',
@@ -104,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/servidores': typeof AuthenticatedServidoresRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
+  '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,6 +126,7 @@ export interface FileRoutesByTo {
   '/servidores': typeof AuthenticatedServidoresRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
+  '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,6 +143,7 @@ export interface FileRoutesById {
   '/_authenticated/servidores': typeof AuthenticatedServidoresRoute
   '/_authenticated/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/_authenticated/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
+  '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/servidores'
     | '/admin/assinantes'
     | '/admin/assinantes/$id'
+    | '/api/public/hooks/auto-charges'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/servidores'
     | '/admin/assinantes'
     | '/admin/assinantes/$id'
+    | '/api/public/hooks/auto-charges'
   id:
     | '__root__'
     | '/'
@@ -179,6 +191,7 @@ export interface FileRouteTypes {
     | '/_authenticated/servidores'
     | '/_authenticated/admin/assinantes'
     | '/_authenticated/admin/assinantes/$id'
+    | '/api/public/hooks/auto-charges'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -186,6 +199,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicHooksAutoChargesRoute: typeof ApiPublicHooksAutoChargesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -274,6 +288,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAssinantesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/hooks/auto-charges': {
+      id: '/api/public/hooks/auto-charges'
+      path: '/api/public/hooks/auto-charges'
+      fullPath: '/api/public/hooks/auto-charges'
+      preLoaderRoute: typeof ApiPublicHooksAutoChargesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/assinantes/$id': {
       id: '/_authenticated/admin/assinantes/$id'
       path: '/$id'
@@ -329,17 +350,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicHooksAutoChargesRoute: ApiPublicHooksAutoChargesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
