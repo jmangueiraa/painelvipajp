@@ -559,13 +559,12 @@ function ClientesPage() {
                           />
                           {st && (
                             <div className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center overflow-hidden rounded-none [border-radius:0!important]">
-                              <img
-                                src={st.flag}
-                                alt={st.name}
+                              <span
+                                role="img"
+                                aria-label={`Bandeira de ${st.name}`}
                                 title={st.name}
-                                className="block h-6 w-6 max-w-none shrink-0 rounded-none border border-border object-cover cursor-help [border-radius:0!important] [clip-path:inset(0)]"
-                                style={{ borderRadius: 0 }}
-                                loading="lazy"
+                                className="block h-6 w-6 shrink-0 rounded-none border border-border bg-cover bg-center bg-no-repeat cursor-help [border-radius:0!important] [clip-path:inset(0)]"
+                                style={{ backgroundImage: `url(${st.flag})`, borderRadius: 0 }}
                               />
                             </div>
                           )}
