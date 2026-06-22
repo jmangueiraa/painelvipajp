@@ -73,7 +73,7 @@ function ClientesPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ ok: number; fail: number; errors: string[] } | null>(null);
-  const [nameSort, setNameSort] = useState<"none" | "asc" | "desc">("none");
+  const [nameSort, setNameSort] = useState<"asc" | "desc">("asc");
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -258,14 +258,11 @@ function ClientesPage() {
         (c.iptv_login ?? "").toLowerCase().includes(term)
       );
     });
-    if (nameSort !== "none") {
-      const sorted = [...list].sort((a, b) =>
-        a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })
-      );
-      if (nameSort === "desc") sorted.reverse();
-      return sorted;
-    }
-    return list;
+    const sorted = [...list].sort((a, b) =>
+      a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })
+    );
+    if (nameSort === "desc") sorted.reverse();
+    return sorted;
   }, [clients, q, chip, nameSort]);
 
   const cobranca = (label: string) => toast.info(`${label}: envio em massa será habilitado em breve.`);
@@ -445,14 +442,12 @@ function ClientesPage() {
                 <TableHead>
                   <button
                     type="button"
-                    onClick={() => setNameSort((s) => (s === "none" ? "asc" : s === "asc" ? "desc" : "none"))}
+                    onClick={() => setNameSort((s) => (s === "asc" ? "desc" : "asc"))}
                     className="inline-flex items-center gap-1 font-medium hover:text-foreground transition-colors"
                     title="Ordenar por nome"
                   >
                     Nome
-                    {nameSort === "asc" && <ArrowUp className="size-3.5" />}
-                    {nameSort === "desc" && <ArrowDown className="size-3.5" />}
-                    {nameSort === "none" && <ArrowUpDown className="size-3.5 opacity-50" />}
+                    {nameSort === "asc" ? <ArrowUp className="size-3.5" /> : <ArrowDown className="size-3.5" />}
                   </button>
                 </TableHead>
                 <TableHead>WhatsApp</TableHead>
