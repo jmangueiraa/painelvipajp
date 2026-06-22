@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Search, CalendarCheck, AlertTriangle, CalendarClock, Send, FileSpreadsheet, Download, Upload, RefreshCw, MessageCircle, Phone, Copy, LifeBuoy, Lock, Unlock } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, CalendarCheck, AlertTriangle, CalendarClock, Send, FileSpreadsheet, Download, Upload, RefreshCw, MessageCircle, Phone, Copy, LifeBuoy, Lock, Unlock, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import type { ComponentType, CSSProperties, SVGProps } from "react";
 import * as XLSX from "xlsx";
 
@@ -73,6 +73,7 @@ function ClientesPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ ok: number; fail: number; errors: string[] } | null>(null);
+  const [nameSort, setNameSort] = useState<"none" | "asc" | "desc">("none");
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -243,7 +244,7 @@ function ClientesPage() {
     const term = q.trim().toLowerCase();
     const today = todayISO();
     const in30 = addDaysISO(today, 30);
-    return clients.filter((c) => {
+    const list = clients.filter((c) => {
       if (chip === "em_dia" && c.status !== "ativo") return false;
       if (chip === "vencidos" && c.status !== "vencido") return false;
       if (chip === "bloqueados" && !(c.status === "suspenso" || c.status === "cancelado")) return false;
@@ -257,7 +258,15 @@ function ClientesPage() {
         (c.iptv_login ?? "").toLowerCase().includes(term)
       );
     });
-  }, [clients, q, chip]);
+    if (nameSort !== "none") {
+      const sorted = [...list].sort((a, b) =>
+        a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })
+      );
+      if (nameSort === "desc") sorted.reverse();
+      return sorted;
+    }
+    return list;
+  }, [clients, q, chip, nameSort]);
 
   const cobranca = (label: string) => toast.info(`${label}: envio em massa será habilitado em breve.`);
 
@@ -433,7 +442,19 @@ function ClientesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome</TableHead>
+                <TableHead>
+                  <button
+                    type="button"
+                    onClick={() => setNameSort((s) => (s === "none" ? "asc" : s === "asc" ? "desc" : "none"))}
+                    className="inline-flex items-center gap-1 font-medium hover:text-foreground transition-colors"
+                    title="Ordenar por nome"
+                  >
+                    Nome
+                    {nameSort === "asc" && <ArrowUp className="size-3.5" />}
+                    {nameSort === "desc" && <ArrowDown className="size-3.5" />}
+                    {nameSort === "none" && <ArrowUpDown className="size-3.5 opacity-50" />}
+                  </button>
+                </TableHead>
                 <TableHead>WhatsApp</TableHead>
                 <TableHead>Valor</TableHead>
                 <TableHead>Vencimento</TableHead>
