@@ -205,16 +205,15 @@ function ClientesPage() {
     onError: (e: Error) => toast.error(translateError(e)),
   });
 
+  const [renewTarget, setRenewTarget] = useState<Client | null>(null);
   const renew = useMutation({
-    mutationFn: async (c: Client) => {
-      const plan = plans?.find((p) => p.id === c.plan_id);
-      const days = plan?.duration_days ?? 30;
+    mutationFn: async ({ c, days }: { c: Client; days: number }) => {
       const base = c.due_date && c.due_date >= todayISO() ? c.due_date : todayISO();
       const newDue = addDaysISO(base, days);
       const { error } = await supabase.from("clients").update({ due_date: newDue, status: computeStatus(newDue, "ativo") }).eq("id", c.id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Cliente renovado"); qc.invalidateQueries({ queryKey: ["clients"] }); },
+    onSuccess: () => { toast.success("Cliente renovado"); setRenewTarget(null); qc.invalidateQueries({ queryKey: ["clients"] }); },
     onError: (e: Error) => toast.error(translateError(e)),
   });
 
@@ -572,7 +571,7 @@ function ClientesPage() {
                   <TableCell><Badge variant={statusVariant[c.status]}>{statusLabel[c.status]}</Badge></TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1.5">
-                      <CircleAction title="Renovar" color="var(--kpi-emerald)" Icon={RefreshCw} onClick={() => renew.mutate(c)} />
+                      <CircleAction title="Renovar" color="var(--kpi-emerald)" Icon={RefreshCw} onClick={() => setRenewTarget(c)} />
                       <CircleAction title="Mensagem (WhatsApp)" color="var(--kpi-emerald)" Icon={MessageCircle} href={whatsappHref(c)} />
 
                       <CircleAction title="Ligar" color="var(--kpi-cyan)" Icon={Phone} href={telHref(c)} />
@@ -757,6 +756,39 @@ function ClientesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!renewTarget} onOpenChange={(o) => { if (!o) setRenewTarget(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Renovar {renewTarget?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Escolha o período da renovação:</p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: "Mensal", days: 30 },
+                { label: "Trimestral", days: 90 },
+                { label: "Semestral", days: 180 },
+                { label: "Anual", days: 365 },
+              ].map((opt) => (
+                <Button
+                  key={opt.label}
+                  type="button"
+                  variant="outline"
+                  className="rounded-full"
+                  disabled={renew.isPending}
+                  onClick={() => renewTarget && renew.mutate({ c: renewTarget, days: opt.days })}
+                >
+                  {opt.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setRenewTarget(null)}>Cancelar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={importOpen} onOpenChange={(o) => { if (!importing) setImportOpen(o); }}>
         <DialogContent className="max-w-lg">
