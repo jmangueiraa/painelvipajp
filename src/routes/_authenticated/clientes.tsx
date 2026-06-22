@@ -205,16 +205,15 @@ function ClientesPage() {
     onError: (e: Error) => toast.error(translateError(e)),
   });
 
+  const [renewTarget, setRenewTarget] = useState<Client | null>(null);
   const renew = useMutation({
-    mutationFn: async (c: Client) => {
-      const plan = plans?.find((p) => p.id === c.plan_id);
-      const days = plan?.duration_days ?? 30;
+    mutationFn: async ({ c, days }: { c: Client; days: number }) => {
       const base = c.due_date && c.due_date >= todayISO() ? c.due_date : todayISO();
       const newDue = addDaysISO(base, days);
       const { error } = await supabase.from("clients").update({ due_date: newDue, status: computeStatus(newDue, "ativo") }).eq("id", c.id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Cliente renovado"); qc.invalidateQueries({ queryKey: ["clients"] }); },
+    onSuccess: () => { toast.success("Cliente renovado"); setRenewTarget(null); qc.invalidateQueries({ queryKey: ["clients"] }); },
     onError: (e: Error) => toast.error(translateError(e)),
   });
 
