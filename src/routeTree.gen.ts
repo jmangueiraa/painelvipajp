@@ -26,6 +26,7 @@ import { Route as ApiPublicZapiQrRouteImport } from './routes/api/public/zapi/qr
 import { Route as ApiPublicZapiDisconnectRouteImport } from './routes/api/public/zapi/disconnect'
 import { Route as ApiPublicPortalVerifyOtpRouteImport } from './routes/api/public/portal/verify-otp'
 import { Route as ApiPublicPortalRequestOtpRouteImport } from './routes/api/public/portal/request-otp'
+import { Route as ApiPublicPortalMeRouteImport } from './routes/api/public/portal/me'
 import { Route as ApiPublicHooksAutoChargesRouteImport } from './routes/api/public/hooks/auto-charges'
 import { Route as AuthenticatedAdminAssinantesIdRouteImport } from './routes/_authenticated/admin.assinantes.$id'
 
@@ -117,6 +118,11 @@ const ApiPublicPortalRequestOtpRoute =
     path: '/api/public/portal/request-otp',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPortalMeRoute = ApiPublicPortalMeRouteImport.update({
+  id: '/api/public/portal/me',
+  path: '/api/public/portal/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksAutoChargesRoute =
   ApiPublicHooksAutoChargesRouteImport.update({
     id: '/api/public/hooks/auto-charges',
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
+  '/api/public/portal/me': typeof ApiPublicPortalMeRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
+  '/api/public/portal/me': typeof ApiPublicPortalMeRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/_authenticated/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
+  '/api/public/portal/me': typeof ApiPublicPortalMeRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/admin/assinantes'
     | '/admin/assinantes/$id'
     | '/api/public/hooks/auto-charges'
+    | '/api/public/portal/me'
     | '/api/public/portal/request-otp'
     | '/api/public/portal/verify-otp'
     | '/api/public/zapi/disconnect'
@@ -228,6 +238,7 @@ export interface FileRouteTypes {
     | '/admin/assinantes'
     | '/admin/assinantes/$id'
     | '/api/public/hooks/auto-charges'
+    | '/api/public/portal/me'
     | '/api/public/portal/request-otp'
     | '/api/public/portal/verify-otp'
     | '/api/public/zapi/disconnect'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/assinantes'
     | '/_authenticated/admin/assinantes/$id'
     | '/api/public/hooks/auto-charges'
+    | '/api/public/portal/me'
     | '/api/public/portal/request-otp'
     | '/api/public/portal/verify-otp'
     | '/api/public/zapi/disconnect'
@@ -262,6 +274,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicHooksAutoChargesRoute: typeof ApiPublicHooksAutoChargesRoute
+  ApiPublicPortalMeRoute: typeof ApiPublicPortalMeRoute
   ApiPublicPortalRequestOtpRoute: typeof ApiPublicPortalRequestOtpRoute
   ApiPublicPortalVerifyOtpRoute: typeof ApiPublicPortalVerifyOtpRoute
   ApiPublicZapiDisconnectRoute: typeof ApiPublicZapiDisconnectRoute
@@ -390,6 +403,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPortalRequestOtpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/portal/me': {
+      id: '/api/public/portal/me'
+      path: '/api/public/portal/me'
+      fullPath: '/api/public/portal/me'
+      preLoaderRoute: typeof ApiPublicPortalMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/auto-charges': {
       id: '/api/public/hooks/auto-charges'
       path: '/api/public/hooks/auto-charges'
@@ -453,6 +473,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicHooksAutoChargesRoute: ApiPublicHooksAutoChargesRoute,
+  ApiPublicPortalMeRoute: ApiPublicPortalMeRoute,
   ApiPublicPortalRequestOtpRoute: ApiPublicPortalRequestOtpRoute,
   ApiPublicPortalVerifyOtpRoute: ApiPublicPortalVerifyOtpRoute,
   ApiPublicZapiDisconnectRoute: ApiPublicZapiDisconnectRoute,
