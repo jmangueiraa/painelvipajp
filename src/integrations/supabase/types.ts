@@ -213,6 +213,7 @@ export type Database = {
         Row: {
           address: string | null
           auto_charge: boolean
+          bonus_days: number
           created_at: string
           doc: string | null
           due_date: string
@@ -226,6 +227,8 @@ export type Database = {
           phone: string
           plan_id: string | null
           price_cents: number
+          referral_code: string | null
+          referred_by: string | null
           server_id: string | null
           status: Database["public"]["Enums"]["client_status"]
           updated_at: string
@@ -234,6 +237,7 @@ export type Database = {
         Insert: {
           address?: string | null
           auto_charge?: boolean
+          bonus_days?: number
           created_at?: string
           doc?: string | null
           due_date: string
@@ -247,6 +251,8 @@ export type Database = {
           phone: string
           plan_id?: string | null
           price_cents?: number
+          referral_code?: string | null
+          referred_by?: string | null
           server_id?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           updated_at?: string
@@ -255,6 +261,7 @@ export type Database = {
         Update: {
           address?: string | null
           auto_charge?: boolean
+          bonus_days?: number
           created_at?: string
           doc?: string | null
           due_date?: string
@@ -268,6 +275,8 @@ export type Database = {
           phone?: string
           plan_id?: string | null
           price_cents?: number
+          referral_code?: string | null
+          referred_by?: string | null
           server_id?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           updated_at?: string
@@ -279,6 +288,13 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
           {
@@ -377,6 +393,71 @@ export type Database = {
         }
         Relationships: []
       }
+      portal_otp_codes: {
+        Row: {
+          attempts: number
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          used_at: string | null
+          whatsapp_digits: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          used_at?: string | null
+          whatsapp_digits: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          used_at?: string | null
+          whatsapp_digits?: string
+        }
+        Relationships: []
+      }
+      portal_sessions: {
+        Row: {
+          client_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          last_seen_at: string
+          token_hash: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          last_seen_at?: string
+          token_hash: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_seen_at?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_sessions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -406,6 +487,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      renewal_requests: {
+        Row: {
+          client_id: string
+          created_at: string
+          days: number
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          days: number
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          days?: number
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "renewal_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       servers: {
         Row: {
@@ -447,6 +563,8 @@ export type Database = {
           pix_message: string | null
           pix_name: string | null
           pix_receiver: string | null
+          referral_enabled: boolean
+          referral_reward_days: number
           subscription_expires_at: string | null
           subscription_monthly_cents: number
           support_message: string | null
@@ -466,6 +584,8 @@ export type Database = {
           pix_message?: string | null
           pix_name?: string | null
           pix_receiver?: string | null
+          referral_enabled?: boolean
+          referral_reward_days?: number
           subscription_expires_at?: string | null
           subscription_monthly_cents?: number
           support_message?: string | null
@@ -485,6 +605,8 @@ export type Database = {
           pix_message?: string | null
           pix_name?: string | null
           pix_receiver?: string | null
+          referral_enabled?: boolean
+          referral_reward_days?: number
           subscription_expires_at?: string | null
           subscription_monthly_cents?: number
           support_message?: string | null
@@ -517,6 +639,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      gen_referral_code: { Args: { _name: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
