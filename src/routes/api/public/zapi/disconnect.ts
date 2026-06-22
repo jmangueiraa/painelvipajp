@@ -29,7 +29,7 @@ function zapiBase() {
   return { url: `https://api.z-api.io/instances/${instance}/token/${token}`, headers };
 }
 
-export const Route = createFileRoute("/api/zapi/disconnect")({
+export const Route = createFileRoute("/api/public/zapi/disconnect")({
   server: {
     handlers: {
       POST: async ({ request }) => {
