@@ -490,11 +490,21 @@ function ClientesPage() {
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
                       {c.name}
-                      {c.auto_charge ? (
-                        <CalendarCheck className="size-3.5 text-[color:var(--kpi-emerald)]" />
-                      ) : null}
+                      {(() => {
+                        const st = getStateFromPhone(c.phone || "");
+                        return st ? (
+                          <img
+                            src={st.flag}
+                            alt={st.uf}
+                            title={`${st.name} (${st.uf})`}
+                            loading="lazy"
+                            className="h-3.5 w-5 rounded-[2px] object-cover border border-border/60"
+                          />
+                        ) : null;
+                      })()}
                     </div>
                   </TableCell>
+
                   <TableCell>{c.phone}</TableCell>
                   <TableCell className="tabular-nums">{brl(c.price_cents)}</TableCell>
                   <TableCell>{formatDateBR(c.due_date)}</TableCell>
