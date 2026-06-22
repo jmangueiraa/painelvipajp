@@ -133,7 +133,7 @@ function ConfiguracoesPage() {
   }, [profile]);
   useEffect(() => {
     if (settings) {
-      setWhatsappInstance(settings.whatsapp_instance ?? "");
+      
       setPixKey(settings.pix_key ?? "");
       setPixName(settings.pix_name ?? "");
       setPixBank(settings.pix_bank ?? "");
