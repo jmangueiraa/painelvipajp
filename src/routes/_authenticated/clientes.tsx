@@ -258,14 +258,11 @@ function ClientesPage() {
         (c.iptv_login ?? "").toLowerCase().includes(term)
       );
     });
-    if (nameSort !== "none") {
-      const sorted = [...list].sort((a, b) =>
-        a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })
-      );
-      if (nameSort === "desc") sorted.reverse();
-      return sorted;
-    }
-    return list;
+    const sorted = [...list].sort((a, b) =>
+      a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })
+    );
+    if (nameSort === "desc") sorted.reverse();
+    return sorted;
   }, [clients, q, chip, nameSort]);
 
   const cobranca = (label: string) => toast.info(`${label}: envio em massa será habilitado em breve.`);
