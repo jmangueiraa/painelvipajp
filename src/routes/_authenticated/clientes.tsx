@@ -571,7 +571,7 @@ function ClientesPage() {
                   <TableCell><Badge variant={statusVariant[c.status]}>{statusLabel[c.status]}</Badge></TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1.5">
-                      <CircleAction title="Renovar" color="var(--kpi-emerald)" Icon={RefreshCw} onClick={() => renew.mutate(c)} />
+                      <CircleAction title="Renovar" color="var(--kpi-emerald)" Icon={RefreshCw} onClick={() => setRenewTarget(c)} />
                       <CircleAction title="Mensagem (WhatsApp)" color="var(--kpi-emerald)" Icon={MessageCircle} href={whatsappHref(c)} />
 
                       <CircleAction title="Ligar" color="var(--kpi-cyan)" Icon={Phone} href={telHref(c)} />
