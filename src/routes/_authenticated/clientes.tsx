@@ -81,7 +81,7 @@ function ClientesPage() {
     queryFn: async () => {
       const { data, error } = await supabase.from("clients").select("*").order("due_date", { ascending: true });
       if (error) throw error;
-      return data as Client[];
+      return (data as Client[]).map((c) => ({ ...c, status: computeStatus(c.due_date, c.status) }));
     },
   });
   const { data: plans } = useQuery({
