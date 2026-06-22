@@ -534,7 +534,20 @@ function ClientesPage() {
                 </TableRow>
               )}
               {filtered.map((c) => (
-                <TableRow key={c.id}>
+                <TableRow key={c.id} data-state={selectedIds.has(c.id) ? "selected" : undefined}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(c.id)}
+                      onCheckedChange={(v) => {
+                        setSelectedIds((prev) => {
+                          const next = new Set(prev);
+                          if (v) next.add(c.id); else next.delete(c.id);
+                          return next;
+                        });
+                      }}
+                      aria-label={`Selecionar ${c.name}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
                       {c.name}
