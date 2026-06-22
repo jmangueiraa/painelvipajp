@@ -34,7 +34,7 @@ function zapiBase() {
 export const Route = createFileRoute("/api/public/zapi/status")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      POST: async ({ request }) => {
         const unauthorized = await requireUser(request);
         if (unauthorized) return unauthorized;
 
