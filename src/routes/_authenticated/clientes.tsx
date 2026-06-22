@@ -740,6 +740,24 @@ function ClientesPage() {
         </DialogContent>
       </Dialog>
 
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover {selectedIds.size} cliente(s)?</AlertDialogTitle>
+            <AlertDialogDescription>Esta ação não pode ser desfeita. Todos os registros selecionados serão excluídos permanentemente.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkRemove.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); bulkRemove.mutate(Array.from(selectedIds)); }}
+              disabled={bulkRemove.isPending}
+            >
+              {bulkRemove.isPending ? "Removendo..." : "Remover"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog open={importOpen} onOpenChange={(o) => { if (!importing) setImportOpen(o); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
