@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/page-header";
 import { KpiCard } from "@/components/kpi-card";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { statusLabel, statusVariant } from "@/lib/status";
+import { statusLabel, statusVariant, computeStatus } from "@/lib/status";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Painel VIP" }] }),
@@ -30,7 +30,7 @@ function DashboardPage() {
     queryFn: async () => {
       const { data, error } = await supabase.from("clients").select("id,name,price_cents,due_date,status");
       if (error) throw error;
-      return data as ClientRow[];
+      return (data as ClientRow[]).map((c) => ({ ...c, status: computeStatus(c.due_date, c.status) }));
     },
   });
 
