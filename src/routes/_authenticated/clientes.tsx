@@ -558,14 +558,16 @@ function ClientesPage() {
                             className={st ? "pr-10" : undefined}
                           />
                           {st && (
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                            <div className="state-flag-wrap absolute right-2 top-1/2 -translate-y-1/2">
                               <img
                                 src={st.flag}
                                 alt={`Bandeira de ${st.name}`}
-                                title={st.name}
                                 className="state-flag"
                                 loading="lazy"
                               />
+                              <span className="state-flag-tooltip" role="tooltip">
+                                {st.uf} - {st.name}
+                              </span>
                             </div>
                           )}
                         </div>
