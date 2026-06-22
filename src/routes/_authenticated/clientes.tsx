@@ -555,20 +555,19 @@ function ClientesPage() {
                             placeholder="(11) 99999-9999"
                             value={field.value}
                             onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                            className={st ? "pr-20" : undefined}
+                            className={st ? "pr-10" : undefined}
                           />
                           {st && (
                             <div
-                              className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none"
+                              className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center pointer-events-none"
                               title={st.name}
                             >
                               <img
                                 src={st.flag}
-                                alt={`Bandeira de ${st.name}`}
+                                alt={st.name}
                                 className="h-4 w-6 object-cover rounded-sm border border-border"
                                 loading="lazy"
                               />
-                              <span className="text-xs font-medium text-muted-foreground">{st.uf}</span>
                             </div>
                           )}
                         </div>
