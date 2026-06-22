@@ -558,14 +558,12 @@ function ClientesPage() {
                             className={st ? "pr-10" : undefined}
                           />
                           {st && (
-                            <div
-                              className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center pointer-events-none"
-                              title={st.name}
-                            >
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
                               <img
                                 src={st.flag}
                                 alt={st.name}
-                                className="h-4 w-6 object-cover rounded-sm border border-border"
+                                title={st.name}
+                                className="h-5 w-5 object-cover rounded-sm border border-border cursor-help"
                                 loading="lazy"
                               />
                             </div>
