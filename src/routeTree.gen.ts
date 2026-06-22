@@ -20,6 +20,7 @@ import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as ApiZapiActionRouteImport } from './routes/api/zapi/$action'
 import { Route as AuthenticatedAdminAssinantesRouteImport } from './routes/_authenticated/admin.assinantes'
 import { Route as ApiPublicHooksAutoChargesRouteImport } from './routes/api/public/hooks/auto-charges'
 import { Route as AuthenticatedAdminAssinantesIdRouteImport } from './routes/_authenticated/admin.assinantes.$id'
@@ -79,6 +80,11 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiZapiActionRoute = ApiZapiActionRouteImport.update({
+  id: '/api/zapi/$action',
+  path: '/api/zapi/$action',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminAssinantesRoute =
   AuthenticatedAdminAssinantesRouteImport.update({
     id: '/admin/assinantes',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
+  '/api/zapi/$action': typeof ApiZapiActionRoute
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
 }
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
+  '/api/zapi/$action': typeof ApiZapiActionRoute
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
 }
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/_authenticated/renovacao': typeof AuthenticatedRenovacaoRoute
   '/_authenticated/servidores': typeof AuthenticatedServidoresRoute
   '/_authenticated/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
+  '/api/zapi/$action': typeof ApiZapiActionRoute
   '/_authenticated/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
 }
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/renovacao'
     | '/servidores'
     | '/admin/assinantes'
+    | '/api/zapi/$action'
     | '/admin/assinantes/$id'
     | '/api/public/hooks/auto-charges'
   fileRoutesByTo: FileRoutesByTo
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/renovacao'
     | '/servidores'
     | '/admin/assinantes'
+    | '/api/zapi/$action'
     | '/admin/assinantes/$id'
     | '/api/public/hooks/auto-charges'
   id:
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/_authenticated/renovacao'
     | '/_authenticated/servidores'
     | '/_authenticated/admin/assinantes'
+    | '/api/zapi/$action'
     | '/_authenticated/admin/assinantes/$id'
     | '/api/public/hooks/auto-charges'
   fileRoutesById: FileRoutesById
@@ -199,6 +211,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiZapiActionRoute: typeof ApiZapiActionRoute
   ApiPublicHooksAutoChargesRoute: typeof ApiPublicHooksAutoChargesRoute
 }
 
@@ -281,6 +294,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/zapi/$action': {
+      id: '/api/zapi/$action'
+      path: '/api/zapi/$action'
+      fullPath: '/api/zapi/$action'
+      preLoaderRoute: typeof ApiZapiActionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/assinantes': {
       id: '/_authenticated/admin/assinantes'
       path: '/admin/assinantes'
@@ -350,6 +370,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiZapiActionRoute: ApiZapiActionRoute,
   ApiPublicHooksAutoChargesRoute: ApiPublicHooksAutoChargesRoute,
 }
 export const routeTree = rootRouteImport
