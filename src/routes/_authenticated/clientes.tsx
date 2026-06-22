@@ -757,6 +757,39 @@ function ClientesPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <Dialog open={!!renewTarget} onOpenChange={(o) => { if (!o) setRenewTarget(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Renovar {renewTarget?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Escolha o período da renovação:</p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: "Mensal", days: 30 },
+                { label: "Trimestral", days: 90 },
+                { label: "Semestral", days: 180 },
+                { label: "Anual", days: 365 },
+              ].map((opt) => (
+                <Button
+                  key={opt.label}
+                  type="button"
+                  variant="outline"
+                  className="rounded-full"
+                  disabled={renew.isPending}
+                  onClick={() => renewTarget && renew.mutate({ c: renewTarget, days: opt.days })}
+                >
+                  {opt.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setRenewTarget(null)}>Cancelar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={importOpen} onOpenChange={(o) => { if (!importing) setImportOpen(o); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
