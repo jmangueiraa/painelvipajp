@@ -244,7 +244,7 @@ function ClientesPage() {
     const term = q.trim().toLowerCase();
     const today = todayISO();
     const in30 = addDaysISO(today, 30);
-    return clients.filter((c) => {
+    const list = clients.filter((c) => {
       if (chip === "em_dia" && c.status !== "ativo") return false;
       if (chip === "vencidos" && c.status !== "vencido") return false;
       if (chip === "bloqueados" && !(c.status === "suspenso" || c.status === "cancelado")) return false;
@@ -258,7 +258,15 @@ function ClientesPage() {
         (c.iptv_login ?? "").toLowerCase().includes(term)
       );
     });
-  }, [clients, q, chip]);
+    if (nameSort !== "none") {
+      const sorted = [...list].sort((a, b) =>
+        a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })
+      );
+      if (nameSort === "desc") sorted.reverse();
+      return sorted;
+    }
+    return list;
+  }, [clients, q, chip, nameSort]);
 
   const cobranca = (label: string) => toast.info(`${label}: envio em massa será habilitado em breve.`);
 
