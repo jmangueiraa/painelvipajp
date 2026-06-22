@@ -438,6 +438,11 @@ function ClientesPage() {
         description={`${clients?.length ?? 0} cliente(s) cadastrado(s)`}
         actions={
           <>
+            {selectedIds.size > 0 && (
+              <Button variant="destructive" className="rounded-full" onClick={() => setBulkDeleteOpen(true)}>
+                <Trash2 className="size-4" /> Excluir selecionados ({selectedIds.size})
+              </Button>
+            )}
             <ActionPillButton color="cyan" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("advance_5d")}>Cobrar Antecipado (5d)</ActionPillButton>
             <ActionPillButton color="rose" icon={<AlertTriangle className="size-4" />} onClick={() => cobranca("overdue")}>Cobrar Vencidos</ActionPillButton>
             <ActionPillButton color="amber" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("due_tomorrow")}>Cobrar Vencendo Amanhã</ActionPillButton>
