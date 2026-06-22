@@ -113,7 +113,7 @@ function ConfiguracoesPage() {
 
   const [fullName, setFullName] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [whatsappInstance, setWhatsappInstance] = useState("");
+  
   const [pixKey, setPixKey] = useState("");
   const [pixName, setPixName] = useState("");
   const [pixBank, setPixBank] = useState("");
