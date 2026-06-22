@@ -489,6 +489,16 @@ function ClientesPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={filtered.length > 0 && filtered.every((c) => selectedIds.has(c.id))}
+                    onCheckedChange={(v) => {
+                      if (v) setSelectedIds(new Set(filtered.map((c) => c.id)));
+                      else setSelectedIds(new Set());
+                    }}
+                    aria-label="Selecionar todos"
+                  />
+                </TableHead>
                 <TableHead>
                   <button
                     type="button"
