@@ -73,6 +73,7 @@ function ClientesPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ ok: number; fail: number; errors: string[] } | null>(null);
+  const [nameSort, setNameSort] = useState<"none" | "asc" | "desc">("none");
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
