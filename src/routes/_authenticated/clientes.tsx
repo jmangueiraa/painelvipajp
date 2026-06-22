@@ -190,6 +190,21 @@ function ClientesPage() {
     onError: (e: Error) => toast.error(translateError(e)),
   });
 
+  const bulkRemove = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("clients").delete().in("id", ids);
+      if (error) throw error;
+      return ids.length;
+    },
+    onSuccess: (n) => {
+      toast.success(`${n} cliente(s) removido(s)`);
+      setSelectedIds(new Set());
+      setBulkDeleteOpen(false);
+      qc.invalidateQueries({ queryKey: ["clients"] });
+    },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
   const renew = useMutation({
     mutationFn: async (c: Client) => {
       const plan = plans?.find((p) => p.id === c.plan_id);
