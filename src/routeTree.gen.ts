@@ -21,6 +21,9 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedAdminAssinantesRouteImport } from './routes/_authenticated/admin.assinantes'
+import { Route as ApiPublicZapiStatusRouteImport } from './routes/api/public/zapi/status'
+import { Route as ApiPublicZapiQrRouteImport } from './routes/api/public/zapi/qr'
+import { Route as ApiPublicZapiDisconnectRouteImport } from './routes/api/public/zapi/disconnect'
 import { Route as ApiPublicHooksAutoChargesRouteImport } from './routes/api/public/hooks/auto-charges'
 import { Route as AuthenticatedAdminAssinantesIdRouteImport } from './routes/_authenticated/admin.assinantes.$id'
 
@@ -85,6 +88,21 @@ const AuthenticatedAdminAssinantesRoute =
     path: '/admin/assinantes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicZapiStatusRoute = ApiPublicZapiStatusRouteImport.update({
+  id: '/api/public/zapi/status',
+  path: '/api/public/zapi/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicZapiQrRoute = ApiPublicZapiQrRouteImport.update({
+  id: '/api/public/zapi/qr',
+  path: '/api/public/zapi/qr',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicZapiDisconnectRoute = ApiPublicZapiDisconnectRouteImport.update({
+  id: '/api/public/zapi/disconnect',
+  path: '/api/public/zapi/disconnect',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksAutoChargesRoute =
   ApiPublicHooksAutoChargesRouteImport.update({
     id: '/api/public/hooks/auto-charges',
@@ -112,6 +130,9 @@ export interface FileRoutesByFullPath {
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
+  '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
+  '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
+  '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -127,6 +148,9 @@ export interface FileRoutesByTo {
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
+  '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
+  '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
+  '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -144,6 +168,9 @@ export interface FileRoutesById {
   '/_authenticated/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/_authenticated/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
+  '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
+  '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
+  '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +188,9 @@ export interface FileRouteTypes {
     | '/admin/assinantes'
     | '/admin/assinantes/$id'
     | '/api/public/hooks/auto-charges'
+    | '/api/public/zapi/disconnect'
+    | '/api/public/zapi/qr'
+    | '/api/public/zapi/status'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -176,6 +206,9 @@ export interface FileRouteTypes {
     | '/admin/assinantes'
     | '/admin/assinantes/$id'
     | '/api/public/hooks/auto-charges'
+    | '/api/public/zapi/disconnect'
+    | '/api/public/zapi/qr'
+    | '/api/public/zapi/status'
   id:
     | '__root__'
     | '/'
@@ -192,6 +225,9 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/assinantes'
     | '/_authenticated/admin/assinantes/$id'
     | '/api/public/hooks/auto-charges'
+    | '/api/public/zapi/disconnect'
+    | '/api/public/zapi/qr'
+    | '/api/public/zapi/status'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -200,6 +236,9 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicHooksAutoChargesRoute: typeof ApiPublicHooksAutoChargesRoute
+  ApiPublicZapiDisconnectRoute: typeof ApiPublicZapiDisconnectRoute
+  ApiPublicZapiQrRoute: typeof ApiPublicZapiQrRoute
+  ApiPublicZapiStatusRoute: typeof ApiPublicZapiStatusRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -288,6 +327,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAssinantesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/zapi/status': {
+      id: '/api/public/zapi/status'
+      path: '/api/public/zapi/status'
+      fullPath: '/api/public/zapi/status'
+      preLoaderRoute: typeof ApiPublicZapiStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/zapi/qr': {
+      id: '/api/public/zapi/qr'
+      path: '/api/public/zapi/qr'
+      fullPath: '/api/public/zapi/qr'
+      preLoaderRoute: typeof ApiPublicZapiQrRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/zapi/disconnect': {
+      id: '/api/public/zapi/disconnect'
+      path: '/api/public/zapi/disconnect'
+      fullPath: '/api/public/zapi/disconnect'
+      preLoaderRoute: typeof ApiPublicZapiDisconnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/auto-charges': {
       id: '/api/public/hooks/auto-charges'
       path: '/api/public/hooks/auto-charges'
@@ -351,6 +411,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicHooksAutoChargesRoute: ApiPublicHooksAutoChargesRoute,
+  ApiPublicZapiDisconnectRoute: ApiPublicZapiDisconnectRoute,
+  ApiPublicZapiQrRoute: ApiPublicZapiQrRoute,
+  ApiPublicZapiStatusRoute: ApiPublicZapiStatusRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -2,14 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { translateError } from "@/lib/translate-error";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { User, MessageSquare, KeyRound, LifeBuoy, Camera, QrCode, RefreshCw, LogOut } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { parseBrlToCents } from "@/lib/format";
-import { getZapiStatus, getZapiQrCode, disconnectZapi } from "@/lib/zapi-status.functions";
 
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -302,25 +300,40 @@ function ConfiguracoesPage() {
 
 function WhatsAppConnectSection() {
   const qc = useQueryClient();
-  const statusFn = useServerFn(getZapiStatus);
-  const qrFn = useServerFn(getZapiQrCode);
-  const disconnectFn = useServerFn(disconnectZapi);
+
+  async function zapiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error("Sessão expirada. Entre novamente.");
+
+    const res = await fetch(path, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...(init?.headers ?? {}),
+      },
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error || `Falha na integração WhatsApp (HTTP ${res.status})`);
+    return body as T;
+  }
 
   const status = useQuery({
     queryKey: ["zapi", "status"],
-    queryFn: () => statusFn(),
+    queryFn: () => zapiFetch<{ configured: boolean; connected: boolean; raw?: unknown }>("/api/public/zapi/status", { method: "POST" }),
     refetchInterval: 8000,
   });
 
   const qr = useQuery({
     queryKey: ["zapi", "qr"],
-    queryFn: () => qrFn(),
+    queryFn: () => zapiFetch<{ connected: boolean; image: string | null }>("/api/public/zapi/qr", { method: "POST" }),
     enabled: status.data?.configured === true && status.data?.connected === false,
     refetchInterval: (q) => (q.state.data?.connected ? false : 20000),
   });
 
   const disconnect = useMutation({
-    mutationFn: () => disconnectFn(),
+    mutationFn: () => zapiFetch<{ ok: boolean }>("/api/public/zapi/disconnect", { method: "POST" }),
     onSuccess: () => {
       toast.success("WhatsApp desconectado");
       qc.invalidateQueries({ queryKey: ["zapi"] });
