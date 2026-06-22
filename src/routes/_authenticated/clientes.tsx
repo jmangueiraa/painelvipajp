@@ -219,7 +219,18 @@ function ClientesPage() {
   const whatsappHref = (c: Client) => {
     const p = intlPhone(c.phone);
     if (!p) return "#";
-    const msg = encodeURIComponent(`Olá ${c.name}, tudo bem?`);
+    const due = new Date(c.due_date + "T00:00:00");
+    const dd = String(due.getDate()).padStart(2, "0");
+    const mm = String(due.getMonth() + 1).padStart(2, "0");
+    const yyyy = due.getFullYear();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((today.getTime() - due.getTime()) / 86400000);
+    const overdue = Math.max(0, diffDays);
+    const identifier = c.iptv_login || c.name;
+    const msg = encodeURIComponent(
+      `Ola!  ${identifier} seu vencimento é: *${dd}/${mm}/${yyyy}  vencido há ${overdue}* dias. Aguardo contato para renovação`
+    );
     return `https://wa.me/${p}?text=${msg}`;
   };
   const telHref = (c: Client) => {
