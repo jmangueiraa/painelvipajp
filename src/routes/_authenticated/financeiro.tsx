@@ -18,7 +18,8 @@ export const Route = createFileRoute("/_authenticated/financeiro")({
 });
 
 type Payment = { id: string; amount_cents: number; paid_at: string; method: string | null; client_id: string };
-type Client = { id: string; name: string; price_cents: number; server_id: string | null; status: "ativo" | "vencido" | "suspenso" | "cancelado" };
+type Client = { id: string; name: string; price_cents: number; server_id: string | null; plan_id: string | null; status: "ativo" | "vencido" | "suspenso" | "cancelado" };
+type Plan = { id: string; duration_days: number };
 type Server = { id: string; credit_cost_cents: number };
 
 function FinanceiroPage() {
