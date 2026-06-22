@@ -2,12 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { translateError } from "@/lib/translate-error";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { User, MessageSquare, KeyRound, LifeBuoy, Camera } from "lucide-react";
+import { User, MessageSquare, KeyRound, LifeBuoy, Camera, QrCode, RefreshCw, LogOut } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { parseBrlToCents } from "@/lib/format";
+import { getZapiStatus, getZapiQrCode, disconnectZapi } from "@/lib/zapi-status.functions";
 
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -15,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações — Painel VIP" }] }),
@@ -110,7 +113,7 @@ function ConfiguracoesPage() {
 
   const [fullName, setFullName] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [whatsappInstance, setWhatsappInstance] = useState("");
+  
   const [pixKey, setPixKey] = useState("");
   const [pixName, setPixName] = useState("");
   const [pixBank, setPixBank] = useState("");
@@ -130,7 +133,7 @@ function ConfiguracoesPage() {
   }, [profile]);
   useEffect(() => {
     if (settings) {
-      setWhatsappInstance(settings.whatsapp_instance ?? "");
+      
       setPixKey(settings.pix_key ?? "");
       setPixName(settings.pix_name ?? "");
       setPixBank(settings.pix_bank ?? "");
@@ -245,53 +248,8 @@ function ConfiguracoesPage() {
         <Button className="btn-premium rounded-full mt-2" onClick={() => saveProfile.mutate()} disabled={saveProfile.isPending}>Salvar</Button>
       </SectionCard>
 
-      <SectionCard
-        title="Conectar WhatsApp"
-        description="Conecte sua conta do WhatsApp para enviar cobranças automáticas aos seus clientes."
-        icon={MessageSquare}
-        color="var(--kpi-emerald)"
-      >
-        <div className="flex items-center justify-end -mt-2">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-400">
-            <span className="size-2 rounded-full bg-rose-500" /> Offline
-          </span>
-        </div>
-        <Button
-          className="w-full rounded-xl h-11 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold"
-          onClick={() => toast.info("Em breve: integração Evolution. Adicione EVOLUTION_API_URL e EVOLUTION_API_KEY nos secrets.")}
-        >
-          <MessageSquare className="size-4 mr-2" /> Conectar WhatsApp
-        </Button>
+      <WhatsAppConnectSection />
 
-        <div className="h-px bg-border my-2" />
-
-        <div className="space-y-1">
-          <Label className="text-sm font-semibold">Conectar via Evolution (instância existente)</Label>
-          <p className="text-xs text-muted-foreground">
-            Já tem uma instância criada na Evolution? Digite o nome exato dela para vincular e gerar o QR Code.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Input
-            placeholder="nome-da-instancia"
-            value={whatsappInstance}
-            onChange={(e) => setWhatsappInstance(e.target.value)}
-            className="h-11"
-          />
-          <Button
-            className="h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shrink-0 px-4"
-            onClick={() => {
-              if (!whatsappInstance.trim()) {
-                toast.error("Informe o nome da instância");
-                return;
-              }
-              saveSettings.mutate({ whatsapp_instance: whatsappInstance.trim() });
-            }}
-          >
-            Vincular &<br />gerar QR
-          </Button>
-        </div>
-      </SectionCard>
 
       <SectionCard title="Cadastrar PIX" description="Dados que serão usados nas cobranças" icon={KeyRound} color="var(--kpi-cyan)">
         <div className="grid md:grid-cols-3 gap-3">
@@ -339,5 +297,115 @@ function ConfiguracoesPage() {
         <Button className="btn-premium rounded-full" onClick={() => changePassword.mutate()} disabled={changePassword.isPending}>Salvar senha</Button>
       </SectionCard>
     </div>
+  );
+}
+
+function WhatsAppConnectSection() {
+  const qc = useQueryClient();
+  const statusFn = useServerFn(getZapiStatus);
+  const qrFn = useServerFn(getZapiQrCode);
+  const disconnectFn = useServerFn(disconnectZapi);
+
+  const status = useQuery({
+    queryKey: ["zapi", "status"],
+    queryFn: () => statusFn(),
+    refetchInterval: 8000,
+  });
+
+  const qr = useQuery({
+    queryKey: ["zapi", "qr"],
+    queryFn: () => qrFn(),
+    enabled: status.data?.configured === true && status.data?.connected === false,
+    refetchInterval: (q) => (q.state.data?.connected ? false : 20000),
+  });
+
+  const disconnect = useMutation({
+    mutationFn: () => disconnectFn(),
+    onSuccess: () => {
+      toast.success("WhatsApp desconectado");
+      qc.invalidateQueries({ queryKey: ["zapi"] });
+    },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  const configured = status.data?.configured ?? true;
+  const connected = status.data?.connected ?? false;
+
+  return (
+    <SectionCard
+      title="Conectar WhatsApp"
+      description="Escaneie o QR Code com seu WhatsApp para enviar cobranças automáticas via Z-API."
+      icon={MessageSquare}
+      color="var(--kpi-emerald)"
+    >
+      <div className="flex items-center justify-between -mt-2">
+        <span className="text-xs text-muted-foreground">Integração: Z-API</span>
+        {connected ? (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400">
+            <span className="size-2 rounded-full bg-emerald-500" /> Conectado
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-400">
+            <span className="size-2 rounded-full bg-rose-500" /> {configured ? "Aguardando leitura" : "Não configurado"}
+          </span>
+        )}
+      </div>
+
+      {!configured && (
+        <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-3 text-sm text-rose-300">
+          Credenciais Z-API ausentes. Configure os secrets <strong>Z_API_INSTANCE_ID</strong>, <strong>Z_API_TOKEN</strong> e (opcional) <strong>Z_API_CLIENT_TOKEN</strong>.
+        </div>
+      )}
+
+      {configured && connected && (
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 text-sm text-emerald-300">
+          ✅ WhatsApp conectado e pronto para enviar cobranças automáticas.
+        </div>
+      )}
+
+      {configured && !connected && (
+        <div className="flex flex-col items-center gap-3 py-2">
+          <div className="size-64 rounded-2xl bg-white grid place-items-center p-3 shadow-[var(--shadow-glow)]">
+            {qr.isLoading ? (
+              <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                <RefreshCw className="size-6 animate-spin" />
+                <span className="text-xs">Gerando QR Code…</span>
+              </div>
+            ) : qr.data?.image ? (
+              <img src={qr.data.image} alt="QR Code WhatsApp" className="size-full object-contain" />
+            ) : (
+              <div className="flex flex-col items-center gap-2 text-muted-foreground text-center px-2">
+                <QrCode className="size-8" />
+                <span className="text-xs">{qr.error ? translateError(qr.error as Error) : "Clique em atualizar"}</span>
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground text-center max-w-xs">
+            Abra o WhatsApp no celular → <strong>Aparelhos conectados</strong> → <strong>Conectar um aparelho</strong> e escaneie.
+          </p>
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          className="flex-1 rounded-xl h-11"
+          onClick={() => { qc.invalidateQueries({ queryKey: ["zapi"] }); }}
+          disabled={status.isFetching || qr.isFetching}
+        >
+          <RefreshCw className={`size-4 mr-2 ${status.isFetching || qr.isFetching ? "animate-spin" : ""}`} /> Atualizar
+        </Button>
+        {connected && (
+          <Button
+            variant="outline"
+            className="rounded-xl h-11 text-rose-400 border-rose-500/40 hover:bg-rose-500/10"
+            onClick={() => disconnect.mutate()}
+            disabled={disconnect.isPending}
+          >
+            <LogOut className="size-4 mr-2" /> Desconectar
+          </Button>
+        )}
+      </div>
+    </SectionCard>
   );
 }
