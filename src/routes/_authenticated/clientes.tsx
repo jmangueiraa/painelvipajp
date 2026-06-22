@@ -210,7 +210,17 @@ function ClientesPage() {
     mutationFn: async ({ c, days }: { c: Client; days: number }) => {
       const base = c.due_date && c.due_date >= todayISO() ? c.due_date : todayISO();
       const newDue = addDaysISO(base, days);
-      const { error } = await supabase.from("clients").update({ due_date: newDue, status: computeStatus(newDue, "ativo") }).eq("id", c.id);
+      const update: { due_date: string; status: ClientStatus; plan_id?: string; price_cents?: number } = { due_date: newDue, status: computeStatus(newDue, "ativo") };
+      // Se o período escolhido for diferente do plano atual, troca para um plano com essa duração
+      const currentPlan = (plans ?? []).find((p) => p.id === c.plan_id);
+      if (!currentPlan || currentPlan.duration_days !== days) {
+        const matching = (plans ?? []).find((p) => p.duration_days === days);
+        if (matching) {
+          update.plan_id = matching.id;
+          update.price_cents = matching.price_cents;
+        }
+      }
+      const { error } = await supabase.from("clients").update(update).eq("id", c.id);
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Cliente renovado"); setRenewTarget(null); qc.invalidateQueries({ queryKey: ["clients"] }); },
