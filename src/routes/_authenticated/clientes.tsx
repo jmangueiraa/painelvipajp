@@ -33,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 
 
 export const Route = createFileRoute("/_authenticated/clientes")({
@@ -77,6 +78,8 @@ function ClientesPage() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ ok: number; fail: number; errors: string[] } | null>(null);
   const [nameSort, setNameSort] = useState<"asc" | "desc">("asc");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -182,6 +185,21 @@ function ClientesPage() {
     },
     onSuccess: () => {
       toast.success("Cliente removido");
+      qc.invalidateQueries({ queryKey: ["clients"] });
+    },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  const bulkRemove = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("clients").delete().in("id", ids);
+      if (error) throw error;
+      return ids.length;
+    },
+    onSuccess: (n) => {
+      toast.success(`${n} cliente(s) removido(s)`);
+      setSelectedIds(new Set());
+      setBulkDeleteOpen(false);
       qc.invalidateQueries({ queryKey: ["clients"] });
     },
     onError: (e: Error) => toast.error(translateError(e)),
@@ -420,6 +438,11 @@ function ClientesPage() {
         description={`${clients?.length ?? 0} cliente(s) cadastrado(s)`}
         actions={
           <>
+            {selectedIds.size > 0 && (
+              <Button variant="destructive" className="rounded-full" onClick={() => setBulkDeleteOpen(true)}>
+                <Trash2 className="size-4" /> Excluir selecionados ({selectedIds.size})
+              </Button>
+            )}
             <ActionPillButton color="cyan" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("advance_5d")}>Cobrar Antecipado (5d)</ActionPillButton>
             <ActionPillButton color="rose" icon={<AlertTriangle className="size-4" />} onClick={() => cobranca("overdue")}>Cobrar Vencidos</ActionPillButton>
             <ActionPillButton color="amber" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("due_tomorrow")}>Cobrar Vencendo Amanhã</ActionPillButton>
@@ -466,6 +489,16 @@ function ClientesPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={filtered.length > 0 && filtered.every((c) => selectedIds.has(c.id))}
+                    onCheckedChange={(v) => {
+                      if (v) setSelectedIds(new Set(filtered.map((c) => c.id)));
+                      else setSelectedIds(new Set());
+                    }}
+                    aria-label="Selecionar todos"
+                  />
+                </TableHead>
                 <TableHead>
                   <button
                     type="button"
@@ -486,11 +519,11 @@ function ClientesPage() {
             </TableHeader>
             <TableBody>
               {isLoading && Array.from({ length: 4 }).map((_, i) => (
-                <TableRow key={i}><TableCell colSpan={6}><Skeleton className="h-6 w-full" /></TableCell></TableRow>
+                <TableRow key={i}><TableCell colSpan={7}><Skeleton className="h-6 w-full" /></TableCell></TableRow>
               ))}
               {!isLoading && filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                     <p>Nenhum cliente encontrado.</p>
                     {clients?.length === 0 && (
                       <Button className="btn-premium rounded-full mt-3" onClick={openCreate}>
@@ -501,7 +534,20 @@ function ClientesPage() {
                 </TableRow>
               )}
               {filtered.map((c) => (
-                <TableRow key={c.id}>
+                <TableRow key={c.id} data-state={selectedIds.has(c.id) ? "selected" : undefined}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(c.id)}
+                      onCheckedChange={(v) => {
+                        setSelectedIds((prev) => {
+                          const next = new Set(prev);
+                          if (v) next.add(c.id); else next.delete(c.id);
+                          return next;
+                        });
+                      }}
+                      aria-label={`Selecionar ${c.name}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
                       {c.name}
@@ -693,6 +739,24 @@ function ClientesPage() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover {selectedIds.size} cliente(s)?</AlertDialogTitle>
+            <AlertDialogDescription>Esta ação não pode ser desfeita. Todos os registros selecionados serão excluídos permanentemente.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkRemove.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); bulkRemove.mutate(Array.from(selectedIds)); }}
+              disabled={bulkRemove.isPending}
+            >
+              {bulkRemove.isPending ? "Removendo..." : "Remover"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={importOpen} onOpenChange={(o) => { if (!importing) setImportOpen(o); }}>
         <DialogContent className="max-w-lg">
