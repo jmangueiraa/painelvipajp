@@ -299,3 +299,113 @@ function ConfiguracoesPage() {
     </div>
   );
 }
+
+function WhatsAppConnectSection() {
+  const qc = useQueryClient();
+  const statusFn = useServerFn(getZapiStatus);
+  const qrFn = useServerFn(getZapiQrCode);
+  const disconnectFn = useServerFn(disconnectZapi);
+
+  const status = useQuery({
+    queryKey: ["zapi", "status"],
+    queryFn: () => statusFn(),
+    refetchInterval: 8000,
+  });
+
+  const qr = useQuery({
+    queryKey: ["zapi", "qr"],
+    queryFn: () => qrFn(),
+    enabled: status.data?.configured === true && status.data?.connected === false,
+    refetchInterval: (q) => (q.state.data?.connected ? false : 20000),
+  });
+
+  const disconnect = useMutation({
+    mutationFn: () => disconnectFn(),
+    onSuccess: () => {
+      toast.success("WhatsApp desconectado");
+      qc.invalidateQueries({ queryKey: ["zapi"] });
+    },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  const configured = status.data?.configured ?? true;
+  const connected = status.data?.connected ?? false;
+
+  return (
+    <SectionCard
+      title="Conectar WhatsApp"
+      description="Escaneie o QR Code com seu WhatsApp para enviar cobranças automáticas via Z-API."
+      icon={MessageSquare}
+      color="var(--kpi-emerald)"
+    >
+      <div className="flex items-center justify-between -mt-2">
+        <span className="text-xs text-muted-foreground">Integração: Z-API</span>
+        {connected ? (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400">
+            <span className="size-2 rounded-full bg-emerald-500" /> Conectado
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-400">
+            <span className="size-2 rounded-full bg-rose-500" /> {configured ? "Aguardando leitura" : "Não configurado"}
+          </span>
+        )}
+      </div>
+
+      {!configured && (
+        <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-3 text-sm text-rose-300">
+          Credenciais Z-API ausentes. Configure os secrets <strong>Z_API_INSTANCE_ID</strong>, <strong>Z_API_TOKEN</strong> e (opcional) <strong>Z_API_CLIENT_TOKEN</strong>.
+        </div>
+      )}
+
+      {configured && connected && (
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 text-sm text-emerald-300">
+          ✅ WhatsApp conectado e pronto para enviar cobranças automáticas.
+        </div>
+      )}
+
+      {configured && !connected && (
+        <div className="flex flex-col items-center gap-3 py-2">
+          <div className="size-64 rounded-2xl bg-white grid place-items-center p-3 shadow-[var(--shadow-glow)]">
+            {qr.isLoading ? (
+              <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                <RefreshCw className="size-6 animate-spin" />
+                <span className="text-xs">Gerando QR Code…</span>
+              </div>
+            ) : qr.data?.image ? (
+              <img src={qr.data.image} alt="QR Code WhatsApp" className="size-full object-contain" />
+            ) : (
+              <div className="flex flex-col items-center gap-2 text-muted-foreground text-center px-2">
+                <QrCode className="size-8" />
+                <span className="text-xs">{qr.error ? translateError(qr.error as Error) : "Clique em atualizar"}</span>
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground text-center max-w-xs">
+            Abra o WhatsApp no celular → <strong>Aparelhos conectados</strong> → <strong>Conectar um aparelho</strong> e escaneie.
+          </p>
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          className="flex-1 rounded-xl h-11"
+          onClick={() => { qc.invalidateQueries({ queryKey: ["zapi"] }); }}
+          disabled={status.isFetching || qr.isFetching}
+        >
+          <RefreshCw className={`size-4 mr-2 ${status.isFetching || qr.isFetching ? "animate-spin" : ""}`} /> Atualizar
+        </Button>
+        {connected && (
+          <Button
+            variant="outline"
+            className="rounded-xl h-11 text-rose-400 border-rose-500/40 hover:bg-rose-500/10"
+            onClick={() => disconnect.mutate()}
+            disabled={disconnect.isPending}
+          >
+            <LogOut className="size-4 mr-2" /> Desconectar
+          </Button>
+        )}
+      </div>
+    </SectionCard>
+  );
+}
