@@ -32,7 +32,7 @@ function zapiBase() {
   return { url: `https://api.z-api.io/instances/${instance}/token/${token}`, headers };
 }
 
-export const Route = createFileRoute("/api/public/zapi/qr")({
+export const Route = createFileRoute("/api/public/zapi/qr/")({
   server: {
     handlers: {
       GET: async ({ request }) => {

@@ -321,19 +321,19 @@ function WhatsAppConnectSection() {
 
   const status = useQuery({
     queryKey: ["zapi", "status"],
-    queryFn: () => zapiFetch<{ configured: boolean; connected: boolean; raw?: unknown }>("/api/zapi/status"),
+    queryFn: () => zapiFetch<{ configured: boolean; connected: boolean; raw?: unknown }>("/api/public/zapi/status/"),
     refetchInterval: 8000,
   });
 
   const qr = useQuery({
     queryKey: ["zapi", "qr"],
-    queryFn: () => zapiFetch<{ connected: boolean; image: string | null }>("/api/zapi/qr"),
+    queryFn: () => zapiFetch<{ connected: boolean; image: string | null }>("/api/public/zapi/qr/"),
     enabled: status.data?.configured === true && status.data?.connected === false,
     refetchInterval: (q) => (q.state.data?.connected ? false : 20000),
   });
 
   const disconnect = useMutation({
-    mutationFn: () => zapiFetch<{ ok: boolean }>("/api/zapi/disconnect", { method: "POST" }),
+    mutationFn: () => zapiFetch<{ ok: boolean }>("/api/public/zapi/disconnect/", { method: "POST" }),
     onSuccess: () => {
       toast.success("WhatsApp desconectado");
       qc.invalidateQueries({ queryKey: ["zapi"] });
