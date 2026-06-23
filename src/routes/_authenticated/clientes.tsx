@@ -155,8 +155,6 @@ function ClientesPage() {
     }
   };
 
-  const setPortalCredentials = useServerFn(setPortalCredentialsFn);
-
   const save = useMutation({
     mutationFn: async (values: FormValues) => {
       if (!user) throw new Error("Sem sessão");
@@ -189,28 +187,12 @@ function ClientesPage() {
         user_id: user.id,
       };
       if (referred_by !== undefined) payload.referred_by = referred_by;
-      let clientId: string;
       if (editing) {
         const { error } = await supabase.from("clients").update(payload).eq("id", editing.id);
         if (error) throw error;
-        clientId = editing.id;
       } else {
-        const { data: ins, error } = await supabase.from("clients").insert(payload).select("id").single();
+        const { error } = await supabase.from("clients").insert(payload);
         if (error) throw error;
-        clientId = ins.id;
-      }
-
-      const newUsername = values.portal_username?.trim() ?? "";
-      const newPassword = values.portal_password?.trim() ?? "";
-      const prevUsername = (editing as unknown as { portal_username?: string | null } | null)?.portal_username ?? "";
-      if (newUsername !== prevUsername || newPassword.length > 0) {
-        await setPortalCredentials({
-          data: {
-            clientId,
-            username: newUsername || null,
-            password: newPassword.length > 0 ? newPassword : null,
-          },
-        });
       }
     },
     onSuccess: () => {
