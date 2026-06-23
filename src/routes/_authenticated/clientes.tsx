@@ -54,6 +54,7 @@ const schema = z.object({
   auto_charge: z.boolean(),
   notes: z.string().max(500).optional().or(z.literal("")),
   referred_by_code: z.string().trim().max(40).optional().or(z.literal("")),
+  allowed_plan_ids: z.array(z.string()).optional(),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -66,6 +67,7 @@ type Client = {
   price_cents: number; due_date: string; status: ClientStatus;
   auto_charge: boolean; notes: string | null;
   referral_code: string | null; referred_by: string | null; bonus_days: number;
+  allowed_plan_ids: string[] | null;
 };
 
 type FilterChip = "todos" | "em_dia" | "a_vencer" | "vencem_hoje" | "vencidos" | "bloqueados";
@@ -114,7 +116,7 @@ function ClientesPage() {
     defaultValues: {
       name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
-      auto_charge: true, notes: "", referred_by_code: "",
+      auto_charge: true, notes: "", referred_by_code: "", allowed_plan_ids: [],
     },
   });
 
@@ -123,7 +125,7 @@ function ClientesPage() {
     form.reset({
       name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
-      auto_charge: true, notes: "", referred_by_code: "",
+      auto_charge: true, notes: "", referred_by_code: "", allowed_plan_ids: [],
     });
     setOpen(true);
   };
@@ -136,6 +138,7 @@ function ClientesPage() {
       price: (c.price_cents / 100).toFixed(2).replace(".", ","),
       due_date: c.due_date, auto_charge: c.auto_charge, notes: c.notes ?? "",
       referred_by_code: "",
+      allowed_plan_ids: (c as Client & { allowed_plan_ids?: string[] | null }).allowed_plan_ids ?? [],
     });
     setOpen(true);
   };
@@ -165,6 +168,7 @@ function ClientesPage() {
         plan_id: string | null; server_id: string | null;
         price_cents: number; due_date: string; status: ClientStatus;
         auto_charge: boolean; notes: string | null; user_id: string;
+        allowed_plan_ids: string[];
         referred_by?: string | null;
       } = {
         name: values.name.trim(),
@@ -179,6 +183,7 @@ function ClientesPage() {
         auto_charge: values.auto_charge,
         notes: values.notes?.trim() || null,
         user_id: user.id,
+        allowed_plan_ids: values.allowed_plan_ids ?? [],
       };
       if (referred_by !== undefined) payload.referred_by = referred_by;
       if (editing) {
@@ -748,6 +753,34 @@ function ClientesPage() {
                   </FormItem>
                 )} />
               </div>
+              <FormField control={form.control} name="allowed_plan_ids" render={({ field }) => (
+                <FormItem className="rounded-xl border border-border p-3">
+                  <FormLabel>Planos liberados no portal</FormLabel>
+                  <p className="text-xs text-muted-foreground -mt-1 mb-2">
+                    Marque os planos que este cliente poderá escolher ao renovar pelo portal. Se nenhum for marcado, todos os planos ativos ficam disponíveis.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {(plans ?? []).map((p) => {
+                      const checked = (field.value ?? []).includes(p.id);
+                      return (
+                        <label key={p.id} className="flex items-center gap-2 rounded-lg border border-border px-2 py-1.5 cursor-pointer hover:bg-muted/40">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => {
+                              const cur = field.value ?? [];
+                              field.onChange(v ? [...cur, p.id] : cur.filter((x) => x !== p.id));
+                            }}
+                          />
+                          <span className="text-sm">{p.name} — {brl(p.price_cents)}</span>
+                        </label>
+                      );
+                    })}
+                    {(!plans || plans.length === 0) && (
+                      <p className="text-xs text-muted-foreground">Cadastre planos antes de definir os liberados.</p>
+                    )}
+                  </div>
+                </FormItem>
+              )} />
               <FormField control={form.control} name="notes" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Observações</FormLabel>
