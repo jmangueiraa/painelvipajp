@@ -352,7 +352,7 @@ function PortalDashboard() {
         )}
       </main>
 
-      <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setPixPeriod(null); setPixCopied(false); setValCopied(false); setBrCopied(false); setQrDataUrl(null); setPixPayload(""); } }}>
+      <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setPixPeriod(null); setValCopied(false); setBrCopied(false); setQrBase64(null); setPixPayload(""); setRenewalId(null); setPaymentId(null); setPaymentStatus("pending"); } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Renovar plano</DialogTitle>
@@ -384,7 +384,7 @@ function PortalDashboard() {
                   ))}
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">Seu provedor também será avisado do pedido.</p>
+              <p className="text-xs text-muted-foreground">PIX gerado via Mercado Pago. Após o pagamento, a solicitação é confirmada automaticamente.</p>
             </>
           ) : (
             <div className="space-y-3">
@@ -397,40 +397,46 @@ function PortalDashboard() {
                 <div className="text-xs text-muted-foreground">Valor a pagar</div>
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-xl font-bold">{brl(pixPeriod.price_cents)}</div>
-                  <Button size="sm" variant="outline" onClick={() => copy((pixPeriod.price_cents / 100).toFixed(2), "val")}>
+                  <Button size="sm" variant="outline" onClick={() => copy((pixPeriod.price_cents / 100).toFixed(2))}>
                     {valCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar
                   </Button>
                 </div>
               </div>
 
-              {qrDataUrl && (
+              {creating && (
+                <div className="flex items-center justify-center gap-2 rounded-xl border bg-card p-6 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />Gerando QR Code...
+                </div>
+              )}
+
+              {qrBase64 && !creating && (
                 <div className="flex flex-col items-center gap-2 rounded-xl border-2 border-primary/40 bg-white p-3">
-                  <img src={qrDataUrl} alt="QR Code PIX" className="h-56 w-56" />
+                  <img src={`data:image/png;base64,${qrBase64}`} alt="QR Code PIX" className="h-56 w-56" />
                   <div className="text-xs text-muted-foreground">Escaneie no app do seu banco</div>
                 </div>
               )}
 
-              <div className="rounded-xl border bg-card p-3">
-                <div className="mb-1 text-xs text-muted-foreground">PIX Copia e Cola</div>
-                <div className="break-all rounded-md bg-muted/50 p-2 font-mono text-[10px] leading-tight">{pixPayload}</div>
-                <Button size="sm" className="mt-2 w-full" onClick={() => { void navigator.clipboard.writeText(pixPayload); setBrCopied(true); setTimeout(() => setBrCopied(false), 2000); toast.success("Código PIX copiado!"); }}>
-                  {brCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar código PIX
-                </Button>
-              </div>
-
-              <div className="rounded-xl border bg-card p-3">
-                <div className="text-xs text-muted-foreground">Ou use a chave PIX</div>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="font-mono text-sm font-bold tracking-wide">{PIX_KEY}</div>
-                  <Button size="sm" variant="outline" onClick={() => copy(PIX_KEY, "pix")}>
-                    {pixCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar
+              {pixPayload && !creating && (
+                <div className="rounded-xl border bg-card p-3">
+                  <div className="mb-1 text-xs text-muted-foreground">PIX Copia e Cola</div>
+                  <div className="break-all rounded-md bg-muted/50 p-2 font-mono text-[10px] leading-tight">{pixPayload}</div>
+                  <Button size="sm" className="mt-2 w-full" onClick={() => { void navigator.clipboard.writeText(pixPayload); setBrCopied(true); setTimeout(() => setBrCopied(false), 2000); toast.success("Código PIX copiado!"); }}>
+                    {brCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar código PIX
                   </Button>
                 </div>
-              </div>
+              )}
 
-              <p className="text-xs text-muted-foreground">
-                Após o pagamento, sua solicitação já foi enviada ao administrador. A liberação é feita após a confirmação.
-              </p>
+              {paymentStatus === "approved" ? (
+                <div className="rounded-xl border-2 border-emerald-500/60 bg-emerald-500/10 p-3 text-center text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                  ✅ Pagamento confirmado! Aguardando liberação do admin.
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Aguardando pagamento... A confirmação é automática após o PIX ser processado pelo Mercado Pago.
+                </p>
+              )}
+              {paymentId && <p className="text-[10px] text-muted-foreground text-center">ID do pagamento: {paymentId}</p>}
+
 
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => setPixPeriod(null)}>Voltar</Button>
