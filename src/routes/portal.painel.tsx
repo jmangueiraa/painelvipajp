@@ -259,26 +259,6 @@ function PortalDashboard() {
           </Card>
         )}
 
-        {/* Indique e ganhe */}
-        {data.settings.referral_enabled && data.client.referral_code && (
-          <Link to="/portal/indique">
-            <Card className="cursor-pointer transition hover:border-primary/50">
-              <CardContent className="flex items-center gap-3 p-4">
-                <div className="grid h-10 w-10 place-items-center rounded-lg bg-emerald-500/10 text-emerald-600">
-                  <Gift className="h-5 w-5" />
-                </div>
-                <div className="flex-1">
-                  <div className="font-semibold">Indique e ganhe {data.settings.referral_reward_days} dias grátis</div>
-                  <div className="text-xs text-muted-foreground">
-                    {data.referrals.length} indicados · {data.client.bonus_days} dias bônus acumulados
-                  </div>
-                </div>
-                <div className="text-muted-foreground">›</div>
-              </CardContent>
-            </Card>
-          </Link>
-        )}
-
         {/* Histórico de pagamentos */}
         <section>
           <div className="mb-3 flex items-center gap-2 px-1">
@@ -316,6 +296,26 @@ function PortalDashboard() {
             </ul>
           )}
         </section>
+
+        {/* Indique e ganhe */}
+        {data.settings.referral_enabled && data.client.referral_code && (
+          <Link to="/portal/indique">
+            <Card className="cursor-pointer transition hover:border-primary/50">
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className="grid h-10 w-10 place-items-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                  <Gift className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold">Indique e ganhe {data.settings.referral_reward_days} dias grátis</div>
+                  <div className="text-xs text-muted-foreground">
+                    {data.referrals.length} indicados · {data.client.bonus_days} dias bônus acumulados
+                  </div>
+                </div>
+                <div className="text-muted-foreground">›</div>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
       </main>
 
       <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setPixPeriod(null); setPixCopied(false); setValCopied(false); } }}>
