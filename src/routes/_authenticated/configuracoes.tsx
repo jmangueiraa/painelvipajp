@@ -164,6 +164,8 @@ function ConfiguracoesPage() {
     support_message: string | null;
     subscription_expires_at: string | null;
     subscription_monthly_cents: number;
+    app_android_url: string | null;
+    app_ios_url: string | null;
   }>;
   const saveSettings = useMutation({
     mutationFn: async (patch: SettingsPatch) => {
