@@ -100,7 +100,7 @@ function PortalDashboard() {
         if (r.status && r.status !== paymentStatus) {
           setPaymentStatus(r.status);
           if (r.status === "approved") {
-            toast.success("Pagamento confirmado! Aguardando liberação do admin.");
+            toast.success("Pagamento confirmado!");
             void refetch();
             if (pollRef.current) window.clearInterval(pollRef.current);
             setTimeout(() => {
@@ -111,7 +111,7 @@ function PortalDashboard() {
               setRenewalId(null);
               setPaymentId(null);
               setPaymentStatus("pending");
-            }, 1500);
+            }, 3500);
           }
         }
       } catch { /* noop */ }
