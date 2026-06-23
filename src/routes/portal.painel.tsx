@@ -334,12 +334,12 @@ function PortalDashboard() {
         )}
       </main>
 
-      <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setPixPeriod(null); setPixCopied(false); setValCopied(false); } }}>
+      <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setPixPeriod(null); setPixCopied(false); setValCopied(false); setBrCopied(false); setQrDataUrl(null); setPixPayload(""); } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Renovar plano</DialogTitle>
             <DialogDescription>
-              {pixPeriod ? "Pague via PIX usando a chave abaixo." : "Escolha o período. O valor é calculado conforme seu plano."}
+              {pixPeriod ? "Escaneie o QR Code ou copie o código PIX abaixo." : "Escolha o período. O valor é calculado conforme seu plano."}
             </DialogDescription>
           </DialogHeader>
 
