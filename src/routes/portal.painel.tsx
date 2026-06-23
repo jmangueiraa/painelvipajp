@@ -68,6 +68,9 @@ function PortalDashboard() {
   const [pixPeriod, setPixPeriod] = useState<{ label: string; days: number; price_cents: number } | null>(null);
   const [pixCopied, setPixCopied] = useState(false);
   const [valCopied, setValCopied] = useState(false);
+  const [brCopied, setBrCopied] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [pixPayload, setPixPayload] = useState<string>("");
   const PIX_KEY = "16997855438";
 
   useEffect(() => {
