@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { CalendarClock, CreditCard, Gift, LogOut, RefreshCw, Server as ServerIcon, Tv, Download } from "lucide-react";
+import { CalendarClock, CreditCard, Gift, LogOut, RefreshCw, Server as ServerIcon, Tv, Download, Copy, Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,6 +47,10 @@ function statusColor(s: string) {
 function PortalDashboard() {
   const navigate = useNavigate();
   const [renewOpen, setRenewOpen] = useState(false);
+  const [pixPeriod, setPixPeriod] = useState<{ label: string; days: number; months: number } | null>(null);
+  const [pixCopied, setPixCopied] = useState(false);
+  const [valCopied, setValCopied] = useState(false);
+  const PIX_KEY = "16997855438";
 
   useEffect(() => {
     if (!getPortalToken()) navigate({ to: "/portal" });
@@ -68,11 +72,26 @@ function PortalDashboard() {
   const renew = useMutation({
     mutationFn: (days: number) => portalFetch("/api/public/portal/renew-request", { method: "POST", body: JSON.stringify({ days }) }),
     onSuccess: () => {
-      toast.success("Pedido de renovação enviado! Aguarde o contato do seu provedor.");
-      setRenewOpen(false);
+      toast.success("Pedido enviado! Use a chave PIX abaixo para pagar.");
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  function selectPeriod(o: { label: string; days: number; months: number }) {
+    setPixPeriod(o);
+    renew.mutate(o.days);
+  }
+
+  async function copy(text: string, which: "pix" | "val") {
+    try {
+      await navigator.clipboard.writeText(text);
+      if (which === "pix") { setPixCopied(true); setTimeout(() => setPixCopied(false), 2000); }
+      else { setValCopied(true); setTimeout(() => setValCopied(false), 2000); }
+      toast.success("Copiado!");
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+  }
 
   function handleLogout() {
     void portalFetch("/api/public/portal/logout", { method: "POST" }).catch(() => undefined);
@@ -245,25 +264,71 @@ function PortalDashboard() {
         </Card>
       </main>
 
-      <Dialog open={renewOpen} onOpenChange={setRenewOpen}>
+      <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setPixPeriod(null); setPixCopied(false); setValCopied(false); } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Renovar plano</DialogTitle>
-            <DialogDescription>Escolha o período. Vamos avisar seu provedor para enviar o pagamento.</DialogDescription>
+            <DialogDescription>
+              {pixPeriod ? "Pague via PIX usando a chave abaixo." : "Escolha o período. O valor é calculado conforme seu plano."}
+            </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { label: "Mensal", days: 30 },
-              { label: "Trimestral", days: 90 },
-              { label: "Semestral", days: 180 },
-              { label: "Anual", days: 365 },
-            ].map((o) => (
-              <Button key={o.days} variant="outline" disabled={renew.isPending} onClick={() => renew.mutate(o.days)}>
-                {o.label}
-              </Button>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">Após confirmar, você receberá as instruções de pagamento no WhatsApp.</p>
+
+          {!pixPeriod ? (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: "Mensal", days: 30, months: 1 },
+                  { label: "Trimestral", days: 90, months: 3 },
+                  { label: "Semestral", days: 180, months: 6 },
+                  { label: "Anual", days: 365, months: 12 },
+                ].map((o) => (
+                  <Button key={o.days} variant="outline" disabled={renew.isPending} onClick={() => selectPeriod(o)}>
+                    <div className="flex flex-col">
+                      <span>{o.label}</span>
+                      <span className="text-xs text-muted-foreground">{brl(data.client.price_cents * o.months)}</span>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">Seu provedor também será avisado do pedido.</p>
+            </>
+          ) : (
+            <div className="space-y-3">
+              <div className="rounded-xl border bg-card p-3">
+                <div className="text-xs text-muted-foreground">Período</div>
+                <div className="font-semibold">{pixPeriod.label} · {pixPeriod.days} dias</div>
+              </div>
+
+              <div className="rounded-xl border bg-card p-3">
+                <div className="text-xs text-muted-foreground">Valor a pagar</div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xl font-bold">{brl(data.client.price_cents * pixPeriod.months)}</div>
+                  <Button size="sm" variant="outline" onClick={() => copy(((data.client.price_cents * pixPeriod.months) / 100).toFixed(2), "val")}>
+                    {valCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar
+                  </Button>
+                </div>
+              </div>
+
+              <div className="rounded-xl border-2 border-primary/40 bg-primary/5 p-3">
+                <div className="text-xs text-muted-foreground">Chave PIX (Celular)</div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-mono text-lg font-bold tracking-wide">{PIX_KEY}</div>
+                  <Button size="sm" onClick={() => copy(PIX_KEY, "pix")}>
+                    {pixCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar
+                  </Button>
+                </div>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Após o pagamento, envie o comprovante no WhatsApp do seu provedor. A liberação é feita após a confirmação.
+              </p>
+
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => setPixPeriod(null)}>Voltar</Button>
+                <Button className="flex-1" onClick={() => { setRenewOpen(false); setPixPeriod(null); }}>Fechar</Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
