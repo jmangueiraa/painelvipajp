@@ -94,8 +94,18 @@ export async function sendWhatsappOtp(phoneDigits: string, code: string, clientN
     headers,
     body: JSON.stringify({ phone: phoneDigits, message }),
   });
+  const txt = await res.text().catch(() => "");
+  console.log("[portal] Z-API send-text", { status: res.status, phone: phoneDigits, body: txt.slice(0, 500) });
   if (!res.ok) {
-    const txt = await res.text().catch(() => "");
     throw new Error(`Falha ao enviar WhatsApp: ${res.status} ${txt}`);
+  }
+  // Z-API retorna 200 mesmo em erro; checar body
+  try {
+    const json = JSON.parse(txt);
+    if (json?.error || json?.value === false) {
+      throw new Error(`Z-API erro: ${txt}`);
+    }
+  } catch (e) {
+    if ((e as Error).message?.startsWith("Z-API erro")) throw e;
   }
 }
