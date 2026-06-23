@@ -150,7 +150,6 @@ function ClientesPage() {
     const p = plans?.find((x) => x.id === planId);
     if (p) {
       form.setValue("price", (p.price_cents / 100).toFixed(2).replace(".", ","));
-      if (!editing) form.setValue("due_date", addDaysISO(todayISO(), p.duration_days));
     }
   };
 
