@@ -64,12 +64,15 @@ function PortalDashboard() {
   const navigate = useNavigate();
   const [renewOpen, setRenewOpen] = useState(false);
   const [pixPeriod, setPixPeriod] = useState<{ label: string; days: number; price_cents: number } | null>(null);
-  const [pixCopied, setPixCopied] = useState(false);
   const [valCopied, setValCopied] = useState(false);
   const [brCopied, setBrCopied] = useState(false);
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [qrBase64, setQrBase64] = useState<string | null>(null);
   const [pixPayload, setPixPayload] = useState<string>("");
-  const PIX_KEY = "16997855438";
+  const [renewalId, setRenewalId] = useState<string | null>(null);
+  const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<string>("pending");
+  const [creating, setCreating] = useState(false);
+  const pollRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!getPortalToken()) navigate({ to: "/portal" });
@@ -88,29 +91,46 @@ function PortalDashboard() {
     }
   }, [error, navigate]);
 
+  // Polling do status do pagamento
+  useEffect(() => {
+    if (!renewalId || paymentStatus === "approved") return;
+    pollRef.current = window.setInterval(async () => {
+      try {
+        const r = await portalFetch<{ status: string }>(`/api/public/portal/renewal-status?id=${renewalId}`);
+        if (r.status && r.status !== paymentStatus) {
+          setPaymentStatus(r.status);
+          if (r.status === "approved") {
+            toast.success("Pagamento confirmado! Aguardando liberação do admin.");
+            void refetch();
+          }
+        }
+      } catch { /* noop */ }
+    }, 5000);
+    return () => { if (pollRef.current) window.clearInterval(pollRef.current); };
+  }, [renewalId, paymentStatus, refetch]);
+
   const renew = useMutation({
-    mutationFn: (days: number) => portalFetch("/api/public/portal/renew-request", { method: "POST", body: JSON.stringify({ days }) }),
-    onSuccess: () => {
-      toast.success("Pedido enviado! Use a chave PIX abaixo para pagar.");
+    mutationFn: (o: { days: number; amount_cents: number; label: string }) =>
+      portalFetch<{ renewal_id: string; payment_id: string; qr_code: string; qr_code_base64: string }>(
+        "/api/public/portal/mp-create-pix",
+        { method: "POST", body: JSON.stringify(o) },
+      ),
+    onSuccess: (r) => {
+      setRenewalId(r.renewal_id);
+      setPaymentId(r.payment_id);
+      setPixPayload(r.qr_code);
+      setQrBase64(r.qr_code_base64);
+      setPaymentStatus("pending");
+      toast.success("QR Code PIX gerado!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => { toast.error(e.message); setPixPeriod(null); },
+    onSettled: () => setCreating(false),
   });
 
   function selectPeriod(o: { label: string; days: number; price_cents: number }) {
     setPixPeriod(o);
-    renew.mutate(o.days);
-    const payload = buildPixPayload({
-      key: PIX_KEY,
-      amount: o.price_cents / 100,
-      merchantName: "PAINEL VIP",
-      merchantCity: "SAO PAULO",
-      txid: `REN${Date.now().toString().slice(-10)}`,
-      description: `Plano ${o.label}`,
-    });
-    setPixPayload(payload);
-    QRCode.toDataURL(payload, { width: 280, margin: 1 })
-      .then(setQrDataUrl)
-      .catch(() => setQrDataUrl(null));
+    setCreating(true);
+    renew.mutate({ days: o.days, amount_cents: o.price_cents, label: o.label });
   }
 
   async function copy(text: string, which: "pix" | "val") {
