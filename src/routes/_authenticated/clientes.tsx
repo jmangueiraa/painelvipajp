@@ -117,6 +117,7 @@ function ClientesPage() {
       name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
       auto_charge: true, notes: "", referred_by_code: "",
+      portal_username: "", portal_password: "",
     },
   });
 
@@ -126,6 +127,7 @@ function ClientesPage() {
       name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
       auto_charge: true, notes: "", referred_by_code: "",
+      portal_username: "", portal_password: "",
     });
     setOpen(true);
   };
@@ -138,6 +140,8 @@ function ClientesPage() {
       price: (c.price_cents / 100).toFixed(2).replace(".", ","),
       due_date: c.due_date, auto_charge: c.auto_charge, notes: c.notes ?? "",
       referred_by_code: "",
+      portal_username: (c as unknown as { portal_username?: string | null }).portal_username ?? "",
+      portal_password: "",
     });
     setOpen(true);
   };
