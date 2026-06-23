@@ -78,7 +78,7 @@ function PortalDashboard() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  function selectPeriod(o: { label: string; days: number; months: number }) {
+  function selectPeriod(o: { label: string; days: number; price_cents: number }) {
     setPixPeriod(o);
     renew.mutate(o.days);
   }
