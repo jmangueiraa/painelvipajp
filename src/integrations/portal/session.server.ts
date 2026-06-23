@@ -18,10 +18,10 @@ export function verifyPassword(password: string, stored: string | null | undefin
   return timingSafeEqual(derived, hashBuf);
 }
 
-export async function getClientByPortalUsername(username: string): Promise<import("./types").PortalClient | null> {
+export async function getClientByPortalUsername(username: string): Promise<PortalClient | null> {
   const { data, error } = await supabaseAdmin.rpc("find_client_by_portal_username", { _username: username });
   if (error || !data || !Array.isArray(data) || data.length === 0) return null;
-  return data[0] as unknown as import("./types").PortalClient;
+  return data[0] as unknown as PortalClient;
 }
 
 export const SESSION_TTL_DAYS = 30;
