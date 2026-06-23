@@ -753,6 +753,34 @@ function ClientesPage() {
                   </FormItem>
                 )} />
               </div>
+              <FormField control={form.control} name="allowed_plan_ids" render={({ field }) => (
+                <FormItem className="rounded-xl border border-border p-3">
+                  <FormLabel>Planos liberados no portal</FormLabel>
+                  <p className="text-xs text-muted-foreground -mt-1 mb-2">
+                    Marque os planos que este cliente poderá escolher ao renovar pelo portal. Se nenhum for marcado, todos os planos ativos ficam disponíveis.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {(plans ?? []).map((p) => {
+                      const checked = (field.value ?? []).includes(p.id);
+                      return (
+                        <label key={p.id} className="flex items-center gap-2 rounded-lg border border-border px-2 py-1.5 cursor-pointer hover:bg-muted/40">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => {
+                              const cur = field.value ?? [];
+                              field.onChange(v ? [...cur, p.id] : cur.filter((x) => x !== p.id));
+                            }}
+                          />
+                          <span className="text-sm">{p.name} — {brl(p.price_cents)}</span>
+                        </label>
+                      );
+                    })}
+                    {(!plans || plans.length === 0) && (
+                      <p className="text-xs text-muted-foreground">Cadastre planos antes de definir os liberados.</p>
+                    )}
+                  </div>
+                </FormItem>
+              )} />
               <FormField control={form.control} name="notes" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Observações</FormLabel>
