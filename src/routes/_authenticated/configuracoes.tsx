@@ -111,7 +111,7 @@ function ConfiguracoesPage() {
 
   const [fullName, setFullName] = useState("");
   const [companyName, setCompanyName] = useState("");
-  
+
   const [pixKey, setPixKey] = useState("");
   const [pixName, setPixName] = useState("");
   const [pixBank, setPixBank] = useState("");
@@ -119,6 +119,8 @@ function ConfiguracoesPage() {
   const [supportMessage, setSupportMessage] = useState("");
   const [subExpires, setSubExpires] = useState("");
   const [subMonthly, setSubMonthly] = useState("");
+  const [appAndroidUrl, setAppAndroidUrl] = useState("");
+  const [appIosUrl, setAppIosUrl] = useState("");
   const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
