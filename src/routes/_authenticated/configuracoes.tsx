@@ -274,6 +274,22 @@ function ConfiguracoesPage() {
         <Button className="btn-premium rounded-full" onClick={() => saveSettings.mutate({ support_message: supportMessage })}>Salvar mensagem de suporte</Button>
       </SectionCard>
 
+      <SectionCard title="Aplicativo para clientes" description="Links de download que aparecem no portal do cliente" icon={Smartphone} color="var(--kpi-violet)">
+        <div className="grid md:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label>Google Play (Android)</Label>
+            <Input placeholder="https://play.google.com/..." value={appAndroidUrl} onChange={(e) => setAppAndroidUrl(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label>App Store (iOS)</Label>
+            <Input placeholder="https://apps.apple.com/..." value={appIosUrl} onChange={(e) => setAppIosUrl(e.target.value)} />
+          </div>
+        </div>
+        <Button className="btn-premium rounded-full" onClick={() => saveSettings.mutate({ app_android_url: appAndroidUrl || null, app_ios_url: appIosUrl || null })}>
+          Salvar links do app
+        </Button>
+      </SectionCard>
+
       <SectionCard title="Assinatura do painel" description="Usado em Dashboard e Renovação" icon={KeyRound} color="var(--kpi-violet)">
         <div className="grid md:grid-cols-2 gap-3">
           <div className="space-y-1"><Label>Expira em</Label><Input type="date" value={subExpires} onChange={(e) => setSubExpires(e.target.value)} /></div>
