@@ -155,7 +155,7 @@ function SolicitacoesPage() {
               {done.map((r) => (
                 <li key={r.id} className="flex items-center justify-between py-2 text-sm">
                   <span>{r.clients?.name ?? "Cliente"} · {periodLabel(r.days)}</span>
-                  <Badge variant="outline">{r.status}</Badge>
+                  <Badge variant="outline">{r.status === "paid" ? "Pago" : r.status === "approved" ? "Aprovado" : r.status === "pending" ? "Pendente" : r.status === "rejected" ? "Rejeitado" : r.status}</Badge>
                 </li>
               ))}
             </ul>
