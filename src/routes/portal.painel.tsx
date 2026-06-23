@@ -195,6 +195,27 @@ function PortalDashboard() {
           </CardContent>
         </Card>
 
+        {/* Baixar aplicativo */}
+        {(data.settings.app_android_url || data.settings.app_ios_url) && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base"><Smartphone className="h-4 w-4" />Aplicativo</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-3">
+              {data.settings.app_android_url && (
+                <a href={data.settings.app_android_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
+                  <ExternalLink className="h-4 w-4" />Google Play
+                </a>
+              )}
+              {data.settings.app_ios_url && (
+                <a href={data.settings.app_ios_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
+                  <ExternalLink className="h-4 w-4" />App Store
+                </a>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Credenciais IPTV */}
         {(data.client.iptv_login || data.client.iptv_password) && (
           <Card>
