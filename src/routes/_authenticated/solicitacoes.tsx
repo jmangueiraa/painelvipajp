@@ -82,9 +82,10 @@ function SolicitacoesPage() {
       if (e2) throw e2;
     },
     onSuccess: () => {
-      toast.success("Renovação aprovada");
+      toast.success("Renovação aprovada e pagamento registrado");
       qc.invalidateQueries({ queryKey: ["renewal_requests"] });
       qc.invalidateQueries({ queryKey: ["clients"] });
+      qc.invalidateQueries({ queryKey: ["payments"] });
     },
     onError: (e: Error) => toast.error(translateError(e)),
   });
