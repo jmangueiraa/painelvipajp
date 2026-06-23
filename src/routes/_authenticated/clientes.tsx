@@ -255,7 +255,7 @@ function ClientesPage() {
       if (error) throw error;
       // Registra o pagamento da renovação para somar no financeiro
       const { error: payErr } = await supabase.from("payments").insert({
-        user_id: user.id,
+        user_id: user!.id,
         client_id: c.id,
         amount_cents: update.price_cents ?? c.price_cents ?? 0,
         method: "manual",
