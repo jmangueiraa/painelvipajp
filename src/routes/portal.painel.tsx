@@ -101,6 +101,18 @@ function PortalDashboard() {
   function selectPeriod(o: { label: string; days: number; price_cents: number }) {
     setPixPeriod(o);
     renew.mutate(o.days);
+    const payload = buildPixPayload({
+      key: PIX_KEY,
+      amount: o.price_cents / 100,
+      merchantName: "PAINEL VIP",
+      merchantCity: "SAO PAULO",
+      txid: `REN${Date.now().toString().slice(-10)}`,
+      description: `Plano ${o.label}`,
+    });
+    setPixPayload(payload);
+    QRCode.toDataURL(payload, { width: 280, margin: 1 })
+      .then(setQrDataUrl)
+      .catch(() => setQrDataUrl(null));
   }
 
   async function copy(text: string, which: "pix" | "val") {
