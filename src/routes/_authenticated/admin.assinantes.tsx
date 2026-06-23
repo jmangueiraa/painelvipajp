@@ -8,7 +8,7 @@ import {
 
 import { listSubscribers, type SubscriberRow } from "@/lib/admin-subscribers.functions";
 import { useIsAdmin } from "@/hooks/use-is-admin";
-import { brl, formatDateBR } from "@/lib/format";
+import { brl, formatDateBR, formatDateTimeBR } from "@/lib/format";
 
 import { PageHeader } from "@/components/page-header";
 import { KpiCard } from "@/components/kpi-card";
