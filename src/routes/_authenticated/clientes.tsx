@@ -151,7 +151,14 @@ function ClientesPage() {
   const save = useMutation({
     mutationFn: async (values: FormValues) => {
       if (!user) throw new Error("Sem sessão");
-      const payload = {
+      let referred_by: string | null | undefined = undefined;
+      const refCode = values.referred_by_code?.trim().toUpperCase();
+      if (refCode) {
+        const { data: ref } = await supabase.from("clients").select("id").eq("referral_code", refCode).maybeSingle();
+        if (!ref) throw new Error("Código de indicação não encontrado");
+        referred_by = ref.id;
+      }
+      const payload: Record<string, unknown> = {
         name: values.name.trim(),
         phone: values.phone.trim(),
         iptv_login: values.iptv_login?.trim() || null,
@@ -165,11 +172,12 @@ function ClientesPage() {
         notes: values.notes?.trim() || null,
         user_id: user.id,
       };
+      if (referred_by !== undefined) payload.referred_by = referred_by;
       if (editing) {
         const { error } = await supabase.from("clients").update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("clients").insert(payload);
+        const { error } = await supabase.from("clients").insert(payload as never);
         if (error) throw error;
       }
     },
