@@ -385,18 +385,33 @@ function PortalDashboard() {
                 </div>
               </div>
 
-              <div className="rounded-xl border-2 border-primary/40 bg-primary/5 p-3">
-                <div className="text-xs text-muted-foreground">Chave PIX (Celular)</div>
+              {qrDataUrl && (
+                <div className="flex flex-col items-center gap-2 rounded-xl border-2 border-primary/40 bg-white p-3">
+                  <img src={qrDataUrl} alt="QR Code PIX" className="h-56 w-56" />
+                  <div className="text-xs text-muted-foreground">Escaneie no app do seu banco</div>
+                </div>
+              )}
+
+              <div className="rounded-xl border bg-card p-3">
+                <div className="mb-1 text-xs text-muted-foreground">PIX Copia e Cola</div>
+                <div className="break-all rounded-md bg-muted/50 p-2 font-mono text-[10px] leading-tight">{pixPayload}</div>
+                <Button size="sm" className="mt-2 w-full" onClick={() => { void navigator.clipboard.writeText(pixPayload); setBrCopied(true); setTimeout(() => setBrCopied(false), 2000); toast.success("Código PIX copiado!"); }}>
+                  {brCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar código PIX
+                </Button>
+              </div>
+
+              <div className="rounded-xl border bg-card p-3">
+                <div className="text-xs text-muted-foreground">Ou use a chave PIX</div>
                 <div className="flex items-center justify-between gap-2">
-                  <div className="font-mono text-lg font-bold tracking-wide">{PIX_KEY}</div>
-                  <Button size="sm" onClick={() => copy(PIX_KEY, "pix")}>
+                  <div className="font-mono text-sm font-bold tracking-wide">{PIX_KEY}</div>
+                  <Button size="sm" variant="outline" onClick={() => copy(PIX_KEY, "pix")}>
                     {pixCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar
                   </Button>
                 </div>
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Após o pagamento, envie o comprovante no WhatsApp do seu provedor. A liberação é feita após a confirmação.
+                Após o pagamento, sua solicitação já foi enviada ao administrador. A liberação é feita após a confirmação.
               </p>
 
               <div className="flex gap-2">
