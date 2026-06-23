@@ -35,7 +35,7 @@ type Me = {
   server: { id: string; name: string } | null;
   payments: { id: string; amount_cents: number; paid_at: string; method: string | null }[];
   referrals: { id: string; name: string; paid: boolean }[];
-  settings: { referral_reward_days: number; referral_enabled: boolean };
+  settings: { referral_reward_days: number; referral_enabled: boolean; app_android_url: string | null; app_ios_url: string | null };
   plans: { id: string; name: string; price_cents: number; duration_days: number }[];
 };
 
