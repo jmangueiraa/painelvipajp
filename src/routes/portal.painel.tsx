@@ -364,6 +364,21 @@ function PortalDashboard() {
 
       <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setPixPeriod(null); setValCopied(false); setBrCopied(false); setQrBase64(null); setPixPayload(""); setRenewalId(null); setPaymentId(null); setPaymentStatus("pending"); } }}>
         <DialogContent className="max-w-sm">
+          {paymentStatus === "approved" ? (
+            <div className="flex flex-col items-center gap-4 py-8 text-center">
+              <div className="grid h-20 w-20 place-items-center rounded-full bg-emerald-500/15 animate-in zoom-in duration-500">
+                <CheckCircle2 className="h-12 w-12 text-emerald-500" strokeWidth={2.5} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-emerald-600 dark:text-emerald-400">Pagamento confirmado!</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Sua renovação será liberada em instantes.</p>
+              </div>
+              <Button className="w-full" onClick={() => { setRenewOpen(false); setPixPeriod(null); setQrBase64(null); setPixPayload(""); setRenewalId(null); setPaymentId(null); setPaymentStatus("pending"); }}>
+                Voltar ao painel
+              </Button>
+            </div>
+          ) : (
+          <>
           <DialogHeader>
             <DialogTitle>Renovar plano</DialogTitle>
             <DialogDescription>
