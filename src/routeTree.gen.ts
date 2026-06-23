@@ -20,7 +20,6 @@ import { Route as AuthenticatedSolicitacoesRouteImport } from './routes/_authent
 import { Route as AuthenticatedServidoresRouteImport } from './routes/_authenticated/servidores'
 import { Route as AuthenticatedRenovacaoRouteImport } from './routes/_authenticated/renovacao'
 import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
-import { Route as AuthenticatedMinhaAssinaturaRouteImport } from './routes/_authenticated/minha-assinatura'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
@@ -29,7 +28,6 @@ import { Route as AuthenticatedAdminAssinantesRouteImport } from './routes/_auth
 import { Route as ApiPublicZapiStatusRouteImport } from './routes/api/public/zapi/status'
 import { Route as ApiPublicZapiQrRouteImport } from './routes/api/public/zapi/qr'
 import { Route as ApiPublicZapiDisconnectRouteImport } from './routes/api/public/zapi/disconnect'
-import { Route as ApiPublicSubscriptionMpWebhookRouteImport } from './routes/api/public/subscription/mp-webhook'
 import { Route as ApiPublicPortalVerifyOtpRouteImport } from './routes/api/public/portal/verify-otp'
 import { Route as ApiPublicPortalRequestOtpRouteImport } from './routes/api/public/portal/request-otp'
 import { Route as ApiPublicPortalRenewalStatusRouteImport } from './routes/api/public/portal/renewal-status'
@@ -97,12 +95,6 @@ const AuthenticatedPlanosRoute = AuthenticatedPlanosRouteImport.update({
   path: '/planos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMinhaAssinaturaRoute =
-  AuthenticatedMinhaAssinaturaRouteImport.update({
-    id: '/minha-assinatura',
-    path: '/minha-assinatura',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
@@ -145,12 +137,6 @@ const ApiPublicZapiDisconnectRoute = ApiPublicZapiDisconnectRouteImport.update({
   path: '/api/public/zapi/disconnect',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicSubscriptionMpWebhookRoute =
-  ApiPublicSubscriptionMpWebhookRouteImport.update({
-    id: '/api/public/subscription/mp-webhook',
-    path: '/api/public/subscription/mp-webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicPortalVerifyOtpRoute =
   ApiPublicPortalVerifyOtpRouteImport.update({
     id: '/api/public/portal/verify-otp',
@@ -224,7 +210,6 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
-  '/minha-assinatura': typeof AuthenticatedMinhaAssinaturaRoute
   '/planos': typeof AuthenticatedPlanosRoute
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
@@ -244,7 +229,6 @@ export interface FileRoutesByFullPath {
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
-  '/api/public/subscription/mp-webhook': typeof ApiPublicSubscriptionMpWebhookRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
   '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
@@ -257,7 +241,6 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
-  '/minha-assinatura': typeof AuthenticatedMinhaAssinaturaRoute
   '/planos': typeof AuthenticatedPlanosRoute
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
@@ -277,7 +260,6 @@ export interface FileRoutesByTo {
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
-  '/api/public/subscription/mp-webhook': typeof ApiPublicSubscriptionMpWebhookRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
   '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
@@ -292,7 +274,6 @@ export interface FileRoutesById {
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
-  '/_authenticated/minha-assinatura': typeof AuthenticatedMinhaAssinaturaRoute
   '/_authenticated/planos': typeof AuthenticatedPlanosRoute
   '/_authenticated/renovacao': typeof AuthenticatedRenovacaoRoute
   '/_authenticated/servidores': typeof AuthenticatedServidoresRoute
@@ -312,7 +293,6 @@ export interface FileRoutesById {
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
-  '/api/public/subscription/mp-webhook': typeof ApiPublicSubscriptionMpWebhookRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
   '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
@@ -327,7 +307,6 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/financeiro'
-    | '/minha-assinatura'
     | '/planos'
     | '/renovacao'
     | '/servidores'
@@ -347,7 +326,6 @@ export interface FileRouteTypes {
     | '/api/public/portal/renewal-status'
     | '/api/public/portal/request-otp'
     | '/api/public/portal/verify-otp'
-    | '/api/public/subscription/mp-webhook'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
     | '/api/public/zapi/status'
@@ -360,7 +338,6 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/financeiro'
-    | '/minha-assinatura'
     | '/planos'
     | '/renovacao'
     | '/servidores'
@@ -380,7 +357,6 @@ export interface FileRouteTypes {
     | '/api/public/portal/renewal-status'
     | '/api/public/portal/request-otp'
     | '/api/public/portal/verify-otp'
-    | '/api/public/subscription/mp-webhook'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
     | '/api/public/zapi/status'
@@ -394,7 +370,6 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
     | '/_authenticated/financeiro'
-    | '/_authenticated/minha-assinatura'
     | '/_authenticated/planos'
     | '/_authenticated/renovacao'
     | '/_authenticated/servidores'
@@ -414,7 +389,6 @@ export interface FileRouteTypes {
     | '/api/public/portal/renewal-status'
     | '/api/public/portal/request-otp'
     | '/api/public/portal/verify-otp'
-    | '/api/public/subscription/mp-webhook'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
     | '/api/public/zapi/status'
@@ -438,7 +412,6 @@ export interface RootRouteChildren {
   ApiPublicPortalRenewalStatusRoute: typeof ApiPublicPortalRenewalStatusRoute
   ApiPublicPortalRequestOtpRoute: typeof ApiPublicPortalRequestOtpRoute
   ApiPublicPortalVerifyOtpRoute: typeof ApiPublicPortalVerifyOtpRoute
-  ApiPublicSubscriptionMpWebhookRoute: typeof ApiPublicSubscriptionMpWebhookRoute
   ApiPublicZapiDisconnectRoute: typeof ApiPublicZapiDisconnectRoute
   ApiPublicZapiQrRoute: typeof ApiPublicZapiQrRoute
   ApiPublicZapiStatusRoute: typeof ApiPublicZapiStatusRoute
@@ -523,13 +496,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlanosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/minha-assinatura': {
-      id: '/_authenticated/minha-assinatura'
-      path: '/minha-assinatura'
-      fullPath: '/minha-assinatura'
-      preLoaderRoute: typeof AuthenticatedMinhaAssinaturaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/financeiro': {
       id: '/_authenticated/financeiro'
       path: '/financeiro'
@@ -584,13 +550,6 @@ declare module '@tanstack/react-router' {
       path: '/api/public/zapi/disconnect'
       fullPath: '/api/public/zapi/disconnect'
       preLoaderRoute: typeof ApiPublicZapiDisconnectRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/subscription/mp-webhook': {
-      id: '/api/public/subscription/mp-webhook'
-      path: '/api/public/subscription/mp-webhook'
-      fullPath: '/api/public/subscription/mp-webhook'
-      preLoaderRoute: typeof ApiPublicSubscriptionMpWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/portal/verify-otp': {
@@ -692,7 +651,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
-  AuthenticatedMinhaAssinaturaRoute: typeof AuthenticatedMinhaAssinaturaRoute
   AuthenticatedPlanosRoute: typeof AuthenticatedPlanosRoute
   AuthenticatedRenovacaoRoute: typeof AuthenticatedRenovacaoRoute
   AuthenticatedServidoresRoute: typeof AuthenticatedServidoresRoute
@@ -705,7 +663,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
-  AuthenticatedMinhaAssinaturaRoute: AuthenticatedMinhaAssinaturaRoute,
   AuthenticatedPlanosRoute: AuthenticatedPlanosRoute,
   AuthenticatedRenovacaoRoute: AuthenticatedRenovacaoRoute,
   AuthenticatedServidoresRoute: AuthenticatedServidoresRoute,
@@ -735,7 +692,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPortalRenewalStatusRoute: ApiPublicPortalRenewalStatusRoute,
   ApiPublicPortalRequestOtpRoute: ApiPublicPortalRequestOtpRoute,
   ApiPublicPortalVerifyOtpRoute: ApiPublicPortalVerifyOtpRoute,
-  ApiPublicSubscriptionMpWebhookRoute: ApiPublicSubscriptionMpWebhookRoute,
   ApiPublicZapiDisconnectRoute: ApiPublicZapiDisconnectRoute,
   ApiPublicZapiQrRoute: ApiPublicZapiQrRoute,
   ApiPublicZapiStatusRoute: ApiPublicZapiStatusRoute,
