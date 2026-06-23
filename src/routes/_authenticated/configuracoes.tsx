@@ -133,7 +133,6 @@ function ConfiguracoesPage() {
   }, [profile]);
   useEffect(() => {
     if (settings) {
-      
       setPixKey(settings.pix_key ?? "");
       setPixName(settings.pix_name ?? "");
       setPixBank(settings.pix_bank ?? "");
@@ -141,6 +140,8 @@ function ConfiguracoesPage() {
       setSupportMessage(settings.support_message ?? "");
       setSubExpires(settings.subscription_expires_at ?? "");
       setSubMonthly(((settings.subscription_monthly_cents ?? 0) / 100).toFixed(2).replace(".", ","));
+      setAppAndroidUrl(settings.app_android_url ?? "");
+      setAppIosUrl(settings.app_ios_url ?? "");
     }
   }, [settings]);
 
