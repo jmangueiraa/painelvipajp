@@ -30,6 +30,7 @@ const items = [
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
   { title: "Renovação", url: "/renovacao", icon: RefreshCw },
   { title: "Solicitações", url: "/solicitacoes", icon: Inbox },
+  { title: "Minha Assinatura", url: "/minha-assinatura", icon: BadgeCheck },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
 
