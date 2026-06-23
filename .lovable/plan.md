@@ -1,88 +1,68 @@
-## Visão geral
+# Portal do Cliente + Indicação Premiada
 
-Aplicar o visual e a estrutura das imagens de referência ao app, mantendo todo o backend já criado (clientes, planos, charges, payments, settings). Não copiarei marca, código ou textos proprietários — apenas a arquitetura visual: dark premium, cards com bordas neon coloridas, headers compactos, ações em pílulas com gradiente.
+## O que será entregue
 
-## 1. Design system (src/styles.css)
+**1. Portal do Cliente** (rotas públicas, sem login no painel principal)
+- `/portal` — tela de login: cliente digita WhatsApp, recebe código de 6 dígitos via Z-API, confirma e entra
+- `/portal/painel` — vê plano atual, vencimento, status, valor, histórico de pagamentos, último login IPTV
+- Botão "Renovar agora" — abre escolha de período (mensal/trimestral/semestral/anual) com Pix manual (você pode evoluir para Pix automático depois)
+- Botão "Baixar comprovante" para cada pagamento (PDF simples gerado no cliente)
+- Sessão fica salva no navegador por 30 dias (token assinado)
 
-- Reforçar tema escuro como padrão (background ~ `oklch(0.14 0.03 260)`, surface levemente mais clara, borders sutis).
-- Adicionar tokens semânticos de status com glow:
-  - `--kpi-violet`, `--kpi-emerald`, `--kpi-rose`, `--kpi-cyan`, `--kpi-amber` (cor + cor-foreground + cor-glow).
-- Gradiente primário azul→ciano para botões de ação principal (`btn-premium`).
-- Utilities `@utility kpi-card` e `@utility action-pill` para cards com borda colorida e leve glow externo.
+**2. Indicação Premiada**
+- Cada cliente recebe automaticamente um **código de indicação único** (ex.: `JOAO-A4F2`)
+- Dentro do portal: tela "Indique e ganhe" com o link `https://seudominio/portal?ref=JOAO-A4F2` + botão "Compartilhar no WhatsApp"
+- Quando o indicado paga a 1ª renovação, o indicador ganha **X dias grátis** automaticamente (configurável em Configurações → padrão 7 dias)
+- Painel mostra: total de indicações, indicações pagas, dias ganhos
 
-## 2. Navegação (sidebar)
+## Estrutura técnica
 
-Itens finais, na ordem das referências:
-1. Dashboard
-2. Clientes
-3. Planos
-4. Servidores  *(novo)*
-5. Financeiro
-6. Renovação  *(novo)*
-7. Configurações
+### Banco (migration)
+- `clients`: adicionar `referral_code TEXT UNIQUE`, `referred_by UUID NULL REFERENCES clients(id)`, `bonus_days INT DEFAULT 0`
+- `settings`: adicionar `referral_reward_days INT DEFAULT 7`
+- Nova tabela `portal_otp_codes` (whatsapp, code_hash, expires_at, used_at)
+- Nova tabela `portal_sessions` (id, client_id, token_hash, expires_at, created_at)
+- Função `gen_referral_code()` + trigger para preencher em todo cliente novo/existente
+- Função `apply_referral_bonus(client_id)` chamada quando renovação é feita por indicado pela 1ª vez
+- RLS: tabelas portal_* só acessadas via service role (rotas públicas validam token manualmente)
 
-## 3. Páginas — restruturação visual
+### Rotas públicas (`src/routes/api/public/portal/`)
+- `request-otp.ts` — POST { whatsapp } → gera código, envia via Z-API
+- `verify-otp.ts` — POST { whatsapp, code } → retorna session token
+- `me.ts` — GET (Bearer token) → dados do cliente + pagamentos + indicações
+- `renew-request.ts` — POST { period } → marca solicitação de renovação (notifica dono via WhatsApp)
+- Todas validam token consultando `portal_sessions` via `supabaseAdmin`
 
-### Dashboard (`/dashboard`)
-- Faixa superior com aviso "Sua assinatura — vence em X" (lê de `settings`/placeholder).
-- 5 KPI cards coloridos: Total de clientes, Ativos, Vencidos, Vencem hoje, A vencer no mês.
-- Grid: gráfico de Receita (6 meses, recharts) + card "Status dos clientes" (donut).
-- Card "Próximos vencimentos" (próximos 7 dias).
+### Páginas do portal (`src/routes/portal.*`)
+- `portal.index.tsx` — tela de login (2 passos: telefone → código)
+- `portal.painel.tsx` — dashboard do cliente (plano, vencimento, pagamentos, renovar)
+- `portal.indique.tsx` — link de indicação + estatísticas
+- Layout próprio simples (sem sidebar do painel admin), mobile-first
 
-### Clientes (`/clientes`)
-- Header com título "Clientes" + contagem + fila horizontal de ações em pílulas com gradiente:
-  - Cobrar Antecipado (5d), Cobrar Vencidos, Cobrar Vencendo Amanhã, Cobrar vence hoje, **+ Novo cliente**.
-- Linha de busca + chips de filtro: Todos / Em dia / A vencer / Vencem hoje / Vencidos / Bloqueados.
-- Tabela atual mantida; estado vazio "Cadastrar primeiro cliente".
-- **Dialog "Novo cliente"** ganha campos: `Login IPTV`, `Senha IPTV`, `Servidor` (select), `Cobrança Automática` (toggle). WhatsApp e Vencimento permanecem obrigatórios. Telefone mantém máscara.
+### Painel admin (ajustes)
+- `clientes.tsx`: mostrar coluna "Indicado por" + badge de dias bônus
+- `configuracoes.tsx`: campo "Dias grátis por indicação paga" + ativar/desativar
+- Aviso WhatsApp opcional ao dono quando cliente solicita renovação pelo portal
 
-### Planos (`/planos`)
-- Header + linha "Novo plano" inline (Nome / Preço / Duração / + Adicionar).
-- Lista em cards (em vez de tabela), com editar/excluir e badge ativo.
+## Detalhes técnicos
 
-### Servidores (`/servidores`) — NOVO
-- Header + linha inline "Novo servidor" (Nome / Custo do crédito / + Adicionar).
-- Lista em cards. Cliente passa a referenciar `server_id` opcional.
+- **OTP**: código de 6 dígitos, válido 10 minutos, hash com bcrypt antes de salvar, máx. 5 tentativas
+- **Sessão**: token aleatório de 32 bytes, hash SHA-256 no banco, expira em 30 dias, renovação a cada `me()`
+- **Comprovante**: gerado no navegador com jsPDF (sem custo de servidor)
+- **Indicação**: trigger no insert/update de `payments` verifica se é a 1ª paga do cliente E `referred_by` está setado → soma `referral_reward_days` em `bonus_days` do indicador e estende `due_date` em N dias
+- **Z-API**: usa a integração já existente para enviar OTP
 
-### Financeiro (`/financeiro`)
-- 3 KPIs grandes: Lucro do mês, Lucro do ano, Lucro total (gradientes violeta/azul/emerald).
-- 2 KPIs: Receitas do mês, Despesas de crédito do mês.
-- Gráfico "Recebimentos — 12 meses" (recharts).
-- Tabela "Histórico de pagamentos".
-- Card final "Clientes no valor do mês".
+## Fora do escopo (próximas iterações)
 
-### Renovação (`/renovacao`) — NOVO
-- Card "Status" da revenda (dias restantes, expira em, valor mensal) — vindo de `settings`.
-- 4 cards de período: Pix +30 / +90 / +180 / +1 ano com valores.
-- Esta é uma vitrine local (sem Pix real ainda); marca como "Em breve" ao clicar.
+- Pix automático com baixa via webhook (Mercado Pago/Asaas)
+- App PWA instalável
+- Notificações push
+- Recompensa por níveis (10 indicações = 30 dias)
 
-### Configurações (`/configuracoes`)
-- Cards verticais empilhados:
-  1. Perfil (email, nome de exibição) — salva em `profiles`.
-  2. Conectar WhatsApp (placeholder + campo "Instância Evolution").
-  3. Cadastrar PIX (chave, nome, banco, mensagem) — `settings`.
-  4. Mensagem padrão de suporte — `settings`.
-  5. Alterar senha — supabase auth.
+## Pergunta antes de começar
 
-## 4. Banco de dados (1 migração)
+1. **Domínio do portal**: usar `/portal` no mesmo domínio do painel admin (mais simples) ou subdomínio separado depois?
+2. **Bônus padrão**: 7 dias por indicação paga te atende? Posso deixar editável em Configurações de qualquer forma.
+3. **Renovação no portal**: por enquanto só "solicitar renovação" (você confirma o pagamento no painel) ou já implementar **Pix manual** (gera QR Code estático que você configura uma vez em Configurações)?
 
-```
-CREATE TABLE public.servers (id, user_id, name, credit_cost_cents, created_at, updated_at)
-ALTER TABLE public.clients ADD COLUMN iptv_login text, iptv_password text, server_id uuid REFERENCES servers, auto_charge boolean DEFAULT true
-ALTER TABLE public.settings ADD COLUMN pix_key text, pix_name text, pix_bank text, pix_message text, support_message text, whatsapp_instance text, subscription_expires_at date, subscription_monthly_cents int DEFAULT 0
-```
-+ RLS por `user_id` em `servers`, GRANTs, trigger updated_at.
-
-## 5. Escopo deste passo
-
-Vou implementar nesta entrega:
-- Tokens de design + sidebar nova (Servidores/Renovação).
-- Restruturação visual de Dashboard, Clientes, Planos, Financeiro.
-- Páginas novas Servidores e Renovação (UI + CRUD/leitura básica).
-- Novos campos no dialog de cliente.
-- Página Configurações com formulários funcionais (perfil, PIX, mensagens).
-- Migração descrita acima.
-
-**Fora deste passo**: envio real de cobrança em massa pelos botões "Cobrar X" (apenas abrem confirmação/toast por enquanto), integração Pix real, geração de QR Code, envio automático via Evolution. Esses entram quando você pedir Fase 4.
-
-Posso seguir?
+Confirma os 3 pontos acima que eu começo a implementação.

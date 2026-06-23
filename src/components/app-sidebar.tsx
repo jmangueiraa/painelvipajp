@@ -4,7 +4,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown, Camera, ShieldCheck,
+  LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown, Camera, ShieldCheck, Inbox,
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import {
@@ -29,6 +29,7 @@ const items = [
   { title: "Servidores", url: "/servidores", icon: Server },
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
   { title: "Renovação", url: "/renovacao", icon: RefreshCw },
+  { title: "Solicitações", url: "/solicitacoes", icon: Inbox },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
 

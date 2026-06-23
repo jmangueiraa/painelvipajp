@@ -13,6 +13,10 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PortalIndexRouteImport } from './routes/portal.index'
+import { Route as PortalPainelRouteImport } from './routes/portal.painel'
+import { Route as PortalIndiqueRouteImport } from './routes/portal.indique'
+import { Route as AuthenticatedSolicitacoesRouteImport } from './routes/_authenticated/solicitacoes'
 import { Route as AuthenticatedServidoresRouteImport } from './routes/_authenticated/servidores'
 import { Route as AuthenticatedRenovacaoRouteImport } from './routes/_authenticated/renovacao'
 import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
@@ -24,6 +28,11 @@ import { Route as AuthenticatedAdminAssinantesRouteImport } from './routes/_auth
 import { Route as ApiPublicZapiStatusRouteImport } from './routes/api/public/zapi/status'
 import { Route as ApiPublicZapiQrRouteImport } from './routes/api/public/zapi/qr'
 import { Route as ApiPublicZapiDisconnectRouteImport } from './routes/api/public/zapi/disconnect'
+import { Route as ApiPublicPortalVerifyOtpRouteImport } from './routes/api/public/portal/verify-otp'
+import { Route as ApiPublicPortalRequestOtpRouteImport } from './routes/api/public/portal/request-otp'
+import { Route as ApiPublicPortalRenewRequestRouteImport } from './routes/api/public/portal/renew-request'
+import { Route as ApiPublicPortalMeRouteImport } from './routes/api/public/portal/me'
+import { Route as ApiPublicPortalLogoutRouteImport } from './routes/api/public/portal/logout'
 import { Route as ApiPublicHooksAutoChargesRouteImport } from './routes/api/public/hooks/auto-charges'
 import { Route as AuthenticatedAdminAssinantesIdRouteImport } from './routes/_authenticated/admin.assinantes.$id'
 
@@ -46,6 +55,27 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PortalIndexRoute = PortalIndexRouteImport.update({
+  id: '/portal/',
+  path: '/portal/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalPainelRoute = PortalPainelRouteImport.update({
+  id: '/portal/painel',
+  path: '/portal/painel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalIndiqueRoute = PortalIndiqueRouteImport.update({
+  id: '/portal/indique',
+  path: '/portal/indique',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSolicitacoesRoute =
+  AuthenticatedSolicitacoesRouteImport.update({
+    id: '/solicitacoes',
+    path: '/solicitacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedServidoresRoute = AuthenticatedServidoresRouteImport.update({
   id: '/servidores',
   path: '/servidores',
@@ -103,6 +133,34 @@ const ApiPublicZapiDisconnectRoute = ApiPublicZapiDisconnectRouteImport.update({
   path: '/api/public/zapi/disconnect',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPortalVerifyOtpRoute =
+  ApiPublicPortalVerifyOtpRouteImport.update({
+    id: '/api/public/portal/verify-otp',
+    path: '/api/public/portal/verify-otp',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalRequestOtpRoute =
+  ApiPublicPortalRequestOtpRouteImport.update({
+    id: '/api/public/portal/request-otp',
+    path: '/api/public/portal/request-otp',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalRenewRequestRoute =
+  ApiPublicPortalRenewRequestRouteImport.update({
+    id: '/api/public/portal/renew-request',
+    path: '/api/public/portal/renew-request',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalMeRoute = ApiPublicPortalMeRouteImport.update({
+  id: '/api/public/portal/me',
+  path: '/api/public/portal/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPortalLogoutRoute = ApiPublicPortalLogoutRouteImport.update({
+  id: '/api/public/portal/logout',
+  path: '/api/public/portal/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksAutoChargesRoute =
   ApiPublicHooksAutoChargesRouteImport.update({
     id: '/api/public/hooks/auto-charges',
@@ -127,9 +185,18 @@ export interface FileRoutesByFullPath {
   '/planos': typeof AuthenticatedPlanosRoute
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
+  '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
+  '/portal/indique': typeof PortalIndiqueRoute
+  '/portal/painel': typeof PortalPainelRoute
+  '/portal/': typeof PortalIndexRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
+  '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
+  '/api/public/portal/me': typeof ApiPublicPortalMeRoute
+  '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
+  '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
+  '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
   '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
@@ -145,9 +212,18 @@ export interface FileRoutesByTo {
   '/planos': typeof AuthenticatedPlanosRoute
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
+  '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
+  '/portal/indique': typeof PortalIndiqueRoute
+  '/portal/painel': typeof PortalPainelRoute
+  '/portal': typeof PortalIndexRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
+  '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
+  '/api/public/portal/me': typeof ApiPublicPortalMeRoute
+  '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
+  '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
+  '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
   '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
@@ -165,9 +241,18 @@ export interface FileRoutesById {
   '/_authenticated/planos': typeof AuthenticatedPlanosRoute
   '/_authenticated/renovacao': typeof AuthenticatedRenovacaoRoute
   '/_authenticated/servidores': typeof AuthenticatedServidoresRoute
+  '/_authenticated/solicitacoes': typeof AuthenticatedSolicitacoesRoute
+  '/portal/indique': typeof PortalIndiqueRoute
+  '/portal/painel': typeof PortalPainelRoute
+  '/portal/': typeof PortalIndexRoute
   '/_authenticated/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/_authenticated/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
+  '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
+  '/api/public/portal/me': typeof ApiPublicPortalMeRoute
+  '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
+  '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
+  '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
   '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
@@ -185,9 +270,18 @@ export interface FileRouteTypes {
     | '/planos'
     | '/renovacao'
     | '/servidores'
+    | '/solicitacoes'
+    | '/portal/indique'
+    | '/portal/painel'
+    | '/portal/'
     | '/admin/assinantes'
     | '/admin/assinantes/$id'
     | '/api/public/hooks/auto-charges'
+    | '/api/public/portal/logout'
+    | '/api/public/portal/me'
+    | '/api/public/portal/renew-request'
+    | '/api/public/portal/request-otp'
+    | '/api/public/portal/verify-otp'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
     | '/api/public/zapi/status'
@@ -203,9 +297,18 @@ export interface FileRouteTypes {
     | '/planos'
     | '/renovacao'
     | '/servidores'
+    | '/solicitacoes'
+    | '/portal/indique'
+    | '/portal/painel'
+    | '/portal'
     | '/admin/assinantes'
     | '/admin/assinantes/$id'
     | '/api/public/hooks/auto-charges'
+    | '/api/public/portal/logout'
+    | '/api/public/portal/me'
+    | '/api/public/portal/renew-request'
+    | '/api/public/portal/request-otp'
+    | '/api/public/portal/verify-otp'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
     | '/api/public/zapi/status'
@@ -222,9 +325,18 @@ export interface FileRouteTypes {
     | '/_authenticated/planos'
     | '/_authenticated/renovacao'
     | '/_authenticated/servidores'
+    | '/_authenticated/solicitacoes'
+    | '/portal/indique'
+    | '/portal/painel'
+    | '/portal/'
     | '/_authenticated/admin/assinantes'
     | '/_authenticated/admin/assinantes/$id'
     | '/api/public/hooks/auto-charges'
+    | '/api/public/portal/logout'
+    | '/api/public/portal/me'
+    | '/api/public/portal/renew-request'
+    | '/api/public/portal/request-otp'
+    | '/api/public/portal/verify-otp'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
     | '/api/public/zapi/status'
@@ -235,7 +347,15 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  PortalIndiqueRoute: typeof PortalIndiqueRoute
+  PortalPainelRoute: typeof PortalPainelRoute
+  PortalIndexRoute: typeof PortalIndexRoute
   ApiPublicHooksAutoChargesRoute: typeof ApiPublicHooksAutoChargesRoute
+  ApiPublicPortalLogoutRoute: typeof ApiPublicPortalLogoutRoute
+  ApiPublicPortalMeRoute: typeof ApiPublicPortalMeRoute
+  ApiPublicPortalRenewRequestRoute: typeof ApiPublicPortalRenewRequestRoute
+  ApiPublicPortalRequestOtpRoute: typeof ApiPublicPortalRequestOtpRoute
+  ApiPublicPortalVerifyOtpRoute: typeof ApiPublicPortalVerifyOtpRoute
   ApiPublicZapiDisconnectRoute: typeof ApiPublicZapiDisconnectRoute
   ApiPublicZapiQrRoute: typeof ApiPublicZapiQrRoute
   ApiPublicZapiStatusRoute: typeof ApiPublicZapiStatusRoute
@@ -270,6 +390,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/portal/': {
+      id: '/portal/'
+      path: '/portal'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof PortalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/painel': {
+      id: '/portal/painel'
+      path: '/portal/painel'
+      fullPath: '/portal/painel'
+      preLoaderRoute: typeof PortalPainelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/indique': {
+      id: '/portal/indique'
+      path: '/portal/indique'
+      fullPath: '/portal/indique'
+      preLoaderRoute: typeof PortalIndiqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/solicitacoes': {
+      id: '/_authenticated/solicitacoes'
+      path: '/solicitacoes'
+      fullPath: '/solicitacoes'
+      preLoaderRoute: typeof AuthenticatedSolicitacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/servidores': {
       id: '/_authenticated/servidores'
@@ -348,6 +496,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicZapiDisconnectRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/portal/verify-otp': {
+      id: '/api/public/portal/verify-otp'
+      path: '/api/public/portal/verify-otp'
+      fullPath: '/api/public/portal/verify-otp'
+      preLoaderRoute: typeof ApiPublicPortalVerifyOtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/request-otp': {
+      id: '/api/public/portal/request-otp'
+      path: '/api/public/portal/request-otp'
+      fullPath: '/api/public/portal/request-otp'
+      preLoaderRoute: typeof ApiPublicPortalRequestOtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/renew-request': {
+      id: '/api/public/portal/renew-request'
+      path: '/api/public/portal/renew-request'
+      fullPath: '/api/public/portal/renew-request'
+      preLoaderRoute: typeof ApiPublicPortalRenewRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/me': {
+      id: '/api/public/portal/me'
+      path: '/api/public/portal/me'
+      fullPath: '/api/public/portal/me'
+      preLoaderRoute: typeof ApiPublicPortalMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/logout': {
+      id: '/api/public/portal/logout'
+      path: '/api/public/portal/logout'
+      fullPath: '/api/public/portal/logout'
+      preLoaderRoute: typeof ApiPublicPortalLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/auto-charges': {
       id: '/api/public/hooks/auto-charges'
       path: '/api/public/hooks/auto-charges'
@@ -387,6 +570,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlanosRoute: typeof AuthenticatedPlanosRoute
   AuthenticatedRenovacaoRoute: typeof AuthenticatedRenovacaoRoute
   AuthenticatedServidoresRoute: typeof AuthenticatedServidoresRoute
+  AuthenticatedSolicitacoesRoute: typeof AuthenticatedSolicitacoesRoute
   AuthenticatedAdminAssinantesRoute: typeof AuthenticatedAdminAssinantesRouteWithChildren
 }
 
@@ -398,6 +582,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlanosRoute: AuthenticatedPlanosRoute,
   AuthenticatedRenovacaoRoute: AuthenticatedRenovacaoRoute,
   AuthenticatedServidoresRoute: AuthenticatedServidoresRoute,
+  AuthenticatedSolicitacoesRoute: AuthenticatedSolicitacoesRoute,
   AuthenticatedAdminAssinantesRoute:
     AuthenticatedAdminAssinantesRouteWithChildren,
 }
@@ -410,7 +595,15 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  PortalIndiqueRoute: PortalIndiqueRoute,
+  PortalPainelRoute: PortalPainelRoute,
+  PortalIndexRoute: PortalIndexRoute,
   ApiPublicHooksAutoChargesRoute: ApiPublicHooksAutoChargesRoute,
+  ApiPublicPortalLogoutRoute: ApiPublicPortalLogoutRoute,
+  ApiPublicPortalMeRoute: ApiPublicPortalMeRoute,
+  ApiPublicPortalRenewRequestRoute: ApiPublicPortalRenewRequestRoute,
+  ApiPublicPortalRequestOtpRoute: ApiPublicPortalRequestOtpRoute,
+  ApiPublicPortalVerifyOtpRoute: ApiPublicPortalVerifyOtpRoute,
   ApiPublicZapiDisconnectRoute: ApiPublicZapiDisconnectRoute,
   ApiPublicZapiQrRoute: ApiPublicZapiQrRoute,
   ApiPublicZapiStatusRoute: ApiPublicZapiStatusRoute,

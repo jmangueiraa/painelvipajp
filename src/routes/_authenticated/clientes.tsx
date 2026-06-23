@@ -52,6 +52,7 @@ const schema = z.object({
   due_date: z.string().min(1, "Informe o vencimento"),
   auto_charge: z.boolean(),
   notes: z.string().max(500).optional().or(z.literal("")),
+  referred_by_code: z.string().trim().max(40).optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -63,6 +64,7 @@ type Client = {
   plan_id: string | null; server_id: string | null;
   price_cents: number; due_date: string; status: ClientStatus;
   auto_charge: boolean; notes: string | null;
+  referral_code: string | null; referred_by: string | null; bonus_days: number;
 };
 
 type FilterChip = "todos" | "em_dia" | "a_vencer" | "vencem_hoje" | "vencidos" | "bloqueados";
@@ -111,7 +113,7 @@ function ClientesPage() {
     defaultValues: {
       name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
-      auto_charge: true, notes: "",
+      auto_charge: true, notes: "", referred_by_code: "",
     },
   });
 
@@ -120,7 +122,7 @@ function ClientesPage() {
     form.reset({
       name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
-      auto_charge: true, notes: "",
+      auto_charge: true, notes: "", referred_by_code: "",
     });
     setOpen(true);
   };
@@ -132,6 +134,7 @@ function ClientesPage() {
       plan_id: c.plan_id ?? undefined, server_id: c.server_id ?? undefined,
       price: (c.price_cents / 100).toFixed(2).replace(".", ","),
       due_date: c.due_date, auto_charge: c.auto_charge, notes: c.notes ?? "",
+      referred_by_code: "",
     });
     setOpen(true);
   };
@@ -148,7 +151,21 @@ function ClientesPage() {
   const save = useMutation({
     mutationFn: async (values: FormValues) => {
       if (!user) throw new Error("Sem sessão");
-      const payload = {
+      let referred_by: string | null | undefined = undefined;
+      const refCode = values.referred_by_code?.trim().toUpperCase();
+      if (refCode) {
+        const { data: ref } = await supabase.from("clients").select("id").eq("referral_code", refCode).maybeSingle();
+        if (!ref) throw new Error("Código de indicação não encontrado");
+        referred_by = ref.id;
+      }
+      const payload: {
+        name: string; phone: string;
+        iptv_login: string | null; iptv_password: string | null;
+        plan_id: string | null; server_id: string | null;
+        price_cents: number; due_date: string; status: ClientStatus;
+        auto_charge: boolean; notes: string | null; user_id: string;
+        referred_by?: string | null;
+      } = {
         name: values.name.trim(),
         phone: values.phone.trim(),
         iptv_login: values.iptv_login?.trim() || null,
@@ -162,6 +179,7 @@ function ClientesPage() {
         notes: values.notes?.trim() || null,
         user_id: user.id,
       };
+      if (referred_by !== undefined) payload.referred_by = referred_by;
       if (editing) {
         const { error } = await supabase.from("clients").update(payload).eq("id", editing.id);
         if (error) throw error;
@@ -734,6 +752,15 @@ function ClientesPage() {
                   <FormControl><Textarea rows={3} {...field} /></FormControl>
                 </FormItem>
               )} />
+              {!editing && (
+                <FormField control={form.control} name="referred_by_code" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Indicado por (código)</FormLabel>
+                    <FormControl><Input placeholder="Ex: JOAO-A4F2" {...field} /></FormControl>
+                    <p className="text-xs text-muted-foreground">Opcional. Quem indicar ganha dias grátis ao 1º pagamento deste cliente.</p>
+                  </FormItem>
+                )} />
+              )}
               <FormField control={form.control} name="auto_charge" render={({ field }) => (
                 <FormItem className="flex items-start justify-between rounded-xl border border-border p-3 gap-3">
                   <div className="min-w-0">
