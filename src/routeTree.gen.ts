@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
 import { Route as PortalPainelRouteImport } from './routes/portal.painel'
 import { Route as PortalIndiqueRouteImport } from './routes/portal.indique'
+import { Route as AuthenticatedSolicitacoesRouteImport } from './routes/_authenticated/solicitacoes'
 import { Route as AuthenticatedServidoresRouteImport } from './routes/_authenticated/servidores'
 import { Route as AuthenticatedRenovacaoRouteImport } from './routes/_authenticated/renovacao'
 import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
@@ -69,6 +70,12 @@ const PortalIndiqueRoute = PortalIndiqueRouteImport.update({
   path: '/portal/indique',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSolicitacoesRoute =
+  AuthenticatedSolicitacoesRouteImport.update({
+    id: '/solicitacoes',
+    path: '/solicitacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedServidoresRoute = AuthenticatedServidoresRouteImport.update({
   id: '/servidores',
   path: '/servidores',
@@ -178,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/planos': typeof AuthenticatedPlanosRoute
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
+  '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
   '/portal/': typeof PortalIndexRoute
@@ -204,6 +212,7 @@ export interface FileRoutesByTo {
   '/planos': typeof AuthenticatedPlanosRoute
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
+  '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
   '/portal': typeof PortalIndexRoute
@@ -232,6 +241,7 @@ export interface FileRoutesById {
   '/_authenticated/planos': typeof AuthenticatedPlanosRoute
   '/_authenticated/renovacao': typeof AuthenticatedRenovacaoRoute
   '/_authenticated/servidores': typeof AuthenticatedServidoresRoute
+  '/_authenticated/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
   '/portal/': typeof PortalIndexRoute
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/renovacao'
     | '/servidores'
+    | '/solicitacoes'
     | '/portal/indique'
     | '/portal/painel'
     | '/portal/'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/renovacao'
     | '/servidores'
+    | '/solicitacoes'
     | '/portal/indique'
     | '/portal/painel'
     | '/portal'
@@ -313,6 +325,7 @@ export interface FileRouteTypes {
     | '/_authenticated/planos'
     | '/_authenticated/renovacao'
     | '/_authenticated/servidores'
+    | '/_authenticated/solicitacoes'
     | '/portal/indique'
     | '/portal/painel'
     | '/portal/'
@@ -398,6 +411,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/indique'
       preLoaderRoute: typeof PortalIndiqueRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/solicitacoes': {
+      id: '/_authenticated/solicitacoes'
+      path: '/solicitacoes'
+      fullPath: '/solicitacoes'
+      preLoaderRoute: typeof AuthenticatedSolicitacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/servidores': {
       id: '/_authenticated/servidores'
@@ -550,6 +570,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlanosRoute: typeof AuthenticatedPlanosRoute
   AuthenticatedRenovacaoRoute: typeof AuthenticatedRenovacaoRoute
   AuthenticatedServidoresRoute: typeof AuthenticatedServidoresRoute
+  AuthenticatedSolicitacoesRoute: typeof AuthenticatedSolicitacoesRoute
   AuthenticatedAdminAssinantesRoute: typeof AuthenticatedAdminAssinantesRouteWithChildren
 }
 
@@ -561,6 +582,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlanosRoute: AuthenticatedPlanosRoute,
   AuthenticatedRenovacaoRoute: AuthenticatedRenovacaoRoute,
   AuthenticatedServidoresRoute: AuthenticatedServidoresRoute,
+  AuthenticatedSolicitacoesRoute: AuthenticatedSolicitacoesRoute,
   AuthenticatedAdminAssinantesRoute:
     AuthenticatedAdminAssinantesRouteWithChildren,
 }

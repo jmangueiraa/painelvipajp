@@ -88,7 +88,6 @@ function SolicitacoesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        icon={Inbox}
         title="Solicitações de renovação"
         description="Pedidos feitos pelos clientes através do Portal."
       />
