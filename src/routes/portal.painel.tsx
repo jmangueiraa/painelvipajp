@@ -469,6 +469,8 @@ function PortalDashboard() {
               </div>
             </div>
           )}
+          </>
+          )}
         </DialogContent>
       </Dialog>
 
