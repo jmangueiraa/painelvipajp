@@ -52,6 +52,7 @@ export const Route = createFileRoute("/api/public/portal/me")({
               paid: referralsPaidIds.has(r.id),
             })),
             settings: settings ?? { referral_reward_days: 7, referral_enabled: true },
+            plans: plans ?? [],
           });
         } catch (e) {
           return json({ error: (e as Error).message }, { status: 500 });
