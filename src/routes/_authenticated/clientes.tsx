@@ -6,7 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Search, CalendarCheck, AlertTriangle, CalendarClock, Send, FileSpreadsheet, Download, Upload, RefreshCw, MessageCircle, Phone, Copy, LifeBuoy, Lock, Unlock, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, CalendarCheck, AlertTriangle, CalendarClock, Send, FileSpreadsheet, Download, Upload, RefreshCw, MessageCircle, Phone, Copy, LifeBuoy, Lock, Unlock, ArrowUp, ArrowDown, ArrowUpDown, MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { ComponentType, CSSProperties, SVGProps } from "react";
 import * as XLSX from "xlsx";
 
@@ -85,6 +86,7 @@ function ClientesPage() {
   const [nameSort, setNameSort] = useState<"asc" | "desc">("asc");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -622,37 +624,60 @@ function ClientesPage() {
                   <TableCell>{formatDateBR(c.due_date)}</TableCell>
                   <TableCell><Badge variant={statusVariant[c.status]}>{statusLabel[c.status]}</Badge></TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <CircleAction title="Renovar" color="var(--kpi-emerald)" Icon={RefreshCw} onClick={() => setRenewTarget(c)} />
-                      <CircleAction title="Mensagem (WhatsApp)" color="var(--kpi-emerald)" Icon={MessageCircle} href={whatsappHref(c)} />
-
-                      <CircleAction title="Ligar" color="var(--kpi-cyan)" Icon={Phone} href={telHref(c)} />
-                      <CircleAction title="Copiar credenciais" color="var(--kpi-cyan)" Icon={Copy} onClick={() => copyCredentials(c)} />
-                      <CircleAction title="Suporte" color="var(--kpi-emerald)" Icon={LifeBuoy} href={supportHref(c)} />
-                      <CircleAction
-                        title={c.status === "suspenso" || c.status === "cancelado" ? "Desbloquear" : "Bloquear"}
-                        color="var(--kpi-amber)"
-                        Icon={c.status === "suspenso" || c.status === "cancelado" ? Unlock : Lock}
-                        onClick={() => toggleBlock.mutate(c)}
-                      />
-                      <CircleAction title="Editar" color="var(--kpi-violet)" Icon={Pencil} onClick={() => openEdit(c)} />
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <button type="button" title="Remover" className="size-7 inline-flex items-center justify-center rounded-full border transition-colors hover:bg-[color-mix(in_oklab,var(--kpi-rose)_15%,transparent)]" style={{ borderColor: "color-mix(in oklab, var(--kpi-rose) 55%, transparent)", color: "var(--kpi-rose)" }}>
-                            <Trash2 className="size-3.5" />
+                    <div className="flex items-center justify-end">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            title="Ações"
+                            aria-label="Ações"
+                            className="size-8 inline-flex items-center justify-center rounded-full border border-border/60 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          >
+                            <MoreVertical className="size-4" />
                           </button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Remover {c.name}?</AlertDialogTitle>
-                            <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => remove.mutate(c.id)}>Remover</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-52">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => setRenewTarget(c)}>
+                            <RefreshCw className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Renovar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <a href={whatsappHref(c)} target="_blank" rel="noreferrer">
+                              <MessageCircle className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Mensagem (WhatsApp)
+                            </a>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <a href={telHref(c)}>
+                              <Phone className="size-4" style={{ color: "var(--kpi-cyan)" }} /> Ligar
+                            </a>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => copyCredentials(c)}>
+                            <Copy className="size-4" style={{ color: "var(--kpi-cyan)" }} /> Copiar credenciais
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <a href={supportHref(c)} target="_blank" rel="noreferrer">
+                              <LifeBuoy className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Suporte
+                            </a>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toggleBlock.mutate(c)}>
+                            {c.status === "suspenso" || c.status === "cancelado" ? (
+                              <><Unlock className="size-4" style={{ color: "var(--kpi-amber)" }} /> Desbloquear</>
+                            ) : (
+                              <><Lock className="size-4" style={{ color: "var(--kpi-amber)" }} /> Bloquear</>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => openEdit(c)}>
+                            <Pencil className="size-4" style={{ color: "var(--kpi-violet)" }} /> Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setDeleteTarget(c)}
+                            className="text-[color:var(--kpi-rose)] focus:text-[color:var(--kpi-rose)]"
+                          >
+                            <Trash2 className="size-4" /> Remover
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </TableCell>
 
