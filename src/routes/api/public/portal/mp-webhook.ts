@@ -61,36 +61,7 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
             })
             .eq("id", (renewal as { id: string }).id);
 
-          // Best-effort: notifica o admin via Z-API quando aprovado
-          if (isApproved) {
-            try {
-              const r = renewal as { user_id: string; client_id: string; days: number; amount_cents: number | null };
-              const { data: ownerSettings } = await supabaseAdmin
-                .from("settings")
-                .select("notify_phone")
-                .eq("user_id", r.user_id)
-                .maybeSingle();
-              const { data: c } = await supabaseAdmin
-                .from("clients")
-                .select("name, phone")
-                .eq("id", r.client_id)
-                .maybeSingle();
-              const phone = (ownerSettings as { notify_phone?: string } | null)?.notify_phone;
-              const instance = process.env.Z_API_INSTANCE_ID;
-              const zToken = process.env.Z_API_TOKEN;
-              if (phone && instance && zToken) {
-                const headers: Record<string, string> = { "Content-Type": "application/json" };
-                if (process.env.Z_API_CLIENT_TOKEN) headers["Client-Token"] = process.env.Z_API_CLIENT_TOKEN;
-                const amount = ((r.amount_cents ?? 0) / 100).toFixed(2);
-                const msg = `✅ Pagamento PIX aprovado!\nCliente: ${(c as { name?: string } | null)?.name ?? "—"}\nTel: ${(c as { phone?: string } | null)?.phone ?? "—"}\nPeríodo: ${r.days} dias\nValor: R$ ${amount}`;
-                await fetch(`https://api.z-api.io/instances/${instance}/token/${zToken}/send-text`, {
-                  method: "POST",
-                  headers,
-                  body: JSON.stringify({ phone: phone.replace(/\D/g, ""), message: msg }),
-                }).catch(() => undefined);
-              }
-            } catch { /* noop */ }
-          }
+          // Solicitação fica visível para o admin no painel ao ser marcada como paga.
 
           return json({ ok: true });
         } catch (e) {
