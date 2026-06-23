@@ -1,17 +1,18 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CalendarClock, CreditCard, Gift, LogOut, RefreshCw, Server as ServerIcon, Tv, Download, Copy, Check, CheckCircle2, ChevronUp, Smartphone, ExternalLink } from "lucide-react";
+import QRCode from "qrcode";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useState } from "react";
 import { brl, formatDateBR } from "@/lib/format";
 import { clearPortalToken, getPortalToken, portalFetch } from "@/lib/portal-client";
 import { InstallAppCard } from "@/components/portal/install-app-card";
+import { buildPixPayload } from "@/lib/pix";
 
 export const Route = createFileRoute("/portal/painel")({
   ssr: false,
@@ -67,6 +68,9 @@ function PortalDashboard() {
   const [pixPeriod, setPixPeriod] = useState<{ label: string; days: number; price_cents: number } | null>(null);
   const [pixCopied, setPixCopied] = useState(false);
   const [valCopied, setValCopied] = useState(false);
+  const [brCopied, setBrCopied] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [pixPayload, setPixPayload] = useState<string>("");
   const PIX_KEY = "16997855438";
 
   useEffect(() => {
@@ -97,6 +101,18 @@ function PortalDashboard() {
   function selectPeriod(o: { label: string; days: number; price_cents: number }) {
     setPixPeriod(o);
     renew.mutate(o.days);
+    const payload = buildPixPayload({
+      key: PIX_KEY,
+      amount: o.price_cents / 100,
+      merchantName: "PAINEL VIP",
+      merchantCity: "SAO PAULO",
+      txid: `REN${Date.now().toString().slice(-10)}`,
+      description: `Plano ${o.label}`,
+    });
+    setPixPayload(payload);
+    QRCode.toDataURL(payload, { width: 280, margin: 1 })
+      .then(setQrDataUrl)
+      .catch(() => setQrDataUrl(null));
   }
 
   async function copy(text: string, which: "pix" | "val") {
@@ -318,12 +334,12 @@ function PortalDashboard() {
         )}
       </main>
 
-      <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setPixPeriod(null); setPixCopied(false); setValCopied(false); } }}>
+      <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setPixPeriod(null); setPixCopied(false); setValCopied(false); setBrCopied(false); setQrDataUrl(null); setPixPayload(""); } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Renovar plano</DialogTitle>
             <DialogDescription>
-              {pixPeriod ? "Pague via PIX usando a chave abaixo." : "Escolha o período. O valor é calculado conforme seu plano."}
+              {pixPeriod ? "Escaneie o QR Code ou copie o código PIX abaixo." : "Escolha o período. O valor é calculado conforme seu plano."}
             </DialogDescription>
           </DialogHeader>
 
@@ -369,18 +385,33 @@ function PortalDashboard() {
                 </div>
               </div>
 
-              <div className="rounded-xl border-2 border-primary/40 bg-primary/5 p-3">
-                <div className="text-xs text-muted-foreground">Chave PIX (Celular)</div>
+              {qrDataUrl && (
+                <div className="flex flex-col items-center gap-2 rounded-xl border-2 border-primary/40 bg-white p-3">
+                  <img src={qrDataUrl} alt="QR Code PIX" className="h-56 w-56" />
+                  <div className="text-xs text-muted-foreground">Escaneie no app do seu banco</div>
+                </div>
+              )}
+
+              <div className="rounded-xl border bg-card p-3">
+                <div className="mb-1 text-xs text-muted-foreground">PIX Copia e Cola</div>
+                <div className="break-all rounded-md bg-muted/50 p-2 font-mono text-[10px] leading-tight">{pixPayload}</div>
+                <Button size="sm" className="mt-2 w-full" onClick={() => { void navigator.clipboard.writeText(pixPayload); setBrCopied(true); setTimeout(() => setBrCopied(false), 2000); toast.success("Código PIX copiado!"); }}>
+                  {brCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar código PIX
+                </Button>
+              </div>
+
+              <div className="rounded-xl border bg-card p-3">
+                <div className="text-xs text-muted-foreground">Ou use a chave PIX</div>
                 <div className="flex items-center justify-between gap-2">
-                  <div className="font-mono text-lg font-bold tracking-wide">{PIX_KEY}</div>
-                  <Button size="sm" onClick={() => copy(PIX_KEY, "pix")}>
+                  <div className="font-mono text-sm font-bold tracking-wide">{PIX_KEY}</div>
+                  <Button size="sm" variant="outline" onClick={() => copy(PIX_KEY, "pix")}>
                     {pixCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar
                   </Button>
                 </div>
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Após o pagamento, envie o comprovante no WhatsApp do seu provedor. A liberação é feita após a confirmação.
+                Após o pagamento, sua solicitação já foi enviada ao administrador. A liberação é feita após a confirmação.
               </p>
 
               <div className="flex gap-2">

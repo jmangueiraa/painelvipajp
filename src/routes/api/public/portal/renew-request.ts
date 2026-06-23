@@ -15,7 +15,7 @@ export const Route = createFileRoute("/api/public/portal/renew-request")({
 
           const body = (await request.json().catch(() => ({}))) as { days?: number };
           const days = Number(body.days);
-          if (![30, 90, 180, 365].includes(days)) return json({ error: "Período inválido" }, { status: 400 });
+          if (!Number.isFinite(days) || days < 1 || days > 3650) return json({ error: "Período inválido" }, { status: 400 });
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { error } = await supabaseAdmin.from("renewal_requests").insert({
