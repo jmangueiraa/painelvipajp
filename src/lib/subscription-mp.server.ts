@@ -80,6 +80,7 @@ export async function applyApprovedSubscriptionPayment(payment: MpPayment) {
     subscriptionId = inserted?.id ?? null;
   }
 
+  if (!subscriptionId) return { skipped: "no subscription id" };
   const { error: payErr } = await supabaseAdmin.from("app_subscription_payments").insert({
     subscription_id: subscriptionId,
     user_id: userId,
