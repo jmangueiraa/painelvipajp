@@ -72,11 +72,26 @@ function PortalDashboard() {
   const renew = useMutation({
     mutationFn: (days: number) => portalFetch("/api/public/portal/renew-request", { method: "POST", body: JSON.stringify({ days }) }),
     onSuccess: () => {
-      toast.success("Pedido de renovação enviado! Aguarde o contato do seu provedor.");
-      setRenewOpen(false);
+      toast.success("Pedido enviado! Use a chave PIX abaixo para pagar.");
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  function selectPeriod(o: { label: string; days: number; months: number }) {
+    setPixPeriod(o);
+    renew.mutate(o.days);
+  }
+
+  async function copy(text: string, which: "pix" | "val") {
+    try {
+      await navigator.clipboard.writeText(text);
+      if (which === "pix") { setPixCopied(true); setTimeout(() => setPixCopied(false), 2000); }
+      else { setValCopied(true); setTimeout(() => setValCopied(false), 2000); }
+      toast.success("Copiado!");
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+  }
 
   function handleLogout() {
     void portalFetch("/api/public/portal/logout", { method: "POST" }).catch(() => undefined);
