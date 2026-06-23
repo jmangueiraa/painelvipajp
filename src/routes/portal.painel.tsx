@@ -285,28 +285,6 @@ function PortalDashboard() {
 
 
 
-        {/* Credenciais IPTV */}
-        {(data.client.iptv_login || data.client.iptv_password) && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base"><Tv className="h-4 w-4" />Minhas credenciais</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3">
-              {data.client.iptv_login && (
-                <div className="rounded-xl border bg-card p-3">
-                  <div className="text-xs text-muted-foreground">Login</div>
-                  <div className="font-mono text-sm break-all">{data.client.iptv_login}</div>
-                </div>
-              )}
-              {data.client.iptv_password && (
-                <div className="rounded-xl border bg-card p-3">
-                  <div className="text-xs text-muted-foreground">Senha</div>
-                  <div className="font-mono text-sm break-all">{data.client.iptv_password}</div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
 
         {/* Histórico de pagamentos */}
         <section>
