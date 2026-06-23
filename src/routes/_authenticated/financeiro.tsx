@@ -188,7 +188,7 @@ function FinanceiroPage() {
               ) : payments.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{clientMap.get(p.client_id)?.name ?? "—"}</TableCell>
-                  <TableCell>{formatDateBR(p.paid_at)}</TableCell>
+                  <TableCell>{formatDateTimeBR(p.paid_at)}</TableCell>
                   <TableCell className="capitalize">{p.method ?? "—"}</TableCell>
                   <TableCell className="text-right tabular-nums">{brl(p.amount_cents)}</TableCell>
                 </TableRow>
