@@ -17,6 +17,17 @@ export const Route = createFileRoute("/portal/")({
     meta: [
       { title: "Portal do Cliente" },
       { name: "description", content: "Acesse seu plano, renove e veja seus pagamentos." },
+      { name: "theme-color", content: "#3B82F6" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "Portal VIP" },
+      { name: "mobile-web-app-capable", content: "yes" },
+    ],
+    links: [
+      { rel: "manifest", href: "/portal-manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/portal-icon-192.png" },
+      { rel: "icon", type: "image/png", sizes: "192x192", href: "/portal-icon-192.png" },
+      { rel: "icon", type: "image/png", sizes: "512x512", href: "/portal-icon-512.png" },
     ],
   }),
   component: PortalLoginPage,

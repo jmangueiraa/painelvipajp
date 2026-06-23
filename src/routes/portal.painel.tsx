@@ -11,10 +11,26 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useState } from "react";
 import { brl, formatDateBR } from "@/lib/format";
 import { clearPortalToken, getPortalToken, portalFetch } from "@/lib/portal-client";
+import { InstallAppCard } from "@/components/portal/install-app-card";
 
 export const Route = createFileRoute("/portal/painel")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Meu Painel — Portal do Cliente" }] }),
+  head: () => ({
+    meta: [
+      { title: "Meu Painel — Portal do Cliente" },
+      { name: "theme-color", content: "#3B82F6" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "Portal VIP" },
+      { name: "mobile-web-app-capable", content: "yes" },
+    ],
+    links: [
+      { rel: "manifest", href: "/portal-manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/portal-icon-192.png" },
+      { rel: "icon", type: "image/png", sizes: "192x192", href: "/portal-icon-192.png" },
+      { rel: "icon", type: "image/png", sizes: "512x512", href: "/portal-icon-512.png" },
+    ],
+  }),
   component: PortalDashboard,
 });
 
@@ -215,6 +231,10 @@ function PortalDashboard() {
             </CardContent>
           </Card>
         )}
+
+        <InstallAppCard />
+
+
 
         {/* Credenciais IPTV */}
         {(data.client.iptv_login || data.client.iptv_password) && (
