@@ -276,35 +276,41 @@ function PortalDashboard() {
 
           {!pixPeriod ? (
             <>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { label: "Mensal", days: 30, months: 1 },
-                  { label: "Trimestral", days: 90, months: 3 },
-                  { label: "Semestral", days: 180, months: 6 },
-                  { label: "Anual", days: 365, months: 12 },
-                ].map((o) => (
-                  <Button key={o.days} variant="outline" disabled={renew.isPending} onClick={() => selectPeriod(o)}>
-                    <div className="flex flex-col">
-                      <span>{o.label}</span>
-                      <span className="text-xs text-muted-foreground">{brl(data.client.price_cents * o.months)}</span>
-                    </div>
-                  </Button>
-                ))}
-              </div>
+              {data.plans.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum plano disponível. Fale com seu provedor.</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {data.plans.map((p) => (
+                    <Button
+                      key={p.id}
+                      variant="outline"
+                      className="h-auto py-3"
+                      disabled={renew.isPending}
+                      onClick={() => selectPeriod({ label: p.name, days: p.duration_days, price_cents: p.price_cents })}
+                    >
+                      <div className="flex flex-col items-start">
+                        <span className="font-semibold">{p.name}</span>
+                        <span className="text-xs text-muted-foreground">{p.duration_days} dias</span>
+                        <span className="text-xs text-primary font-medium">{brl(p.price_cents)}</span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">Seu provedor também será avisado do pedido.</p>
             </>
           ) : (
             <div className="space-y-3">
               <div className="rounded-xl border bg-card p-3">
-                <div className="text-xs text-muted-foreground">Período</div>
+                <div className="text-xs text-muted-foreground">Plano</div>
                 <div className="font-semibold">{pixPeriod.label} · {pixPeriod.days} dias</div>
               </div>
 
               <div className="rounded-xl border bg-card p-3">
                 <div className="text-xs text-muted-foreground">Valor a pagar</div>
                 <div className="flex items-center justify-between gap-2">
-                  <div className="text-xl font-bold">{brl(data.client.price_cents * pixPeriod.months)}</div>
-                  <Button size="sm" variant="outline" onClick={() => copy(((data.client.price_cents * pixPeriod.months) / 100).toFixed(2), "val")}>
+                  <div className="text-xl font-bold">{brl(pixPeriod.price_cents)}</div>
+                  <Button size="sm" variant="outline" onClick={() => copy((pixPeriod.price_cents / 100).toFixed(2), "val")}>
                     {valCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar
                   </Button>
                 </div>
