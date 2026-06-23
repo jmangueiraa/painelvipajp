@@ -102,6 +102,16 @@ function PortalDashboard() {
           if (r.status === "approved") {
             toast.success("Pagamento confirmado! Aguardando liberação do admin.");
             void refetch();
+            if (pollRef.current) window.clearInterval(pollRef.current);
+            setTimeout(() => {
+              setRenewOpen(false);
+              setPixPeriod(null);
+              setQrBase64(null);
+              setPixPayload("");
+              setRenewalId(null);
+              setPaymentId(null);
+              setPaymentStatus("pending");
+            }, 1500);
           }
         }
       } catch { /* noop */ }
