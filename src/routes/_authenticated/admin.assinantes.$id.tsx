@@ -13,7 +13,7 @@ import {
 } from "@/lib/admin-subscribers.functions";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { translateError } from "@/lib/translate-error";
-import { brl, formatDateBR, parseBrlToCents } from "@/lib/format";
+import { brl, formatDateBR, formatDateTimeBR, parseBrlToCents } from "@/lib/format";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -294,7 +294,7 @@ function AssinanteDetalhe() {
               <TableBody>
                 {payments.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell>{formatDateBR(p.paid_at)}</TableCell>
+                    <TableCell>{formatDateTimeBR(p.paid_at)}</TableCell>
                     <TableCell className="tabular-nums">{brl(p.amount_cents)}</TableCell>
                     <TableCell className="capitalize">{p.method ?? "—"}</TableCell>
                     <TableCell className="text-muted-foreground">{p.notes ?? "—"}</TableCell>

@@ -5,7 +5,7 @@ import { Wallet, TrendingUp, ArrowUpRight, ArrowDownRight, Users } from "lucide-
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { supabase } from "@/integrations/supabase/client";
-import { brl, formatDateBR } from "@/lib/format";
+import { brl, formatDateBR, formatDateTimeBR } from "@/lib/format";
 
 import { PageHeader } from "@/components/page-header";
 import { KpiCard } from "@/components/kpi-card";
@@ -188,7 +188,7 @@ function FinanceiroPage() {
               ) : payments.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{clientMap.get(p.client_id)?.name ?? "—"}</TableCell>
-                  <TableCell>{formatDateBR(p.paid_at)}</TableCell>
+                  <TableCell>{formatDateTimeBR(p.paid_at)}</TableCell>
                   <TableCell className="capitalize">{p.method ?? "—"}</TableCell>
                   <TableCell className="text-right tabular-nums">{brl(p.amount_cents)}</TableCell>
                 </TableRow>

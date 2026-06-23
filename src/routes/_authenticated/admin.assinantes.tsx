@@ -8,7 +8,7 @@ import {
 
 import { listSubscribers, type SubscriberRow } from "@/lib/admin-subscribers.functions";
 import { useIsAdmin } from "@/hooks/use-is-admin";
-import { brl, formatDateBR } from "@/lib/format";
+import { brl, formatDateBR, formatDateTimeBR } from "@/lib/format";
 
 import { PageHeader } from "@/components/page-header";
 import { KpiCard } from "@/components/kpi-card";
@@ -246,7 +246,7 @@ function AssinantesPage() {
                     <TableCell className="text-sm capitalize">{r.subscription.payment_method ?? "—"}</TableCell>
                     <TableCell className="text-sm">
                       {r.last_payment
-                        ? `${formatDateBR(r.last_payment.paid_at!)} · ${brl(r.last_payment.amount_cents ?? 0)}`
+                        ? `${formatDateTimeBR(r.last_payment.paid_at!)} · ${brl(r.last_payment.amount_cents ?? 0)}`
                         : "—"}
                     </TableCell>
                     <TableCell className="text-right">
