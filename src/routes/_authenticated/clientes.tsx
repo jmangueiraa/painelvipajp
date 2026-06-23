@@ -18,6 +18,7 @@ import { statusLabel, statusVariant, computeStatus, type ClientStatus } from "@/
 import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { sendChargesNow as sendChargesNowFn } from "@/lib/auto-charges.functions";
+import { setPortalCredentials as setPortalCredentialsFn } from "@/lib/portal-admin.functions";
 
 import { PageHeader } from "@/components/page-header";
 import { ActionPillButton } from "@/components/action-pill-button";
