@@ -11,6 +11,11 @@ export const Route = createFileRoute("/api/public/portal/mp-create-pix")({
         try {
           const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
           if (!token) return json({ error: "Mercado Pago não configurado" }, { status: 500 });
+          if (token.startsWith("TEST-")) {
+            return json({
+              error: "Access Token de TESTE detectado. Use o token de PRODUÇÃO do Mercado Pago (começa com APP_USR-) para que o PIX possa ser pago em bancos reais.",
+            }, { status: 500 });
+          }
 
           const portal = await import("@/integrations/portal/session.server");
           const client = await portal.getSessionFromRequest(request);
