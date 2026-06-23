@@ -16,9 +16,9 @@ export const setPortalCredentials = createServerFn({ method: "POST" })
     if (cErr) throw cErr;
     if (!client || client.user_id !== context.userId) throw new Error("Cliente não encontrado");
 
-    const update: Record<string, string | null> = {};
-    const u = (username ?? "").trim();
-    update.portal_username = u.length > 0 ? u : null;
+    const update: { portal_username: string | null; portal_password_hash?: string } = {
+      portal_username: (username ?? "").trim() || null,
+    };
 
     if (password && password.length > 0) {
       if (password.length < 4) throw new Error("Senha muito curta (mín. 4)");
