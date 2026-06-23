@@ -14,6 +14,20 @@ export const formatDateBR = (iso: string) => {
   return `${d}/${m}/${y}`;
 };
 
+export const formatDateTimeBR = (iso: string) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return formatDateBR(iso);
+  return d.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
+  });
+};
+
 export const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export const addDaysISO = (iso: string, days: number) => {
