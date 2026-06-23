@@ -13,7 +13,7 @@ import {
 } from "@/lib/admin-subscribers.functions";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { translateError } from "@/lib/translate-error";
-import { brl, formatDateBR, parseBrlToCents } from "@/lib/format";
+import { brl, formatDateBR, formatDateTimeBR, parseBrlToCents } from "@/lib/format";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
