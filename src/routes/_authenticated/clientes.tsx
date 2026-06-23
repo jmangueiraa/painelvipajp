@@ -761,6 +761,7 @@ function ClientesPage() {
                   </FormItem>
                 )} />
               )}
+              <FormField control={form.control} name="auto_charge" render={({ field }) => (
                 <FormItem className="flex items-start justify-between rounded-xl border border-border p-3 gap-3">
                   <div className="min-w-0">
                     <FormLabel className="mb-0">Cobrança Automática</FormLabel>
