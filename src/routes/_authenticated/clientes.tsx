@@ -52,6 +52,7 @@ const schema = z.object({
   due_date: z.string().min(1, "Informe o vencimento"),
   auto_charge: z.boolean(),
   notes: z.string().max(500).optional().or(z.literal("")),
+  referred_by_code: z.string().trim().max(40).optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -63,6 +64,7 @@ type Client = {
   plan_id: string | null; server_id: string | null;
   price_cents: number; due_date: string; status: ClientStatus;
   auto_charge: boolean; notes: string | null;
+  referral_code: string | null; referred_by: string | null; bonus_days: number;
 };
 
 type FilterChip = "todos" | "em_dia" | "a_vencer" | "vencem_hoje" | "vencidos" | "bloqueados";
