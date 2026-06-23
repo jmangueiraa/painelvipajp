@@ -28,6 +28,7 @@ import { Route as AuthenticatedAdminAssinantesRouteImport } from './routes/_auth
 import { Route as ApiPublicZapiStatusRouteImport } from './routes/api/public/zapi/status'
 import { Route as ApiPublicZapiQrRouteImport } from './routes/api/public/zapi/qr'
 import { Route as ApiPublicZapiDisconnectRouteImport } from './routes/api/public/zapi/disconnect'
+import { Route as ApiPublicSubscriptionMpWebhookRouteImport } from './routes/api/public/subscription/mp-webhook'
 import { Route as ApiPublicPortalVerifyOtpRouteImport } from './routes/api/public/portal/verify-otp'
 import { Route as ApiPublicPortalRequestOtpRouteImport } from './routes/api/public/portal/request-otp'
 import { Route as ApiPublicPortalRenewalStatusRouteImport } from './routes/api/public/portal/renewal-status'
@@ -137,6 +138,12 @@ const ApiPublicZapiDisconnectRoute = ApiPublicZapiDisconnectRouteImport.update({
   path: '/api/public/zapi/disconnect',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSubscriptionMpWebhookRoute =
+  ApiPublicSubscriptionMpWebhookRouteImport.update({
+    id: '/api/public/subscription/mp-webhook',
+    path: '/api/public/subscription/mp-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPortalVerifyOtpRoute =
   ApiPublicPortalVerifyOtpRouteImport.update({
     id: '/api/public/portal/verify-otp',
@@ -229,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
+  '/api/public/subscription/mp-webhook': typeof ApiPublicSubscriptionMpWebhookRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
   '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
@@ -260,6 +268,7 @@ export interface FileRoutesByTo {
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
+  '/api/public/subscription/mp-webhook': typeof ApiPublicSubscriptionMpWebhookRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
   '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
@@ -293,6 +302,7 @@ export interface FileRoutesById {
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
+  '/api/public/subscription/mp-webhook': typeof ApiPublicSubscriptionMpWebhookRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
   '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
@@ -326,6 +336,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/renewal-status'
     | '/api/public/portal/request-otp'
     | '/api/public/portal/verify-otp'
+    | '/api/public/subscription/mp-webhook'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
     | '/api/public/zapi/status'
@@ -357,6 +368,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/renewal-status'
     | '/api/public/portal/request-otp'
     | '/api/public/portal/verify-otp'
+    | '/api/public/subscription/mp-webhook'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
     | '/api/public/zapi/status'
@@ -389,6 +401,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/renewal-status'
     | '/api/public/portal/request-otp'
     | '/api/public/portal/verify-otp'
+    | '/api/public/subscription/mp-webhook'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
     | '/api/public/zapi/status'
@@ -412,6 +425,7 @@ export interface RootRouteChildren {
   ApiPublicPortalRenewalStatusRoute: typeof ApiPublicPortalRenewalStatusRoute
   ApiPublicPortalRequestOtpRoute: typeof ApiPublicPortalRequestOtpRoute
   ApiPublicPortalVerifyOtpRoute: typeof ApiPublicPortalVerifyOtpRoute
+  ApiPublicSubscriptionMpWebhookRoute: typeof ApiPublicSubscriptionMpWebhookRoute
   ApiPublicZapiDisconnectRoute: typeof ApiPublicZapiDisconnectRoute
   ApiPublicZapiQrRoute: typeof ApiPublicZapiQrRoute
   ApiPublicZapiStatusRoute: typeof ApiPublicZapiStatusRoute
@@ -550,6 +564,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/zapi/disconnect'
       fullPath: '/api/public/zapi/disconnect'
       preLoaderRoute: typeof ApiPublicZapiDisconnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/subscription/mp-webhook': {
+      id: '/api/public/subscription/mp-webhook'
+      path: '/api/public/subscription/mp-webhook'
+      fullPath: '/api/public/subscription/mp-webhook'
+      preLoaderRoute: typeof ApiPublicSubscriptionMpWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/portal/verify-otp': {
@@ -692,6 +713,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPortalRenewalStatusRoute: ApiPublicPortalRenewalStatusRoute,
   ApiPublicPortalRequestOtpRoute: ApiPublicPortalRequestOtpRoute,
   ApiPublicPortalVerifyOtpRoute: ApiPublicPortalVerifyOtpRoute,
+  ApiPublicSubscriptionMpWebhookRoute: ApiPublicSubscriptionMpWebhookRoute,
   ApiPublicZapiDisconnectRoute: ApiPublicZapiDisconnectRoute,
   ApiPublicZapiQrRoute: ApiPublicZapiQrRoute,
   ApiPublicZapiStatusRoute: ApiPublicZapiStatusRoute,
