@@ -98,7 +98,7 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
               await supabaseAdmin.from("payments").insert({
                 client_id: renewal.client_id,
                 user_id: renewal.user_id,
-                amount_cents: renewal.amount_cents ?? payment.transaction_amount ? Math.round((payment.transaction_amount ?? 0) * 100) : 0,
+                amount_cents: renewal.amount_cents ?? (payment.transaction_amount ? Math.round(payment.transaction_amount * 100) : 0),
                 paid_at: payment.date_approved ?? new Date().toISOString(),
                 method: "pix_mercadopago",
                 notes: `Renovação ${renewal.days} dias (MP ${payment.id})`,
