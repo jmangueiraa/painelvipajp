@@ -48,20 +48,63 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
           } else {
             renewalQuery = renewalQuery.eq("mp_payment_id", String(payment.id));
           }
-          const { data: renewal } = await renewalQuery.maybeSingle();
-          if (!renewal) return json({ ok: true, skipped: "not found" });
+          const { data: renewalRaw } = await renewalQuery.maybeSingle();
+          if (!renewalRaw) return json({ ok: true, skipped: "not found" });
+          const renewal = renewalRaw as {
+            id: string;
+            client_id: string;
+            user_id: string;
+            days: number;
+            amount_cents: number | null;
+            status: string;
+          };
 
           const isApproved = payment.status === "approved";
+          const alreadyPaid = renewal.status === "paid";
+
           await supabaseAdmin
             .from("renewal_requests")
             .update({
               mp_status: payment.status ?? "unknown",
               paid_at: isApproved ? (payment.date_approved ?? new Date().toISOString()) : null,
-              status: isApproved ? "paid" : (renewal as { status?: string }).status ?? "pending",
+              status: isApproved ? "paid" : renewal.status ?? "pending",
             })
-            .eq("id", (renewal as { id: string }).id);
+            .eq("id", renewal.id);
 
-          // Solicitação fica visível para o admin no painel ao ser marcada como paga.
+          // Quando aprovado pela primeira vez, adiciona os dias comprados ao vencimento do cliente
+          // e registra o pagamento no histórico.
+          if (isApproved && !alreadyPaid) {
+            const { data: clientRow } = await supabaseAdmin
+              .from("clients")
+              .select("id, due_date")
+              .eq("id", renewal.client_id)
+              .maybeSingle();
+
+            if (clientRow) {
+              const today = new Date();
+              today.setUTCHours(0, 0, 0, 0);
+              const current = (clientRow as { due_date: string | null }).due_date;
+              const base = current ? new Date(current + "T00:00:00Z") : today;
+              const start = base.getTime() > today.getTime() ? base : today;
+              const next = new Date(start);
+              next.setUTCDate(next.getUTCDate() + Number(renewal.days || 0));
+              const newDueDate = next.toISOString().slice(0, 10);
+
+              await supabaseAdmin
+                .from("clients")
+                .update({ due_date: newDueDate })
+                .eq("id", renewal.client_id);
+
+              await supabaseAdmin.from("payments").insert({
+                client_id: renewal.client_id,
+                user_id: renewal.user_id,
+                amount_cents: renewal.amount_cents ?? (payment.transaction_amount ? Math.round(payment.transaction_amount * 100) : 0),
+                paid_at: payment.date_approved ?? new Date().toISOString(),
+                method: "pix_mercadopago",
+                notes: `Renovação ${renewal.days} dias (MP ${payment.id})`,
+              });
+            }
+          }
 
           return json({ ok: true });
         } catch (e) {
