@@ -36,6 +36,7 @@ type Me = {
   payments: { id: string; amount_cents: number; paid_at: string; method: string | null }[];
   referrals: { id: string; name: string; paid: boolean }[];
   settings: { referral_reward_days: number; referral_enabled: boolean };
+  plans: { id: string; name: string; price_cents: number; duration_days: number }[];
 };
 
 function statusColor(s: string) {
