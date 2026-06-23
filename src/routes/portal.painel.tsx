@@ -133,11 +133,11 @@ function PortalDashboard() {
     renew.mutate({ days: o.days, amount_cents: o.price_cents, label: o.label });
   }
 
-  async function copy(text: string, which: "pix" | "val") {
+  async function copy(text: string) {
     try {
       await navigator.clipboard.writeText(text);
-      if (which === "pix") { setPixCopied(true); setTimeout(() => setPixCopied(false), 2000); }
-      else { setValCopied(true); setTimeout(() => setValCopied(false), 2000); }
+      setValCopied(true);
+      setTimeout(() => setValCopied(false), 2000);
       toast.success("Copiado!");
     } catch {
       toast.error("Não foi possível copiar");
