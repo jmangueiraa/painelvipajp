@@ -639,6 +639,39 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      find_client_by_phone_digits: {
+        Args: { _digits: string }
+        Returns: {
+          address: string | null
+          auto_charge: boolean
+          bonus_days: number
+          created_at: string
+          doc: string | null
+          due_date: string
+          email: string | null
+          id: string
+          internal_notes: string | null
+          iptv_login: string | null
+          iptv_password: string | null
+          name: string
+          notes: string | null
+          phone: string
+          plan_id: string | null
+          price_cents: number
+          referral_code: string | null
+          referred_by: string | null
+          server_id: string | null
+          status: Database["public"]["Enums"]["client_status"]
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "clients"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       gen_referral_code: { Args: { _name: string }; Returns: string }
       has_role: {
         Args: {
