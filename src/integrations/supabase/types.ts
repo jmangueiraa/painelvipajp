@@ -496,26 +496,44 @@ export type Database = {
       }
       renewal_requests: {
         Row: {
+          amount_cents: number | null
           client_id: string
           created_at: string
           days: number
           id: string
+          mp_payment_id: string | null
+          mp_status: string | null
+          paid_at: string | null
+          pix_qr_base64: string | null
+          pix_qr_code: string | null
           status: string
           user_id: string
         }
         Insert: {
+          amount_cents?: number | null
           client_id: string
           created_at?: string
           days: number
           id?: string
+          mp_payment_id?: string | null
+          mp_status?: string | null
+          paid_at?: string | null
+          pix_qr_base64?: string | null
+          pix_qr_code?: string | null
           status?: string
           user_id: string
         }
         Update: {
+          amount_cents?: number | null
           client_id?: string
           created_at?: string
           days?: number
           id?: string
+          mp_payment_id?: string | null
+          mp_status?: string | null
+          paid_at?: string | null
+          pix_qr_base64?: string | null
+          pix_qr_code?: string | null
           status?: string
           user_id?: string
         }
