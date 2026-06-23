@@ -212,6 +212,7 @@ export type Database = {
       clients: {
         Row: {
           address: string | null
+          allowed_plan_ids: string[]
           auto_charge: boolean
           bonus_days: number
           created_at: string
@@ -238,6 +239,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          allowed_plan_ids?: string[]
           auto_charge?: boolean
           bonus_days?: number
           created_at?: string
@@ -264,6 +266,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          allowed_plan_ids?: string[]
           auto_charge?: boolean
           bonus_days?: number
           created_at?: string
@@ -673,6 +676,7 @@ export type Database = {
         Args: { _digits: string }
         Returns: {
           address: string | null
+          allowed_plan_ids: string[]
           auto_charge: boolean
           bonus_days: number
           created_at: string
@@ -708,6 +712,7 @@ export type Database = {
         Args: { _username: string }
         Returns: {
           address: string | null
+          allowed_plan_ids: string[]
           auto_charge: boolean
           bonus_days: number
           created_at: string
