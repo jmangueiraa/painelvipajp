@@ -246,7 +246,7 @@ function AssinantesPage() {
                     <TableCell className="text-sm capitalize">{r.subscription.payment_method ?? "—"}</TableCell>
                     <TableCell className="text-sm">
                       {r.last_payment
-                        ? `${formatDateBR(r.last_payment.paid_at!)} · ${brl(r.last_payment.amount_cents ?? 0)}`
+                        ? `${formatDateTimeBR(r.last_payment.paid_at!)} · ${brl(r.last_payment.amount_cents ?? 0)}`
                         : "—"}
                     </TableCell>
                     <TableCell className="text-right">
