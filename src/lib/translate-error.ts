@@ -23,8 +23,16 @@ const MAP: Array<[RegExp, string]> = [
 ];
 
 export function translateError(input: unknown): string {
-  const msg = input instanceof Error ? input.message : String(input ?? "");
-  if (!msg) return "Ocorreu um erro inesperado";
+  let msg = "";
+  if (input instanceof Error) {
+    msg = input.message;
+  } else if (input && typeof input === "object") {
+    const o = input as { message?: unknown; error_description?: unknown; error?: unknown; details?: unknown; hint?: unknown };
+    msg = String(o.message ?? o.error_description ?? o.error ?? o.details ?? o.hint ?? "");
+  } else {
+    msg = String(input ?? "");
+  }
+  if (!msg || msg === "[object Object]") return "Ocorreu um erro inesperado";
   for (const [re, pt] of MAP) {
     if (re.test(msg)) return msg.replace(re, pt);
   }
