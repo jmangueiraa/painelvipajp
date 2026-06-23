@@ -3,7 +3,7 @@ import { translateError } from "@/lib/translate-error";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { User, MessageSquare, KeyRound, LifeBuoy, Camera, QrCode, RefreshCw, LogOut } from "lucide-react";
+import { User, MessageSquare, KeyRound, LifeBuoy, Camera, QrCode, RefreshCw, LogOut, Smartphone } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -102,7 +102,7 @@ function ConfiguracoesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("settings")
-        .select("whatsapp_instance,pix_key,pix_name,pix_bank,pix_message,support_message,subscription_expires_at,subscription_monthly_cents")
+        .select("whatsapp_instance,pix_key,pix_name,pix_bank,pix_message,support_message,subscription_expires_at,subscription_monthly_cents,app_android_url,app_ios_url")
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -111,7 +111,7 @@ function ConfiguracoesPage() {
 
   const [fullName, setFullName] = useState("");
   const [companyName, setCompanyName] = useState("");
-  
+
   const [pixKey, setPixKey] = useState("");
   const [pixName, setPixName] = useState("");
   const [pixBank, setPixBank] = useState("");
@@ -119,6 +119,8 @@ function ConfiguracoesPage() {
   const [supportMessage, setSupportMessage] = useState("");
   const [subExpires, setSubExpires] = useState("");
   const [subMonthly, setSubMonthly] = useState("");
+  const [appAndroidUrl, setAppAndroidUrl] = useState("");
+  const [appIosUrl, setAppIosUrl] = useState("");
   const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
@@ -131,7 +133,6 @@ function ConfiguracoesPage() {
   }, [profile]);
   useEffect(() => {
     if (settings) {
-      
       setPixKey(settings.pix_key ?? "");
       setPixName(settings.pix_name ?? "");
       setPixBank(settings.pix_bank ?? "");
@@ -139,6 +140,8 @@ function ConfiguracoesPage() {
       setSupportMessage(settings.support_message ?? "");
       setSubExpires(settings.subscription_expires_at ?? "");
       setSubMonthly(((settings.subscription_monthly_cents ?? 0) / 100).toFixed(2).replace(".", ","));
+      setAppAndroidUrl(settings.app_android_url ?? "");
+      setAppIosUrl(settings.app_ios_url ?? "");
     }
   }, [settings]);
 
@@ -161,6 +164,8 @@ function ConfiguracoesPage() {
     support_message: string | null;
     subscription_expires_at: string | null;
     subscription_monthly_cents: number;
+    app_android_url: string | null;
+    app_ios_url: string | null;
   }>;
   const saveSettings = useMutation({
     mutationFn: async (patch: SettingsPatch) => {
@@ -267,6 +272,22 @@ function ConfiguracoesPage() {
       <SectionCard title="Mensagem padrão de suporte" description="Enviada quando você clica em 'Mensagem de suporte' na lista de clientes" icon={LifeBuoy} color="var(--kpi-amber)">
         <Textarea rows={3} placeholder="Olá! Aqui é o suporte. Como posso te ajudar?" value={supportMessage} onChange={(e) => setSupportMessage(e.target.value)} />
         <Button className="btn-premium rounded-full" onClick={() => saveSettings.mutate({ support_message: supportMessage })}>Salvar mensagem de suporte</Button>
+      </SectionCard>
+
+      <SectionCard title="Aplicativo para clientes" description="Links de download que aparecem no portal do cliente" icon={Smartphone} color="var(--kpi-violet)">
+        <div className="grid md:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label>Google Play (Android)</Label>
+            <Input placeholder="https://play.google.com/..." value={appAndroidUrl} onChange={(e) => setAppAndroidUrl(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label>App Store (iOS)</Label>
+            <Input placeholder="https://apps.apple.com/..." value={appIosUrl} onChange={(e) => setAppIosUrl(e.target.value)} />
+          </div>
+        </div>
+        <Button className="btn-premium rounded-full" onClick={() => saveSettings.mutate({ app_android_url: appAndroidUrl || null, app_ios_url: appIosUrl || null })}>
+          Salvar links do app
+        </Button>
       </SectionCard>
 
       <SectionCard title="Assinatura do painel" description="Usado em Dashboard e Renovação" icon={KeyRound} color="var(--kpi-violet)">

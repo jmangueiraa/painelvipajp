@@ -558,6 +558,8 @@ export type Database = {
       }
       settings: {
         Row: {
+          app_android_url: string | null
+          app_ios_url: string | null
           company_name: string | null
           created_at: string
           default_message: string | null
@@ -579,6 +581,8 @@ export type Database = {
           whatsapp_instance: string | null
         }
         Insert: {
+          app_android_url?: string | null
+          app_ios_url?: string | null
           company_name?: string | null
           created_at?: string
           default_message?: string | null
@@ -600,6 +604,8 @@ export type Database = {
           whatsapp_instance?: string | null
         }
         Update: {
+          app_android_url?: string | null
+          app_ios_url?: string | null
           company_name?: string | null
           created_at?: string
           default_message?: string | null

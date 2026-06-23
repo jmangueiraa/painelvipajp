@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { CalendarClock, CreditCard, Gift, LogOut, RefreshCw, Server as ServerIcon, Tv, Download, Copy, Check, CheckCircle2, ChevronUp } from "lucide-react";
+import { CalendarClock, CreditCard, Gift, LogOut, RefreshCw, Server as ServerIcon, Tv, Download, Copy, Check, CheckCircle2, ChevronUp, Smartphone, ExternalLink } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,7 +35,7 @@ type Me = {
   server: { id: string; name: string } | null;
   payments: { id: string; amount_cents: number; paid_at: string; method: string | null }[];
   referrals: { id: string; name: string; paid: boolean }[];
-  settings: { referral_reward_days: number; referral_enabled: boolean };
+  settings: { referral_reward_days: number; referral_enabled: boolean; app_android_url: string | null; app_ios_url: string | null };
   plans: { id: string; name: string; price_cents: number; duration_days: number }[];
 };
 
@@ -194,6 +194,27 @@ function PortalDashboard() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Baixar aplicativo */}
+        {(data.settings.app_android_url || data.settings.app_ios_url) && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base"><Smartphone className="h-4 w-4" />Aplicativo</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-3">
+              {data.settings.app_android_url && (
+                <a href={data.settings.app_android_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
+                  <ExternalLink className="h-4 w-4" />Google Play
+                </a>
+              )}
+              {data.settings.app_ios_url && (
+                <a href={data.settings.app_ios_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
+                  <ExternalLink className="h-4 w-4" />App Store
+                </a>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Credenciais IPTV */}
         {(data.client.iptv_login || data.client.iptv_password) && (
