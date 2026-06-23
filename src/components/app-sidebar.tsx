@@ -4,7 +4,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown, Camera, ShieldCheck, Inbox,
+  LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown, Camera, ShieldCheck, Inbox, BadgeCheck,
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import {
