@@ -23,7 +23,7 @@ type RenewalRequest = {
   days: number;
   status: string;
   created_at: string;
-  clients: { id: string; name: string; phone: string; due_date: string; price_cents: number; plan_id: string | null } | null;
+  clients: { id: string; name: string; phone: string; due_date: string; price_cents: number; plan_id: string | null; user_id: string } | null;
 };
 
 function periodLabel(d: number) {
@@ -42,7 +42,7 @@ function SolicitacoesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("renewal_requests")
-        .select("id,client_id,days,status,created_at,clients:client_id(id,name,phone,due_date,price_cents,plan_id)")
+        .select("id,client_id,days,status,created_at,clients:client_id(id,name,phone,due_date,price_cents,plan_id,user_id)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as unknown as RenewalRequest[];
@@ -54,18 +54,38 @@ function SolicitacoesPage() {
       if (!req.clients) throw new Error("Cliente não encontrado");
       const base = req.clients.due_date && req.clients.due_date >= todayISO() ? req.clients.due_date : todayISO();
       const newDue = addDaysISO(base, req.days);
+      // Resolve preço a partir do plano correspondente (mesma duração) ou do cadastro do cliente
+      let amount = req.clients.price_cents ?? 0;
+      const { data: plan } = await supabase
+        .from("plans")
+        .select("price_cents")
+        .eq("user_id", req.clients.user_id)
+        .eq("duration_days", req.days)
+        .eq("active", true)
+        .maybeSingle();
+      if (plan?.price_cents) amount = plan.price_cents;
+
       const { error: e1 } = await supabase
         .from("clients")
         .update({ due_date: newDue, status: computeStatus(newDue, "ativo") })
         .eq("id", req.client_id);
       if (e1) throw e1;
+      const { error: ePay } = await supabase.from("payments").insert({
+        user_id: req.clients.user_id,
+        client_id: req.client_id,
+        amount_cents: amount,
+        method: "pix",
+        notes: `Renovação ${periodLabel(req.days)} aprovada via portal`,
+      });
+      if (ePay) throw ePay;
       const { error: e2 } = await supabase.from("renewal_requests").update({ status: "approved" }).eq("id", req.id);
       if (e2) throw e2;
     },
     onSuccess: () => {
-      toast.success("Renovação aprovada");
+      toast.success("Renovação aprovada e pagamento registrado");
       qc.invalidateQueries({ queryKey: ["renewal_requests"] });
       qc.invalidateQueries({ queryKey: ["clients"] });
+      qc.invalidateQueries({ queryKey: ["payments"] });
     },
     onError: (e: Error) => toast.error(translateError(e)),
   });
