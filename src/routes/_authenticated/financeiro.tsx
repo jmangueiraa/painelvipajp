@@ -5,7 +5,7 @@ import { Wallet, TrendingUp, ArrowUpRight, ArrowDownRight, Users } from "lucide-
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { supabase } from "@/integrations/supabase/client";
-import { brl, formatDateBR } from "@/lib/format";
+import { brl, formatDateBR, formatDateTimeBR } from "@/lib/format";
 
 import { PageHeader } from "@/components/page-header";
 import { KpiCard } from "@/components/kpi-card";
