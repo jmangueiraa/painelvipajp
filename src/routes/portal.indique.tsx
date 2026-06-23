@@ -11,7 +11,19 @@ import { getPortalToken, portalFetch } from "@/lib/portal-client";
 
 export const Route = createFileRoute("/portal/indique")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Indique e ganhe — Portal do Cliente" }] }),
+  head: () => ({
+    meta: [
+      { title: "Indique e ganhe — Portal do Cliente" },
+      { name: "theme-color", content: "#3B82F6" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "Portal VIP" },
+      { name: "mobile-web-app-capable", content: "yes" },
+    ],
+    links: [
+      { rel: "manifest", href: "/portal-manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/portal-icon-192.png" },
+    ],
+  }),
   component: PortalRefer,
 });
 
