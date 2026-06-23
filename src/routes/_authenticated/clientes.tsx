@@ -54,8 +54,6 @@ const schema = z.object({
   auto_charge: z.boolean(),
   notes: z.string().max(500).optional().or(z.literal("")),
   referred_by_code: z.string().trim().max(40).optional().or(z.literal("")),
-  portal_username: z.string().trim().max(40).optional().or(z.literal("")),
-  portal_password: z.string().trim().max(40).optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
 
