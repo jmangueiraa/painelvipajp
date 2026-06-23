@@ -781,12 +781,6 @@ function ClientesPage() {
                   </div>
                 </FormItem>
               )} />
-              <FormField control={form.control} name="notes" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Observações</FormLabel>
-                  <FormControl><Textarea rows={3} {...field} /></FormControl>
-                </FormItem>
-              )} />
               {!editing && (
                 <FormField control={form.control} name="referred_by_code" render={({ field }) => (
                   <FormItem>
