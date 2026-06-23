@@ -23,7 +23,7 @@ type RenewalRequest = {
   days: number;
   status: string;
   created_at: string;
-  clients: { id: string; name: string; phone: string; due_date: string; price_cents: number; plan_id: string | null } | null;
+  clients: { id: string; name: string; phone: string; due_date: string; price_cents: number; plan_id: string | null; user_id: string } | null;
 };
 
 function periodLabel(d: number) {
