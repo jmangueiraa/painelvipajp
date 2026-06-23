@@ -93,7 +93,8 @@ function PortalDashboard() {
 
   // Polling do status do pagamento
   useEffect(() => {
-    if (!renewalId || paymentStatus === "approved") return;
+    if (!renewalId) return;
+    if (paymentStatus === "approved" || paymentStatus === "rejected" || paymentStatus === "cancelled") return;
     pollRef.current = window.setInterval(async () => {
       try {
         const r = await portalFetch<{ status: string }>(`/api/public/portal/renewal-status?id=${renewalId}`);
@@ -112,12 +113,16 @@ function PortalDashboard() {
               setPaymentId(null);
               setPaymentStatus("pending");
             }, 3500);
+          } else if (r.status === "rejected" || r.status === "cancelled") {
+            toast.error("Pagamento não aprovado. Gere um novo PIX.");
+            if (pollRef.current) window.clearInterval(pollRef.current);
           }
         }
       } catch { /* noop */ }
     }, 5000);
     return () => { if (pollRef.current) window.clearInterval(pollRef.current); };
   }, [renewalId, paymentStatus, refetch]);
+
 
   const renew = useMutation({
     mutationFn: (o: { days: number; amount_cents: number; label: string }) =>
