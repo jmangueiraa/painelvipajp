@@ -3,7 +3,7 @@ import { translateError } from "@/lib/translate-error";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { User, MessageSquare, KeyRound, LifeBuoy, Camera, QrCode, RefreshCw, LogOut } from "lucide-react";
+import { User, MessageSquare, KeyRound, LifeBuoy, Camera, QrCode, RefreshCw, LogOut, Smartphone } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
