@@ -32,7 +32,7 @@ export const Route = createFileRoute("/api/public/portal/mp-create-pix")({
           // Cria a solicitação
           const { data: renewal, error: insErr } = await supabaseAdmin
             .from("renewal_requests")
-            .insert({ client_id: client.id, user_id: client.user_id, days, amount_cents })
+            .insert({ client_id: client.id, user_id: client.user_id, days, amount_cents, status: "awaiting_payment" })
             .select("id")
             .single();
           if (insErr || !renewal) return json({ error: "Falha ao registrar solicitação" }, { status: 500 });

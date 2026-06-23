@@ -26,7 +26,39 @@ export const Route = createFileRoute("/api/public/portal/renewal-status")({
             .maybeSingle();
 
           if (!r) return json({ error: "Não encontrado" }, { status: 404 });
-          const row = r as { mp_status: string | null; status: string | null; mp_payment_id: string | null; paid_at: string | null };
+          let row = r as { mp_status: string | null; status: string | null; mp_payment_id: string | null; paid_at: string | null };
+
+          // Fallback: se ainda não confirmado e existe mp_payment_id, consulta o MP diretamente
+          // (caso o webhook não tenha chegado) e atualiza o registro.
+          if (row.status !== "paid" && row.mp_status !== "approved" && row.mp_payment_id) {
+            const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+            if (token) {
+              const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${row.mp_payment_id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (mpRes.ok) {
+                const payment = (await mpRes.json()) as { status?: string; date_approved?: string | null };
+                const isApproved = payment.status === "approved";
+                if (payment.status && payment.status !== row.mp_status) {
+                  await supabaseAdmin
+                    .from("renewal_requests")
+                    .update({
+                      mp_status: payment.status,
+                      paid_at: isApproved ? (payment.date_approved ?? new Date().toISOString()) : row.paid_at,
+                      status: isApproved ? "paid" : row.status ?? "awaiting_payment",
+                    })
+                    .eq("id", id);
+                  row = {
+                    ...row,
+                    mp_status: payment.status,
+                    paid_at: isApproved ? (payment.date_approved ?? new Date().toISOString()) : row.paid_at,
+                    status: isApproved ? "paid" : row.status,
+                  };
+                }
+              }
+            }
+          }
+
           return json({
             status: row.mp_status ?? "pending",
             paid: row.status === "paid" || row.mp_status === "approved",

@@ -43,6 +43,7 @@ function SolicitacoesPage() {
       const { data, error } = await supabase
         .from("renewal_requests")
         .select("id,client_id,days,status,created_at,clients:client_id(id,name,phone,due_date,price_cents,plan_id,user_id)")
+        .neq("status", "awaiting_payment")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as unknown as RenewalRequest[];
