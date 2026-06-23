@@ -781,15 +781,6 @@ function ClientesPage() {
                   </div>
                 </FormItem>
               )} />
-              {!editing && (
-                <FormField control={form.control} name="referred_by_code" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Indicado por (código)</FormLabel>
-                    <FormControl><Input placeholder="Ex: JOAO-A4F2" {...field} /></FormControl>
-                    <p className="text-xs text-muted-foreground">Opcional. Quem indicar ganha dias grátis ao 1º pagamento deste cliente.</p>
-                  </FormItem>
-                )} />
-              )}
               <FormField control={form.control} name="auto_charge" render={({ field }) => (
                 <FormItem className="flex items-start justify-between rounded-xl border border-border p-3 gap-3">
                   <div className="min-w-0">
