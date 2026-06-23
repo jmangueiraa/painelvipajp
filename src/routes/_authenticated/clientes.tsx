@@ -737,6 +737,20 @@ function ClientesPage() {
                     <FormControl><Input {...field} /></FormControl>
                   </FormItem>
                 )} />
+                <FormField control={form.control} name="portal_username" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Usuário do Portal</FormLabel>
+                    <FormControl><Input placeholder="ex: joao123" autoComplete="off" {...field} /></FormControl>
+                    <p className="text-xs text-muted-foreground">Login alternativo (sem WhatsApp).</p>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="portal_password" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Senha do Portal</FormLabel>
+                    <FormControl><Input type="text" placeholder={editing ? "Deixe em branco para manter" : "mín. 4 caracteres"} autoComplete="off" {...field} /></FormControl>
+                  </FormItem>
+                )} />
+
                 <FormField control={form.control} name="plan_id" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Plano</FormLabel>
