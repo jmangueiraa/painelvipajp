@@ -93,7 +93,8 @@ function PortalDashboard() {
 
   // Polling do status do pagamento
   useEffect(() => {
-    if (!renewalId || paymentStatus === "approved") return;
+    if (!renewalId) return;
+    if (paymentStatus === "approved" || paymentStatus === "rejected" || paymentStatus === "cancelled") return;
     pollRef.current = window.setInterval(async () => {
       try {
         const r = await portalFetch<{ status: string }>(`/api/public/portal/renewal-status?id=${renewalId}`);
@@ -112,12 +113,16 @@ function PortalDashboard() {
               setPaymentId(null);
               setPaymentStatus("pending");
             }, 3500);
+          } else if (r.status === "rejected" || r.status === "cancelled") {
+            toast.error("Pagamento não aprovado. Gere um novo PIX.");
+            if (pollRef.current) window.clearInterval(pollRef.current);
           }
         }
       } catch { /* noop */ }
     }, 5000);
     return () => { if (pollRef.current) window.clearInterval(pollRef.current); };
   }, [renewalId, paymentStatus, refetch]);
+
 
   const renew = useMutation({
     mutationFn: (o: { days: number; amount_cents: number; label: string }) =>
@@ -451,15 +456,39 @@ function PortalDashboard() {
                 </div>
               )}
 
-              {paymentStatus === "approved" ? (
-                <div className="rounded-xl border-2 border-emerald-500/60 bg-emerald-500/10 p-3 text-center text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                  ✅ Pagamento confirmado! Aguardando liberação do admin.
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Aguardando pagamento... A confirmação é automática após o PIX ser processado pelo Mercado Pago.
-                </p>
-              )}
+              {(() => {
+                const s = paymentStatus;
+                if (s === "approved") {
+                  return (
+                    <div className="flex items-center gap-2 rounded-xl border-2 border-emerald-500/60 bg-emerald-500/10 p-3 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                      <span>Pago — renovação confirmada!</span>
+                    </div>
+                  );
+                }
+                if (s === "rejected" || s === "cancelled") {
+                  return (
+                    <div className="rounded-xl border-2 border-rose-500/60 bg-rose-500/10 p-3 text-sm font-medium text-rose-700 dark:text-rose-300">
+                      ❌ Falha no pagamento ({s === "rejected" ? "recusado" : "cancelado"}). Volte e gere um novo PIX.
+                    </div>
+                  );
+                }
+                if (s === "in_process") {
+                  return (
+                    <div className="flex items-center gap-2 rounded-xl border border-amber-500/50 bg-amber-500/10 p-3 text-sm font-medium text-amber-700 dark:text-amber-300">
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                      <span>Pagamento em análise pelo Mercado Pago...</span>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="flex items-center gap-2 rounded-xl border bg-card p-3 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                    <span>Aguardando pagamento... A confirmação é automática.</span>
+                  </div>
+                );
+              })()}
+
               {paymentId && <p className="text-[10px] text-muted-foreground text-center">ID do pagamento: {paymentId}</p>}
 
 
