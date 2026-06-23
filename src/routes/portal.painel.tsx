@@ -264,25 +264,71 @@ function PortalDashboard() {
         </Card>
       </main>
 
-      <Dialog open={renewOpen} onOpenChange={setRenewOpen}>
+      <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setPixPeriod(null); setPixCopied(false); setValCopied(false); } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Renovar plano</DialogTitle>
-            <DialogDescription>Escolha o período. Vamos avisar seu provedor para enviar o pagamento.</DialogDescription>
+            <DialogDescription>
+              {pixPeriod ? "Pague via PIX usando a chave abaixo." : "Escolha o período. O valor é calculado conforme seu plano."}
+            </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { label: "Mensal", days: 30 },
-              { label: "Trimestral", days: 90 },
-              { label: "Semestral", days: 180 },
-              { label: "Anual", days: 365 },
-            ].map((o) => (
-              <Button key={o.days} variant="outline" disabled={renew.isPending} onClick={() => renew.mutate(o.days)}>
-                {o.label}
-              </Button>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">Após confirmar, você receberá as instruções de pagamento no WhatsApp.</p>
+
+          {!pixPeriod ? (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: "Mensal", days: 30, months: 1 },
+                  { label: "Trimestral", days: 90, months: 3 },
+                  { label: "Semestral", days: 180, months: 6 },
+                  { label: "Anual", days: 365, months: 12 },
+                ].map((o) => (
+                  <Button key={o.days} variant="outline" disabled={renew.isPending} onClick={() => selectPeriod(o)}>
+                    <div className="flex flex-col">
+                      <span>{o.label}</span>
+                      <span className="text-xs text-muted-foreground">{brl(data.client.price_cents * o.months)}</span>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">Seu provedor também será avisado do pedido.</p>
+            </>
+          ) : (
+            <div className="space-y-3">
+              <div className="rounded-xl border bg-card p-3">
+                <div className="text-xs text-muted-foreground">Período</div>
+                <div className="font-semibold">{pixPeriod.label} · {pixPeriod.days} dias</div>
+              </div>
+
+              <div className="rounded-xl border bg-card p-3">
+                <div className="text-xs text-muted-foreground">Valor a pagar</div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xl font-bold">{brl(data.client.price_cents * pixPeriod.months)}</div>
+                  <Button size="sm" variant="outline" onClick={() => copy(((data.client.price_cents * pixPeriod.months) / 100).toFixed(2), "val")}>
+                    {valCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar
+                  </Button>
+                </div>
+              </div>
+
+              <div className="rounded-xl border-2 border-primary/40 bg-primary/5 p-3">
+                <div className="text-xs text-muted-foreground">Chave PIX (Celular)</div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-mono text-lg font-bold tracking-wide">{PIX_KEY}</div>
+                  <Button size="sm" onClick={() => copy(PIX_KEY, "pix")}>
+                    {pixCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar
+                  </Button>
+                </div>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Após o pagamento, envie o comprovante no WhatsApp do seu provedor. A liberação é feita após a confirmação.
+              </p>
+
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => setPixPeriod(null)}>Voltar</Button>
+                <Button className="flex-1" onClick={() => { setRenewOpen(false); setPixPeriod(null); }}>Fechar</Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
