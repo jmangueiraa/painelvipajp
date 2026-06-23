@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useState } from "react";
 import { brl, formatDateBR } from "@/lib/format";
 import { clearPortalToken, getPortalToken, portalFetch } from "@/lib/portal-client";
+import { InstallAppCard } from "@/components/portal/install-app-card";
 
 export const Route = createFileRoute("/portal/painel")({
   ssr: false,
@@ -230,6 +231,10 @@ function PortalDashboard() {
             </CardContent>
           </Card>
         )}
+
+        <InstallAppCard />
+
+
 
         {/* Credenciais IPTV */}
         {(data.client.iptv_login || data.client.iptv_password) && (
