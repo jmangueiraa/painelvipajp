@@ -1,9 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { CalendarClock, CreditCard, Gift, LogOut, RefreshCw, Server as ServerIcon, Tv, Download, Copy, Check, CheckCircle2, ChevronUp, Smartphone, ExternalLink } from "lucide-react";
-import QRCode from "qrcode";
+import { CalendarClock, CreditCard, Gift, LogOut, RefreshCw, Server as ServerIcon, Tv, Download, Copy, Check, CheckCircle2, ChevronUp, Smartphone, ExternalLink, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +11,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { brl, formatDateBR } from "@/lib/format";
 import { clearPortalToken, getPortalToken, portalFetch } from "@/lib/portal-client";
 import { InstallAppCard } from "@/components/portal/install-app-card";
-import { buildPixPayload } from "@/lib/pix";
 
 export const Route = createFileRoute("/portal/painel")({
   ssr: false,
@@ -66,12 +64,15 @@ function PortalDashboard() {
   const navigate = useNavigate();
   const [renewOpen, setRenewOpen] = useState(false);
   const [pixPeriod, setPixPeriod] = useState<{ label: string; days: number; price_cents: number } | null>(null);
-  const [pixCopied, setPixCopied] = useState(false);
   const [valCopied, setValCopied] = useState(false);
   const [brCopied, setBrCopied] = useState(false);
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [qrBase64, setQrBase64] = useState<string | null>(null);
   const [pixPayload, setPixPayload] = useState<string>("");
-  const PIX_KEY = "16997855438";
+  const [renewalId, setRenewalId] = useState<string | null>(null);
+  const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<string>("pending");
+  const [creating, setCreating] = useState(false);
+  const pollRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!getPortalToken()) navigate({ to: "/portal" });
@@ -90,36 +91,53 @@ function PortalDashboard() {
     }
   }, [error, navigate]);
 
+  // Polling do status do pagamento
+  useEffect(() => {
+    if (!renewalId || paymentStatus === "approved") return;
+    pollRef.current = window.setInterval(async () => {
+      try {
+        const r = await portalFetch<{ status: string }>(`/api/public/portal/renewal-status?id=${renewalId}`);
+        if (r.status && r.status !== paymentStatus) {
+          setPaymentStatus(r.status);
+          if (r.status === "approved") {
+            toast.success("Pagamento confirmado! Aguardando liberação do admin.");
+            void refetch();
+          }
+        }
+      } catch { /* noop */ }
+    }, 5000);
+    return () => { if (pollRef.current) window.clearInterval(pollRef.current); };
+  }, [renewalId, paymentStatus, refetch]);
+
   const renew = useMutation({
-    mutationFn: (days: number) => portalFetch("/api/public/portal/renew-request", { method: "POST", body: JSON.stringify({ days }) }),
-    onSuccess: () => {
-      toast.success("Pedido enviado! Use a chave PIX abaixo para pagar.");
+    mutationFn: (o: { days: number; amount_cents: number; label: string }) =>
+      portalFetch<{ renewal_id: string; payment_id: string; qr_code: string; qr_code_base64: string }>(
+        "/api/public/portal/mp-create-pix",
+        { method: "POST", body: JSON.stringify(o) },
+      ),
+    onSuccess: (r) => {
+      setRenewalId(r.renewal_id);
+      setPaymentId(r.payment_id);
+      setPixPayload(r.qr_code);
+      setQrBase64(r.qr_code_base64);
+      setPaymentStatus("pending");
+      toast.success("QR Code PIX gerado!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => { toast.error(e.message); setPixPeriod(null); },
+    onSettled: () => setCreating(false),
   });
 
   function selectPeriod(o: { label: string; days: number; price_cents: number }) {
     setPixPeriod(o);
-    renew.mutate(o.days);
-    const payload = buildPixPayload({
-      key: PIX_KEY,
-      amount: o.price_cents / 100,
-      merchantName: "PAINEL VIP",
-      merchantCity: "SAO PAULO",
-      txid: `REN${Date.now().toString().slice(-10)}`,
-      description: `Plano ${o.label}`,
-    });
-    setPixPayload(payload);
-    QRCode.toDataURL(payload, { width: 280, margin: 1 })
-      .then(setQrDataUrl)
-      .catch(() => setQrDataUrl(null));
+    setCreating(true);
+    renew.mutate({ days: o.days, amount_cents: o.price_cents, label: o.label });
   }
 
-  async function copy(text: string, which: "pix" | "val") {
+  async function copy(text: string) {
     try {
       await navigator.clipboard.writeText(text);
-      if (which === "pix") { setPixCopied(true); setTimeout(() => setPixCopied(false), 2000); }
-      else { setValCopied(true); setTimeout(() => setValCopied(false), 2000); }
+      setValCopied(true);
+      setTimeout(() => setValCopied(false), 2000);
       toast.success("Copiado!");
     } catch {
       toast.error("Não foi possível copiar");
@@ -334,7 +352,7 @@ function PortalDashboard() {
         )}
       </main>
 
-      <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setPixPeriod(null); setPixCopied(false); setValCopied(false); setBrCopied(false); setQrDataUrl(null); setPixPayload(""); } }}>
+      <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setPixPeriod(null); setValCopied(false); setBrCopied(false); setQrBase64(null); setPixPayload(""); setRenewalId(null); setPaymentId(null); setPaymentStatus("pending"); } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Renovar plano</DialogTitle>
@@ -366,7 +384,7 @@ function PortalDashboard() {
                   ))}
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">Seu provedor também será avisado do pedido.</p>
+              <p className="text-xs text-muted-foreground">PIX gerado via Mercado Pago. Após o pagamento, a solicitação é confirmada automaticamente.</p>
             </>
           ) : (
             <div className="space-y-3">
@@ -379,40 +397,46 @@ function PortalDashboard() {
                 <div className="text-xs text-muted-foreground">Valor a pagar</div>
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-xl font-bold">{brl(pixPeriod.price_cents)}</div>
-                  <Button size="sm" variant="outline" onClick={() => copy((pixPeriod.price_cents / 100).toFixed(2), "val")}>
+                  <Button size="sm" variant="outline" onClick={() => copy((pixPeriod.price_cents / 100).toFixed(2))}>
                     {valCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar
                   </Button>
                 </div>
               </div>
 
-              {qrDataUrl && (
+              {creating && (
+                <div className="flex items-center justify-center gap-2 rounded-xl border bg-card p-6 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />Gerando QR Code...
+                </div>
+              )}
+
+              {qrBase64 && !creating && (
                 <div className="flex flex-col items-center gap-2 rounded-xl border-2 border-primary/40 bg-white p-3">
-                  <img src={qrDataUrl} alt="QR Code PIX" className="h-56 w-56" />
+                  <img src={`data:image/png;base64,${qrBase64}`} alt="QR Code PIX" className="h-56 w-56" />
                   <div className="text-xs text-muted-foreground">Escaneie no app do seu banco</div>
                 </div>
               )}
 
-              <div className="rounded-xl border bg-card p-3">
-                <div className="mb-1 text-xs text-muted-foreground">PIX Copia e Cola</div>
-                <div className="break-all rounded-md bg-muted/50 p-2 font-mono text-[10px] leading-tight">{pixPayload}</div>
-                <Button size="sm" className="mt-2 w-full" onClick={() => { void navigator.clipboard.writeText(pixPayload); setBrCopied(true); setTimeout(() => setBrCopied(false), 2000); toast.success("Código PIX copiado!"); }}>
-                  {brCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar código PIX
-                </Button>
-              </div>
-
-              <div className="rounded-xl border bg-card p-3">
-                <div className="text-xs text-muted-foreground">Ou use a chave PIX</div>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="font-mono text-sm font-bold tracking-wide">{PIX_KEY}</div>
-                  <Button size="sm" variant="outline" onClick={() => copy(PIX_KEY, "pix")}>
-                    {pixCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar
+              {pixPayload && !creating && (
+                <div className="rounded-xl border bg-card p-3">
+                  <div className="mb-1 text-xs text-muted-foreground">PIX Copia e Cola</div>
+                  <div className="break-all rounded-md bg-muted/50 p-2 font-mono text-[10px] leading-tight">{pixPayload}</div>
+                  <Button size="sm" className="mt-2 w-full" onClick={() => { void navigator.clipboard.writeText(pixPayload); setBrCopied(true); setTimeout(() => setBrCopied(false), 2000); toast.success("Código PIX copiado!"); }}>
+                    {brCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar código PIX
                   </Button>
                 </div>
-              </div>
+              )}
 
-              <p className="text-xs text-muted-foreground">
-                Após o pagamento, sua solicitação já foi enviada ao administrador. A liberação é feita após a confirmação.
-              </p>
+              {paymentStatus === "approved" ? (
+                <div className="rounded-xl border-2 border-emerald-500/60 bg-emerald-500/10 p-3 text-center text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                  ✅ Pagamento confirmado! Aguardando liberação do admin.
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Aguardando pagamento... A confirmação é automática após o PIX ser processado pelo Mercado Pago.
+                </p>
+              )}
+              {paymentId && <p className="text-[10px] text-muted-foreground text-center">ID do pagamento: {paymentId}</p>}
+
 
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => setPixPeriod(null)}>Voltar</Button>
