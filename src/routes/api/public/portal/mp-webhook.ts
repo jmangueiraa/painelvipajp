@@ -60,50 +60,71 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
           };
 
           const isApproved = payment.status === "approved";
-          const alreadyPaid = renewal.status === "paid";
+          const paidAtIso = payment.date_approved ?? new Date().toISOString();
 
-          await supabaseAdmin
+          if (!isApproved) {
+            await supabaseAdmin
+              .from("renewal_requests")
+              .update({ mp_status: payment.status ?? "unknown" })
+              .eq("id", renewal.id);
+            return json({ ok: true, status: payment.status });
+          }
+
+          // Transição atômica awaiting_payment -> paid (idempotente: só uma execução vence)
+          const { data: claimed } = await supabaseAdmin
             .from("renewal_requests")
             .update({
-              mp_status: payment.status ?? "unknown",
-              paid_at: isApproved ? (payment.date_approved ?? new Date().toISOString()) : null,
-              status: isApproved ? "paid" : renewal.status ?? "pending",
+              mp_status: payment.status ?? "approved",
+              paid_at: paidAtIso,
+              status: "paid",
             })
-            .eq("id", renewal.id);
+            .eq("id", renewal.id)
+            .neq("status", "paid")
+            .select("id")
+            .maybeSingle();
 
-          // Quando aprovado pela primeira vez, adiciona os dias comprados ao vencimento do cliente
-          // e registra o pagamento no histórico.
-          if (isApproved && !alreadyPaid) {
-            const { data: clientRow } = await supabaseAdmin
+          if (!claimed) {
+            return json({ ok: true, skipped: "already processed" });
+          }
+
+          // Adiciona os dias ao vencimento do cliente
+          const { data: clientRow } = await supabaseAdmin
+            .from("clients")
+            .select("id, due_date")
+            .eq("id", renewal.client_id)
+            .maybeSingle();
+
+          if (clientRow) {
+            const today = new Date();
+            today.setUTCHours(0, 0, 0, 0);
+            const current = (clientRow as { due_date: string | null }).due_date;
+            const base = current ? new Date(current + "T00:00:00Z") : today;
+            const start = base.getTime() > today.getTime() ? base : today;
+            const next = new Date(start);
+            next.setUTCDate(next.getUTCDate() + Number(renewal.days || 0));
+            const newDueDate = next.toISOString().slice(0, 10);
+
+            await supabaseAdmin
               .from("clients")
-              .select("id, due_date")
-              .eq("id", renewal.client_id)
-              .maybeSingle();
+              .update({ due_date: newDueDate })
+              .eq("id", renewal.client_id);
+          }
 
-            if (clientRow) {
-              const today = new Date();
-              today.setUTCHours(0, 0, 0, 0);
-              const current = (clientRow as { due_date: string | null }).due_date;
-              const base = current ? new Date(current + "T00:00:00Z") : today;
-              const start = base.getTime() > today.getTime() ? base : today;
-              const next = new Date(start);
-              next.setUTCDate(next.getUTCDate() + Number(renewal.days || 0));
-              const newDueDate = next.toISOString().slice(0, 10);
+          // Registra o pagamento no histórico com cliente, data e hora do Mercado Pago
+          const amountCents =
+            renewal.amount_cents ??
+            (payment.transaction_amount ? Math.round(payment.transaction_amount * 100) : 0);
 
-              await supabaseAdmin
-                .from("clients")
-                .update({ due_date: newDueDate })
-                .eq("id", renewal.client_id);
-
-              await supabaseAdmin.from("payments").insert({
-                client_id: renewal.client_id,
-                user_id: renewal.user_id,
-                amount_cents: renewal.amount_cents ?? (payment.transaction_amount ? Math.round(payment.transaction_amount * 100) : 0),
-                paid_at: payment.date_approved ?? new Date().toISOString(),
-                method: "pix_mercadopago",
-                notes: `Renovação ${renewal.days} dias (MP ${payment.id})`,
-              });
-            }
+          const { error: payErr } = await supabaseAdmin.from("payments").insert({
+            client_id: renewal.client_id,
+            user_id: renewal.user_id,
+            amount_cents: amountCents,
+            paid_at: paidAtIso,
+            method: "pix_mercadopago",
+            notes: `Renovação ${renewal.days} dias - Mercado Pago (id ${payment.id})`,
+          });
+          if (payErr) {
+            console.error("[mp-webhook] payments insert failed", payErr);
           }
 
           return json({ ok: true });
