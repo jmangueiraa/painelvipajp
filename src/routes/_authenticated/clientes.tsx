@@ -232,8 +232,10 @@ function ClientesPage() {
   const [renewTarget, setRenewTarget] = useState<Client | null>(null);
   const renew = useMutation({
     mutationFn: async ({ c, days }: { c: Client; days: number }) => {
-      const base = c.due_date && c.due_date >= todayISO() ? c.due_date : todayISO();
+      // Sempre conta a partir do vencimento atual (mesmo vencido); usa hoje só se não houver
+      const base = c.due_date || todayISO();
       const newDue = addDaysISO(base, days);
+
       const update: { due_date: string; status: ClientStatus; plan_id?: string; price_cents?: number } = { due_date: newDue, status: computeStatus(newDue, "ativo") };
       // Se o período escolhido for diferente do plano atual, troca para um plano com essa duração
       const currentPlan = (plans ?? []).find((p) => p.id === c.plan_id);

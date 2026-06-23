@@ -98,11 +98,12 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
             const today = new Date();
             today.setUTCHours(0, 0, 0, 0);
             const current = (clientRow as { due_date: string | null }).due_date;
-            const base = current ? new Date(current + "T00:00:00Z") : today;
-            const start = base.getTime() > today.getTime() ? base : today;
+            // Sempre conta a partir do vencimento atual (mesmo vencido); só usa hoje se não houver vencimento
+            const start = current ? new Date(current + "T00:00:00Z") : today;
             const next = new Date(start);
             next.setUTCDate(next.getUTCDate() + Number(renewal.days || 0));
             const newDueDate = next.toISOString().slice(0, 10);
+
 
             await supabaseAdmin
               .from("clients")
