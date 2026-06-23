@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { CalendarClock, CreditCard, Gift, LogOut, RefreshCw, Server as ServerIcon, Tv, Download, Copy, Check } from "lucide-react";
+import { CalendarClock, CreditCard, Gift, LogOut, RefreshCw, Server as ServerIcon, Tv, Download, Copy, Check, CheckCircle2, ChevronUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -239,30 +239,42 @@ function PortalDashboard() {
         )}
 
         {/* Histórico de pagamentos */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base"><CreditCard className="h-4 w-4" />Meus pagamentos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {data.payments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum pagamento registrado ainda.</p>
-            ) : (
-              <ul className="divide-y">
-                {data.payments.map((p) => (
-                  <li key={p.id} className="flex items-center justify-between py-3">
-                    <div>
-                      <div className="font-medium">{brl(p.amount_cents)}</div>
-                      <div className="text-xs text-muted-foreground">{formatDateBR(p.paid_at)} · {p.method ?? "—"}</div>
-                    </div>
-                    <Button size="sm" variant="outline" onClick={() => downloadReceipt(p)}>
-                      <Download className="mr-1 h-3 w-3" />Comprovante
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+        <section>
+          <div className="mb-3 flex items-center gap-2 px-1">
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-medium text-muted-foreground">Pagas</h2>
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          </div>
+          {data.payments.length === 0 ? (
+            <p className="px-1 text-sm text-muted-foreground">Nenhum pagamento registrado ainda.</p>
+          ) : (
+            <ul className="space-y-2">
+              {data.payments.map((p) => (
+                <li
+                  key={p.id}
+                  className="flex items-center gap-3 rounded-2xl border bg-card px-4 py-3 shadow-sm transition hover:border-primary/40"
+                >
+                  <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-500" strokeWidth={2} />
+                  <div className="flex-1">
+                    <div className="text-xs text-muted-foreground">Vencimento</div>
+                    <div className="text-base font-bold tracking-tight">{formatDateBR(p.paid_at)}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-muted-foreground">Original</div>
+                    <div className="text-base font-bold tracking-tight">{brl(p.amount_cents)}</div>
+                  </div>
+                  <button
+                    onClick={() => downloadReceipt(p)}
+                    className="ml-1 grid h-9 w-9 place-items-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                    aria-label="Baixar comprovante"
+                  >
+                    <Download className="h-4 w-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </main>
 
       <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setPixPeriod(null); setPixCopied(false); setValCopied(false); } }}>
