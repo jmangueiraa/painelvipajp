@@ -67,6 +67,7 @@ type Client = {
   price_cents: number; due_date: string; status: ClientStatus;
   auto_charge: boolean; notes: string | null;
   referral_code: string | null; referred_by: string | null; bonus_days: number;
+  allowed_plan_ids: string[] | null;
 };
 
 type FilterChip = "todos" | "em_dia" | "a_vencer" | "vencem_hoje" | "vencidos" | "bloqueados";
