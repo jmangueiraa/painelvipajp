@@ -1,5 +1,28 @@
-import { createHash, randomBytes } from "crypto";
+import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+export function hashPassword(password: string): string {
+  const salt = randomBytes(16).toString("hex");
+  const derived = scryptSync(password, salt, 64).toString("hex");
+  return `scrypt$${salt}$${derived}`;
+}
+
+export function verifyPassword(password: string, stored: string | null | undefined): boolean {
+  if (!stored) return false;
+  const parts = stored.split("$");
+  if (parts.length !== 3 || parts[0] !== "scrypt") return false;
+  const [, salt, hash] = parts;
+  const derived = scryptSync(password, salt, 64);
+  const hashBuf = Buffer.from(hash, "hex");
+  if (derived.length !== hashBuf.length) return false;
+  return timingSafeEqual(derived, hashBuf);
+}
+
+export async function getClientByPortalUsername(username: string): Promise<PortalClient | null> {
+  const { data, error } = await supabaseAdmin.rpc("find_client_by_portal_username", { _username: username });
+  if (error || !data || !Array.isArray(data) || data.length === 0) return null;
+  return data[0] as unknown as PortalClient;
+}
 
 export const SESSION_TTL_DAYS = 30;
 export const OTP_TTL_MIN = 10;
