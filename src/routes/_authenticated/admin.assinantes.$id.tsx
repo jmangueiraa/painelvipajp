@@ -294,7 +294,7 @@ function AssinanteDetalhe() {
               <TableBody>
                 {payments.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell>{formatDateBR(p.paid_at)}</TableCell>
+                    <TableCell>{formatDateTimeBR(p.paid_at)}</TableCell>
                     <TableCell className="tabular-nums">{brl(p.amount_cents)}</TableCell>
                     <TableCell className="capitalize">{p.method ?? "—"}</TableCell>
                     <TableCell className="text-muted-foreground">{p.notes ?? "—"}</TableCell>
