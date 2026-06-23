@@ -48,16 +48,14 @@ export type PortalClient = {
 };
 
 export async function getClientByPhone(phoneDigits: string): Promise<PortalClient | null> {
-  // Filtra por sufixo dos últimos 8 dígitos (independe de DDI/máscara) e confere normalizado
+  // Compara apenas dígitos (ignora parênteses/espaços/traços do telefone salvo)
   const suffix = phoneDigits.slice(-8);
-  const { data, error } = await supabaseAdmin
-    .from("clients")
-    .select("id,user_id,name,phone,due_date,status,price_cents,plan_id,server_id,iptv_login,iptv_password,referral_code,referred_by,bonus_days")
-    .ilike("phone", `%${suffix}%`)
-    .limit(20);
+  const { data, error } = await supabaseAdmin.rpc("find_client_by_phone_digits", { _digits: phoneDigits });
   if (error || !data) return null;
-  const match = data.find((c) => normalizePhone(c.phone) === phoneDigits)
-    ?? data.find((c) => onlyDigits(c.phone).endsWith(suffix));
+  const list = data as PortalClient[];
+  const match =
+    list.find((c) => normalizePhone(c.phone) === phoneDigits) ??
+    list.find((c) => onlyDigits(c.phone).endsWith(suffix));
   return (match as PortalClient) ?? null;
 }
 
