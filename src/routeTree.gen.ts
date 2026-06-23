@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
 import { Route as PortalPainelRouteImport } from './routes/portal.painel'
+import { Route as PortalIndiqueRouteImport } from './routes/portal.indique'
 import { Route as AuthenticatedServidoresRouteImport } from './routes/_authenticated/servidores'
 import { Route as AuthenticatedRenovacaoRouteImport } from './routes/_authenticated/renovacao'
 import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
@@ -61,6 +62,11 @@ const PortalIndexRoute = PortalIndexRouteImport.update({
 const PortalPainelRoute = PortalPainelRouteImport.update({
   id: '/portal/painel',
   path: '/portal/painel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalIndiqueRoute = PortalIndiqueRouteImport.update({
+  id: '/portal/indique',
+  path: '/portal/indique',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedServidoresRoute = AuthenticatedServidoresRouteImport.update({
@@ -172,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/planos': typeof AuthenticatedPlanosRoute
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
+  '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
   '/portal/': typeof PortalIndexRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/planos': typeof AuthenticatedPlanosRoute
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
+  '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
   '/portal': typeof PortalIndexRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/_authenticated/planos': typeof AuthenticatedPlanosRoute
   '/_authenticated/renovacao': typeof AuthenticatedRenovacaoRoute
   '/_authenticated/servidores': typeof AuthenticatedServidoresRoute
+  '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
   '/portal/': typeof PortalIndexRoute
   '/_authenticated/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/renovacao'
     | '/servidores'
+    | '/portal/indique'
     | '/portal/painel'
     | '/portal/'
     | '/admin/assinantes'
@@ -276,6 +286,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/renovacao'
     | '/servidores'
+    | '/portal/indique'
     | '/portal/painel'
     | '/portal'
     | '/admin/assinantes'
@@ -302,6 +313,7 @@ export interface FileRouteTypes {
     | '/_authenticated/planos'
     | '/_authenticated/renovacao'
     | '/_authenticated/servidores'
+    | '/portal/indique'
     | '/portal/painel'
     | '/portal/'
     | '/_authenticated/admin/assinantes'
@@ -322,6 +334,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  PortalIndiqueRoute: typeof PortalIndiqueRoute
   PortalPainelRoute: typeof PortalPainelRoute
   PortalIndexRoute: typeof PortalIndexRoute
   ApiPublicHooksAutoChargesRoute: typeof ApiPublicHooksAutoChargesRoute
@@ -377,6 +390,13 @@ declare module '@tanstack/react-router' {
       path: '/portal/painel'
       fullPath: '/portal/painel'
       preLoaderRoute: typeof PortalPainelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/indique': {
+      id: '/portal/indique'
+      path: '/portal/indique'
+      fullPath: '/portal/indique'
+      preLoaderRoute: typeof PortalIndiqueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/servidores': {
@@ -553,6 +573,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  PortalIndiqueRoute: PortalIndiqueRoute,
   PortalPainelRoute: PortalPainelRoute,
   PortalIndexRoute: PortalIndexRoute,
   ApiPublicHooksAutoChargesRoute: ApiPublicHooksAutoChargesRoute,
