@@ -48,7 +48,7 @@ function statusColor(s: string) {
 function PortalDashboard() {
   const navigate = useNavigate();
   const [renewOpen, setRenewOpen] = useState(false);
-  const [pixPeriod, setPixPeriod] = useState<{ label: string; days: number; months: number } | null>(null);
+  const [pixPeriod, setPixPeriod] = useState<{ label: string; days: number; price_cents: number } | null>(null);
   const [pixCopied, setPixCopied] = useState(false);
   const [valCopied, setValCopied] = useState(false);
   const PIX_KEY = "16997855438";
