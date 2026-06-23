@@ -158,7 +158,14 @@ function ClientesPage() {
         if (!ref) throw new Error("Código de indicação não encontrado");
         referred_by = ref.id;
       }
-      const payload: Record<string, unknown> = {
+      const payload: {
+        name: string; phone: string;
+        iptv_login: string | null; iptv_password: string | null;
+        plan_id: string | null; server_id: string | null;
+        price_cents: number; due_date: string; status: ClientStatus;
+        auto_charge: boolean; notes: string | null; user_id: string;
+        referred_by?: string | null;
+      } = {
         name: values.name.trim(),
         phone: values.phone.trim(),
         iptv_login: values.iptv_login?.trim() || null,
@@ -177,7 +184,7 @@ function ClientesPage() {
         const { error } = await supabase.from("clients").update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("clients").insert(payload as never);
+        const { error } = await supabase.from("clients").insert(payload);
         if (error) throw error;
       }
     },
