@@ -18,7 +18,7 @@ import { statusLabel, statusVariant, computeStatus, type ClientStatus } from "@/
 import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { sendChargesNow as sendChargesNowFn } from "@/lib/auto-charges.functions";
-import { setPortalCredentials as setPortalCredentialsFn } from "@/lib/portal-admin.functions";
+
 
 import { PageHeader } from "@/components/page-header";
 import { ActionPillButton } from "@/components/action-pill-button";
@@ -54,8 +54,6 @@ const schema = z.object({
   auto_charge: z.boolean(),
   notes: z.string().max(500).optional().or(z.literal("")),
   referred_by_code: z.string().trim().max(40).optional().or(z.literal("")),
-  portal_username: z.string().trim().max(40).optional().or(z.literal("")),
-  portal_password: z.string().trim().max(40).optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -117,7 +115,6 @@ function ClientesPage() {
       name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
       auto_charge: true, notes: "", referred_by_code: "",
-      portal_username: "", portal_password: "",
     },
   });
 
@@ -127,7 +124,6 @@ function ClientesPage() {
       name: "", phone: "", iptv_login: "", iptv_password: "",
       plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
       auto_charge: true, notes: "", referred_by_code: "",
-      portal_username: "", portal_password: "",
     });
     setOpen(true);
   };
@@ -140,8 +136,6 @@ function ClientesPage() {
       price: (c.price_cents / 100).toFixed(2).replace(".", ","),
       due_date: c.due_date, auto_charge: c.auto_charge, notes: c.notes ?? "",
       referred_by_code: "",
-      portal_username: (c as unknown as { portal_username?: string | null }).portal_username ?? "",
-      portal_password: "",
     });
     setOpen(true);
   };
@@ -154,8 +148,6 @@ function ClientesPage() {
       if (!editing) form.setValue("due_date", addDaysISO(todayISO(), p.duration_days));
     }
   };
-
-  const setPortalCredentials = useServerFn(setPortalCredentialsFn);
 
   const save = useMutation({
     mutationFn: async (values: FormValues) => {
@@ -189,28 +181,12 @@ function ClientesPage() {
         user_id: user.id,
       };
       if (referred_by !== undefined) payload.referred_by = referred_by;
-      let clientId: string;
       if (editing) {
         const { error } = await supabase.from("clients").update(payload).eq("id", editing.id);
         if (error) throw error;
-        clientId = editing.id;
       } else {
-        const { data: ins, error } = await supabase.from("clients").insert(payload).select("id").single();
+        const { error } = await supabase.from("clients").insert(payload);
         if (error) throw error;
-        clientId = ins.id;
-      }
-
-      const newUsername = values.portal_username?.trim() ?? "";
-      const newPassword = values.portal_password?.trim() ?? "";
-      const prevUsername = (editing as unknown as { portal_username?: string | null } | null)?.portal_username ?? "";
-      if (newUsername !== prevUsername || newPassword.length > 0) {
-        await setPortalCredentials({
-          data: {
-            clientId,
-            username: newUsername || null,
-            password: newPassword.length > 0 ? newPassword : null,
-          },
-        });
       }
     },
     onSuccess: () => {
@@ -735,19 +711,6 @@ function ClientesPage() {
                   <FormItem>
                     <FormLabel>Senha IPTV</FormLabel>
                     <FormControl><Input {...field} /></FormControl>
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="portal_username" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Usuário do Portal</FormLabel>
-                    <FormControl><Input placeholder="ex: joao123" autoComplete="off" {...field} /></FormControl>
-                    <p className="text-xs text-muted-foreground">Login alternativo (sem WhatsApp).</p>
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="portal_password" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Senha do Portal</FormLabel>
-                    <FormControl><Input type="text" placeholder={editing ? "Deixe em branco para manter" : "mín. 4 caracteres"} autoComplete="off" {...field} /></FormControl>
                   </FormItem>
                 )} />
 
