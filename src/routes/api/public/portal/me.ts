@@ -15,12 +15,13 @@ export const Route = createFileRoute("/api/public/portal/me")({
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-          const [{ data: payments }, { data: plan }, { data: server }, { data: referrals }, { data: settings }] = await Promise.all([
+          const [{ data: payments }, { data: plan }, { data: server }, { data: referrals }, { data: settings }, { data: plans }] = await Promise.all([
             supabaseAdmin.from("payments").select("id,amount_cents,paid_at,method").eq("client_id", client.id).order("paid_at", { ascending: false }).limit(50),
             client.plan_id ? supabaseAdmin.from("plans").select("id,name,price_cents,duration_days").eq("id", client.plan_id).maybeSingle() : Promise.resolve({ data: null }),
             client.server_id ? supabaseAdmin.from("servers").select("id,name").eq("id", client.server_id).maybeSingle() : Promise.resolve({ data: null }),
             supabaseAdmin.from("clients").select("id,name,due_date,status").eq("referred_by", client.id),
             supabaseAdmin.from("settings").select("referral_reward_days,referral_enabled").eq("user_id", client.user_id).maybeSingle(),
+            supabaseAdmin.from("plans").select("id,name,price_cents,duration_days,active").eq("user_id", client.user_id).eq("active", true).order("duration_days", { ascending: true }),
           ]);
 
           const referralsPaidIds = new Set<string>();
@@ -51,6 +52,7 @@ export const Route = createFileRoute("/api/public/portal/me")({
               paid: referralsPaidIds.has(r.id),
             })),
             settings: settings ?? { referral_reward_days: 7, referral_enabled: true },
+            plans: plans ?? [],
           });
         } catch (e) {
           return json({ error: (e as Error).message }, { status: 500 });
