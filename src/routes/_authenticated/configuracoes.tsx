@@ -7,6 +7,7 @@ import { User, MessageSquare, KeyRound, LifeBuoy, Camera, QrCode, RefreshCw, Log
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import { parseBrlToCents } from "@/lib/format";
 
 import { PageHeader } from "@/components/page-header";
