@@ -41,6 +41,7 @@ type Me = {
     due_date: string;
     status: string;
     price_cents: number;
+    points: number | null;
     iptv_login: string | null;
     iptv_password: string | null;
     referral_code: string | null;
