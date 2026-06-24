@@ -290,10 +290,6 @@ function ConfiguracoesPage() {
         </Button>
       </SectionCard>
 
-      <SectionCard title="Mensagem padrão de suporte" description="Enviada quando você clica em 'Mensagem de suporte' na lista de clientes" icon={LifeBuoy} color="var(--kpi-amber)">
-        <Textarea rows={3} placeholder="Olá! Aqui é o suporte. Como posso te ajudar?" value={supportMessage} onChange={(e) => setSupportMessage(e.target.value)} />
-        <Button className="btn-premium rounded-full" onClick={() => saveSettings.mutate({ support_message: supportMessage })}>Salvar mensagem de suporte</Button>
-      </SectionCard>
 
       <SectionCard title="Aplicativo para clientes" description="Links de download que aparecem no portal do cliente" icon={Smartphone} color="var(--kpi-violet)">
         <div className="grid md:grid-cols-2 gap-3">
