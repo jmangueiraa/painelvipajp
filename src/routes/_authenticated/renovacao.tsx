@@ -74,9 +74,25 @@ function RenovacaoPage() {
     },
   });
 
-  const monthly = data?.subscription_monthly_cents ?? 0;
+  const { data: lastPaid } = useQuery({
+    queryKey: ["app_renewal_requests", "last_paid", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("app_renewal_requests")
+        .select("amount_cents,days,paid_at,plan_id")
+        .eq("status", "paid")
+        .order("paid_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { amount_cents: number; days: number; paid_at: string | null; plan_id: string | null } | null;
+    },
+  });
+
   const expires = data?.subscription_expires_at;
   const days = expires ? Math.ceil((new Date(expires).getTime() - Date.now()) / 86_400_000) : null;
+  const currentPlanValue = lastPaid?.amount_cents ?? data?.subscription_monthly_cents ?? 0;
 
   async function handlePay(plan: RenewalPlan) {
     setLoadingPlanId(plan.id);
@@ -141,7 +157,7 @@ function RenovacaoPage() {
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               {expires ? `Expira em ${formatDateBR(expires)}` : "Sem vencimento definido"} ·
-              {" "}Valor mensal: <span className="font-medium text-foreground">{brl(monthly)}</span>
+              {" "}Valor do plano: <span className="font-medium text-foreground">{brl(currentPlanValue)}</span>
             </p>
           </div>
         </CardContent>
