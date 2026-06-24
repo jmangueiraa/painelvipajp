@@ -36,6 +36,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
+
+function getPageItems(current: number, total: number): (number | "...")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: (number | "...")[] = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) pages.push("...");
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < total - 1) pages.push("...");
+  pages.push(total);
+  return pages;
+}
 
 
 export const Route = createFileRoute("/_authenticated/clientes")({
@@ -89,6 +102,8 @@ function ClientesPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [page, setPage] = useState<number>(1);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -354,6 +369,13 @@ function ClientesPage() {
     return sorted;
   }, [clients, q, chip, nameSort]);
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paged = useMemo(
+    () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filtered, currentPage, pageSize],
+  );
+
   const sendChargesNow = useServerFn(sendChargesNowFn);
   const sendCharges = useMutation({
     mutationFn: async (filter: "due_today" | "due_tomorrow" | "advance_5d" | "overdue" | "auto_due_or_overdue") => {
@@ -492,7 +514,6 @@ function ClientesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Clientes"
-        description={`${clients?.length ?? 0} cliente(s) cadastrado(s)`}
         actions={
           <>
             {selectedIds.size > 0 && (
@@ -590,7 +611,7 @@ function ClientesPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {filtered.map((c) => (
+              {paged.map((c) => (
                 <TableRow key={c.id} data-state={selectedIds.has(c.id) ? "selected" : undefined}>
                   <TableCell>
                     <Checkbox
@@ -674,6 +695,57 @@ function ClientesPage() {
               ))}
             </TableBody>
           </Table>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Resultados por página</span>
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                <SelectTrigger className="h-8 w-[80px] rounded-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[10, 25, 50, 100].map((n) => (
+                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="ml-2">{filtered.length} cliente(s)</span>
+            </div>
+            <Pagination className="mx-0 w-auto justify-end">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    aria-disabled={currentPage <= 1}
+                    className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                    onClick={(e) => { e.preventDefault(); if (currentPage > 1) setPage(currentPage - 1); }}
+                  />
+                </PaginationItem>
+                {getPageItems(currentPage, totalPages).map((it, idx) =>
+                  it === "..." ? (
+                    <PaginationItem key={`e-${idx}`}><PaginationEllipsis /></PaginationItem>
+                  ) : (
+                    <PaginationItem key={it}>
+                      <PaginationLink
+                        href="#"
+                        isActive={it === currentPage}
+                        onClick={(e) => { e.preventDefault(); setPage(it as number); }}
+                      >
+                        {it}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                )}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    aria-disabled={currentPage >= totalPages}
+                    className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                    onClick={(e) => { e.preventDefault(); if (currentPage < totalPages) setPage(currentPage + 1); }}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </CardContent>
       </Card>
 
