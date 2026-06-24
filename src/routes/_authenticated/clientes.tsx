@@ -697,11 +697,41 @@ function ClientesPage() {
               </Select>
               <span className="ml-2">{filtered.length} cliente(s)</span>
             </div>
-            <Pagination
-              page={currentPage}
-              totalPages={totalPages}
-              onPageChange={(p) => setPage(p)}
-            />
+            <Pagination className="mx-0 w-auto justify-end">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    aria-disabled={currentPage <= 1}
+                    className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                    onClick={(e) => { e.preventDefault(); if (currentPage > 1) setPage(currentPage - 1); }}
+                  />
+                </PaginationItem>
+                {getPageItems(currentPage, totalPages).map((it, idx) =>
+                  it === "..." ? (
+                    <PaginationItem key={`e-${idx}`}><PaginationEllipsis /></PaginationItem>
+                  ) : (
+                    <PaginationItem key={it}>
+                      <PaginationLink
+                        href="#"
+                        isActive={it === currentPage}
+                        onClick={(e) => { e.preventDefault(); setPage(it as number); }}
+                      >
+                        {it}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                )}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    aria-disabled={currentPage >= totalPages}
+                    className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                    onClick={(e) => { e.preventDefault(); if (currentPage < totalPages) setPage(currentPage + 1); }}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         </CardContent>
       </Card>
