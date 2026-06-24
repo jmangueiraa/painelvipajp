@@ -10,9 +10,6 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
       GET: async () => json({ ok: true }),
       POST: async ({ request }) => {
         try {
-          const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
-          if (!token) return json({ error: "not configured" }, { status: 500 });
-
           const url = new URL(request.url);
           const body = (await request.json().catch(() => ({}))) as {
             type?: string;
@@ -25,6 +22,30 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
             url.searchParams.get("id");
 
           if (!paymentId) return json({ ok: true, skipped: "no payment id" });
+
+          const externalRef =
+            url.searchParams.get("external_reference") ?? undefined;
+
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+          // localiza renovação primeiro (sem precisar do token) para descobrir o dono
+          let renewalQuery = supabaseAdmin.from("renewal_requests").select("*").limit(1);
+          if (externalRef) {
+            renewalQuery = renewalQuery.eq("id", externalRef);
+          } else {
+            renewalQuery = renewalQuery.eq("mp_payment_id", String(paymentId));
+          }
+          const { data: renewalRaw } = await renewalQuery.maybeSingle();
+          if (!renewalRaw) return json({ ok: true, skipped: "not found" });
+
+          // Token do assinante dono da renovação
+          const { data: ownerSettings } = await supabaseAdmin
+            .from("settings")
+            .select("mp_access_token")
+            .eq("user_id", (renewalRaw as { user_id: string }).user_id)
+            .maybeSingle();
+          const token = (ownerSettings as { mp_access_token?: string | null } | null)?.mp_access_token?.trim();
+          if (!token) return json({ error: "not configured" }, { status: 500 });
 
           // Busca status real do pagamento no MP (não confie no payload)
           const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
@@ -39,17 +60,6 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
             date_approved?: string | null;
           };
 
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-          // localiza pelo external_reference (renewal_id) ou pelo mp_payment_id
-          let renewalQuery = supabaseAdmin.from("renewal_requests").select("*").limit(1);
-          if (payment.external_reference) {
-            renewalQuery = renewalQuery.eq("id", payment.external_reference);
-          } else {
-            renewalQuery = renewalQuery.eq("mp_payment_id", String(payment.id));
-          }
-          const { data: renewalRaw } = await renewalQuery.maybeSingle();
-          if (!renewalRaw) return json({ ok: true, skipped: "not found" });
           const renewal = renewalRaw as {
             id: string;
             client_id: string;
