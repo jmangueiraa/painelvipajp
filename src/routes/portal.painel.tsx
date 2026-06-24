@@ -364,7 +364,12 @@ function PortalDashboard() {
           ) : (
           <>
           <DialogHeader>
-            <DialogTitle>Renovar plano{data.client.points && data.client.points > 1 ? ` — ${data.client.points} pontos` : ""}</DialogTitle>
+            <div className="flex items-center justify-between gap-2 pr-6">
+              <DialogTitle>Renovar plano</DialogTitle>
+              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                {data.client.points ?? 1} {(data.client.points ?? 1) === 1 ? "ponto" : "pontos"}
+              </span>
+            </div>
             <DialogDescription>
               {pixPeriod ? "Escaneie o QR Code ou copie o código PIX abaixo." : "Escolha o período. O valor é calculado conforme seu plano."}
             </DialogDescription>
