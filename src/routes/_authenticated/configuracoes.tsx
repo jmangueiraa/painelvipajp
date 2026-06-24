@@ -102,7 +102,7 @@ function ConfiguracoesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("settings")
-        .select("whatsapp_instance,pix_key,pix_name,pix_bank,pix_message,support_message,subscription_expires_at,subscription_monthly_cents,app_android_url,app_ios_url,mp_access_token")
+        .select("whatsapp_instance,support_message,subscription_expires_at,subscription_monthly_cents,app_android_url,app_ios_url,mp_access_token")
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -112,10 +112,6 @@ function ConfiguracoesPage() {
   const [fullName, setFullName] = useState("");
   const [companyName, setCompanyName] = useState("");
 
-  const [pixKey, setPixKey] = useState("");
-  const [pixName, setPixName] = useState("");
-  const [pixBank, setPixBank] = useState("");
-  const [pixMessage, setPixMessage] = useState("");
   const [mpAccessToken, setMpAccessToken] = useState("");
   const [showMpToken, setShowMpToken] = useState(false);
   const [supportMessage, setSupportMessage] = useState("");
@@ -135,10 +131,6 @@ function ConfiguracoesPage() {
   }, [profile]);
   useEffect(() => {
     if (settings) {
-      setPixKey(settings.pix_key ?? "");
-      setPixName(settings.pix_name ?? "");
-      setPixBank(settings.pix_bank ?? "");
-      setPixMessage(settings.pix_message ?? "");
       setMpAccessToken(settings.mp_access_token ?? "");
       setSupportMessage(settings.support_message ?? "");
       setSubExpires(settings.subscription_expires_at ?? "");
