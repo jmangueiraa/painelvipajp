@@ -34,6 +34,7 @@ import { Route as ApiPublicPortalRenewalStatusRouteImport } from './routes/api/p
 import { Route as ApiPublicPortalRenewRequestRouteImport } from './routes/api/public/portal/renew-request'
 import { Route as ApiPublicPortalMpWebhookRouteImport } from './routes/api/public/portal/mp-webhook'
 import { Route as ApiPublicPortalMpCreatePixRouteImport } from './routes/api/public/portal/mp-create-pix'
+import { Route as ApiPublicPortalMpCreateCardRouteImport } from './routes/api/public/portal/mp-create-card'
 import { Route as ApiPublicPortalMeRouteImport } from './routes/api/public/portal/me'
 import { Route as ApiPublicPortalLogoutRouteImport } from './routes/api/public/portal/logout'
 import { Route as ApiPublicPortalLoginPasswordRouteImport } from './routes/api/public/portal/login-password'
@@ -174,6 +175,12 @@ const ApiPublicPortalMpCreatePixRoute =
     path: '/api/public/portal/mp-create-pix',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPortalMpCreateCardRoute =
+  ApiPublicPortalMpCreateCardRouteImport.update({
+    id: '/api/public/portal/mp-create-card',
+    path: '/api/public/portal/mp-create-card',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPortalMeRoute = ApiPublicPortalMeRouteImport.update({
   id: '/api/public/portal/me',
   path: '/api/public/portal/me',
@@ -230,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/api/public/portal/login-password': typeof ApiPublicPortalLoginPasswordRoute
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
   '/api/public/portal/me': typeof ApiPublicPortalMeRoute
+  '/api/public/portal/mp-create-card': typeof ApiPublicPortalMpCreateCardRoute
   '/api/public/portal/mp-create-pix': typeof ApiPublicPortalMpCreatePixRoute
   '/api/public/portal/mp-webhook': typeof ApiPublicPortalMpWebhookRoute
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
@@ -262,6 +270,7 @@ export interface FileRoutesByTo {
   '/api/public/portal/login-password': typeof ApiPublicPortalLoginPasswordRoute
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
   '/api/public/portal/me': typeof ApiPublicPortalMeRoute
+  '/api/public/portal/mp-create-card': typeof ApiPublicPortalMpCreateCardRoute
   '/api/public/portal/mp-create-pix': typeof ApiPublicPortalMpCreatePixRoute
   '/api/public/portal/mp-webhook': typeof ApiPublicPortalMpWebhookRoute
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
@@ -296,6 +305,7 @@ export interface FileRoutesById {
   '/api/public/portal/login-password': typeof ApiPublicPortalLoginPasswordRoute
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
   '/api/public/portal/me': typeof ApiPublicPortalMeRoute
+  '/api/public/portal/mp-create-card': typeof ApiPublicPortalMpCreateCardRoute
   '/api/public/portal/mp-create-pix': typeof ApiPublicPortalMpCreatePixRoute
   '/api/public/portal/mp-webhook': typeof ApiPublicPortalMpWebhookRoute
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
@@ -330,6 +340,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/login-password'
     | '/api/public/portal/logout'
     | '/api/public/portal/me'
+    | '/api/public/portal/mp-create-card'
     | '/api/public/portal/mp-create-pix'
     | '/api/public/portal/mp-webhook'
     | '/api/public/portal/renew-request'
@@ -362,6 +373,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/login-password'
     | '/api/public/portal/logout'
     | '/api/public/portal/me'
+    | '/api/public/portal/mp-create-card'
     | '/api/public/portal/mp-create-pix'
     | '/api/public/portal/mp-webhook'
     | '/api/public/portal/renew-request'
@@ -395,6 +407,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/login-password'
     | '/api/public/portal/logout'
     | '/api/public/portal/me'
+    | '/api/public/portal/mp-create-card'
     | '/api/public/portal/mp-create-pix'
     | '/api/public/portal/mp-webhook'
     | '/api/public/portal/renew-request'
@@ -419,6 +432,7 @@ export interface RootRouteChildren {
   ApiPublicPortalLoginPasswordRoute: typeof ApiPublicPortalLoginPasswordRoute
   ApiPublicPortalLogoutRoute: typeof ApiPublicPortalLogoutRoute
   ApiPublicPortalMeRoute: typeof ApiPublicPortalMeRoute
+  ApiPublicPortalMpCreateCardRoute: typeof ApiPublicPortalMpCreateCardRoute
   ApiPublicPortalMpCreatePixRoute: typeof ApiPublicPortalMpCreatePixRoute
   ApiPublicPortalMpWebhookRoute: typeof ApiPublicPortalMpWebhookRoute
   ApiPublicPortalRenewRequestRoute: typeof ApiPublicPortalRenewRequestRoute
@@ -607,6 +621,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPortalMpCreatePixRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/portal/mp-create-card': {
+      id: '/api/public/portal/mp-create-card'
+      path: '/api/public/portal/mp-create-card'
+      fullPath: '/api/public/portal/mp-create-card'
+      preLoaderRoute: typeof ApiPublicPortalMpCreateCardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/portal/me': {
       id: '/api/public/portal/me'
       path: '/api/public/portal/me'
@@ -707,6 +728,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPortalLoginPasswordRoute: ApiPublicPortalLoginPasswordRoute,
   ApiPublicPortalLogoutRoute: ApiPublicPortalLogoutRoute,
   ApiPublicPortalMeRoute: ApiPublicPortalMeRoute,
+  ApiPublicPortalMpCreateCardRoute: ApiPublicPortalMpCreateCardRoute,
   ApiPublicPortalMpCreatePixRoute: ApiPublicPortalMpCreatePixRoute,
   ApiPublicPortalMpWebhookRoute: ApiPublicPortalMpWebhookRoute,
   ApiPublicPortalRenewRequestRoute: ApiPublicPortalRenewRequestRoute,
@@ -720,13 +742,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

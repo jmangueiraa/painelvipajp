@@ -30,7 +30,7 @@ export const Route = createFileRoute("/api/public/portal/renewal-status")({
 
           // Fallback: se ainda não confirmado e existe mp_payment_id, consulta o MP diretamente
           // (caso o webhook não tenha chegado) e atualiza o registro.
-          if (row.status !== "paid" && row.mp_status !== "approved" && row.mp_payment_id) {
+          if (row.status !== "paid" && row.mp_status !== "approved") {
             const { data: ownerSettings } = await supabaseAdmin
               .from("settings")
               .select("mp_access_token")
@@ -38,28 +38,48 @@ export const Route = createFileRoute("/api/public/portal/renewal-status")({
               .maybeSingle();
             const token = (ownerSettings as { mp_access_token?: string | null } | null)?.mp_access_token?.trim();
             if (token) {
-              const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${row.mp_payment_id}`, {
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              if (mpRes.ok) {
-                const payment = (await mpRes.json()) as { status?: string; date_approved?: string | null };
+              let paymentId = row.mp_payment_id;
+              let payment: { status?: string; date_approved?: string | null; id?: number | string } | null = null;
+
+              if (paymentId) {
+                const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                if (mpRes.ok) payment = await mpRes.json();
+              } else {
+                // Fluxo de cartão (preference): busca pagamento por external_reference
+                const searchRes = await fetch(
+                  `https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent(id)}&sort=date_created&criteria=desc&limit=1`,
+                  { headers: { Authorization: `Bearer ${token}` } },
+                );
+                if (searchRes.ok) {
+                  const search = (await searchRes.json()) as { results?: Array<{ id?: number | string; status?: string; date_approved?: string | null }> };
+                  const first = search.results?.[0];
+                  if (first?.id) {
+                    paymentId = String(first.id);
+                    payment = first;
+                  }
+                }
+              }
+
+              if (payment?.status) {
                 const isApproved = payment.status === "approved";
-                if (payment.status && payment.status !== row.mp_status) {
-                  await supabaseAdmin
-                    .from("renewal_requests")
-                    .update({
-                      mp_status: payment.status,
-                      paid_at: isApproved ? (payment.date_approved ?? new Date().toISOString()) : row.paid_at,
-                      status: isApproved ? "paid" : row.status ?? "awaiting_payment",
-                    })
-                    .eq("id", id);
-                  row = {
-                    ...row,
+                await supabaseAdmin
+                  .from("renewal_requests")
+                  .update({
+                    mp_payment_id: paymentId,
                     mp_status: payment.status,
                     paid_at: isApproved ? (payment.date_approved ?? new Date().toISOString()) : row.paid_at,
-                    status: isApproved ? "paid" : row.status,
-                  };
-                }
+                    status: isApproved ? "paid" : row.status ?? "awaiting_payment",
+                  })
+                  .eq("id", id);
+                row = {
+                  ...row,
+                  mp_payment_id: paymentId,
+                  mp_status: payment.status,
+                  paid_at: isApproved ? (payment.date_approved ?? new Date().toISOString()) : row.paid_at,
+                  status: isApproved ? "paid" : row.status,
+                };
               }
             }
           }
