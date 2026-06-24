@@ -323,6 +323,8 @@ function ConfiguracoesPage() {
         </SectionCard>
       )}
 
+      {isAdmin && <AdminRenewalPlansSection />}
+
       <SectionCard title="Alterar senha" icon={KeyRound} color="var(--kpi-violet)">
         <div className="space-y-1">
           <Label>Senha atual</Label>
