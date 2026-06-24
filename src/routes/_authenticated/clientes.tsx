@@ -356,6 +356,13 @@ function ClientesPage() {
     return sorted;
   }, [clients, q, chip, nameSort]);
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paged = useMemo(
+    () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filtered, currentPage, pageSize],
+  );
+
   const sendChargesNow = useServerFn(sendChargesNowFn);
   const sendCharges = useMutation({
     mutationFn: async (filter: "due_today" | "due_tomorrow" | "advance_5d" | "overdue" | "auto_due_or_overdue") => {
