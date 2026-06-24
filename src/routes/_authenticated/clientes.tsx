@@ -89,6 +89,8 @@ function ClientesPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [page, setPage] = useState<number>(1);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -492,7 +494,6 @@ function ClientesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Clientes"
-        description={`${clients?.length ?? 0} cliente(s) cadastrado(s)`}
         actions={
           <>
             {selectedIds.size > 0 && (
