@@ -98,7 +98,7 @@ export async function getSessionFromRequest(request: Request): Promise<PortalCli
   await supabaseAdmin.from("portal_sessions").update({ last_seen_at: new Date().toISOString() }).eq("token_hash", hash);
   const { data: c } = await supabaseAdmin
     .from("clients")
-    .select("id,user_id,name,phone,due_date,status,price_cents,plan_id,server_id,iptv_login,iptv_password,referral_code,referred_by,bonus_days")
+    .select("id,user_id,name,phone,due_date,status,price_cents,plan_id,server_id,iptv_login,iptv_password,referral_code,referred_by,bonus_days,points")
     .eq("id", sess.client_id)
     .maybeSingle();
   return (c as PortalClient) ?? null;
