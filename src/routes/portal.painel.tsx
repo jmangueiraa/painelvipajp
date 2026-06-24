@@ -231,7 +231,7 @@ function PortalDashboard() {
                 <CardTitle className="text-base">Meu plano</CardTitle>
                 <p className="mt-1 text-sm text-muted-foreground">{data.plan?.name ?? "Sem plano"}</p>
               </div>
-              <Badge className={statusColor(data.client.status)}>{data.client.status}</Badge>
+              <Badge className={statusColor(displayStatus)}>{displayStatus}</Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
