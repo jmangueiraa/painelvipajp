@@ -64,6 +64,8 @@ function statusColor(s: string) {
 function PortalDashboard() {
   const navigate = useNavigate();
   const [renewOpen, setRenewOpen] = useState(false);
+  const [chosenPeriod, setChosenPeriod] = useState<{ label: string; days: number; price_cents: number } | null>(null);
+  const [method, setMethod] = useState<"pix" | "card" | null>(null);
   const [pixPeriod, setPixPeriod] = useState<{ label: string; days: number; price_cents: number } | null>(null);
   const [valCopied, setValCopied] = useState(false);
   const [brCopied, setBrCopied] = useState(false);
@@ -73,6 +75,7 @@ function PortalDashboard() {
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<string>("pending");
   const [creating, setCreating] = useState(false);
+  const [cardLink, setCardLink] = useState<string | null>(null);
   const pollRef = useRef<number | null>(null);
 
   useEffect(() => {
