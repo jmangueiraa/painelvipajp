@@ -2,7 +2,18 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+
 const MP_API = "https://api.mercadopago.com/v1/payments";
+const MP_PREF_API = "https://api.mercadopago.com/checkout/preferences";
+const MP_SEARCH_API = "https://api.mercadopago.com/v1/payments/search";
+
+// Taxa do cartão (Mercado Pago ~4.99% para 1x). Repassada ao assinante.
+export const CARD_FEE_PERCENT = 4.99;
+
+function applyCardFee(price_cents: number) {
+  // Bruto necessário para receber `price_cents` líquido após a taxa
+  return Math.ceil(price_cents / (1 - CARD_FEE_PERCENT / 100));
+}
 
 function getToken() {
   const t = process.env.MERCADOPAGO_ACCESS_TOKEN?.trim();
@@ -13,6 +24,18 @@ function getToken() {
     );
   }
   return t;
+}
+
+async function getOrigin() {
+  try {
+    const mod = await import("@tanstack/react-start/server");
+    const proto = mod.getRequestHeader("x-forwarded-proto") ?? "https";
+    const host = mod.getRequestHost();
+    if (host) return `${proto}://${host}`;
+  } catch {
+    // ignore
+  }
+  return "https://painelvipajp.lovable.app";
 }
 
 export const createAppRenewalPix = createServerFn({ method: "POST" })
@@ -106,6 +129,107 @@ export const createAppRenewalPix = createServerFn({ method: "POST" })
     };
   });
 
+export const createAppRenewalCardCheckout = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ plan_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const token = getToken();
+    const { supabase, userId } = context;
+
+    const { data: plan, error: planErr } = await supabase
+      .from("app_plans")
+      .select("id,name,price_cents,duration_days,active")
+      .eq("id", data.plan_id)
+      .maybeSingle();
+    if (planErr || !plan || !plan.active) throw new Error("Plano indisponível");
+
+    const amount_with_fee = applyCardFee(plan.price_cents);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: req, error: reqErr } = await supabaseAdmin
+      .from("app_renewal_requests")
+      .insert({
+        user_id: userId,
+        plan_id: plan.id,
+        days: plan.duration_days,
+        amount_cents: amount_with_fee,
+        status: "awaiting_payment",
+      })
+      .select("id")
+      .single();
+    if (reqErr || !req) throw new Error("Falha ao registrar solicitação");
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("full_name")
+      .eq("id", userId)
+      .maybeSingle();
+    const fullName = (profile as { full_name?: string } | null)?.full_name ?? "Assinante";
+
+    const origin = await getOrigin();
+    const back = `${origin}/renovacao`;
+
+    const mpRes = await fetch(MP_PREF_API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "X-Idempotency-Key": req.id,
+      },
+      body: JSON.stringify({
+        items: [
+          {
+            id: plan.id,
+            title: `Renovação Painel - ${plan.name}`,
+            description: `${plan.duration_days} dias de assinatura`,
+            quantity: 1,
+            currency_id: "BRL",
+            unit_price: Number((amount_with_fee / 100).toFixed(2)),
+          },
+        ],
+        payer: {
+          name: fullName.split(" ")[0] || "Assinante",
+          surname: fullName.split(" ").slice(1).join(" ") || "VIP",
+          email: `assinante.${userId.slice(0, 8)}@painelvip.app`,
+        },
+        payment_methods: {
+          excluded_payment_types: [{ id: "ticket" }, { id: "atm" }, { id: "bank_transfer" }],
+          installments: 12,
+        },
+        external_reference: req.id,
+        notification_url: `${origin}/api/public/app/mp-webhook`,
+        back_urls: { success: back, pending: back, failure: back },
+        auto_return: "approved",
+        statement_descriptor: "PAINEL VIP",
+      }),
+    });
+
+    const mp = (await mpRes.json().catch(() => ({}))) as {
+      id?: string;
+      init_point?: string;
+      sandbox_init_point?: string;
+      message?: string;
+    };
+    if (!mpRes.ok || !mp.init_point) {
+      throw new Error(`Mercado Pago: ${mp.message ?? mpRes.statusText}`);
+    }
+
+    await supabaseAdmin
+      .from("app_renewal_requests")
+      .update({ mp_status: "pending" })
+      .eq("id", req.id);
+
+    return {
+      renewal_id: req.id,
+      init_point: mp.init_point,
+      amount_cents: amount_with_fee,
+      base_cents: plan.price_cents,
+      days: plan.duration_days,
+      plan_name: plan.name,
+    };
+  });
+
 export const checkAppRenewalStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ renewal_id: z.string().uuid() }).parse(d))
@@ -122,24 +246,47 @@ export const checkAppRenewalStatus = createServerFn({ method: "POST" })
 
     if (req.status === "paid") return { status: "paid" as const };
 
-    if (!req.mp_payment_id) return { status: req.status as string };
-
     const token = getToken();
-    const mpRes = await fetch(`${MP_API}/${req.mp_payment_id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const mp = (await mpRes.json().catch(() => ({}))) as { status?: string };
+    let paymentId = req.mp_payment_id as string | null;
+    let mpStatus: string | undefined;
 
-    await supabaseAdmin
-      .from("app_renewal_requests")
-      .update({ mp_status: mp.status ?? null })
-      .eq("id", req.id);
+    if (!paymentId) {
+      // Fluxo de cartão (preference): busca pagamento via external_reference
+      const searchRes = await fetch(
+        `${MP_SEARCH_API}?external_reference=${encodeURIComponent(req.id)}&sort=date_created&criteria=desc&limit=1`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      const search = (await searchRes.json().catch(() => ({}))) as {
+        results?: Array<{ id?: number | string; status?: string }>;
+      };
+      const first = search.results?.[0];
+      if (first?.id) {
+        paymentId = String(first.id);
+        mpStatus = first.status;
+        await supabaseAdmin
+          .from("app_renewal_requests")
+          .update({ mp_payment_id: paymentId, mp_status: mpStatus ?? null })
+          .eq("id", req.id);
+      } else {
+        return { status: req.status as string };
+      }
+    } else {
+      const mpRes = await fetch(`${MP_API}/${paymentId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const mp = (await mpRes.json().catch(() => ({}))) as { status?: string };
+      mpStatus = mp.status;
+      await supabaseAdmin
+        .from("app_renewal_requests")
+        .update({ mp_status: mpStatus ?? null })
+        .eq("id", req.id);
+    }
 
-    if (mp.status === "approved") {
+    if (mpStatus === "approved") {
       await applyApprovedRenewal(req.id);
       return { status: "paid" as const };
     }
-    return { status: mp.status ?? "pending" };
+    return { status: mpStatus ?? "pending" };
   });
 
 async function applyApprovedRenewal(renewal_id: string) {
