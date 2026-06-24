@@ -768,6 +768,20 @@ function ClientesPage() {
                     <FormMessage />
                   </FormItem>
                 )} />
+                <FormField control={form.control} name="points" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pontos (telas)</FormLabel>
+                    <Select value={String(field.value ?? 1)} onValueChange={(v) => field.onChange(Number(v))}>
+                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {[1,2,3,4,5,6,7,8,9,10].map((n) => (
+                          <SelectItem key={n} value={String(n)}>{n} ponto{n > 1 ? "s" : ""}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
                 <FormField control={form.control} name="server_id" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Servidor</FormLabel>
