@@ -618,7 +618,7 @@ function ClientesPage() {
                     </div>
                   </TableCell>
 
-                  <TableCell>{c.phone}</TableCell>
+                  <TableCell className="tracking-widest text-muted-foreground">••••••••</TableCell>
                   <TableCell className="tabular-nums">{brl(c.price_cents)}</TableCell>
                   <TableCell>{formatDateBR(c.due_date)}</TableCell>
                   <TableCell><Badge variant={statusVariant[c.status]}>{statusLabel[c.status]}</Badge></TableCell>
