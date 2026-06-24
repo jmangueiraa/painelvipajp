@@ -17,13 +17,7 @@ export const Route = createFileRoute("/_authenticated/renovacao")({
 });
 
 type Settings = { subscription_expires_at: string | null; subscription_monthly_cents: number };
-
-const periods = [
-  { label: "Pix +30 dias", days: 30, multiplier: 1 },
-  { label: "Pix +90 dias", days: 90, multiplier: 3 },
-  { label: "Pix +180 dias", days: 180, multiplier: 5.6 },
-  { label: "Pix +1 ano", days: 365, multiplier: 10 },
-];
+type RenewalPlan = { id: string; name: string; price_cents: number; duration_days: number; featured: boolean };
 
 function RenovacaoPage() {
   const { user } = useAuth();
@@ -38,6 +32,19 @@ function RenovacaoPage() {
         .maybeSingle();
       if (error) throw error;
       return data as Settings | null;
+    },
+  });
+
+  const { data: plans = [] } = useQuery({
+    queryKey: ["app_plans", "renovacao"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("app_plans")
+        .select("id,name,price_cents,duration_days,featured")
+        .eq("active", true)
+        .order("duration_days", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as RenewalPlan[];
     },
   });
 
@@ -71,26 +78,27 @@ function RenovacaoPage() {
         <p className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-3">
           Escolha o período de renovação
         </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {periods.map((p) => {
-            const total = Math.round(monthly * p.multiplier);
-            return (
+        {plans.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhum plano disponível no momento.</p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {plans.map((p) => (
               <button
-                key={p.days}
+                key={p.id}
                 onClick={() => toast.info("Pagamento via Pix será habilitado em breve.")}
-                className="flex items-center justify-between rounded-xl border border-border bg-card/60 px-4 py-4 text-left hover:border-primary/60 hover:bg-card transition"
+                className={`flex items-center justify-between rounded-xl border bg-card/60 px-4 py-4 text-left hover:bg-card transition ${p.featured ? "border-primary/60" : "border-border hover:border-primary/60"}`}
               >
-                <span className="flex items-center gap-2 font-medium">
-                  <RefreshCw className="size-4 text-primary" /> {p.label}
+                <span className="flex flex-col">
+                  <span className="flex items-center gap-2 font-medium">
+                    <RefreshCw className="size-4 text-primary" /> {p.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground mt-0.5">{p.duration_days} dias</span>
                 </span>
-                <span className="text-[color:var(--kpi-emerald)] font-bold tabular-nums">{brl(total)}</span>
+                <span className="text-[color:var(--kpi-emerald)] font-bold tabular-nums">{brl(p.price_cents)}</span>
               </button>
-            );
-          })}
-        </div>
-        <p className="text-xs text-muted-foreground text-center mt-3">
-          Os valores de cada período são definidos a partir do valor mensal.
-        </p>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
