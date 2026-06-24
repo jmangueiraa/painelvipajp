@@ -247,8 +247,12 @@ function PortalDashboard() {
                 <div className="text-xs text-muted-foreground">Valor</div>
                 <div className="font-semibold">{brl(data.client.price_cents)}</div>
               </div>
+              <div className="rounded-xl border bg-card p-3">
+                <div className="text-xs text-muted-foreground">Pontos</div>
+                <div className="font-semibold">{data.client.points ?? 1}</div>
+              </div>
               {data.server && (
-                <div className="rounded-xl border bg-card p-3">
+                <div className="col-span-2 rounded-xl border bg-card p-3">
                   <div className="flex items-center gap-1 text-xs text-muted-foreground"><ServerIcon className="h-3 w-3" />Servidor</div>
                   <div className="font-semibold truncate">{data.server.name}</div>
                 </div>
