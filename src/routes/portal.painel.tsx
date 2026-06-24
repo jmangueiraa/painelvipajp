@@ -201,6 +201,12 @@ function PortalDashboard() {
 
   const dueDays = Math.ceil((new Date(data.client.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   const overdue = dueDays < 0;
+  const displayStatus =
+    data.client.status === "suspenso" || data.client.status === "cancelado"
+      ? data.client.status
+      : overdue
+        ? "vencido"
+        : "ativo";
 
   return (
     <div className="min-h-dvh bg-muted/30">
@@ -225,7 +231,7 @@ function PortalDashboard() {
                 <CardTitle className="text-base">Meu plano</CardTitle>
                 <p className="mt-1 text-sm text-muted-foreground">{data.plan?.name ?? "Sem plano"}</p>
               </div>
-              <Badge className={statusColor(data.client.status)}>{data.client.status}</Badge>
+              <Badge className={statusColor(displayStatus)}>{displayStatus}</Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
