@@ -371,27 +371,49 @@ function PortalDashboard() {
 
           {!pixPeriod ? (
             <>
-              {data.plans.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum plano disponível. Fale com seu provedor.</p>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  {data.plans.map((p) => (
-                    <Button
-                      key={p.id}
-                      variant="outline"
-                      className="h-auto py-3"
-                      disabled={renew.isPending}
-                      onClick={() => selectPeriod({ label: p.name, days: p.duration_days, price_cents: p.price_cents })}
-                    >
-                      <div className="flex flex-col items-start">
-                        <span className="font-semibold">{p.name}</span>
-                        <span className="text-xs text-muted-foreground">{p.duration_days} dias</span>
-                        <span className="text-xs text-primary font-medium">{brl(p.price_cents)}</span>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              )}
+              {(() => {
+                const monthly = data.plan?.price_cents ?? data.client.price_cents;
+                if (!monthly || monthly <= 0) {
+                  return <p className="text-sm text-muted-foreground">Plano mensal não configurado. Fale com seu provedor.</p>;
+                }
+                const periods = [
+                  { label: "Mensal", days: 30, months: 1, discount: 0 },
+                  { label: "Trimestral", days: 90, months: 3, discount: 0.15 },
+                  { label: "Semestral", days: 180, months: 6, discount: 0.20 },
+                  { label: "Anual", days: 365, months: 12, discount: 0.25 },
+                ].map((p) => {
+                  const full = monthly * p.months;
+                  const price = Math.round(full * (1 - p.discount));
+                  return { ...p, full, price };
+                });
+                return (
+                  <div className="grid grid-cols-2 gap-2">
+                    {periods.map((p) => (
+                      <Button
+                        key={p.label}
+                        variant="outline"
+                        className="h-auto py-3 relative"
+                        disabled={renew.isPending}
+                        onClick={() => selectPeriod({ label: p.label, days: p.days, price_cents: p.price })}
+                      >
+                        {p.discount > 0 && (
+                          <span className="absolute -top-2 -right-2 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                            -{Math.round(p.discount * 100)}%
+                          </span>
+                        )}
+                        <div className="flex flex-col items-start">
+                          <span className="font-semibold">{p.label}</span>
+                          <span className="text-xs text-muted-foreground">{p.days} dias</span>
+                          {p.discount > 0 && (
+                            <span className="text-[11px] text-muted-foreground line-through">{brl(p.full)}</span>
+                          )}
+                          <span className="text-xs text-primary font-medium">{brl(p.price)}</span>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                );
+              })()}
               <p className="text-xs text-muted-foreground">PIX gerado via Mercado Pago. Após o pagamento, a solicitação é confirmada automaticamente.</p>
             </>
           ) : (
