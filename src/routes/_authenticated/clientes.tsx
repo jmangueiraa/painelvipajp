@@ -51,7 +51,7 @@ const schema = z.object({
   plan_id: z.string().optional(),
   server_id: z.string().optional(),
   price: z.string().min(1, "Informe o valor"),
-  points: z.coerce.number().int().min(1).max(10).default(1),
+  points: z.coerce.number().int().min(1).max(10),
   due_date: z.string().min(1, "Informe o vencimento"),
   auto_charge: z.boolean(),
   notes: z.string().max(500).optional().or(z.literal("")),
