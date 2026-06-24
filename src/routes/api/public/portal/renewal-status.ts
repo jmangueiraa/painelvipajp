@@ -31,7 +31,12 @@ export const Route = createFileRoute("/api/public/portal/renewal-status")({
           // Fallback: se ainda não confirmado e existe mp_payment_id, consulta o MP diretamente
           // (caso o webhook não tenha chegado) e atualiza o registro.
           if (row.status !== "paid" && row.mp_status !== "approved" && row.mp_payment_id) {
-            const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+            const { data: ownerSettings } = await supabaseAdmin
+              .from("settings")
+              .select("mp_access_token")
+              .eq("user_id", client.user_id)
+              .maybeSingle();
+            const token = (ownerSettings as { mp_access_token?: string | null } | null)?.mp_access_token?.trim();
             if (token) {
               const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${row.mp_payment_id}`, {
                 headers: { Authorization: `Bearer ${token}` },
