@@ -139,6 +139,7 @@ function ConfiguracoesPage() {
       setPixName(settings.pix_name ?? "");
       setPixBank(settings.pix_bank ?? "");
       setPixMessage(settings.pix_message ?? "");
+      setMpAccessToken(settings.mp_access_token ?? "");
       setSupportMessage(settings.support_message ?? "");
       setSubExpires(settings.subscription_expires_at ?? "");
       setSubMonthly(((settings.subscription_monthly_cents ?? 0) / 100).toFixed(2).replace(".", ","));
@@ -163,6 +164,7 @@ function ConfiguracoesPage() {
     pix_name: string | null;
     pix_bank: string | null;
     pix_message: string | null;
+    mp_access_token: string | null;
     support_message: string | null;
     subscription_expires_at: string | null;
     subscription_monthly_cents: number;
@@ -256,18 +258,41 @@ function ConfiguracoesPage() {
       <WhatsAppConnectSection />
 
 
-      <SectionCard title="Cadastrar PIX" description="Dados que serão usados nas cobranças" icon={KeyRound} color="var(--kpi-cyan)">
-        <div className="grid md:grid-cols-3 gap-3">
-          <div className="space-y-1"><Label>Chave PIX</Label><Input value={pixKey} onChange={(e) => setPixKey(e.target.value)} /></div>
-          <div className="space-y-1"><Label>Nome</Label><Input value={pixName} onChange={(e) => setPixName(e.target.value)} /></div>
-          <div className="space-y-1"><Label>Banco</Label><Input value={pixBank} onChange={(e) => setPixBank(e.target.value)} /></div>
+      <SectionCard
+        title="Mercado Pago"
+        description="Configure seu Access Token para receber os pagamentos PIX diretamente na sua conta"
+        icon={Wallet}
+        color="var(--kpi-cyan)"
+      >
+        <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 text-sm text-cyan-100/90">
+          Cole abaixo o <strong>Access Token de PRODUÇÃO</strong> da sua conta Mercado Pago (começa com <code>APP_USR-</code>).
+          Você pode gerá-lo em <a href="https://www.mercadopago.com.br/developers/panel/app" target="_blank" rel="noreferrer" className="underline">Painel do desenvolvedor → Suas integrações → Credenciais de produção</a>.
+          Todos os pagamentos PIX gerados pelos seus clientes serão creditados na sua conta.
         </div>
         <div className="space-y-1">
-          <Label>Mensagem PIX</Label>
-          <Textarea rows={3} placeholder="Após o pagamento envie o comprovante." value={pixMessage} onChange={(e) => setPixMessage(e.target.value)} />
+          <Label>Access Token do Mercado Pago</Label>
+          <div className="flex gap-2">
+            <Input
+              type={showMpToken ? "text" : "password"}
+              placeholder="APP_USR-xxxxxxxx-xxxxxx-xxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxx"
+              value={mpAccessToken}
+              onChange={(e) => setMpAccessToken(e.target.value)}
+              autoComplete="off"
+            />
+            <Button type="button" variant="outline" className="rounded-full" onClick={() => setShowMpToken((v) => !v)}>
+              {showMpToken ? "Ocultar" : "Mostrar"}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            O token é armazenado com segurança e usado somente para criar e consultar pagamentos PIX dos seus clientes.
+          </p>
         </div>
-        <Button className="btn-premium rounded-full" onClick={() => saveSettings.mutate({ pix_key: pixKey, pix_name: pixName, pix_bank: pixBank, pix_message: pixMessage })}>
-          Salvar mensagem PIX
+        <Button
+          className="btn-premium rounded-full"
+          onClick={() => saveSettings.mutate({ mp_access_token: mpAccessToken.trim() || null })}
+          disabled={saveSettings.isPending}
+        >
+          Salvar Access Token
         </Button>
       </SectionCard>
 
