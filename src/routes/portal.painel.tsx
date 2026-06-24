@@ -385,7 +385,7 @@ function PortalDashboard() {
         )}
       </main>
 
-      <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setPixPeriod(null); setValCopied(false); setBrCopied(false); setQrBase64(null); setPixPayload(""); setRenewalId(null); setPaymentId(null); setPaymentStatus("pending"); } }}>
+      <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setChosenPeriod(null); setMethod(null); setPixPeriod(null); setValCopied(false); setBrCopied(false); setQrBase64(null); setPixPayload(""); setRenewalId(null); setPaymentId(null); setPaymentStatus("pending"); setCardLink(null); } }}>
         <DialogContent className="max-w-sm">
           {paymentStatus === "approved" ? (
             <div className="flex flex-col items-center gap-4 py-8 text-center">
@@ -396,7 +396,7 @@ function PortalDashboard() {
                 <h2 className="text-xl font-bold text-emerald-600 dark:text-emerald-400">Pagamento confirmado!</h2>
                 <p className="mt-1 text-sm text-muted-foreground">Sua renovação será liberada em instantes.</p>
               </div>
-              <Button className="w-full" onClick={() => { setRenewOpen(false); setPixPeriod(null); setQrBase64(null); setPixPayload(""); setRenewalId(null); setPaymentId(null); setPaymentStatus("pending"); }}>
+              <Button className="w-full" onClick={() => { setRenewOpen(false); setChosenPeriod(null); setMethod(null); setPixPeriod(null); setQrBase64(null); setPixPayload(""); setRenewalId(null); setPaymentId(null); setPaymentStatus("pending"); setCardLink(null); }}>
                 Voltar ao painel
               </Button>
             </div>
@@ -410,11 +410,17 @@ function PortalDashboard() {
               </span>
             </div>
             <DialogDescription>
-              {pixPeriod ? "Escaneie o QR Code ou copie o código PIX abaixo." : "Escolha o período. O valor é calculado conforme seu plano."}
+              {!chosenPeriod
+                ? "Escolha o período. O valor é calculado conforme seu plano."
+                : !method
+                  ? "Escolha como deseja pagar."
+                  : method === "pix"
+                    ? "Escaneie o QR Code ou copie o código PIX abaixo."
+                    : "Conclua o pagamento na aba do Mercado Pago."}
             </DialogDescription>
           </DialogHeader>
 
-          {!pixPeriod ? (
+          {!chosenPeriod ? (
             <>
               {(() => {
                 const monthly = data.plan?.price_cents ?? data.client.price_cents;
@@ -438,7 +444,6 @@ function PortalDashboard() {
                         key={p.label}
                         variant="outline"
                         className="h-auto py-3 relative"
-                        disabled={renew.isPending}
                         onClick={() => selectPeriod({ label: p.label, days: p.days, price_cents: p.price })}
                       >
                         {p.discount > 0 && (
@@ -459,9 +464,49 @@ function PortalDashboard() {
                   </div>
                 );
               })()}
-              <p className="text-xs text-muted-foreground">PIX gerado via Mercado Pago. Após o pagamento, a solicitação é confirmada automaticamente.</p>
+              <p className="text-xs text-muted-foreground">Pagamento via Mercado Pago. Após a confirmação, sua renovação é liberada automaticamente.</p>
             </>
-          ) : (
+          ) : !method ? (
+            <div className="space-y-3">
+              <div className="rounded-xl border bg-card p-3">
+                <div className="text-xs text-muted-foreground">Plano selecionado</div>
+                <div className="font-semibold">{chosenPeriod.label} · {chosenPeriod.days} dias</div>
+                <div className="text-sm text-muted-foreground">Valor base: <strong className="text-foreground">{brl(chosenPeriod.price_cents)}</strong></div>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full h-auto py-3 justify-start"
+                onClick={choosePix}
+              >
+                <Smartphone className="mr-3 h-5 w-5 text-emerald-600" />
+                <div className="flex flex-col items-start">
+                  <span className="font-semibold">PIX</span>
+                  <span className="text-xs text-muted-foreground">Aprovação imediata · {brl(chosenPeriod.price_cents)}</span>
+                </div>
+              </Button>
+              {(() => {
+                const cardTotal = Math.ceil(chosenPeriod.price_cents / (1 - 4.99 / 100));
+                const fee = cardTotal - chosenPeriod.price_cents;
+                return (
+                  <Button
+                    variant="outline"
+                    className="w-full h-auto py-3 justify-start"
+                    onClick={chooseCard}
+                  >
+                    <CreditCard className="mr-3 h-5 w-5 text-primary" />
+                    <div className="flex flex-col items-start">
+                      <span className="font-semibold">Cartão de crédito (até 12x)</span>
+                      <span className="text-xs text-muted-foreground">
+                        {brl(chosenPeriod.price_cents)} + taxa {brl(fee)} = <strong className="text-foreground">{brl(cardTotal)}</strong>
+                      </span>
+                    </div>
+                  </Button>
+                );
+              })()}
+              <p className="text-[11px] text-muted-foreground">A taxa do cartão (4,99%) é repassada para cobrir os custos do Mercado Pago.</p>
+              <Button variant="ghost" size="sm" className="w-full" onClick={() => setChosenPeriod(null)}>Voltar</Button>
+            </div>
+          ) : method === "pix" && pixPeriod ? (
             <div className="space-y-3">
               <div className="rounded-xl border bg-card p-3">
                 <div className="text-xs text-muted-foreground">Plano</div>
@@ -503,14 +548,6 @@ function PortalDashboard() {
 
               {(() => {
                 const s = paymentStatus;
-                if (s === "approved") {
-                  return (
-                    <div className="flex items-center gap-2 rounded-xl border-2 border-emerald-500/60 bg-emerald-500/10 p-3 text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                      <CheckCircle2 className="h-4 w-4 shrink-0" />
-                      <span>Pago — renovação confirmada!</span>
-                    </div>
-                  );
-                }
                 if (s === "rejected" || s === "cancelled") {
                   return (
                     <div className="rounded-xl border-2 border-rose-500/60 bg-rose-500/10 p-3 text-sm font-medium text-rose-700 dark:text-rose-300">
@@ -536,10 +573,58 @@ function PortalDashboard() {
 
               {paymentId && <p className="text-[10px] text-muted-foreground text-center">ID do pagamento: {paymentId}</p>}
 
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => { setMethod(null); setPixPeriod(null); setQrBase64(null); setPixPayload(""); setRenewalId(null); setPaymentId(null); setPaymentStatus("pending"); }}>Voltar</Button>
+                <Button className="flex-1" onClick={() => setRenewOpen(false)}>Fechar</Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="rounded-xl border bg-card p-3">
+                <div className="text-xs text-muted-foreground">Plano</div>
+                <div className="font-semibold">{chosenPeriod.label} · {chosenPeriod.days} dias</div>
+                {(() => {
+                  const cardTotal = Math.ceil(chosenPeriod.price_cents / (1 - 4.99 / 100));
+                  const fee = cardTotal - chosenPeriod.price_cents;
+                  return (
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      Valor: <strong className="text-foreground">{brl(chosenPeriod.price_cents)}</strong>
+                      <span className="mx-1">+</span>
+                      taxa {brl(fee)} ={" "}
+                      <strong className="text-foreground">{brl(cardTotal)}</strong>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {creating && (
+                <div className="flex items-center justify-center gap-2 rounded-xl border bg-card p-6 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />Abrindo checkout do cartão...
+                </div>
+              )}
+
+              {cardLink && !creating && (
+                <>
+                  <a href={cardLink} target="_blank" rel="noopener noreferrer" className="block">
+                    <Button className="w-full">
+                      <ExternalLink className="mr-2 h-4 w-4" />Abrir checkout do cartão
+                    </Button>
+                  </a>
+                  <div className="flex items-center gap-2 rounded-xl border bg-card p-3 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                    <span>Aguardando confirmação do pagamento...</span>
+                  </div>
+                  {paymentStatus === "rejected" || paymentStatus === "cancelled" ? (
+                    <div className="rounded-xl border-2 border-rose-500/60 bg-rose-500/10 p-3 text-sm font-medium text-rose-700 dark:text-rose-300">
+                      ❌ Pagamento {paymentStatus === "rejected" ? "recusado" : "cancelado"}. Tente novamente.
+                    </div>
+                  ) : null}
+                </>
+              )}
 
               <div className="flex gap-2">
-                <Button variant="outline" className="flex-1" onClick={() => setPixPeriod(null)}>Voltar</Button>
-                <Button className="flex-1" onClick={() => { setRenewOpen(false); setPixPeriod(null); }}>Fechar</Button>
+                <Button variant="outline" className="flex-1" onClick={() => { setMethod(null); setCardLink(null); setRenewalId(null); setPaymentStatus("pending"); }}>Voltar</Button>
+                <Button className="flex-1" onClick={() => setRenewOpen(false)}>Fechar</Button>
               </div>
             </div>
           )}
