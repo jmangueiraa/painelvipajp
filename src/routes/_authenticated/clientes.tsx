@@ -119,7 +119,7 @@ function ClientesPage() {
     resolver: zodResolver(schema),
     defaultValues: {
       name: "", phone: "", iptv_login: "", iptv_password: "",
-      plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
+      plan_id: undefined, server_id: undefined, price: "", points: 1, due_date: todayISO(),
       auto_charge: true, notes: "", referred_by_code: "", allowed_plan_ids: [],
     },
   });
@@ -128,7 +128,7 @@ function ClientesPage() {
     setEditing(null);
     form.reset({
       name: "", phone: "", iptv_login: "", iptv_password: "",
-      plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
+      plan_id: undefined, server_id: undefined, price: "", points: 1, due_date: todayISO(),
       auto_charge: true, notes: "", referred_by_code: "", allowed_plan_ids: [],
     });
     setOpen(true);
@@ -140,6 +140,7 @@ function ClientesPage() {
       iptv_login: c.iptv_login ?? "", iptv_password: c.iptv_password ?? "",
       plan_id: c.plan_id ?? undefined, server_id: c.server_id ?? undefined,
       price: (c.price_cents / 100).toFixed(2).replace(".", ","),
+      points: c.points ?? 1,
       due_date: c.due_date, auto_charge: c.auto_charge, notes: c.notes ?? "",
       referred_by_code: "",
       allowed_plan_ids: (c as Client & { allowed_plan_ids?: string[] | null }).allowed_plan_ids ?? [],
