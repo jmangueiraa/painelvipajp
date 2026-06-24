@@ -598,7 +598,7 @@ function ClientesPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {filtered.map((c) => (
+              {paged.map((c) => (
                 <TableRow key={c.id} data-state={selectedIds.has(c.id) ? "selected" : undefined}>
                   <TableCell>
                     <Checkbox
