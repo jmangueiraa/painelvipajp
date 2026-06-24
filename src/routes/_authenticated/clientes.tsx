@@ -682,6 +682,27 @@ function ClientesPage() {
               ))}
             </TableBody>
           </Table>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Resultados por página</span>
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                <SelectTrigger className="h-8 w-[80px] rounded-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[10, 25, 50, 100].map((n) => (
+                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="ml-2">{filtered.length} cliente(s)</span>
+            </div>
+            <Pagination
+              page={currentPage}
+              totalPages={totalPages}
+              onPageChange={(p) => setPage(p)}
+            />
+          </div>
         </CardContent>
       </Card>
 
