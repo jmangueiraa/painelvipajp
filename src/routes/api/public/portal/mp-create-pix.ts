@@ -9,17 +9,23 @@ export const Route = createFileRoute("/api/public/portal/mp-create-pix")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
-          if (!token) return json({ error: "Mercado Pago não configurado" }, { status: 500 });
+          const portal = await import("@/integrations/portal/session.server");
+          const client = await portal.getSessionFromRequest(request);
+          if (!client) return json({ error: "Sessão inválida" }, { status: 401 });
+
+          const { supabaseAdmin: adminEarly } = await import("@/integrations/supabase/client.server");
+          const { data: ownerSettings } = await adminEarly
+            .from("settings")
+            .select("mp_access_token")
+            .eq("user_id", client.user_id)
+            .maybeSingle();
+          const token = (ownerSettings as { mp_access_token?: string | null } | null)?.mp_access_token?.trim();
+          if (!token) return json({ error: "Mercado Pago não configurado pelo administrador" }, { status: 500 });
           if (token.startsWith("TEST-")) {
             return json({
               error: "Access Token de TESTE detectado. Use o token de PRODUÇÃO do Mercado Pago (começa com APP_USR-) para que o PIX possa ser pago em bancos reais.",
             }, { status: 500 });
           }
-
-          const portal = await import("@/integrations/portal/session.server");
-          const client = await portal.getSessionFromRequest(request);
-          if (!client) return json({ error: "Sessão inválida" }, { status: 401 });
 
           const body = (await request.json().catch(() => ({}))) as { days?: number; amount_cents?: number; label?: string };
           const days = Number(body.days);
