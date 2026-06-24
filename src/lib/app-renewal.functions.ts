@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getRequestHost, getRequestHeader } from "@tanstack/react-start/server";
+
 
 const MP_API = "https://api.mercadopago.com/v1/payments";
 const MP_PREF_API = "https://api.mercadopago.com/checkout/preferences";
@@ -26,10 +26,11 @@ function getToken() {
   return t;
 }
 
-function getOrigin() {
+async function getOrigin() {
   try {
-    const proto = getRequestHeader("x-forwarded-proto") ?? "https";
-    const host = getRequestHost();
+    const mod = await import("@tanstack/react-start/server");
+    const proto = mod.getRequestHeader("x-forwarded-proto") ?? "https";
+    const host = mod.getRequestHost();
     if (host) return `${proto}://${host}`;
   } catch {
     // ignore
