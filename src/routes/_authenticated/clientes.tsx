@@ -51,6 +51,7 @@ const schema = z.object({
   plan_id: z.string().optional(),
   server_id: z.string().optional(),
   price: z.string().min(1, "Informe o valor"),
+  points: z.coerce.number().int().min(1).max(10),
   due_date: z.string().min(1, "Informe o vencimento"),
   auto_charge: z.boolean(),
   notes: z.string().max(500).optional().or(z.literal("")),
@@ -69,6 +70,7 @@ type Client = {
   auto_charge: boolean; notes: string | null;
   referral_code: string | null; referred_by: string | null; bonus_days: number;
   allowed_plan_ids: string[] | null;
+  points: number | null;
 };
 
 type FilterChip = "todos" | "em_dia" | "a_vencer" | "vencem_hoje" | "vencidos" | "bloqueados";
@@ -117,7 +119,7 @@ function ClientesPage() {
     resolver: zodResolver(schema),
     defaultValues: {
       name: "", phone: "", iptv_login: "", iptv_password: "",
-      plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
+      plan_id: undefined, server_id: undefined, price: "", points: 1, due_date: todayISO(),
       auto_charge: true, notes: "", referred_by_code: "", allowed_plan_ids: [],
     },
   });
@@ -126,7 +128,7 @@ function ClientesPage() {
     setEditing(null);
     form.reset({
       name: "", phone: "", iptv_login: "", iptv_password: "",
-      plan_id: undefined, server_id: undefined, price: "", due_date: todayISO(),
+      plan_id: undefined, server_id: undefined, price: "", points: 1, due_date: todayISO(),
       auto_charge: true, notes: "", referred_by_code: "", allowed_plan_ids: [],
     });
     setOpen(true);
@@ -138,6 +140,7 @@ function ClientesPage() {
       iptv_login: c.iptv_login ?? "", iptv_password: c.iptv_password ?? "",
       plan_id: c.plan_id ?? undefined, server_id: c.server_id ?? undefined,
       price: (c.price_cents / 100).toFixed(2).replace(".", ","),
+      points: c.points ?? 1,
       due_date: c.due_date, auto_charge: c.auto_charge, notes: c.notes ?? "",
       referred_by_code: "",
       allowed_plan_ids: (c as Client & { allowed_plan_ids?: string[] | null }).allowed_plan_ids ?? [],
@@ -170,6 +173,7 @@ function ClientesPage() {
         price_cents: number; due_date: string; status: ClientStatus;
         auto_charge: boolean; notes: string | null; user_id: string;
         allowed_plan_ids: string[];
+        points: number;
         referred_by?: string | null;
       } = {
         name: values.name.trim(),
@@ -185,6 +189,7 @@ function ClientesPage() {
         notes: values.notes?.trim() || null,
         user_id: user.id,
         allowed_plan_ids: values.allowed_plan_ids ?? [],
+        points: values.points ?? 1,
       };
       if (referred_by !== undefined) payload.referred_by = referred_by;
       if (editing) {
@@ -760,6 +765,20 @@ function ClientesPage() {
                   <FormItem>
                     <FormLabel>Valor (R$) *</FormLabel>
                     <FormControl><Input inputMode="decimal" placeholder="49,90" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="points" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pontos (telas)</FormLabel>
+                    <Select value={String(field.value ?? 1)} onValueChange={(v) => field.onChange(Number(v))}>
+                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {[1,2,3,4,5,6,7,8,9,10].map((n) => (
+                          <SelectItem key={n} value={String(n)}>{n} ponto{n > 1 ? "s" : ""}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )} />

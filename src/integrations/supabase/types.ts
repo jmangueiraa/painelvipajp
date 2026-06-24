@@ -227,6 +227,7 @@ export type Database = {
           notes: string | null
           phone: string
           plan_id: string | null
+          points: number
           portal_password_hash: string | null
           portal_username: string | null
           price_cents: number
@@ -254,6 +255,7 @@ export type Database = {
           notes?: string | null
           phone: string
           plan_id?: string | null
+          points?: number
           portal_password_hash?: string | null
           portal_username?: string | null
           price_cents?: number
@@ -281,6 +283,7 @@ export type Database = {
           notes?: string | null
           phone?: string
           plan_id?: string | null
+          points?: number
           portal_password_hash?: string | null
           portal_username?: string | null
           price_cents?: number
@@ -691,6 +694,7 @@ export type Database = {
           notes: string | null
           phone: string
           plan_id: string | null
+          points: number
           portal_password_hash: string | null
           portal_username: string | null
           price_cents: number
@@ -727,6 +731,7 @@ export type Database = {
           notes: string | null
           phone: string
           plan_id: string | null
+          points: number
           portal_password_hash: string | null
           portal_username: string | null
           price_cents: number
