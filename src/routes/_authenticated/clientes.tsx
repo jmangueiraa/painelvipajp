@@ -600,23 +600,8 @@ function ClientesPage() {
                       aria-label={`Selecionar ${c.name}`}
                     />
                   </TableCell>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      {c.name}
-                      {(() => {
-                        const st = getStateFromPhone(c.phone || "");
-                        return st ? (
-                          <img
-                            src={st.flag}
-                            alt={st.uf}
-                            title={`${st.name} (${st.uf})`}
-                            loading="lazy"
-                            className="h-3.5 w-5 rounded-[2px] object-cover border border-border/60"
-                          />
-                        ) : null;
-                      })()}
-                    </div>
-                  </TableCell>
+                  <TableCell className="font-medium">{c.name}</TableCell>
+
 
                   
                   <TableCell className="tabular-nums">{brl(c.price_cents)}</TableCell>
@@ -723,38 +708,20 @@ function ClientesPage() {
                 </FormItem>
               )} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField control={form.control} name="phone" render={({ field }) => {
-                  const st = getStateFromPhone(field.value || "");
-                  return (
-                    <FormItem>
-                      <FormLabel>WhatsApp *</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            placeholder="(11) 99999-9999"
-                            value={field.value}
-                            onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                            className={st ? "pr-10" : undefined}
-                          />
-                          {st && (
-                            <div className="state-flag-wrap absolute right-2 top-1/2 -translate-y-1/2">
-                              <img
-                                src={st.flag}
-                                alt={`Bandeira de ${st.name}`}
-                                className="state-flag"
-                                loading="lazy"
-                              />
-                              <span className="state-flag-tooltip" role="tooltip">
-                                {st.uf} - {st.name}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  );
-                }} />
+                <FormField control={form.control} name="phone" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>WhatsApp *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="(11) 99999-9999"
+                        value={field.value}
+                        onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
                 <FormField control={form.control} name="due_date" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Vencimento *</FormLabel>
