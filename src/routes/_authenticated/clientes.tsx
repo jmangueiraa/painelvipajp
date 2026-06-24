@@ -562,7 +562,7 @@ function ClientesPage() {
                     {nameSort === "asc" ? <ArrowUp className="size-3.5" /> : <ArrowDown className="size-3.5" />}
                   </button>
                 </TableHead>
-                <TableHead>WhatsApp</TableHead>
+                
                 <TableHead>Valor</TableHead>
                 <TableHead>Vencimento</TableHead>
                 <TableHead>Status</TableHead>
@@ -571,11 +571,11 @@ function ClientesPage() {
             </TableHeader>
             <TableBody>
               {isLoading && Array.from({ length: 4 }).map((_, i) => (
-                <TableRow key={i}><TableCell colSpan={7}><Skeleton className="h-6 w-full" /></TableCell></TableRow>
+                <TableRow key={i}><TableCell colSpan={6}><Skeleton className="h-6 w-full" /></TableCell></TableRow>
               ))}
               {!isLoading && filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
                     <p>Nenhum cliente encontrado.</p>
                     {clients?.length === 0 && (
                       <Button className="btn-premium rounded-full mt-3" onClick={openCreate}>
@@ -618,7 +618,7 @@ function ClientesPage() {
                     </div>
                   </TableCell>
 
-                  <TableCell className="tracking-widest text-muted-foreground">••••••••</TableCell>
+                  
                   <TableCell className="tabular-nums">{brl(c.price_cents)}</TableCell>
                   <TableCell>{formatDateBR(c.due_date)}</TableCell>
                   <TableCell><Badge variant={statusVariant[c.status]}>{statusLabel[c.status]}</Badge></TableCell>
