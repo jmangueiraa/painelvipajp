@@ -50,6 +50,62 @@ export type Database = {
         }
         Relationships: []
       }
+      app_renewal_requests: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          days: number
+          id: string
+          mp_payment_id: string | null
+          mp_status: string | null
+          paid_at: string | null
+          pix_qr_base64: string | null
+          pix_qr_code: string | null
+          plan_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          days: number
+          id?: string
+          mp_payment_id?: string | null
+          mp_status?: string | null
+          paid_at?: string | null
+          pix_qr_base64?: string | null
+          pix_qr_code?: string | null
+          plan_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          days?: number
+          id?: string
+          mp_payment_id?: string | null
+          mp_status?: string | null
+          paid_at?: string | null
+          pix_qr_base64?: string | null
+          pix_qr_code?: string | null
+          plan_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_renewal_requests_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "app_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_subscription_payments: {
         Row: {
           amount_cents: number

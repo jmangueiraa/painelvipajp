@@ -38,6 +38,7 @@ import { Route as ApiPublicPortalMeRouteImport } from './routes/api/public/porta
 import { Route as ApiPublicPortalLogoutRouteImport } from './routes/api/public/portal/logout'
 import { Route as ApiPublicPortalLoginPasswordRouteImport } from './routes/api/public/portal/login-password'
 import { Route as ApiPublicHooksAutoChargesRouteImport } from './routes/api/public/hooks/auto-charges'
+import { Route as ApiPublicAppMpWebhookRouteImport } from './routes/api/public/app/mp-webhook'
 import { Route as AuthenticatedAdminAssinantesIdRouteImport } from './routes/_authenticated/admin.assinantes.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -195,6 +196,11 @@ const ApiPublicHooksAutoChargesRoute =
     path: '/api/public/hooks/auto-charges',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicAppMpWebhookRoute = ApiPublicAppMpWebhookRouteImport.update({
+  id: '/api/public/app/mp-webhook',
+  path: '/api/public/app/mp-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminAssinantesIdRoute =
   AuthenticatedAdminAssinantesIdRouteImport.update({
     id: '/$id',
@@ -219,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/portal/': typeof PortalIndexRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
+  '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
   '/api/public/portal/login-password': typeof ApiPublicPortalLoginPasswordRoute
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/portal': typeof PortalIndexRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
+  '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
   '/api/public/portal/login-password': typeof ApiPublicPortalLoginPasswordRoute
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
@@ -283,6 +291,7 @@ export interface FileRoutesById {
   '/portal/': typeof PortalIndexRoute
   '/_authenticated/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/_authenticated/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
+  '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
   '/api/public/portal/login-password': typeof ApiPublicPortalLoginPasswordRoute
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
@@ -316,6 +325,7 @@ export interface FileRouteTypes {
     | '/portal/'
     | '/admin/assinantes'
     | '/admin/assinantes/$id'
+    | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
     | '/api/public/portal/login-password'
     | '/api/public/portal/logout'
@@ -347,6 +357,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/admin/assinantes'
     | '/admin/assinantes/$id'
+    | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
     | '/api/public/portal/login-password'
     | '/api/public/portal/logout'
@@ -379,6 +390,7 @@ export interface FileRouteTypes {
     | '/portal/'
     | '/_authenticated/admin/assinantes'
     | '/_authenticated/admin/assinantes/$id'
+    | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
     | '/api/public/portal/login-password'
     | '/api/public/portal/logout'
@@ -402,6 +414,7 @@ export interface RootRouteChildren {
   PortalIndiqueRoute: typeof PortalIndiqueRoute
   PortalPainelRoute: typeof PortalPainelRoute
   PortalIndexRoute: typeof PortalIndexRoute
+  ApiPublicAppMpWebhookRoute: typeof ApiPublicAppMpWebhookRoute
   ApiPublicHooksAutoChargesRoute: typeof ApiPublicHooksAutoChargesRoute
   ApiPublicPortalLoginPasswordRoute: typeof ApiPublicPortalLoginPasswordRoute
   ApiPublicPortalLogoutRoute: typeof ApiPublicPortalLogoutRoute
@@ -622,6 +635,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAutoChargesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/app/mp-webhook': {
+      id: '/api/public/app/mp-webhook'
+      path: '/api/public/app/mp-webhook'
+      fullPath: '/api/public/app/mp-webhook'
+      preLoaderRoute: typeof ApiPublicAppMpWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/assinantes/$id': {
       id: '/_authenticated/admin/assinantes/$id'
       path: '/$id'
@@ -682,6 +702,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortalIndiqueRoute: PortalIndiqueRoute,
   PortalPainelRoute: PortalPainelRoute,
   PortalIndexRoute: PortalIndexRoute,
+  ApiPublicAppMpWebhookRoute: ApiPublicAppMpWebhookRoute,
   ApiPublicHooksAutoChargesRoute: ApiPublicHooksAutoChargesRoute,
   ApiPublicPortalLoginPasswordRoute: ApiPublicPortalLoginPasswordRoute,
   ApiPublicPortalLogoutRoute: ApiPublicPortalLogoutRoute,
