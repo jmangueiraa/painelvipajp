@@ -167,7 +167,7 @@ export const createAppRenewalCardCheckout = createServerFn({ method: "POST" })
       .maybeSingle();
     const fullName = (profile as { full_name?: string } | null)?.full_name ?? "Assinante";
 
-    const origin = getOrigin();
+    const origin = await getOrigin();
     const back = `${origin}/renovacao`;
 
     const mpRes = await fetch(MP_PREF_API, {
