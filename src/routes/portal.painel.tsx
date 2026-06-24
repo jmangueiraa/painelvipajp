@@ -364,7 +364,7 @@ function PortalDashboard() {
           ) : (
           <>
           <DialogHeader>
-            <DialogTitle>Renovar plano</DialogTitle>
+            <DialogTitle>Renovar plano{data.client.points && data.client.points > 1 ? ` — ${data.client.points} pontos` : ""}</DialogTitle>
             <DialogDescription>
               {pixPeriod ? "Escaneie o QR Code ou copie o código PIX abaixo." : "Escolha o período. O valor é calculado conforme seu plano."}
             </DialogDescription>
