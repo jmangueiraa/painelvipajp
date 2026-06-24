@@ -201,6 +201,12 @@ function PortalDashboard() {
 
   const dueDays = Math.ceil((new Date(data.client.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   const overdue = dueDays < 0;
+  const displayStatus =
+    data.client.status === "suspenso" || data.client.status === "cancelado"
+      ? data.client.status
+      : overdue
+        ? "vencido"
+        : "ativo";
 
   return (
     <div className="min-h-dvh bg-muted/30">
