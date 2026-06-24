@@ -562,7 +562,7 @@ function ClientesPage() {
                     {nameSort === "asc" ? <ArrowUp className="size-3.5" /> : <ArrowDown className="size-3.5" />}
                   </button>
                 </TableHead>
-                <TableHead>WhatsApp</TableHead>
+                
                 <TableHead>Valor</TableHead>
                 <TableHead>Vencimento</TableHead>
                 <TableHead>Status</TableHead>
@@ -618,7 +618,7 @@ function ClientesPage() {
                     </div>
                   </TableCell>
 
-                  <TableCell className="tracking-widest text-muted-foreground">••••••••</TableCell>
+                  
                   <TableCell className="tabular-nums">{brl(c.price_cents)}</TableCell>
                   <TableCell>{formatDateBR(c.due_date)}</TableCell>
                   <TableCell><Badge variant={statusVariant[c.status]}>{statusLabel[c.status]}</Badge></TableCell>
