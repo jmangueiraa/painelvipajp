@@ -157,7 +157,7 @@ function RenovacaoPage() {
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               {expires ? `Expira em ${formatDateBR(expires)}` : "Sem vencimento definido"} ·
-              {" "}Valor mensal: <span className="font-medium text-foreground">{brl(monthly)}</span>
+              {" "}Valor do plano: <span className="font-medium text-foreground">{brl(currentPlanValue)}</span>
             </p>
           </div>
         </CardContent>
