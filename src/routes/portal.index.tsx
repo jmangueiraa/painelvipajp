@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Loader2, ShieldCheck, KeyRound, User } from "lucide-react";
+import { Loader2, KeyRound, User } from "lucide-react";
+import portalIcon from "@/assets/portal-icon.png.asset.json";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -58,9 +59,12 @@ function PortalLoginPage() {
     <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
-            <ShieldCheck className="h-6 w-6" />
-          </div>
+          <img
+            src={portalIcon.url}
+            alt="Portal do Cliente"
+            className="mx-auto mb-3 h-16 w-16 object-contain"
+          />
+
           <CardTitle className="text-2xl">Portal do Cliente</CardTitle>
           <CardDescription>Entre com seu usuário e senha.</CardDescription>
         </CardHeader>
