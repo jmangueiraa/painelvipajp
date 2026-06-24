@@ -3,7 +3,7 @@ import { translateError } from "@/lib/translate-error";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { User, MessageSquare, KeyRound, LifeBuoy, Camera, QrCode, RefreshCw, LogOut, Smartphone } from "lucide-react";
+import { User, MessageSquare, KeyRound, LifeBuoy, Camera, QrCode, RefreshCw, LogOut, Smartphone, Wallet } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -102,7 +102,7 @@ function ConfiguracoesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("settings")
-        .select("whatsapp_instance,pix_key,pix_name,pix_bank,pix_message,support_message,subscription_expires_at,subscription_monthly_cents,app_android_url,app_ios_url")
+        .select("whatsapp_instance,pix_key,pix_name,pix_bank,pix_message,support_message,subscription_expires_at,subscription_monthly_cents,app_android_url,app_ios_url,mp_access_token")
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -116,6 +116,8 @@ function ConfiguracoesPage() {
   const [pixName, setPixName] = useState("");
   const [pixBank, setPixBank] = useState("");
   const [pixMessage, setPixMessage] = useState("");
+  const [mpAccessToken, setMpAccessToken] = useState("");
+  const [showMpToken, setShowMpToken] = useState(false);
   const [supportMessage, setSupportMessage] = useState("");
   const [subExpires, setSubExpires] = useState("");
   const [subMonthly, setSubMonthly] = useState("");
