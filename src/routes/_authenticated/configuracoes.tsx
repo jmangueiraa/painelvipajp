@@ -7,6 +7,7 @@ import { User, MessageSquare, KeyRound, LifeBuoy, Camera, QrCode, RefreshCw, Log
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import { parseBrlToCents } from "@/lib/format";
 
 import { PageHeader } from "@/components/page-header";
@@ -52,6 +53,7 @@ function SectionCard({
 
 function ConfiguracoesPage() {
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const qc = useQueryClient();
 
   const { data: profile } = useQuery({
@@ -309,15 +311,17 @@ function ConfiguracoesPage() {
         </Button>
       </SectionCard>
 
-      <SectionCard title="Assinatura do painel" description="Usado em Dashboard e Renovação" icon={KeyRound} color="var(--kpi-violet)">
-        <div className="grid md:grid-cols-2 gap-3">
-          <div className="space-y-1"><Label>Expira em</Label><Input type="date" value={subExpires} onChange={(e) => setSubExpires(e.target.value)} /></div>
-          <div className="space-y-1"><Label>Valor mensal (R$)</Label><Input inputMode="decimal" value={subMonthly} onChange={(e) => setSubMonthly(e.target.value)} /></div>
-        </div>
-        <Button className="btn-premium rounded-full" onClick={() => saveSettings.mutate({ subscription_expires_at: subExpires || null, subscription_monthly_cents: parseBrlToCents(subMonthly) })}>
-          Salvar assinatura
-        </Button>
-      </SectionCard>
+      {isAdmin && (
+        <SectionCard title="Assinatura do painel" description="Usado em Dashboard e Renovação" icon={KeyRound} color="var(--kpi-violet)">
+          <div className="grid md:grid-cols-2 gap-3">
+            <div className="space-y-1"><Label>Expira em</Label><Input type="date" value={subExpires} onChange={(e) => setSubExpires(e.target.value)} /></div>
+            <div className="space-y-1"><Label>Valor mensal (R$)</Label><Input inputMode="decimal" value={subMonthly} onChange={(e) => setSubMonthly(e.target.value)} /></div>
+          </div>
+          <Button className="btn-premium rounded-full" onClick={() => saveSettings.mutate({ subscription_expires_at: subExpires || null, subscription_monthly_cents: parseBrlToCents(subMonthly) })}>
+            Salvar assinatura
+          </Button>
+        </SectionCard>
+      )}
 
       <SectionCard title="Alterar senha" icon={KeyRound} color="var(--kpi-violet)">
         <div className="space-y-1">
