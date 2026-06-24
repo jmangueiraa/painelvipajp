@@ -68,6 +68,7 @@ export type PortalClient = {
   referral_code: string | null;
   referred_by: string | null;
   bonus_days: number;
+  points: number | null;
 };
 
 export async function getClientByPhone(phoneDigits: string): Promise<PortalClient | null> {
