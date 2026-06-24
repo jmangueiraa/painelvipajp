@@ -588,6 +588,7 @@ export type Database = {
           created_at: string
           default_message: string | null
           default_renewal_days: number
+          mp_access_token: string | null
           pix_bank: string | null
           pix_city: string | null
           pix_key: string | null
@@ -611,6 +612,7 @@ export type Database = {
           created_at?: string
           default_message?: string | null
           default_renewal_days?: number
+          mp_access_token?: string | null
           pix_bank?: string | null
           pix_city?: string | null
           pix_key?: string | null
@@ -634,6 +636,7 @@ export type Database = {
           created_at?: string
           default_message?: string | null
           default_renewal_days?: number
+          mp_access_token?: string | null
           pix_bank?: string | null
           pix_city?: string | null
           pix_key?: string | null
