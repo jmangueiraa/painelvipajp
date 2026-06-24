@@ -173,6 +173,7 @@ function ClientesPage() {
         price_cents: number; due_date: string; status: ClientStatus;
         auto_charge: boolean; notes: string | null; user_id: string;
         allowed_plan_ids: string[];
+        points: number;
         referred_by?: string | null;
       } = {
         name: values.name.trim(),
@@ -188,6 +189,7 @@ function ClientesPage() {
         notes: values.notes?.trim() || null,
         user_id: user.id,
         allowed_plan_ids: values.allowed_plan_ids ?? [],
+        points: values.points ?? 1,
       };
       if (referred_by !== undefined) payload.referred_by = referred_by;
       if (editing) {
