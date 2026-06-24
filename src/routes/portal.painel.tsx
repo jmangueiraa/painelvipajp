@@ -142,14 +142,44 @@ function PortalDashboard() {
       setPaymentStatus("pending");
       toast.success("QR Code PIX gerado!");
     },
-    onError: (e: Error) => { toast.error(e.message); setPixPeriod(null); },
+    onError: (e: Error) => { toast.error(e.message); setPixPeriod(null); setMethod(null); },
     onSettled: () => setCreating(false),
   });
 
-  function selectPeriod(o: { label: string; days: number; price_cents: number }) {
-    setPixPeriod(o);
+  const renewCard = useMutation({
+    mutationFn: (o: { days: number; amount_cents: number; label: string }) =>
+      portalFetch<{ renewal_id: string; init_point: string; amount_cents: number; base_cents: number }>(
+        "/api/public/portal/mp-create-card",
+        { method: "POST", body: JSON.stringify(o) },
+      ),
+    onSuccess: (r) => {
+      setRenewalId(r.renewal_id);
+      setPaymentStatus("pending");
+      setCardLink(r.init_point);
+      window.open(r.init_point, "_blank", "noopener,noreferrer");
+      toast.success("Checkout do cartão aberto em nova aba.");
+    },
+    onError: (e: Error) => { toast.error(e.message); setMethod(null); },
+    onSettled: () => setCreating(false),
+  });
+
+  function choosePix() {
+    if (!chosenPeriod) return;
+    setMethod("pix");
+    setPixPeriod(chosenPeriod);
     setCreating(true);
-    renew.mutate({ days: o.days, amount_cents: o.price_cents, label: o.label });
+    renew.mutate({ days: chosenPeriod.days, amount_cents: chosenPeriod.price_cents, label: chosenPeriod.label });
+  }
+
+  function chooseCard() {
+    if (!chosenPeriod) return;
+    setMethod("card");
+    setCreating(true);
+    renewCard.mutate({ days: chosenPeriod.days, amount_cents: chosenPeriod.price_cents, label: chosenPeriod.label });
+  }
+
+  function selectPeriod(o: { label: string; days: number; price_cents: number }) {
+    setChosenPeriod(o);
   }
 
   async function copy(text: string) {
