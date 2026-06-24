@@ -45,6 +45,7 @@ export const Route = createFileRoute("/api/public/portal/me")({
               due_date: client.due_date,
               status: client.status,
               price_cents: client.price_cents,
+              points: client.points ?? 1,
               iptv_login: client.iptv_login,
               iptv_password: client.iptv_password,
               referral_code: client.referral_code,
