@@ -303,7 +303,7 @@ function ConfiguracoesPage() {
             <Button
               size="sm"
               className="btn-premium rounded-full w-full"
-              onClick={() => saveSettings.mutate({ updates_movies_text: moviesText })}
+              onClick={() => saveSettings.mutate({ updates_movies_text: moviesText, updates_movies_updated_at: new Date().toISOString() })}
               disabled={saveSettings.isPending}
             >
               Salvar Filmes
