@@ -68,8 +68,15 @@ function parseUpdatesText(text: string | null | undefined): { category: string; 
   const lines = text.split(/\r?\n/);
   const groups: { category: string; items: string[] }[] = [];
   let current: { category: string; items: string[] } | null = null;
-  const catRe = /^\*?\s*\(([^)]+)\)\s*\*?\s*$/;
-  const itemRe = /^\s*\d+\s*[-–.)]\s*(.+)$/;
+  const catRe = /^\*?\s*[\(\[]([^)\]]+)[\)\]]\s*\*?\s*:?\s*$/;
+  const itemRe = /^\s*(?:\d+\s*[-–.)]|[-–•*])\s*(.+)$/;
+  const ensureCurrent = () => {
+    if (!current) {
+      current = { category: "Novidades", items: [] };
+      groups.push(current);
+    }
+    return current;
+  };
   for (const raw of lines) {
     const line = raw.trim();
     if (!line) continue;
@@ -80,12 +87,16 @@ function parseUpdatesText(text: string | null | undefined): { category: string; 
       continue;
     }
     const it = itemRe.exec(line);
-    if (it && current) {
-      current.items.push(it[1].trim());
+    if (it) {
+      ensureCurrent().items.push(it[1].trim());
+    } else {
+      // Plain text line — treat as an item too so nothing is lost
+      ensureCurrent().items.push(line);
     }
   }
   return groups.filter((g) => g.items.length > 0);
 }
+
 
 function PortalDashboard() {
   const navigate = useNavigate();
