@@ -393,23 +393,36 @@ function PortalDashboard() {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 mt-2">
-                    {activeGroups.length === 0 && (
-                      <div className="text-sm text-muted-foreground text-center py-6">Nenhuma atualização disponível no momento.</div>
-                    )}
-                    {activeGroups.map((g) => (
-                      <div key={g.category} className="rounded-xl border bg-card/50 p-3">
-                        <div className="text-xs font-semibold uppercase tracking-wide text-primary mb-2">
-                          {g.category}
-                          <span className="ml-2 text-[10px] text-muted-foreground normal-case font-normal">({g.items.length})</span>
+                    {updatesKind === "games" ? (
+                      data.settings.updates_games_text && data.settings.updates_games_text.trim() ? (
+                        <div className="rounded-xl border bg-card/50 p-3">
+                          <pre className="whitespace-pre-wrap break-words font-sans text-sm text-foreground/90 leading-relaxed">{data.settings.updates_games_text}</pre>
                         </div>
-                        <ol className="space-y-1 list-decimal list-inside text-sm">
-                          {g.items.map((it, i) => (
-                            <li key={i} className="text-foreground/90 marker:text-muted-foreground">{it}</li>
-                          ))}
-                        </ol>
-                      </div>
-                    ))}
+                      ) : (
+                        <div className="text-sm text-muted-foreground text-center py-6">Nenhuma atualização disponível no momento.</div>
+                      )
+                    ) : (
+                      <>
+                        {activeGroups.length === 0 && (
+                          <div className="text-sm text-muted-foreground text-center py-6">Nenhuma atualização disponível no momento.</div>
+                        )}
+                        {activeGroups.map((g) => (
+                          <div key={g.category} className="rounded-xl border bg-card/50 p-3">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-primary mb-2">
+                              {g.category}
+                              <span className="ml-2 text-[10px] text-muted-foreground normal-case font-normal">({g.items.length})</span>
+                            </div>
+                            <ol className="space-y-1 list-decimal list-inside text-sm">
+                              {g.items.map((it, i) => (
+                                <li key={i} className="text-foreground/90 marker:text-muted-foreground">{it}</li>
+                              ))}
+                            </ol>
+                          </div>
+                        ))}
+                      </>
+                    )}
                   </div>
+
                 </DialogContent>
               </Dialog>
             </>
