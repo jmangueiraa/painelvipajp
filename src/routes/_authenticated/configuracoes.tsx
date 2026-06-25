@@ -289,10 +289,44 @@ function ConfiguracoesPage() {
       </SectionCard>
 
 
-      <SectionCard title="Atualizações" description="Cadastre as atualizações de Filmes e Séries que aparecerão no portal do cliente" icon={Smartphone} color="var(--kpi-violet)">
+      <SectionCard title="Atualizações" description="Cole o texto completo das atualizações. Categorias entre parênteses, ex: *(LANÇAMENTO)*, *(AÇÃO)*, *(DRAMA)*. Os itens listados abaixo aparecem agrupados por categoria no portal." icon={Smartphone} color="var(--kpi-violet)">
         <div className="grid md:grid-cols-2 gap-4">
-          <ContentUpdatesManager kind="movie" title="Filmes" />
-          <ContentUpdatesManager kind="series" title="Séries" />
+          <div className="space-y-2">
+            <Label>🎬 Filmes</Label>
+            <Textarea
+              rows={14}
+              placeholder={"*FILMES ADICIONADOS*\n\n*(LANÇAMENTO)*\n1- Título do filme\n2- Outro filme [LEG]\n\n*(AÇÃO)*\n1- Título do filme"}
+              value={moviesText}
+              onChange={(e) => setMoviesText(e.target.value)}
+              className="font-mono text-xs"
+            />
+            <Button
+              size="sm"
+              className="btn-premium rounded-full w-full"
+              onClick={() => saveSettings.mutate({ updates_movies_text: moviesText })}
+              disabled={saveSettings.isPending}
+            >
+              Salvar Filmes
+            </Button>
+          </div>
+          <div className="space-y-2">
+            <Label>📺 Séries</Label>
+            <Textarea
+              rows={14}
+              placeholder={"*SÉRIES ADICIONADAS*\n\n*(LANÇAMENTO)*\n1- Nome da série S01\n\n*(DRAMA)*\n1- Nome da série S02"}
+              value={seriesText}
+              onChange={(e) => setSeriesText(e.target.value)}
+              className="font-mono text-xs"
+            />
+            <Button
+              size="sm"
+              className="btn-premium rounded-full w-full"
+              onClick={() => saveSettings.mutate({ updates_series_text: seriesText })}
+              disabled={saveSettings.isPending}
+            >
+              Salvar Séries
+            </Button>
+          </div>
         </div>
       </SectionCard>
 
