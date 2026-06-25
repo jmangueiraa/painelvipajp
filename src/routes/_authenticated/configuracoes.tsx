@@ -323,7 +323,7 @@ function ConfiguracoesPage() {
             <Button
               size="sm"
               className="btn-premium rounded-full w-full"
-              onClick={() => saveSettings.mutate({ updates_series_text: seriesText })}
+              onClick={() => saveSettings.mutate({ updates_series_text: seriesText, updates_series_updated_at: new Date().toISOString() })}
               disabled={saveSettings.isPending}
             >
               Salvar Séries
