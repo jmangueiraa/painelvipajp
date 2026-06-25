@@ -116,6 +116,8 @@ function ConfiguracoesPage() {
   const [supportMessage, setSupportMessage] = useState("");
   const [appAndroidUrl, setAppAndroidUrl] = useState("");
   const [appIosUrl, setAppIosUrl] = useState("");
+  const [moviesText, setMoviesText] = useState("");
+  const [seriesText, setSeriesText] = useState("");
   const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
@@ -132,6 +134,8 @@ function ConfiguracoesPage() {
       setSupportMessage(settings.support_message ?? "");
       setAppAndroidUrl(settings.app_android_url ?? "");
       setAppIosUrl(settings.app_ios_url ?? "");
+      setMoviesText(settings.updates_movies_text ?? "");
+      setSeriesText(settings.updates_series_text ?? "");
     }
   }, [settings]);
 
