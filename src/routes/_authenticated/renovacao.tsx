@@ -58,6 +58,7 @@ type CardData = {
 
 function RenovacaoPage() {
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const createPix = useServerFn(createAppRenewalPix);
   const createCard = useServerFn(createAppRenewalCardCheckout);
   const checkStatus = useServerFn(checkAppRenewalStatus);
