@@ -52,7 +52,7 @@ type Me = {
   server: { id: string; name: string } | null;
   payments: { id: string; amount_cents: number; paid_at: string; method: string | null }[];
   referrals: { id: string; name: string; paid: boolean }[];
-  settings: { referral_reward_days: number; referral_enabled: boolean; app_android_url: string | null; app_ios_url: string | null; updates_movies_text: string | null; updates_series_text: string | null; updates_movies_updated_at: string | null; updates_series_updated_at: string | null };
+  settings: { referral_reward_days: number; referral_enabled: boolean; app_android_url: string | null; app_ios_url: string | null; updates_movies_text: string | null; updates_series_text: string | null; updates_movies_updated_at: string | null; updates_series_updated_at: string | null; updates_games_text: string | null; updates_games_updated_at: string | null };
   plans: { id: string; name: string; price_cents: number; duration_days: number }[];
   updates: { id: string; kind: "movie" | "series"; title: string; description: string | null; image_url: string | null; created_at: string }[];
 };
@@ -114,7 +114,7 @@ function PortalDashboard() {
   const [creating, setCreating] = useState(false);
   const [cardLink, setCardLink] = useState<string | null>(null);
   const pollRef = useRef<number | null>(null);
-  const [updatesKind, setUpdatesKind] = useState<"movie" | "series" | null>(null);
+  const [updatesKind, setUpdatesKind] = useState<"movie" | "series" | "games" | null>(null);
 
 
   useEffect(() => {
@@ -345,32 +345,41 @@ function PortalDashboard() {
         {(() => {
           const movieGroups = parseUpdatesText(data.settings.updates_movies_text);
           const seriesGroups = parseUpdatesText(data.settings.updates_series_text);
+          const gamesGroups = parseUpdatesText(data.settings.updates_games_text);
           const movieCount = movieGroups.reduce((acc, g) => acc + g.items.length, 0);
           const seriesCount = seriesGroups.reduce((acc, g) => acc + g.items.length, 0);
-          const activeGroups = updatesKind === "movie" ? movieGroups : updatesKind === "series" ? seriesGroups : [];
+          const gamesCount = gamesGroups.reduce((acc, g) => acc + g.items.length, 0);
+          const activeGroups = updatesKind === "movie" ? movieGroups : updatesKind === "series" ? seriesGroups : updatesKind === "games" ? gamesGroups : [];
           const moviesUpdatedAt = data.settings.updates_movies_updated_at;
           const seriesUpdatedAt = data.settings.updates_series_updated_at;
-          const activeUpdatedAt = updatesKind === "movie" ? moviesUpdatedAt : updatesKind === "series" ? seriesUpdatedAt : null;
+          const gamesUpdatedAt = data.settings.updates_games_updated_at;
+          const activeUpdatedAt = updatesKind === "movie" ? moviesUpdatedAt : updatesKind === "series" ? seriesUpdatedAt : updatesKind === "games" ? gamesUpdatedAt : null;
           const fmtDate = (iso: string | null) => {
             if (!iso) return null;
             try { return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }); } catch { return null; }
           };
+          const dialogTitle = updatesKind === "movie" ? "🎬 Filmes adicionados" : updatesKind === "series" ? "📺 Séries adicionadas" : "⚽ Jogos do Dia";
           return (
             <>
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-base"><Smartphone className="h-4 w-4" />Atualizações</CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-3">
-                  <button type="button" onClick={() => setUpdatesKind("movie")} className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
+                <CardContent className="grid grid-cols-3 gap-3">
+                  <button type="button" onClick={() => setUpdatesKind("movie")} className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-3 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
                     <span className="inline-flex items-center gap-2">🎬 Filmes</span>
                     <span className="text-xs text-muted-foreground">{movieCount} novidades</span>
                     {fmtDate(moviesUpdatedAt) && <span className="text-[10px] text-muted-foreground">Atualizado {fmtDate(moviesUpdatedAt)}</span>}
                   </button>
-                  <button type="button" onClick={() => setUpdatesKind("series")} className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
+                  <button type="button" onClick={() => setUpdatesKind("series")} className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-3 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
                     <span className="inline-flex items-center gap-2">📺 Séries</span>
                     <span className="text-xs text-muted-foreground">{seriesCount} novidades</span>
                     {fmtDate(seriesUpdatedAt) && <span className="text-[10px] text-muted-foreground">Atualizado {fmtDate(seriesUpdatedAt)}</span>}
+                  </button>
+                  <button type="button" onClick={() => setUpdatesKind("games")} className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-3 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
+                    <span className="inline-flex items-center gap-2">⚽ Jogos</span>
+                    <span className="text-xs text-muted-foreground">{gamesCount} hoje</span>
+                    {fmtDate(gamesUpdatedAt) && <span className="text-[10px] text-muted-foreground">Atualizado {fmtDate(gamesUpdatedAt)}</span>}
                   </button>
                 </CardContent>
               </Card>
@@ -378,7 +387,7 @@ function PortalDashboard() {
               <Dialog open={updatesKind !== null} onOpenChange={(o) => !o && setUpdatesKind(null)}>
                 <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>{updatesKind === "movie" ? "🎬 Filmes adicionados" : "📺 Séries adicionadas"}</DialogTitle>
+                    <DialogTitle>{dialogTitle}</DialogTitle>
                     <DialogDescription>
                       {fmtDate(activeUpdatedAt) ? `Última atualização: ${fmtDate(activeUpdatedAt)}` : "Confira as novidades organizadas por categoria."}
                     </DialogDescription>

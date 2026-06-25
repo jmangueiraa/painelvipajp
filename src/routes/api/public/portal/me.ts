@@ -26,7 +26,7 @@ export const Route = createFileRoute("/api/public/portal/me")({
             client.plan_id ? supabaseAdmin.from("plans").select("id,name,price_cents,duration_days").eq("id", client.plan_id).maybeSingle() : Promise.resolve({ data: null }),
             client.server_id ? supabaseAdmin.from("servers").select("id,name").eq("id", client.server_id).maybeSingle() : Promise.resolve({ data: null }),
             supabaseAdmin.from("clients").select("id,name,due_date,status").eq("referred_by", client.id),
-            supabaseAdmin.from("settings").select("referral_reward_days,referral_enabled,app_android_url,app_ios_url,updates_movies_text,updates_series_text,updates_movies_updated_at,updates_series_updated_at").eq("user_id", client.user_id).maybeSingle(),
+            supabaseAdmin.from("settings").select("referral_reward_days,referral_enabled,app_android_url,app_ios_url,updates_movies_text,updates_series_text,updates_movies_updated_at,updates_series_updated_at,updates_games_text,updates_games_updated_at").eq("user_id", client.user_id).maybeSingle(),
             plansQuery,
             supabaseAdmin.from("content_updates").select("id,kind,title,description,image_url,created_at").eq("user_id", client.user_id).order("created_at", { ascending: false }).limit(100),
           ]);
