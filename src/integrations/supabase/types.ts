@@ -688,6 +688,8 @@ export type Database = {
           subscription_monthly_cents: number
           support_message: string | null
           updated_at: string
+          updates_games_text: string | null
+          updates_games_updated_at: string | null
           updates_movies_text: string | null
           updates_movies_updated_at: string | null
           updates_series_text: string | null
@@ -716,6 +718,8 @@ export type Database = {
           subscription_monthly_cents?: number
           support_message?: string | null
           updated_at?: string
+          updates_games_text?: string | null
+          updates_games_updated_at?: string | null
           updates_movies_text?: string | null
           updates_movies_updated_at?: string | null
           updates_series_text?: string | null
@@ -744,6 +748,8 @@ export type Database = {
           subscription_monthly_cents?: number
           support_message?: string | null
           updated_at?: string
+          updates_games_text?: string | null
+          updates_games_updated_at?: string | null
           updates_movies_text?: string | null
           updates_movies_updated_at?: string | null
           updates_series_text?: string | null
