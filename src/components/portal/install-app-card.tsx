@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Smartphone, Share, Plus, CheckCircle2 } from "lucide-react";
+import { Smartphone, Share, Plus, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -57,6 +57,7 @@ export function InstallAppCard() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [showIOS, setShowIOS] = useState(false);
+  const [waitingPrompt, setWaitingPrompt] = useState(false);
 
   useRegisterPortalSW();
 
@@ -68,6 +69,7 @@ export function InstallAppCard() {
     const onPrompt = (e: Event) => {
       e.preventDefault();
       setDeferred(e as BeforeInstallPromptEvent);
+      setWaitingPrompt(false);
     };
     const onInstalled = () => {
       setInstalled(true);
@@ -91,7 +93,14 @@ export function InstallAppCard() {
       setDeferred(null);
       return;
     }
-    setShowIOS((v) => !v);
+
+    if (isIOS()) {
+      setShowIOS((v) => !v);
+      return;
+    }
+
+    setWaitingPrompt(true);
+    setTimeout(() => setWaitingPrompt(false), 3500);
   }
 
   const canPrompt = !!deferred;
@@ -109,9 +118,14 @@ export function InstallAppCard() {
           Adicione o portal à tela inicial e acesse como um app nativo — abre em tela cheia, sem barra do navegador.
         </p>
         <Button onClick={handleInstall} size="lg" className="w-full sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" />
+          {waitingPrompt ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
           📲 Instalar Aplicativo
         </Button>
+        {waitingPrompt && (
+          <p className="text-xs text-muted-foreground">
+            Preparando instalação automática. Se não abrir, acesse o portal publicado direto no Chrome/Edge do celular.
+          </p>
+        )}
         {showIOS && (
           <div className="rounded-xl border bg-card p-3 text-sm">
             {ios ? (
