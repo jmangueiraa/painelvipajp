@@ -688,6 +688,8 @@ export type Database = {
           subscription_monthly_cents: number
           support_message: string | null
           updated_at: string
+          updates_movies_text: string | null
+          updates_series_text: string | null
           user_id: string
           whatsapp_instance: string | null
         }
@@ -712,6 +714,8 @@ export type Database = {
           subscription_monthly_cents?: number
           support_message?: string | null
           updated_at?: string
+          updates_movies_text?: string | null
+          updates_series_text?: string | null
           user_id: string
           whatsapp_instance?: string | null
         }
@@ -736,6 +740,8 @@ export type Database = {
           subscription_monthly_cents?: number
           support_message?: string | null
           updated_at?: string
+          updates_movies_text?: string | null
+          updates_series_text?: string | null
           user_id?: string
           whatsapp_instance?: string | null
         }

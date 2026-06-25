@@ -101,7 +101,7 @@ function ConfiguracoesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("settings")
-        .select("whatsapp_instance,support_message,subscription_expires_at,subscription_monthly_cents,app_android_url,app_ios_url,mp_access_token")
+        .select("whatsapp_instance,support_message,subscription_expires_at,subscription_monthly_cents,app_android_url,app_ios_url,mp_access_token,updates_movies_text,updates_series_text")
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -116,6 +116,8 @@ function ConfiguracoesPage() {
   const [supportMessage, setSupportMessage] = useState("");
   const [appAndroidUrl, setAppAndroidUrl] = useState("");
   const [appIosUrl, setAppIosUrl] = useState("");
+  const [moviesText, setMoviesText] = useState("");
+  const [seriesText, setSeriesText] = useState("");
   const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
@@ -132,6 +134,8 @@ function ConfiguracoesPage() {
       setSupportMessage(settings.support_message ?? "");
       setAppAndroidUrl(settings.app_android_url ?? "");
       setAppIosUrl(settings.app_ios_url ?? "");
+      setMoviesText(settings.updates_movies_text ?? "");
+      setSeriesText(settings.updates_series_text ?? "");
     }
   }, [settings]);
 
@@ -157,6 +161,8 @@ function ConfiguracoesPage() {
     subscription_monthly_cents: number;
     app_android_url: string | null;
     app_ios_url: string | null;
+    updates_movies_text: string | null;
+    updates_series_text: string | null;
   }>;
   const saveSettings = useMutation({
     mutationFn: async (patch: SettingsPatch) => {
@@ -283,10 +289,44 @@ function ConfiguracoesPage() {
       </SectionCard>
 
 
-      <SectionCard title="Atualizações" description="Cadastre as atualizações de Filmes e Séries que aparecerão no portal do cliente" icon={Smartphone} color="var(--kpi-violet)">
+      <SectionCard title="Atualizações" description="Cole o texto completo das atualizações. Categorias entre parênteses, ex: *(LANÇAMENTO)*, *(AÇÃO)*, *(DRAMA)*. Os itens listados abaixo aparecem agrupados por categoria no portal." icon={Smartphone} color="var(--kpi-violet)">
         <div className="grid md:grid-cols-2 gap-4">
-          <ContentUpdatesManager kind="movie" title="Filmes" />
-          <ContentUpdatesManager kind="series" title="Séries" />
+          <div className="space-y-2">
+            <Label>🎬 Filmes</Label>
+            <Textarea
+              rows={14}
+              placeholder={"*FILMES ADICIONADOS*\n\n*(LANÇAMENTO)*\n1- Título do filme\n2- Outro filme [LEG]\n\n*(AÇÃO)*\n1- Título do filme"}
+              value={moviesText}
+              onChange={(e) => setMoviesText(e.target.value)}
+              className="font-mono text-xs"
+            />
+            <Button
+              size="sm"
+              className="btn-premium rounded-full w-full"
+              onClick={() => saveSettings.mutate({ updates_movies_text: moviesText })}
+              disabled={saveSettings.isPending}
+            >
+              Salvar Filmes
+            </Button>
+          </div>
+          <div className="space-y-2">
+            <Label>📺 Séries</Label>
+            <Textarea
+              rows={14}
+              placeholder={"*SÉRIES ADICIONADAS*\n\n*(LANÇAMENTO)*\n1- Nome da série S01\n\n*(DRAMA)*\n1- Nome da série S02"}
+              value={seriesText}
+              onChange={(e) => setSeriesText(e.target.value)}
+              className="font-mono text-xs"
+            />
+            <Button
+              size="sm"
+              className="btn-premium rounded-full w-full"
+              onClick={() => saveSettings.mutate({ updates_series_text: seriesText })}
+              disabled={saveSettings.isPending}
+            >
+              Salvar Séries
+            </Button>
+          </div>
         </div>
       </SectionCard>
 
