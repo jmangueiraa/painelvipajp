@@ -3,12 +3,10 @@ import { translateError } from "@/lib/translate-error";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { User, MessageSquare, KeyRound, LifeBuoy, Camera, QrCode, RefreshCw, LogOut, Smartphone, Wallet, CalendarClock, Plus, Trash2, Star } from "lucide-react";
+import { User, MessageSquare, KeyRound, Camera, QrCode, RefreshCw, LogOut, Smartphone, Wallet } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { useIsAdmin } from "@/hooks/use-is-admin";
-import { parseBrlToCents } from "@/lib/format";
 
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
