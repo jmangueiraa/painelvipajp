@@ -323,11 +323,6 @@ function PortalDashboard() {
           </Card>
         )}
 
-        <InstallAppCard />
-
-
-
-
         {/* Histórico de pagamentos */}
         <section>
           <div className="mb-3 flex items-center gap-2 px-1">
