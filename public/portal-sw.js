@@ -1,8 +1,8 @@
 // Portal VIP - Service Worker (NetworkFirst para HTML, CacheFirst para estáticos)
-const VERSION = "v1";
+const VERSION = "v2";
 const STATIC_CACHE = `portal-static-${VERSION}`;
 const RUNTIME_CACHE = `portal-runtime-${VERSION}`;
-const APP_SHELL = ["/portal/", "/portal-manifest.webmanifest", "/portal-icon-192.png", "/portal-icon-512.png"];
+const APP_SHELL = ["/portal/", "/portal/painel", "/portal-manifest.webmanifest", "/portal-icon-192.png", "/portal-icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
