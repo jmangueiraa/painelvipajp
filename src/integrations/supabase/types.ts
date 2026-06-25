@@ -689,7 +689,9 @@ export type Database = {
           support_message: string | null
           updated_at: string
           updates_movies_text: string | null
+          updates_movies_updated_at: string | null
           updates_series_text: string | null
+          updates_series_updated_at: string | null
           user_id: string
           whatsapp_instance: string | null
         }
@@ -715,7 +717,9 @@ export type Database = {
           support_message?: string | null
           updated_at?: string
           updates_movies_text?: string | null
+          updates_movies_updated_at?: string | null
           updates_series_text?: string | null
+          updates_series_updated_at?: string | null
           user_id: string
           whatsapp_instance?: string | null
         }
@@ -741,7 +745,9 @@ export type Database = {
           support_message?: string | null
           updated_at?: string
           updates_movies_text?: string | null
+          updates_movies_updated_at?: string | null
           updates_series_text?: string | null
+          updates_series_updated_at?: string | null
           user_id?: string
           whatsapp_instance?: string | null
         }
