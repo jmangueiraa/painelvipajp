@@ -63,6 +63,30 @@ function statusColor(s: string) {
   return "bg-rose-500/15 text-rose-700 dark:text-rose-300";
 }
 
+function parseUpdatesText(text: string | null | undefined): { category: string; items: string[] }[] {
+  if (!text) return [];
+  const lines = text.split(/\r?\n/);
+  const groups: { category: string; items: string[] }[] = [];
+  let current: { category: string; items: string[] } | null = null;
+  const catRe = /^\*?\s*\(([^)]+)\)\s*\*?\s*$/;
+  const itemRe = /^\s*\d+\s*[-–.)]\s*(.+)$/;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    const m = catRe.exec(line);
+    if (m) {
+      current = { category: m[1].trim(), items: [] };
+      groups.push(current);
+      continue;
+    }
+    const it = itemRe.exec(line);
+    if (it && current) {
+      current.items.push(it[1].trim());
+    }
+  }
+  return groups.filter((g) => g.items.length > 0);
+}
+
 function PortalDashboard() {
   const navigate = useNavigate();
   const [renewOpen, setRenewOpen] = useState(false);
