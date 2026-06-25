@@ -249,7 +249,6 @@ function ConfiguracoesPage() {
         <Button className="btn-premium rounded-full mt-2" onClick={() => saveProfile.mutate()} disabled={saveProfile.isPending}>Salvar</Button>
       </SectionCard>
 
-      <WhatsAppConnectSection />
 
 
       <SectionCard
