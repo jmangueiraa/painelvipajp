@@ -348,6 +348,13 @@ function PortalDashboard() {
           const movieCount = movieGroups.reduce((acc, g) => acc + g.items.length, 0);
           const seriesCount = seriesGroups.reduce((acc, g) => acc + g.items.length, 0);
           const activeGroups = updatesKind === "movie" ? movieGroups : updatesKind === "series" ? seriesGroups : [];
+          const moviesUpdatedAt = data.settings.updates_movies_updated_at;
+          const seriesUpdatedAt = data.settings.updates_series_updated_at;
+          const activeUpdatedAt = updatesKind === "movie" ? moviesUpdatedAt : updatesKind === "series" ? seriesUpdatedAt : null;
+          const fmtDate = (iso: string | null) => {
+            if (!iso) return null;
+            try { return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }); } catch { return null; }
+          };
           return (
             <>
               <Card>
@@ -358,10 +365,12 @@ function PortalDashboard() {
                   <button type="button" onClick={() => setUpdatesKind("movie")} className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
                     <span className="inline-flex items-center gap-2">🎬 Filmes</span>
                     <span className="text-xs text-muted-foreground">{movieCount} novidades</span>
+                    {fmtDate(moviesUpdatedAt) && <span className="text-[10px] text-muted-foreground">Atualizado {fmtDate(moviesUpdatedAt)}</span>}
                   </button>
                   <button type="button" onClick={() => setUpdatesKind("series")} className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
                     <span className="inline-flex items-center gap-2">📺 Séries</span>
                     <span className="text-xs text-muted-foreground">{seriesCount} novidades</span>
+                    {fmtDate(seriesUpdatedAt) && <span className="text-[10px] text-muted-foreground">Atualizado {fmtDate(seriesUpdatedAt)}</span>}
                   </button>
                 </CardContent>
               </Card>
@@ -370,7 +379,9 @@ function PortalDashboard() {
                 <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>{updatesKind === "movie" ? "🎬 Filmes adicionados" : "📺 Séries adicionadas"}</DialogTitle>
-                    <DialogDescription>Confira as novidades organizadas por categoria.</DialogDescription>
+                    <DialogDescription>
+                      {fmtDate(activeUpdatedAt) ? `Última atualização: ${fmtDate(activeUpdatedAt)}` : "Confira as novidades organizadas por categoria."}
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 mt-2">
                     {activeGroups.length === 0 && (
