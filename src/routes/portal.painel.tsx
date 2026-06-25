@@ -79,6 +79,8 @@ function PortalDashboard() {
   const [creating, setCreating] = useState(false);
   const [cardLink, setCardLink] = useState<string | null>(null);
   const pollRef = useRef<number | null>(null);
+  const [updatesKind, setUpdatesKind] = useState<"movie" | "series" | null>(null);
+
 
   useEffect(() => {
     if (!getPortalToken()) navigate({ to: "/portal" });
