@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { RefreshCw, CalendarCheck, Copy, Loader2, CheckCircle2, QrCode, CreditCard } from "lucide-react";
+import { RefreshCw, CalendarCheck, Copy, Loader2, CheckCircle2, QrCode, CreditCard, KeyRound, CalendarClock, Plus, Trash2, Star } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { brl, formatDateBR } from "@/lib/format";
+import { useIsAdmin } from "@/hooks/use-is-admin";
+import { brl, formatDateBR, parseBrlToCents } from "@/lib/format";
+import { translateError } from "@/lib/translate-error";
 import {
   createAppRenewalPix,
   createAppRenewalCardCheckout,
@@ -16,8 +18,10 @@ import {
 } from "@/lib/app-renewal.functions";
 
 import { PageHeader } from "@/components/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
