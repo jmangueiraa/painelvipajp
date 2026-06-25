@@ -8,10 +8,24 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-function isStandalone() {
+const INSTALLED_KEY = "portal_app_installed";
+
+function markInstalled() {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(INSTALLED_KEY, "true");
+}
+
+function wasMarkedInstalled() {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem(INSTALLED_KEY) === "true";
+}
+
+function isInstalledDisplayMode() {
   if (typeof window === "undefined") return false;
   return (
+    window.matchMedia?.("(display-mode: fullscreen)").matches ||
     window.matchMedia?.("(display-mode: standalone)").matches ||
+    window.matchMedia?.("(display-mode: minimal-ui)").matches ||
     // @ts-expect-error iOS specific
     window.navigator.standalone === true
   );
@@ -63,7 +77,8 @@ export function InstallAppCard() {
   useRegisterPortalSW();
 
   useEffect(() => {
-    if (isStandalone()) {
+    if (isInstalledDisplayMode() || wasMarkedInstalled()) {
+      if (isInstalledDisplayMode()) markInstalled();
       setInstalled(true);
       return;
     }
@@ -82,6 +97,7 @@ export function InstallAppCard() {
       setDeferred(promptEvent);
     };
     const onInstalled = () => {
+      markInstalled();
       setInstalled(true);
       setDeferred(null);
     };
@@ -123,7 +139,10 @@ export function InstallAppCard() {
       setShowHelp(false);
       await promptEvent.prompt();
       const choice = await promptEvent.userChoice;
-      if (choice.outcome === "accepted") setInstalled(true);
+      if (choice.outcome === "accepted") {
+        markInstalled();
+        setInstalled(true);
+      }
     } finally {
       setDeferred(null);
       pendingInstallClick.current = false;
