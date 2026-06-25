@@ -3,7 +3,7 @@
   "short_name": "Portal VIP",
   "description": "Acesse seu plano, pagamentos e renovações no Portal do Cliente.",
   "id": "/portal/",
-  "start_url": "/portal/",
+  "start_url": "/portal/painel",
   "scope": "/portal/",
   "display": "standalone",
   "display_override": ["fullscreen", "standalone", "minimal-ui"],

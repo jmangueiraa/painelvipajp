@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, KeyRound, User } from "lucide-react";
 import portalIcon from "@/assets/portal-icon.png.asset.json";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { portalFetch, setPortalToken } from "@/lib/portal-client";
+import { getPortalToken, portalFetch, setPortalToken } from "@/lib/portal-client";
 import { useRegisterPortalSW } from "@/components/portal/install-app-card";
 
 export const Route = createFileRoute("/portal/")({
@@ -39,6 +39,10 @@ function PortalLoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (getPortalToken()) navigate({ to: "/portal/painel", replace: true });
+  }, [navigate]);
 
   async function loginPassword(e: React.FormEvent) {
     e.preventDefault();
