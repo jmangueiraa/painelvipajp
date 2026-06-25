@@ -52,7 +52,7 @@ type Me = {
   server: { id: string; name: string } | null;
   payments: { id: string; amount_cents: number; paid_at: string; method: string | null }[];
   referrals: { id: string; name: string; paid: boolean }[];
-  settings: { referral_reward_days: number; referral_enabled: boolean; app_android_url: string | null; app_ios_url: string | null; updates_movies_text: string | null; updates_series_text: string | null };
+  settings: { referral_reward_days: number; referral_enabled: boolean; app_android_url: string | null; app_ios_url: string | null; updates_movies_text: string | null; updates_series_text: string | null; updates_movies_updated_at: string | null; updates_series_updated_at: string | null };
   plans: { id: string; name: string; price_cents: number; duration_days: number }[];
   updates: { id: string; kind: "movie" | "series"; title: string; description: string | null; image_url: string | null; created_at: string }[];
 };
