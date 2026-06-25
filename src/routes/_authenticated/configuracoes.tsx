@@ -163,6 +163,8 @@ function ConfiguracoesPage() {
     app_ios_url: string | null;
     updates_movies_text: string | null;
     updates_series_text: string | null;
+    updates_movies_updated_at: string | null;
+    updates_series_updated_at: string | null;
   }>;
   const saveSettings = useMutation({
     mutationFn: async (patch: SettingsPatch) => {
