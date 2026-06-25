@@ -283,21 +283,13 @@ function ConfiguracoesPage() {
       </SectionCard>
 
 
-      <SectionCard title="Atualizações" description="Links de atualizações que aparecem no portal do cliente" icon={Smartphone} color="var(--kpi-violet)">
-        <div className="grid md:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label>Atualizações de Filmes (Google Play)</Label>
-            <Input placeholder="https://play.google.com/..." value={appAndroidUrl} onChange={(e) => setAppAndroidUrl(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>Atualizações de Séries (App Store)</Label>
-            <Input placeholder="https://apps.apple.com/..." value={appIosUrl} onChange={(e) => setAppIosUrl(e.target.value)} />
-          </div>
+      <SectionCard title="Atualizações" description="Cadastre as atualizações de Filmes e Séries que aparecerão no portal do cliente" icon={Smartphone} color="var(--kpi-violet)">
+        <div className="grid md:grid-cols-2 gap-4">
+          <ContentUpdatesManager kind="movie" title="Filmes" />
+          <ContentUpdatesManager kind="series" title="Séries" />
         </div>
-        <Button className="btn-premium rounded-full" onClick={() => saveSettings.mutate({ app_android_url: appAndroidUrl || null, app_ios_url: appIosUrl || null })}>
-          Salvar atualizações
-        </Button>
       </SectionCard>
+
 
 
 
