@@ -374,6 +374,36 @@ export type Database = {
           },
         ]
       }
+      content_updates: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          kind: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          kind: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          kind?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount_cents: number

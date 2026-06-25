@@ -283,21 +283,13 @@ function ConfiguracoesPage() {
       </SectionCard>
 
 
-      <SectionCard title="Atualizações" description="Links de atualizações que aparecem no portal do cliente" icon={Smartphone} color="var(--kpi-violet)">
-        <div className="grid md:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label>Atualizações de Filmes (Google Play)</Label>
-            <Input placeholder="https://play.google.com/..." value={appAndroidUrl} onChange={(e) => setAppAndroidUrl(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>Atualizações de Séries (App Store)</Label>
-            <Input placeholder="https://apps.apple.com/..." value={appIosUrl} onChange={(e) => setAppIosUrl(e.target.value)} />
-          </div>
+      <SectionCard title="Atualizações" description="Cadastre as atualizações de Filmes e Séries que aparecerão no portal do cliente" icon={Smartphone} color="var(--kpi-violet)">
+        <div className="grid md:grid-cols-2 gap-4">
+          <ContentUpdatesManager kind="movie" title="Filmes" />
+          <ContentUpdatesManager kind="series" title="Séries" />
         </div>
-        <Button className="btn-premium rounded-full" onClick={() => saveSettings.mutate({ app_android_url: appAndroidUrl || null, app_ios_url: appIosUrl || null })}>
-          Salvar atualizações
-        </Button>
       </SectionCard>
+
 
 
 
@@ -444,4 +436,96 @@ function WhatsAppConnectSection() {
     </SectionCard>
   );
 }
+
+function ContentUpdatesManager({ kind, title }: { kind: "movie" | "series"; title: string }) {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [newImage, setNewImage] = useState("");
+
+  const { data: items } = useQuery({
+    queryKey: ["content_updates", user?.id, kind],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("content_updates")
+        .select("id,title,description,image_url,created_at")
+        .eq("kind", kind)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const add = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Sem sessão");
+      const t = newTitle.trim();
+      if (!t) throw new Error("Informe o título");
+      const { error } = await supabase.from("content_updates").insert({
+        user_id: user.id,
+        kind,
+        title: t,
+        description: newDesc.trim() || null,
+        image_url: newImage.trim() || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setNewTitle(""); setNewDesc(""); setNewImage("");
+      toast.success("Atualização adicionada");
+      qc.invalidateQueries({ queryKey: ["content_updates"] });
+    },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("content_updates").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Removido");
+      qc.invalidateQueries({ queryKey: ["content_updates"] });
+    },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  return (
+    <div className="rounded-xl border bg-card/50 p-3 space-y-3">
+      <div className="font-medium text-sm">{title}</div>
+      <div className="space-y-2">
+        <Input placeholder="Título (ex: Vingadores Ultimato)" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} />
+        <Input placeholder="URL da imagem (opcional)" value={newImage} onChange={(e) => setNewImage(e.target.value)} />
+        <Textarea placeholder="Descrição (opcional)" rows={2} value={newDesc} onChange={(e) => setNewDesc(e.target.value)} />
+        <Button size="sm" className="btn-premium rounded-full w-full" onClick={() => add.mutate()} disabled={add.isPending}>
+          Adicionar
+        </Button>
+      </div>
+      <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+        {(items ?? []).length === 0 && (
+          <div className="text-xs text-muted-foreground text-center py-3">Nenhuma atualização cadastrada</div>
+        )}
+        {(items ?? []).map((item) => (
+          <div key={item.id} className="flex items-start gap-2 rounded-lg border bg-background/50 p-2">
+            {item.image_url && (
+              <img src={item.image_url} alt="" className="size-12 rounded object-cover shrink-0" />
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium truncate">{item.title}</div>
+              {item.description && (
+                <div className="text-xs text-muted-foreground line-clamp-2">{item.description}</div>
+              )}
+            </div>
+            <Button size="sm" variant="ghost" className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 h-7 px-2" onClick={() => remove.mutate(item.id)}>
+              Remover
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 

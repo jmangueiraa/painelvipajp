@@ -54,6 +54,7 @@ type Me = {
   referrals: { id: string; name: string; paid: boolean }[];
   settings: { referral_reward_days: number; referral_enabled: boolean; app_android_url: string | null; app_ios_url: string | null };
   plans: { id: string; name: string; price_cents: number; duration_days: number }[];
+  updates: { id: string; kind: "movie" | "series"; title: string; description: string | null; image_url: string | null; created_at: string }[];
 };
 
 function statusColor(s: string) {
@@ -78,6 +79,8 @@ function PortalDashboard() {
   const [creating, setCreating] = useState(false);
   const [cardLink, setCardLink] = useState<string | null>(null);
   const pollRef = useRef<number | null>(null);
+  const [updatesKind, setUpdatesKind] = useState<"movie" | "series" | null>(null);
+
 
   useEffect(() => {
     if (!getPortalToken()) navigate({ to: "/portal" });
@@ -304,27 +307,49 @@ function PortalDashboard() {
         </Card>
 
         {/* Atualizações */}
-        {(data.settings.app_android_url || data.settings.app_ios_url) && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base"><Smartphone className="h-4 w-4" />Atualizações</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3">
-              {data.settings.app_android_url && (
-                <a href={data.settings.app_android_url} target="_blank" rel="noopener noreferrer" className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
-                  <span className="inline-flex items-center gap-2"><ExternalLink className="h-4 w-4" />Google Play</span>
-                  <span className="text-xs text-muted-foreground">Filmes</span>
-                </a>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base"><Smartphone className="h-4 w-4" />Atualizações</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-3">
+            <button type="button" onClick={() => setUpdatesKind("movie")} className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
+              <span className="inline-flex items-center gap-2">🎬 Filmes</span>
+              <span className="text-xs text-muted-foreground">{data.updates.filter((u) => u.kind === "movie").length} novidades</span>
+            </button>
+            <button type="button" onClick={() => setUpdatesKind("series")} className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
+              <span className="inline-flex items-center gap-2">📺 Séries</span>
+              <span className="text-xs text-muted-foreground">{data.updates.filter((u) => u.kind === "series").length} novidades</span>
+            </button>
+          </CardContent>
+        </Card>
+
+        <Dialog open={updatesKind !== null} onOpenChange={(o) => !o && setUpdatesKind(null)}>
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Atualizações de {updatesKind === "movie" ? "Filmes" : "Séries"}</DialogTitle>
+              <DialogDescription>Confira as novidades adicionadas recentemente.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 mt-2">
+              {data.updates.filter((u) => u.kind === updatesKind).length === 0 && (
+                <div className="text-sm text-muted-foreground text-center py-6">Nenhuma atualização disponível no momento.</div>
               )}
-              {data.settings.app_ios_url && (
-                <a href={data.settings.app_ios_url} target="_blank" rel="noopener noreferrer" className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
-                  <span className="inline-flex items-center gap-2"><ExternalLink className="h-4 w-4" />App Store</span>
-                  <span className="text-xs text-muted-foreground">Séries</span>
-                </a>
-              )}
-            </CardContent>
-          </Card>
-        )}
+              {data.updates.filter((u) => u.kind === updatesKind).map((u) => (
+                <div key={u.id} className="flex gap-3 rounded-xl border bg-card/50 p-3">
+                  {u.image_url && (
+                    <img src={u.image_url} alt={u.title} className="size-20 rounded-lg object-cover shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm">{u.title}</div>
+                    {u.description && <div className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{u.description}</div>}
+                    <div className="text-[10px] text-muted-foreground mt-1">{formatDateBR(u.created_at)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+
 
 
         {/* Histórico de pagamentos */}
