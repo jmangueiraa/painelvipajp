@@ -201,6 +201,9 @@ function RenovacaoPage() {
     <div className="space-y-6">
       <PageHeader title="Renovação" description="Gerencie sua assinatura e renove via Pix ou Cartão" />
 
+      {isAdmin && <AdminSubscriptionSection />}
+      {isAdmin && <AdminRenewalPlansSection />}
+
       <Card className="kpi-card" style={{ "--kpi-color": "var(--kpi-emerald)" } as React.CSSProperties}>
         <CardContent className="p-5 flex items-center gap-4">
           <div className="size-12 rounded-xl grid place-items-center bg-[color:color-mix(in_oklab,var(--kpi-emerald)_15%,transparent)] text-[color:var(--kpi-emerald)] shrink-0">
