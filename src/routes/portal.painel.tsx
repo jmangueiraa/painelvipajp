@@ -331,47 +331,59 @@ function PortalDashboard() {
         </Card>
 
         {/* Atualizações */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base"><Smartphone className="h-4 w-4" />Atualizações</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-3">
-            <button type="button" onClick={() => setUpdatesKind("movie")} className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
-              <span className="inline-flex items-center gap-2">🎬 Filmes</span>
-              <span className="text-xs text-muted-foreground">{data.updates.filter((u) => u.kind === "movie").length} novidades</span>
-            </button>
-            <button type="button" onClick={() => setUpdatesKind("series")} className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
-              <span className="inline-flex items-center gap-2">📺 Séries</span>
-              <span className="text-xs text-muted-foreground">{data.updates.filter((u) => u.kind === "series").length} novidades</span>
-            </button>
-          </CardContent>
-        </Card>
+        {(() => {
+          const movieGroups = parseUpdatesText(data.settings.updates_movies_text);
+          const seriesGroups = parseUpdatesText(data.settings.updates_series_text);
+          const movieCount = movieGroups.reduce((acc, g) => acc + g.items.length, 0);
+          const seriesCount = seriesGroups.reduce((acc, g) => acc + g.items.length, 0);
+          const activeGroups = updatesKind === "movie" ? movieGroups : updatesKind === "series" ? seriesGroups : [];
+          return (
+            <>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base"><Smartphone className="h-4 w-4" />Atualizações</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-3">
+                  <button type="button" onClick={() => setUpdatesKind("movie")} className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
+                    <span className="inline-flex items-center gap-2">🎬 Filmes</span>
+                    <span className="text-xs text-muted-foreground">{movieCount} novidades</span>
+                  </button>
+                  <button type="button" onClick={() => setUpdatesKind("series")} className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
+                    <span className="inline-flex items-center gap-2">📺 Séries</span>
+                    <span className="text-xs text-muted-foreground">{seriesCount} novidades</span>
+                  </button>
+                </CardContent>
+              </Card>
 
-        <Dialog open={updatesKind !== null} onOpenChange={(o) => !o && setUpdatesKind(null)}>
-          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Atualizações de {updatesKind === "movie" ? "Filmes" : "Séries"}</DialogTitle>
-              <DialogDescription>Confira as novidades adicionadas recentemente.</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3 mt-2">
-              {data.updates.filter((u) => u.kind === updatesKind).length === 0 && (
-                <div className="text-sm text-muted-foreground text-center py-6">Nenhuma atualização disponível no momento.</div>
-              )}
-              {data.updates.filter((u) => u.kind === updatesKind).map((u) => (
-                <div key={u.id} className="flex gap-3 rounded-xl border bg-card/50 p-3">
-                  {u.image_url && (
-                    <img src={u.image_url} alt={u.title} className="size-20 rounded-lg object-cover shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm">{u.title}</div>
-                    {u.description && <div className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{u.description}</div>}
-                    <div className="text-[10px] text-muted-foreground mt-1">{formatDateBR(u.created_at)}</div>
+              <Dialog open={updatesKind !== null} onOpenChange={(o) => !o && setUpdatesKind(null)}>
+                <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>{updatesKind === "movie" ? "🎬 Filmes adicionados" : "📺 Séries adicionadas"}</DialogTitle>
+                    <DialogDescription>Confira as novidades organizadas por categoria.</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-2">
+                    {activeGroups.length === 0 && (
+                      <div className="text-sm text-muted-foreground text-center py-6">Nenhuma atualização disponível no momento.</div>
+                    )}
+                    {activeGroups.map((g) => (
+                      <div key={g.category} className="rounded-xl border bg-card/50 p-3">
+                        <div className="text-xs font-semibold uppercase tracking-wide text-primary mb-2">
+                          {g.category}
+                          <span className="ml-2 text-[10px] text-muted-foreground normal-case font-normal">({g.items.length})</span>
+                        </div>
+                        <ol className="space-y-1 list-decimal list-inside text-sm">
+                          {g.items.map((it, i) => (
+                            <li key={i} className="text-foreground/90 marker:text-muted-foreground">{it}</li>
+                          ))}
+                        </ol>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
+                </DialogContent>
+              </Dialog>
+            </>
+          );
+        })()}
 
 
 
