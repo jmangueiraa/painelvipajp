@@ -393,14 +393,18 @@ function PortalDashboard() {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 mt-2">
-                    {updatesKind === "games" ? (
-                      data.settings.updates_games_text && data.settings.updates_games_text.trim() ? (
-                        <div className="rounded-xl border bg-card/50 p-3">
-                          <pre className="whitespace-pre-wrap break-words font-sans text-sm text-foreground/90 leading-relaxed">{data.settings.updates_games_text}</pre>
-                        </div>
-                      ) : (
-                        <div className="text-sm text-muted-foreground text-center py-6">Nenhuma atualização disponível no momento.</div>
-                      )
+                    {updatesKind === "games" || updatesKind === "series" ? (
+                      (() => {
+                        const raw = updatesKind === "games" ? data.settings.updates_games_text : data.settings.updates_series_text;
+                        return raw && raw.trim() ? (
+                          <div className="rounded-xl border bg-card/50 p-3">
+                            <pre className="whitespace-pre-wrap break-words font-sans text-sm text-foreground/90 leading-relaxed">{raw}</pre>
+                          </div>
+                        ) : (
+                          <div className="text-sm text-muted-foreground text-center py-6">Nenhuma atualização disponível no momento.</div>
+                        );
+                      })()
+
                     ) : (
                       <>
                         {activeGroups.length === 0 && (
