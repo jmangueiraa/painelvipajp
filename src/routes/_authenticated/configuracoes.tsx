@@ -114,8 +114,6 @@ function ConfiguracoesPage() {
   const [mpAccessToken, setMpAccessToken] = useState("");
   const [showMpToken, setShowMpToken] = useState(false);
   const [supportMessage, setSupportMessage] = useState("");
-  const [subExpires, setSubExpires] = useState("");
-  const [subMonthly, setSubMonthly] = useState("");
   const [appAndroidUrl, setAppAndroidUrl] = useState("");
   const [appIosUrl, setAppIosUrl] = useState("");
   const [currentPass, setCurrentPass] = useState("");
