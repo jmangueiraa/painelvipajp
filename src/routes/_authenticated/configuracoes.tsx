@@ -3,12 +3,10 @@ import { translateError } from "@/lib/translate-error";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { User, MessageSquare, KeyRound, LifeBuoy, Camera, QrCode, RefreshCw, LogOut, Smartphone, Wallet, CalendarClock, Plus, Trash2, Star } from "lucide-react";
+import { User, MessageSquare, KeyRound, Camera, QrCode, RefreshCw, LogOut, Smartphone, Wallet } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { useIsAdmin } from "@/hooks/use-is-admin";
-import { parseBrlToCents } from "@/lib/format";
 
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -53,7 +51,6 @@ function SectionCard({
 
 function ConfiguracoesPage() {
   const { user } = useAuth();
-  const { isAdmin } = useIsAdmin();
   const qc = useQueryClient();
 
   const { data: profile } = useQuery({
@@ -117,8 +114,6 @@ function ConfiguracoesPage() {
   const [mpAccessToken, setMpAccessToken] = useState("");
   const [showMpToken, setShowMpToken] = useState(false);
   const [supportMessage, setSupportMessage] = useState("");
-  const [subExpires, setSubExpires] = useState("");
-  const [subMonthly, setSubMonthly] = useState("");
   const [appAndroidUrl, setAppAndroidUrl] = useState("");
   const [appIosUrl, setAppIosUrl] = useState("");
   const [currentPass, setCurrentPass] = useState("");
@@ -135,8 +130,6 @@ function ConfiguracoesPage() {
     if (settings) {
       setMpAccessToken(settings.mp_access_token ?? "");
       setSupportMessage(settings.support_message ?? "");
-      setSubExpires(settings.subscription_expires_at ?? "");
-      setSubMonthly(((settings.subscription_monthly_cents ?? 0) / 100).toFixed(2).replace(".", ","));
       setAppAndroidUrl(settings.app_android_url ?? "");
       setAppIosUrl(settings.app_ios_url ?? "");
     }
@@ -306,19 +299,6 @@ function ConfiguracoesPage() {
         </Button>
       </SectionCard>
 
-      {isAdmin && (
-        <SectionCard title="Assinatura do painel" description="Usado em Dashboard e Renovação" icon={KeyRound} color="var(--kpi-violet)">
-          <div className="grid md:grid-cols-2 gap-3">
-            <div className="space-y-1"><Label>Expira em</Label><Input type="date" value={subExpires} onChange={(e) => setSubExpires(e.target.value)} /></div>
-            <div className="space-y-1"><Label>Valor mensal (R$)</Label><Input inputMode="decimal" value={subMonthly} onChange={(e) => setSubMonthly(e.target.value)} /></div>
-          </div>
-          <Button className="btn-premium rounded-full" onClick={() => saveSettings.mutate({ subscription_expires_at: subExpires || null, subscription_monthly_cents: parseBrlToCents(subMonthly) })}>
-            Salvar assinatura
-          </Button>
-        </SectionCard>
-      )}
-
-      {isAdmin && <AdminRenewalPlansSection />}
 
       <SectionCard title="Alterar senha" icon={KeyRound} color="var(--kpi-violet)">
         <div className="space-y-1">
@@ -464,148 +444,3 @@ function WhatsAppConnectSection() {
   );
 }
 
-type AppPlanRow = {
-  id: string;
-  name: string;
-  price_cents: number;
-  duration_days: number;
-  active: boolean;
-  featured: boolean;
-};
-
-function AdminRenewalPlansSection() {
-  const qc = useQueryClient();
-  const { data: plans = [] } = useQuery({
-    queryKey: ["app_plans", "admin"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("app_plans")
-        .select("id,name,price_cents,duration_days,active,featured")
-        .order("duration_days", { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as AppPlanRow[];
-    },
-  });
-
-  const [drafts, setDrafts] = useState<Record<string, { name: string; price: string; days: string; active: boolean; featured: boolean }>>({});
-  useEffect(() => {
-    const next: typeof drafts = {};
-    for (const p of plans) {
-      next[p.id] = {
-        name: p.name,
-        price: (p.price_cents / 100).toFixed(2).replace(".", ","),
-        days: String(p.duration_days),
-        active: p.active,
-        featured: p.featured,
-      };
-    }
-    setDrafts(next);
-  }, [plans]);
-
-  const save = useMutation({
-    mutationFn: async (id: string) => {
-      const d = drafts[id];
-      if (!d) return;
-      const { error } = await supabase.from("app_plans").update({
-        name: d.name.trim() || "Plano",
-        price_cents: parseBrlToCents(d.price),
-        duration_days: Math.max(1, parseInt(d.days || "0", 10) || 0),
-        active: d.active,
-        featured: d.featured,
-      }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success("Plano salvo"); qc.invalidateQueries({ queryKey: ["app_plans"] }); },
-    onError: (e: Error) => toast.error(translateError(e)),
-  });
-
-  const create = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("app_plans").insert({
-        name: "Novo plano", price_cents: 0, duration_days: 30, active: true, featured: false,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success("Plano criado"); qc.invalidateQueries({ queryKey: ["app_plans"] }); },
-    onError: (e: Error) => toast.error(translateError(e)),
-  });
-
-  const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("app_plans").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success("Plano removido"); qc.invalidateQueries({ queryKey: ["app_plans"] }); },
-    onError: (e: Error) => toast.error(translateError(e)),
-  });
-
-  return (
-    <SectionCard
-      title="Planos de renovação"
-      description="Configure os valores e a quantidade de dias dos planos que aparecem na tela de Renovação"
-      icon={CalendarClock}
-      color="var(--kpi-emerald)"
-    >
-      <div className="space-y-3">
-        {plans.length === 0 && (
-          <p className="text-sm text-muted-foreground">Nenhum plano cadastrado.</p>
-        )}
-        {plans.map((p) => {
-          const d = drafts[p.id];
-          if (!d) return null;
-          return (
-            <div key={p.id} className="rounded-xl border border-border bg-card/40 p-3 space-y-3">
-              <div className="grid md:grid-cols-4 gap-3">
-                <div className="space-y-1 md:col-span-2">
-                  <Label>Nome do plano</Label>
-                  <Input value={d.name} onChange={(e) => setDrafts((s) => ({ ...s, [p.id]: { ...s[p.id], name: e.target.value } }))} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Valor (R$)</Label>
-                  <Input inputMode="decimal" value={d.price} onChange={(e) => setDrafts((s) => ({ ...s, [p.id]: { ...s[p.id], price: e.target.value } }))} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Dias</Label>
-                  <Input inputMode="numeric" value={d.days} onChange={(e) => setDrafts((s) => ({ ...s, [p.id]: { ...s[p.id], days: e.target.value.replace(/\D/g, "") } }))} />
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 justify-between">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    type="button"
-                    variant={d.active ? "default" : "outline"}
-                    size="sm"
-                    className="rounded-full"
-                    onClick={() => setDrafts((s) => ({ ...s, [p.id]: { ...s[p.id], active: !s[p.id].active } }))}
-                  >
-                    {d.active ? "Ativo" : "Inativo"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={d.featured ? "default" : "outline"}
-                    size="sm"
-                    className="rounded-full"
-                    onClick={() => setDrafts((s) => ({ ...s, [p.id]: { ...s[p.id], featured: !s[p.id].featured } }))}
-                  >
-                    <Star className="size-3.5 mr-1" /> {d.featured ? "Destaque" : "Sem destaque"}
-                  </Button>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="rounded-full text-rose-400 border-rose-500/40 hover:bg-rose-500/10" onClick={() => remove.mutate(p.id)} disabled={remove.isPending}>
-                    <Trash2 className="size-4" />
-                  </Button>
-                  <Button size="sm" className="btn-premium rounded-full" onClick={() => save.mutate(p.id)} disabled={save.isPending}>
-                    Salvar
-                  </Button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-        <Button type="button" variant="outline" className="rounded-full" onClick={() => create.mutate()} disabled={create.isPending}>
-          <Plus className="size-4 mr-1" /> Adicionar plano
-        </Button>
-      </div>
-    </SectionCard>
-  );
-}
