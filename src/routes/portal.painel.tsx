@@ -256,6 +256,8 @@ function PortalDashboard() {
       </header>
 
       <main className="mx-auto max-w-3xl space-y-4 px-4 py-6">
+        <InstallAppCard />
+
         {/* Status do plano */}
         <Card>
           <CardHeader className="pb-3">
