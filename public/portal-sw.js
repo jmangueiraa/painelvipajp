@@ -2,7 +2,7 @@
 const VERSION = "v1";
 const STATIC_CACHE = `portal-static-${VERSION}`;
 const RUNTIME_CACHE = `portal-runtime-${VERSION}`;
-const APP_SHELL = ["/portal", "/portal-manifest.webmanifest", "/portal-icon-192.png", "/portal-icon-512.png"];
+const APP_SHELL = ["/portal/", "/portal-manifest.webmanifest", "/portal-icon-192.png", "/portal-icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -42,7 +42,7 @@ self.addEventListener("fetch", (event) => {
           return fresh;
         } catch {
           const cached = await caches.match(req);
-          return cached || caches.match("/portal");
+          return cached || caches.match("/portal/");
         }
       })(),
     );
