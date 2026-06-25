@@ -303,26 +303,29 @@ function PortalDashboard() {
           </CardContent>
         </Card>
 
-        {/* Baixar aplicativo */}
+        {/* Atualizações */}
         {(data.settings.app_android_url || data.settings.app_ios_url) && (
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base"><Smartphone className="h-4 w-4" />Aplicativo</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base"><Smartphone className="h-4 w-4" />Atualizações</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-3">
               {data.settings.app_android_url && (
-                <a href={data.settings.app_android_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
-                  <ExternalLink className="h-4 w-4" />Google Play
+                <a href={data.settings.app_android_url} target="_blank" rel="noopener noreferrer" className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
+                  <span className="inline-flex items-center gap-2"><ExternalLink className="h-4 w-4" />Google Play</span>
+                  <span className="text-xs text-muted-foreground">Filmes</span>
                 </a>
               )}
               {data.settings.app_ios_url && (
-                <a href={data.settings.app_ios_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
-                  <ExternalLink className="h-4 w-4" />App Store
+                <a href={data.settings.app_ios_url} target="_blank" rel="noopener noreferrer" className="inline-flex flex-col items-center justify-center gap-1 rounded-xl border bg-card px-4 py-3 text-sm font-medium transition hover:border-primary/50 hover:bg-primary/5">
+                  <span className="inline-flex items-center gap-2"><ExternalLink className="h-4 w-4" />App Store</span>
+                  <span className="text-xs text-muted-foreground">Séries</span>
                 </a>
               )}
             </CardContent>
           </Card>
         )}
+
 
         {/* Histórico de pagamentos */}
         <section>
