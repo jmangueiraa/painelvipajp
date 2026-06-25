@@ -407,3 +407,243 @@ function RenovacaoPage() {
     </div>
   );
 }
+
+function AdminSubscriptionSection() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+
+  const { data: settings } = useQuery({
+    queryKey: ["settings", user?.id, "admin-renovacao"],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("settings")
+        .select("subscription_expires_at,subscription_monthly_cents")
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const [subExpires, setSubExpires] = useState("");
+  const [subMonthly, setSubMonthly] = useState("");
+
+  useEffect(() => {
+    if (settings) {
+      setSubExpires(settings.subscription_expires_at ?? "");
+      setSubMonthly(((settings.subscription_monthly_cents ?? 0) / 100).toFixed(2).replace(".", ","));
+    }
+  }, [settings]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Sem sessão");
+      const { error } = await supabase
+        .from("settings")
+        .update({
+          subscription_expires_at: subExpires || null,
+          subscription_monthly_cents: parseBrlToCents(subMonthly),
+        })
+        .eq("user_id", user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Assinatura salva");
+      qc.invalidateQueries({ queryKey: ["settings"] });
+    },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start gap-3 space-y-0">
+        <div
+          className="size-10 rounded-xl grid place-items-center shrink-0"
+          style={{
+            background: "color-mix(in oklab, var(--kpi-violet) 15%, transparent)",
+            color: "var(--kpi-violet)",
+            border: "1px solid color-mix(in oklab, var(--kpi-violet) 45%, transparent)",
+          }}
+        >
+          <KeyRound className="size-5" />
+        </div>
+        <div className="min-w-0">
+          <CardTitle>Assinatura do painel</CardTitle>
+          <CardDescription>Usado em Dashboard e Renovação (apenas administrador)</CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="grid md:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label>Expira em</Label>
+            <Input type="date" value={subExpires} onChange={(e) => setSubExpires(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label>Valor mensal (R$)</Label>
+            <Input inputMode="decimal" value={subMonthly} onChange={(e) => setSubMonthly(e.target.value)} />
+          </div>
+        </div>
+        <Button className="btn-premium rounded-full" onClick={() => save.mutate()} disabled={save.isPending}>
+          Salvar assinatura
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+type AppPlanRow = {
+  id: string;
+  name: string;
+  price_cents: number;
+  duration_days: number;
+  active: boolean;
+  featured: boolean;
+};
+
+function AdminRenewalPlansSection() {
+  const qc = useQueryClient();
+  const { data: plans = [] } = useQuery({
+    queryKey: ["app_plans", "admin"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("app_plans")
+        .select("id,name,price_cents,duration_days,active,featured")
+        .order("duration_days", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as AppPlanRow[];
+    },
+  });
+
+  const [drafts, setDrafts] = useState<Record<string, { name: string; price: string; days: string; active: boolean; featured: boolean }>>({});
+  useEffect(() => {
+    const next: typeof drafts = {};
+    for (const p of plans) {
+      next[p.id] = {
+        name: p.name,
+        price: (p.price_cents / 100).toFixed(2).replace(".", ","),
+        days: String(p.duration_days),
+        active: p.active,
+        featured: p.featured,
+      };
+    }
+    setDrafts(next);
+  }, [plans]);
+
+  const save = useMutation({
+    mutationFn: async (id: string) => {
+      const d = drafts[id];
+      if (!d) return;
+      const { error } = await supabase.from("app_plans").update({
+        name: d.name.trim() || "Plano",
+        price_cents: parseBrlToCents(d.price),
+        duration_days: Math.max(1, parseInt(d.days || "0", 10) || 0),
+        active: d.active,
+        featured: d.featured,
+      }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Plano salvo"); qc.invalidateQueries({ queryKey: ["app_plans"] }); },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  const create = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("app_plans").insert({
+        name: "Novo plano", price_cents: 0, duration_days: 30, active: true, featured: false,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Plano criado"); qc.invalidateQueries({ queryKey: ["app_plans"] }); },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("app_plans").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Plano removido"); qc.invalidateQueries({ queryKey: ["app_plans"] }); },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start gap-3 space-y-0">
+        <div
+          className="size-10 rounded-xl grid place-items-center shrink-0"
+          style={{
+            background: "color-mix(in oklab, var(--kpi-emerald) 15%, transparent)",
+            color: "var(--kpi-emerald)",
+            border: "1px solid color-mix(in oklab, var(--kpi-emerald) 45%, transparent)",
+          }}
+        >
+          <CalendarClock className="size-5" />
+        </div>
+        <div className="min-w-0">
+          <CardTitle>Planos de renovação</CardTitle>
+          <CardDescription>Configure os valores e a quantidade de dias dos planos que aparecem aqui (apenas administrador)</CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {plans.length === 0 && (
+          <p className="text-sm text-muted-foreground">Nenhum plano cadastrado.</p>
+        )}
+        {plans.map((p) => {
+          const d = drafts[p.id];
+          if (!d) return null;
+          return (
+            <div key={p.id} className="rounded-xl border border-border bg-card/40 p-3 space-y-3">
+              <div className="grid md:grid-cols-4 gap-3">
+                <div className="space-y-1 md:col-span-2">
+                  <Label>Nome do plano</Label>
+                  <Input value={d.name} onChange={(e) => setDrafts((s) => ({ ...s, [p.id]: { ...s[p.id], name: e.target.value } }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Valor (R$)</Label>
+                  <Input inputMode="decimal" value={d.price} onChange={(e) => setDrafts((s) => ({ ...s, [p.id]: { ...s[p.id], price: e.target.value } }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Dias</Label>
+                  <Input inputMode="numeric" value={d.days} onChange={(e) => setDrafts((s) => ({ ...s, [p.id]: { ...s[p.id], days: e.target.value.replace(/\D/g, "") } }))} />
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant={d.active ? "default" : "outline"}
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() => setDrafts((s) => ({ ...s, [p.id]: { ...s[p.id], active: !s[p.id].active } }))}
+                  >
+                    {d.active ? "Ativo" : "Inativo"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={d.featured ? "default" : "outline"}
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() => setDrafts((s) => ({ ...s, [p.id]: { ...s[p.id], featured: !s[p.id].featured } }))}
+                  >
+                    <Star className="size-3.5 mr-1" /> {d.featured ? "Destaque" : "Sem destaque"}
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="rounded-full text-rose-400 border-rose-500/40 hover:bg-rose-500/10" onClick={() => remove.mutate(p.id)} disabled={remove.isPending}>
+                    <Trash2 className="size-4" />
+                  </Button>
+                  <Button size="sm" className="btn-premium rounded-full" onClick={() => save.mutate(p.id)} disabled={save.isPending}>
+                    Salvar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <Button type="button" variant="outline" className="rounded-full" onClick={() => create.mutate()} disabled={create.isPending}>
+          <Plus className="size-4 mr-1" /> Adicionar plano
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
