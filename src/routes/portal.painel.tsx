@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { brl, formatDateBR } from "@/lib/format";
-import { clearPortalToken, getPortalToken, portalFetch } from "@/lib/portal-client";
+import { clearPortalToken, getPortalToken, portalFetch, PortalFetchError } from "@/lib/portal-client";
 import { InstallAppCard } from "@/components/portal/install-app-card";
 
 export const Route = createFileRoute("/portal/painel")({
@@ -89,7 +89,7 @@ function PortalDashboard() {
   });
 
   useEffect(() => {
-    if (error) {
+    if (error && error instanceof PortalFetchError && error.status === 401) {
       clearPortalToken();
       navigate({ to: "/portal" });
     }

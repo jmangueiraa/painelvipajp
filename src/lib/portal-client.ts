@@ -15,6 +15,14 @@ export function clearPortalToken(): void {
   window.localStorage.removeItem(TOKEN_KEY);
 }
 
+export class PortalFetchError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
 export async function portalFetch<T = unknown>(path: string, init?: RequestInit): Promise<T> {
   const token = getPortalToken();
   const headers: Record<string, string> = {
@@ -24,6 +32,6 @@ export async function portalFetch<T = unknown>(path: string, init?: RequestInit)
   if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(path, { ...init, headers });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((body as { error?: string }).error || `HTTP ${res.status}`);
+  if (!res.ok) throw new PortalFetchError((body as { error?: string }).error || `HTTP ${res.status}`, res.status);
   return body as T;
 }
