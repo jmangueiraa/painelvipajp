@@ -51,7 +51,6 @@ function SectionCard({
 
 function ConfiguracoesPage() {
   const { user } = useAuth();
-  const { isAdmin } = useIsAdmin();
   const qc = useQueryClient();
 
   const { data: profile } = useQuery({
