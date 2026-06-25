@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { portalFetch, setPortalToken } from "@/lib/portal-client";
+import { useRegisterPortalSW } from "@/components/portal/install-app-card";
 
 export const Route = createFileRoute("/portal/")({
   ssr: false,
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/portal/")({
 });
 
 function PortalLoginPage() {
+  useRegisterPortalSW();
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Smartphone, Share, Plus, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,7 +36,7 @@ function isPreviewOrDev() {
 }
 
 // Registra/desregistra o service worker do portal
-function useRegisterPortalSW() {
+export function useRegisterPortalSW() {
   useEffect(() => {
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
     if (isPreviewOrDev()) {
@@ -48,7 +48,7 @@ function useRegisterPortalSW() {
       return;
     }
     navigator.serviceWorker
-      .register("/portal-sw.js", { scope: "/portal" })
+      .register("/portal-sw.js", { scope: "/portal/" })
       .catch(() => undefined);
   }, []);
 }
@@ -56,8 +56,9 @@ function useRegisterPortalSW() {
 export function InstallAppCard() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
-  const [showIOS, setShowIOS] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [waitingPrompt, setWaitingPrompt] = useState(false);
+  const pendingInstallClick = useRef(false);
 
   useRegisterPortalSW();
 
@@ -68,8 +69,17 @@ export function InstallAppCard() {
     }
     const onPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferred(e as BeforeInstallPromptEvent);
+      const promptEvent = e as BeforeInstallPromptEvent;
       setWaitingPrompt(false);
+      setShowHelp(false);
+
+      if (pendingInstallClick.current) {
+        pendingInstallClick.current = false;
+        void openNativePrompt(promptEvent);
+        return;
+      }
+
+      setDeferred(promptEvent);
     };
     const onInstalled = () => {
       setInstalled(true);
@@ -87,20 +97,37 @@ export function InstallAppCard() {
 
   async function handleInstall() {
     if (deferred) {
-      await deferred.prompt();
-      const choice = await deferred.userChoice;
-      if (choice.outcome === "accepted") setInstalled(true);
-      setDeferred(null);
+      await openNativePrompt(deferred);
       return;
     }
 
     if (isIOS()) {
-      setShowIOS((v) => !v);
+      setShowHelp((v) => !v);
       return;
     }
 
+    pendingInstallClick.current = true;
+    setShowHelp(false);
     setWaitingPrompt(true);
-    setTimeout(() => setWaitingPrompt(false), 3500);
+    setTimeout(() => {
+      if (!pendingInstallClick.current) return;
+      pendingInstallClick.current = false;
+      setWaitingPrompt(false);
+      setShowHelp(true);
+    }, 6000);
+  }
+
+  async function openNativePrompt(promptEvent: BeforeInstallPromptEvent) {
+    try {
+      setWaitingPrompt(false);
+      setShowHelp(false);
+      await promptEvent.prompt();
+      const choice = await promptEvent.userChoice;
+      if (choice.outcome === "accepted") setInstalled(true);
+    } finally {
+      setDeferred(null);
+      pendingInstallClick.current = false;
+    }
   }
 
   const canPrompt = !!deferred;
@@ -126,7 +153,7 @@ export function InstallAppCard() {
             Preparando instalação automática. Se não abrir, acesse o portal publicado direto no Chrome/Edge do celular.
           </p>
         )}
-        {showIOS && (
+        {showHelp && (
           <div className="rounded-xl border bg-card p-3 text-sm">
             {ios ? (
               <>
@@ -144,15 +171,15 @@ export function InstallAppCard() {
               <>
                 <div className="mb-2 flex items-center gap-2 font-medium">
                   <CheckCircle2 className="h-4 w-4 text-primary" />
-                  Como instalar
+                  Instalação não liberada pelo navegador
                 </div>
                 <ol className="list-decimal space-y-1 pl-5">
-                  <li>Abra o menu do navegador (⋮ ou ⋯).</li>
-                  <li>Toque em <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
-                  <li>Confirme para criar o ícone do app.</li>
+                  <li>Abra o portal publicado direto no <strong>Chrome</strong> ou <strong>Edge</strong>, fora do WhatsApp/Facebook.</li>
+                  <li>Toque novamente em <strong>Instalar Aplicativo</strong>.</li>
+                  <li>Se aparecer no menu do navegador, toque em <strong>Instalar app</strong>.</li>
                 </ol>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Dica: alguns navegadores só liberam a instalação após alguns segundos de uso.
+                  O botão só consegue abrir a instalação quando o navegador envia a permissão nativa de instalação.
                 </p>
               </>
             )}
