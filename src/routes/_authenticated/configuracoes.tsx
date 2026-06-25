@@ -161,6 +161,8 @@ function ConfiguracoesPage() {
     subscription_monthly_cents: number;
     app_android_url: string | null;
     app_ios_url: string | null;
+    updates_movies_text: string | null;
+    updates_series_text: string | null;
   }>;
   const saveSettings = useMutation({
     mutationFn: async (patch: SettingsPatch) => {
