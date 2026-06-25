@@ -89,7 +89,7 @@ function PortalDashboard() {
   });
 
   useEffect(() => {
-    if (error) {
+    if (error && error instanceof PortalFetchError && error.status === 401) {
       clearPortalToken();
       navigate({ to: "/portal" });
     }
