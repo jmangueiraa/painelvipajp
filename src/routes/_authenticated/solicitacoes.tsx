@@ -23,7 +23,8 @@ type RenewalRequest = {
   days: number;
   status: string;
   created_at: string;
-  clients: { id: string; name: string; phone: string; due_date: string; price_cents: number; plan_id: string | null; user_id: string } | null;
+  label: string | null;
+  clients: { id: string; name: string; phone: string; portal_username: string | null; due_date: string; price_cents: number; plan_id: string | null; user_id: string } | null;
 };
 
 function periodLabel(d: number) {
@@ -32,6 +33,11 @@ function periodLabel(d: number) {
   if (d === 180) return "Semestral";
   if (d === 365) return "Anual";
   return `${d} dias`;
+}
+
+function itemLabel(r: RenewalRequest) {
+  if (r.days === 0) return r.label ?? "Produto avulso";
+  return r.label ? `${periodLabel(r.days)} · ${r.label}` : periodLabel(r.days);
 }
 
 function SolicitacoesPage() {
