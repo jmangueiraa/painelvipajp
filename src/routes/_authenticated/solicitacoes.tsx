@@ -171,7 +171,11 @@ function SolicitacoesPage() {
             <ul className="divide-y">
               {done.map((r) => (
                 <li key={r.id} className="flex items-center justify-between py-2 text-sm">
-                  <span>{r.clients?.name ?? "Cliente"} · {periodLabel(r.days)}</span>
+                  <span>
+                    {r.clients?.name ?? "Cliente"}
+                    {r.clients?.portal_username && <span className="ml-1 text-xs text-muted-foreground">(@{r.clients.portal_username})</span>}
+                    {" · "}{itemLabel(r)}
+                  </span>
                   <Badge variant="outline">{r.status === "paid" ? "Pago" : r.status === "approved" ? "Aprovado" : r.status === "pending" ? "Pendente" : r.status === "rejected" ? "Rejeitado" : r.status}</Badge>
                 </li>
               ))}
