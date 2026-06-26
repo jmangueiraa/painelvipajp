@@ -48,7 +48,7 @@ function SolicitacoesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("renewal_requests")
-        .select("id,client_id,days,status,created_at,clients:client_id(id,name,phone,due_date,price_cents,plan_id,user_id)")
+        .select("id,client_id,days,status,created_at,label,clients:client_id(id,name,phone,portal_username,due_date,price_cents,plan_id,user_id)")
         .neq("status", "awaiting_payment")
         .order("created_at", { ascending: false });
       if (error) throw error;
