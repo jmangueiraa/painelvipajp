@@ -835,7 +835,7 @@ function PortalDashboard() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-emerald-600 dark:text-emerald-400">Pagamento confirmado!</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Em instantes seu provedor entrará em contato com os dados de acesso.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Aguarde — sua solicitação foi enviada. O acesso será entregue em instantes pelo <strong className="text-emerald-600 dark:text-emerald-400">WhatsApp</strong>.</p>
               </div>
               <Button className="w-full" onClick={() => { setStoreOpen(false); setStoreItem(null); setStoreMethod(null); setStoreQrBase64(null); setStorePixPayload(""); setStoreCardLink(null); setRenewalId(null); setPaymentStatus("pending"); }}>
                 Voltar ao painel
