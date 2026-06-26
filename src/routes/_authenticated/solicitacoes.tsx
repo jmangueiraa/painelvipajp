@@ -23,7 +23,8 @@ type RenewalRequest = {
   days: number;
   status: string;
   created_at: string;
-  clients: { id: string; name: string; phone: string; due_date: string; price_cents: number; plan_id: string | null; user_id: string } | null;
+  label: string | null;
+  clients: { id: string; name: string; phone: string; portal_username: string | null; due_date: string; price_cents: number; plan_id: string | null; user_id: string } | null;
 };
 
 function periodLabel(d: number) {
@@ -34,6 +35,11 @@ function periodLabel(d: number) {
   return `${d} dias`;
 }
 
+function itemLabel(r: RenewalRequest) {
+  if (r.days === 0) return r.label ?? "Produto avulso";
+  return r.label ? `${periodLabel(r.days)} · ${r.label}` : periodLabel(r.days);
+}
+
 function SolicitacoesPage() {
   const qc = useQueryClient();
 
@@ -42,7 +48,7 @@ function SolicitacoesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("renewal_requests")
-        .select("id,client_id,days,status,created_at,clients:client_id(id,name,phone,due_date,price_cents,plan_id,user_id)")
+        .select("id,client_id,days,status,created_at,label,clients:client_id(id,name,phone,portal_username,due_date,price_cents,plan_id,user_id)")
         .neq("status", "awaiting_payment")
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -53,30 +59,33 @@ function SolicitacoesPage() {
   const approve = useMutation({
     mutationFn: async (req: RenewalRequest) => {
       if (!req.clients) throw new Error("Cliente não encontrado");
-      const base = req.clients.due_date && req.clients.due_date >= todayISO() ? req.clients.due_date : todayISO();
-      const newDue = addDaysISO(base, req.days);
+      const isExtra = req.days === 0;
       // Resolve preço a partir do plano correspondente (mesma duração) ou do cadastro do cliente
       let amount = req.clients.price_cents ?? 0;
-      const { data: plan } = await supabase
-        .from("plans")
-        .select("price_cents")
-        .eq("user_id", req.clients.user_id)
-        .eq("duration_days", req.days)
-        .eq("active", true)
-        .maybeSingle();
-      if (plan?.price_cents) amount = plan.price_cents;
+      if (!isExtra) {
+        const { data: plan } = await supabase
+          .from("plans")
+          .select("price_cents")
+          .eq("user_id", req.clients.user_id)
+          .eq("duration_days", req.days)
+          .eq("active", true)
+          .maybeSingle();
+        if (plan?.price_cents) amount = plan.price_cents;
 
-      const { error: e1 } = await supabase
-        .from("clients")
-        .update({ due_date: newDue, status: computeStatus(newDue, "ativo") })
-        .eq("id", req.client_id);
-      if (e1) throw e1;
+        const base = req.clients.due_date && req.clients.due_date >= todayISO() ? req.clients.due_date : todayISO();
+        const newDue = addDaysISO(base, req.days);
+        const { error: e1 } = await supabase
+          .from("clients")
+          .update({ due_date: newDue, status: computeStatus(newDue, "ativo") })
+          .eq("id", req.client_id);
+        if (e1) throw e1;
+      }
       const { error: ePay } = await supabase.from("payments").insert({
         user_id: req.clients.user_id,
         client_id: req.client_id,
         amount_cents: amount,
         method: "pix",
-        notes: `Renovação ${periodLabel(req.days)} aprovada via portal`,
+        notes: isExtra ? (req.label ?? "Produto avulso") : `Renovação ${periodLabel(req.days)} aprovada via portal`,
       });
       if (ePay) throw ePay;
       const { error: e2 } = await supabase.from("renewal_requests").update({ status: "approved" }).eq("id", req.id);
@@ -125,13 +134,21 @@ function SolicitacoesPage() {
               {pending.map((r) => (
                 <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium">{r.clients?.name ?? "Cliente"}</div>
+                    <div className="font-medium">
+                      {r.clients?.name ?? "Cliente"}
+                      {r.clients?.portal_username && (
+                        <span className="ml-2 text-xs font-normal text-muted-foreground">@{r.clients.portal_username}</span>
+                      )}
+                    </div>
+                    <div className="text-xs font-medium text-primary">
+                      {r.days === 0 ? "🛒 " : ""}{itemLabel(r)}
+                    </div>
                     <div className="text-xs text-muted-foreground">
                       {r.clients?.phone} · vence {r.clients ? formatDateBR(r.clients.due_date) : "—"} · {brl(r.clients?.price_cents ?? 0)}
                     </div>
                     <div className="text-xs text-muted-foreground">Solicitado em {formatDateBR(r.created_at)}</div>
                   </div>
-                  <Badge variant="secondary">{periodLabel(r.days)}</Badge>
+                  <Badge variant={r.days === 0 ? "default" : "secondary"}>{r.days === 0 ? "Loja" : periodLabel(r.days)}</Badge>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => approve.mutate(r)} disabled={approve.isPending}>
                       <Check className="mr-1 h-3 w-3" />Aprovar
@@ -154,7 +171,11 @@ function SolicitacoesPage() {
             <ul className="divide-y">
               {done.map((r) => (
                 <li key={r.id} className="flex items-center justify-between py-2 text-sm">
-                  <span>{r.clients?.name ?? "Cliente"} · {periodLabel(r.days)}</span>
+                  <span>
+                    {r.clients?.name ?? "Cliente"}
+                    {r.clients?.portal_username && <span className="ml-1 text-xs text-muted-foreground">(@{r.clients.portal_username})</span>}
+                    {" · "}{itemLabel(r)}
+                  </span>
                   <Badge variant="outline">{r.status === "paid" ? "Pago" : r.status === "approved" ? "Aprovado" : r.status === "pending" ? "Pendente" : r.status === "rejected" ? "Rejeitado" : r.status}</Badge>
                 </li>
               ))}
