@@ -60,6 +60,16 @@ function SolicitacoesPage() {
     mutationFn: async (req: RenewalRequest) => {
       if (!req.clients) throw new Error("Cliente não encontrado");
       const isExtra = req.days === 0;
+      const alreadyPaid = req.status === "paid";
+
+      // Se já foi pago via Mercado Pago, apenas marca como entregue/aprovado
+      // (pagamento e extensão já foram registrados pelo webhook).
+      if (alreadyPaid) {
+        const { error } = await supabase.from("renewal_requests").update({ status: "approved" }).eq("id", req.id);
+        if (error) throw error;
+        return;
+      }
+
       // Resolve preço a partir do plano correspondente (mesma duração) ou do cadastro do cliente
       let amount = req.clients.price_cents ?? 0;
       if (!isExtra) {
@@ -92,7 +102,7 @@ function SolicitacoesPage() {
       if (e2) throw e2;
     },
     onSuccess: () => {
-      toast.success("Renovação aprovada e pagamento registrado");
+      toast.success("Solicitação aprovada");
       qc.invalidateQueries({ queryKey: ["renewal_requests"] });
       qc.invalidateQueries({ queryKey: ["clients"] });
       qc.invalidateQueries({ queryKey: ["payments"] });
@@ -112,8 +122,11 @@ function SolicitacoesPage() {
     onError: (e: Error) => toast.error(translateError(e)),
   });
 
-  const pending = data.filter((r) => r.status === "pending");
-  const done = data.filter((r) => r.status !== "pending");
+  const pending = data.filter((r) => r.status === "pending" || (r.status === "paid" && r.days === 0));
+  const done = data.filter((r) => r.status !== "pending" && !(r.status === "paid" && r.days === 0));
+
+  const statusLabel = (s: string) =>
+    s === "paid" ? "Pago" : s === "approved" ? "Aprovado" : s === "pending" ? "Pendente" : s === "rejected" ? "Rejeitado" : s;
 
   return (
     <div className="space-y-6">
@@ -148,10 +161,15 @@ function SolicitacoesPage() {
                     </div>
                     <div className="text-xs text-muted-foreground">Solicitado em {formatDateBR(r.created_at)}</div>
                   </div>
-                  <Badge variant={r.days === 0 ? "default" : "secondary"}>{r.days === 0 ? "Loja" : periodLabel(r.days)}</Badge>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge variant={r.days === 0 ? "default" : "secondary"}>{r.days === 0 ? "Loja" : periodLabel(r.days)}</Badge>
+                    <Badge variant={r.status === "paid" ? "default" : "outline"} className={r.status === "paid" ? "bg-emerald-600 hover:bg-emerald-600" : ""}>
+                      {statusLabel(r.status)}
+                    </Badge>
+                  </div>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => approve.mutate(r)} disabled={approve.isPending}>
-                      <Check className="mr-1 h-3 w-3" />Aprovar
+                      <Check className="mr-1 h-3 w-3" />{r.status === "paid" ? "Entregar" : "Aprovar"}
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => remove.mutate(r.id)} disabled={remove.isPending}>
                       <Trash2 className="h-3 w-3" />
@@ -176,7 +194,7 @@ function SolicitacoesPage() {
                     {r.clients?.portal_username && <span className="ml-1 text-xs text-muted-foreground">(@{r.clients.portal_username})</span>}
                     {" · "}{itemLabel(r)}
                   </span>
-                  <Badge variant="outline">{r.status === "paid" ? "Pago" : r.status === "approved" ? "Aprovado" : r.status === "pending" ? "Pendente" : r.status === "rejected" ? "Rejeitado" : r.status}</Badge>
+                  <Badge variant="outline">{statusLabel(r.status)}</Badge>
                 </li>
               ))}
             </ul>
