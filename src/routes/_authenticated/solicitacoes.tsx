@@ -59,30 +59,33 @@ function SolicitacoesPage() {
   const approve = useMutation({
     mutationFn: async (req: RenewalRequest) => {
       if (!req.clients) throw new Error("Cliente não encontrado");
-      const base = req.clients.due_date && req.clients.due_date >= todayISO() ? req.clients.due_date : todayISO();
-      const newDue = addDaysISO(base, req.days);
+      const isExtra = req.days === 0;
       // Resolve preço a partir do plano correspondente (mesma duração) ou do cadastro do cliente
       let amount = req.clients.price_cents ?? 0;
-      const { data: plan } = await supabase
-        .from("plans")
-        .select("price_cents")
-        .eq("user_id", req.clients.user_id)
-        .eq("duration_days", req.days)
-        .eq("active", true)
-        .maybeSingle();
-      if (plan?.price_cents) amount = plan.price_cents;
+      if (!isExtra) {
+        const { data: plan } = await supabase
+          .from("plans")
+          .select("price_cents")
+          .eq("user_id", req.clients.user_id)
+          .eq("duration_days", req.days)
+          .eq("active", true)
+          .maybeSingle();
+        if (plan?.price_cents) amount = plan.price_cents;
 
-      const { error: e1 } = await supabase
-        .from("clients")
-        .update({ due_date: newDue, status: computeStatus(newDue, "ativo") })
-        .eq("id", req.client_id);
-      if (e1) throw e1;
+        const base = req.clients.due_date && req.clients.due_date >= todayISO() ? req.clients.due_date : todayISO();
+        const newDue = addDaysISO(base, req.days);
+        const { error: e1 } = await supabase
+          .from("clients")
+          .update({ due_date: newDue, status: computeStatus(newDue, "ativo") })
+          .eq("id", req.client_id);
+        if (e1) throw e1;
+      }
       const { error: ePay } = await supabase.from("payments").insert({
         user_id: req.clients.user_id,
         client_id: req.client_id,
         amount_cents: amount,
         method: "pix",
-        notes: `Renovação ${periodLabel(req.days)} aprovada via portal`,
+        notes: isExtra ? (req.label ?? "Produto avulso") : `Renovação ${periodLabel(req.days)} aprovada via portal`,
       });
       if (ePay) throw ePay;
       const { error: e2 } = await supabase.from("renewal_requests").update({ status: "approved" }).eq("id", req.id);
