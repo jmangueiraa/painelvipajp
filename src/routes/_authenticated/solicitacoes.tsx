@@ -60,6 +60,16 @@ function SolicitacoesPage() {
     mutationFn: async (req: RenewalRequest) => {
       if (!req.clients) throw new Error("Cliente não encontrado");
       const isExtra = req.days === 0;
+      const alreadyPaid = req.status === "paid";
+
+      // Se já foi pago via Mercado Pago, apenas marca como entregue/aprovado
+      // (pagamento e extensão já foram registrados pelo webhook).
+      if (alreadyPaid) {
+        const { error } = await supabase.from("renewal_requests").update({ status: "approved" }).eq("id", req.id);
+        if (error) throw error;
+        return;
+      }
+
       // Resolve preço a partir do plano correspondente (mesma duração) ou do cadastro do cliente
       let amount = req.clients.price_cents ?? 0;
       if (!isExtra) {
@@ -92,7 +102,7 @@ function SolicitacoesPage() {
       if (e2) throw e2;
     },
     onSuccess: () => {
-      toast.success("Renovação aprovada e pagamento registrado");
+      toast.success("Solicitação aprovada");
       qc.invalidateQueries({ queryKey: ["renewal_requests"] });
       qc.invalidateQueries({ queryKey: ["clients"] });
       qc.invalidateQueries({ queryKey: ["payments"] });
