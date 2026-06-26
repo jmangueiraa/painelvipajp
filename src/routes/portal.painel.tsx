@@ -493,7 +493,29 @@ function PortalDashboard() {
           );
         })()}
 
-
+        {/* Loja de produtos avulsos */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">🛒 Loja</CardTitle>
+            <p className="text-xs text-muted-foreground">Toque em um produto para pagar via PIX ou cartão.</p>
+          </CardHeader>
+          <CardContent className="grid grid-cols-3 gap-3">
+            {storeProducts.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => openStoreItem(p)}
+                className="group flex flex-col items-center gap-2 rounded-xl border bg-card p-3 text-center transition hover:border-primary/50 hover:shadow-md"
+              >
+                <div className={`grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br ${p.gradient} text-3xl text-white shadow-md transition group-hover:scale-105`}>
+                  <span>{p.emoji}</span>
+                </div>
+                <div className="text-xs font-semibold leading-tight">{p.label}</div>
+                <div className="text-sm font-bold text-primary">{brl(p.price_cents)}</div>
+              </button>
+            ))}
+          </CardContent>
+        </Card>
 
 
         {/* Histórico de pagamentos */}
