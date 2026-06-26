@@ -134,13 +134,21 @@ function SolicitacoesPage() {
               {pending.map((r) => (
                 <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium">{r.clients?.name ?? "Cliente"}</div>
+                    <div className="font-medium">
+                      {r.clients?.name ?? "Cliente"}
+                      {r.clients?.portal_username && (
+                        <span className="ml-2 text-xs font-normal text-muted-foreground">@{r.clients.portal_username}</span>
+                      )}
+                    </div>
+                    <div className="text-xs font-medium text-primary">
+                      {r.days === 0 ? "🛒 " : ""}{itemLabel(r)}
+                    </div>
                     <div className="text-xs text-muted-foreground">
                       {r.clients?.phone} · vence {r.clients ? formatDateBR(r.clients.due_date) : "—"} · {brl(r.clients?.price_cents ?? 0)}
                     </div>
                     <div className="text-xs text-muted-foreground">Solicitado em {formatDateBR(r.created_at)}</div>
                   </div>
-                  <Badge variant="secondary">{periodLabel(r.days)}</Badge>
+                  <Badge variant={r.days === 0 ? "default" : "secondary"}>{r.days === 0 ? "Loja" : periodLabel(r.days)}</Badge>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => approve.mutate(r)} disabled={approve.isPending}>
                       <Check className="mr-1 h-3 w-3" />Aprovar
