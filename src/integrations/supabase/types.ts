@@ -593,6 +593,7 @@ export type Database = {
           created_at: string
           days: number
           id: string
+          label: string | null
           mp_payment_id: string | null
           mp_status: string | null
           paid_at: string | null
@@ -607,6 +608,7 @@ export type Database = {
           created_at?: string
           days: number
           id?: string
+          label?: string | null
           mp_payment_id?: string | null
           mp_status?: string | null
           paid_at?: string | null
@@ -621,6 +623,7 @@ export type Database = {
           created_at?: string
           days?: number
           id?: string
+          label?: string | null
           mp_payment_id?: string | null
           mp_status?: string | null
           paid_at?: string | null

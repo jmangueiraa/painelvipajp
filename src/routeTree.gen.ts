@@ -34,6 +34,7 @@ import { Route as ApiPublicPortalRenewalStatusRouteImport } from './routes/api/p
 import { Route as ApiPublicPortalRenewRequestRouteImport } from './routes/api/public/portal/renew-request'
 import { Route as ApiPublicPortalMpWebhookRouteImport } from './routes/api/public/portal/mp-webhook'
 import { Route as ApiPublicPortalMpCreatePixRouteImport } from './routes/api/public/portal/mp-create-pix'
+import { Route as ApiPublicPortalMpCreateExtraRouteImport } from './routes/api/public/portal/mp-create-extra'
 import { Route as ApiPublicPortalMpCreateCardRouteImport } from './routes/api/public/portal/mp-create-card'
 import { Route as ApiPublicPortalMeRouteImport } from './routes/api/public/portal/me'
 import { Route as ApiPublicPortalLogoutRouteImport } from './routes/api/public/portal/logout'
@@ -175,6 +176,12 @@ const ApiPublicPortalMpCreatePixRoute =
     path: '/api/public/portal/mp-create-pix',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPortalMpCreateExtraRoute =
+  ApiPublicPortalMpCreateExtraRouteImport.update({
+    id: '/api/public/portal/mp-create-extra',
+    path: '/api/public/portal/mp-create-extra',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPortalMpCreateCardRoute =
   ApiPublicPortalMpCreateCardRouteImport.update({
     id: '/api/public/portal/mp-create-card',
@@ -238,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
   '/api/public/portal/me': typeof ApiPublicPortalMeRoute
   '/api/public/portal/mp-create-card': typeof ApiPublicPortalMpCreateCardRoute
+  '/api/public/portal/mp-create-extra': typeof ApiPublicPortalMpCreateExtraRoute
   '/api/public/portal/mp-create-pix': typeof ApiPublicPortalMpCreatePixRoute
   '/api/public/portal/mp-webhook': typeof ApiPublicPortalMpWebhookRoute
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
@@ -271,6 +279,7 @@ export interface FileRoutesByTo {
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
   '/api/public/portal/me': typeof ApiPublicPortalMeRoute
   '/api/public/portal/mp-create-card': typeof ApiPublicPortalMpCreateCardRoute
+  '/api/public/portal/mp-create-extra': typeof ApiPublicPortalMpCreateExtraRoute
   '/api/public/portal/mp-create-pix': typeof ApiPublicPortalMpCreatePixRoute
   '/api/public/portal/mp-webhook': typeof ApiPublicPortalMpWebhookRoute
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
@@ -306,6 +315,7 @@ export interface FileRoutesById {
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
   '/api/public/portal/me': typeof ApiPublicPortalMeRoute
   '/api/public/portal/mp-create-card': typeof ApiPublicPortalMpCreateCardRoute
+  '/api/public/portal/mp-create-extra': typeof ApiPublicPortalMpCreateExtraRoute
   '/api/public/portal/mp-create-pix': typeof ApiPublicPortalMpCreatePixRoute
   '/api/public/portal/mp-webhook': typeof ApiPublicPortalMpWebhookRoute
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
@@ -341,6 +351,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/logout'
     | '/api/public/portal/me'
     | '/api/public/portal/mp-create-card'
+    | '/api/public/portal/mp-create-extra'
     | '/api/public/portal/mp-create-pix'
     | '/api/public/portal/mp-webhook'
     | '/api/public/portal/renew-request'
@@ -374,6 +385,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/logout'
     | '/api/public/portal/me'
     | '/api/public/portal/mp-create-card'
+    | '/api/public/portal/mp-create-extra'
     | '/api/public/portal/mp-create-pix'
     | '/api/public/portal/mp-webhook'
     | '/api/public/portal/renew-request'
@@ -408,6 +420,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/logout'
     | '/api/public/portal/me'
     | '/api/public/portal/mp-create-card'
+    | '/api/public/portal/mp-create-extra'
     | '/api/public/portal/mp-create-pix'
     | '/api/public/portal/mp-webhook'
     | '/api/public/portal/renew-request'
@@ -433,6 +446,7 @@ export interface RootRouteChildren {
   ApiPublicPortalLogoutRoute: typeof ApiPublicPortalLogoutRoute
   ApiPublicPortalMeRoute: typeof ApiPublicPortalMeRoute
   ApiPublicPortalMpCreateCardRoute: typeof ApiPublicPortalMpCreateCardRoute
+  ApiPublicPortalMpCreateExtraRoute: typeof ApiPublicPortalMpCreateExtraRoute
   ApiPublicPortalMpCreatePixRoute: typeof ApiPublicPortalMpCreatePixRoute
   ApiPublicPortalMpWebhookRoute: typeof ApiPublicPortalMpWebhookRoute
   ApiPublicPortalRenewRequestRoute: typeof ApiPublicPortalRenewRequestRoute
@@ -621,6 +635,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPortalMpCreatePixRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/portal/mp-create-extra': {
+      id: '/api/public/portal/mp-create-extra'
+      path: '/api/public/portal/mp-create-extra'
+      fullPath: '/api/public/portal/mp-create-extra'
+      preLoaderRoute: typeof ApiPublicPortalMpCreateExtraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/portal/mp-create-card': {
       id: '/api/public/portal/mp-create-card'
       path: '/api/public/portal/mp-create-card'
@@ -729,6 +750,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPortalLogoutRoute: ApiPublicPortalLogoutRoute,
   ApiPublicPortalMeRoute: ApiPublicPortalMeRoute,
   ApiPublicPortalMpCreateCardRoute: ApiPublicPortalMpCreateCardRoute,
+  ApiPublicPortalMpCreateExtraRoute: ApiPublicPortalMpCreateExtraRoute,
   ApiPublicPortalMpCreatePixRoute: ApiPublicPortalMpCreatePixRoute,
   ApiPublicPortalMpWebhookRoute: ApiPublicPortalMpWebhookRoute,
   ApiPublicPortalRenewRequestRoute: ApiPublicPortalRenewRequestRoute,

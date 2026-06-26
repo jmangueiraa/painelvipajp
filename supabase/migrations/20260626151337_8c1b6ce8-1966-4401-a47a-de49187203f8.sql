@@ -1,0 +1,1 @@
+ALTER TABLE public.renewal_requests ADD COLUMN IF NOT EXISTS label TEXT;

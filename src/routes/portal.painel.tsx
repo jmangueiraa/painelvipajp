@@ -116,6 +116,21 @@ function PortalDashboard() {
   const pollRef = useRef<number | null>(null);
   const [updatesKind, setUpdatesKind] = useState<"movie" | "series" | "games" | null>(null);
 
+  // Loja de produtos avulsos (ChatGPT, Spotify, YouTube)
+  type StoreItem = { id: string; label: string; price_cents: number; emoji: string; gradient: string };
+  const storeProducts: StoreItem[] = [
+    { id: "chatgpt", label: "ChatGPT Plus", price_cents: 3000, emoji: "🤖", gradient: "from-emerald-500 to-teal-600" },
+    { id: "spotify", label: "Spotify Premium", price_cents: 1500, emoji: "🎵", gradient: "from-green-500 to-emerald-600" },
+    { id: "youtube", label: "YouTube Premium", price_cents: 1500, emoji: "▶️", gradient: "from-red-500 to-rose-600" },
+  ];
+  const [storeOpen, setStoreOpen] = useState(false);
+  const [storeItem, setStoreItem] = useState<StoreItem | null>(null);
+  const [storeMethod, setStoreMethod] = useState<"pix" | "card" | null>(null);
+  const [storeQrBase64, setStoreQrBase64] = useState<string | null>(null);
+  const [storePixPayload, setStorePixPayload] = useState<string>("");
+  const [storeCardLink, setStoreCardLink] = useState<string | null>(null);
+  const [storeCreating, setStoreCreating] = useState(false);
+
 
   useEffect(() => {
     if (!getPortalToken()) navigate({ to: "/portal" });
@@ -155,6 +170,12 @@ function PortalDashboard() {
               setRenewalId(null);
               setPaymentId(null);
               setPaymentStatus("pending");
+              setStoreOpen(false);
+              setStoreItem(null);
+              setStoreMethod(null);
+              setStoreQrBase64(null);
+              setStorePixPayload("");
+              setStoreCardLink(null);
             }, 3500);
           } else if (r.status === "rejected" || r.status === "cancelled") {
             toast.error("Pagamento não aprovado. Gere um novo PIX.");
@@ -201,6 +222,45 @@ function PortalDashboard() {
     onError: (e: Error) => { toast.error(e.message); setMethod(null); },
     onSettled: () => setCreating(false),
   });
+
+  const buyExtra = useMutation({
+    mutationFn: (o: { method: "pix" | "card"; label: string; amount_cents: number }) =>
+      portalFetch<{ renewal_id: string; payment_id?: string; qr_code?: string; qr_code_base64?: string; init_point?: string }>(
+        "/api/public/portal/mp-create-extra",
+        { method: "POST", body: JSON.stringify(o) },
+      ),
+    onSuccess: (r, vars) => {
+      setRenewalId(r.renewal_id);
+      setPaymentStatus("pending");
+      if (vars.method === "pix") {
+        setStorePixPayload(r.qr_code ?? "");
+        setStoreQrBase64(r.qr_code_base64 ?? null);
+        toast.success("QR Code PIX gerado!");
+      } else if (r.init_point) {
+        setStoreCardLink(r.init_point);
+        window.open(r.init_point, "_blank", "noopener,noreferrer");
+        toast.success("Checkout do cartão aberto em nova aba.");
+      }
+    },
+    onError: (e: Error) => { toast.error(e.message); setStoreMethod(null); },
+    onSettled: () => setStoreCreating(false),
+  });
+
+  function openStoreItem(p: StoreItem) {
+    setStoreItem(p);
+    setStoreMethod(null);
+    setStoreQrBase64(null);
+    setStorePixPayload("");
+    setStoreCardLink(null);
+    setStoreOpen(true);
+  }
+
+  function chooseStoreMethod(m: "pix" | "card") {
+    if (!storeItem) return;
+    setStoreMethod(m);
+    setStoreCreating(true);
+    buyExtra.mutate({ method: m, label: storeItem.label, amount_cents: storeItem.price_cents });
+  }
 
   function choosePix() {
     if (!chosenPeriod) return;
@@ -433,7 +493,29 @@ function PortalDashboard() {
           );
         })()}
 
-
+        {/* Loja de produtos avulsos */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">🛒 Loja</CardTitle>
+            <p className="text-xs text-muted-foreground">Toque em um produto para pagar via PIX ou cartão.</p>
+          </CardHeader>
+          <CardContent className="grid grid-cols-3 gap-3">
+            {storeProducts.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => openStoreItem(p)}
+                className="group flex flex-col items-center gap-2 rounded-xl border bg-card p-3 text-center transition hover:border-primary/50 hover:shadow-md"
+              >
+                <div className={`grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br ${p.gradient} text-3xl text-white shadow-md transition group-hover:scale-105`}>
+                  <span>{p.emoji}</span>
+                </div>
+                <div className="text-xs font-semibold leading-tight">{p.label}</div>
+                <div className="text-sm font-bold text-primary">{brl(p.price_cents)}</div>
+              </button>
+            ))}
+          </CardContent>
+        </Card>
 
 
         {/* Histórico de pagamentos */}
@@ -742,6 +824,152 @@ function PortalDashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Dialog da loja de produtos avulsos */}
+      <Dialog open={storeOpen} onOpenChange={(o) => { setStoreOpen(o); if (!o) { setStoreItem(null); setStoreMethod(null); setStoreQrBase64(null); setStorePixPayload(""); setStoreCardLink(null); if (paymentStatus !== "approved") { setRenewalId(null); setPaymentStatus("pending"); } } }}>
+        <DialogContent className="max-w-sm">
+          {paymentStatus === "approved" ? (
+            <div className="flex flex-col items-center gap-4 py-8 text-center">
+              <div className="grid h-20 w-20 place-items-center rounded-full bg-emerald-500/15 animate-in zoom-in duration-500">
+                <CheckCircle2 className="h-12 w-12 text-emerald-500" strokeWidth={2.5} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-emerald-600 dark:text-emerald-400">Pagamento confirmado!</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Em instantes seu provedor entrará em contato com os dados de acesso.</p>
+              </div>
+              <Button className="w-full" onClick={() => { setStoreOpen(false); setStoreItem(null); setStoreMethod(null); setStoreQrBase64(null); setStorePixPayload(""); setStoreCardLink(null); setRenewalId(null); setPaymentStatus("pending"); }}>
+                Voltar ao painel
+              </Button>
+            </div>
+          ) : storeItem ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <span className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${storeItem.gradient} text-lg text-white`}>{storeItem.emoji}</span>
+                  {storeItem.label}
+                </DialogTitle>
+                <DialogDescription>
+                  {!storeMethod ? "Escolha como deseja pagar." : storeMethod === "pix" ? "Escaneie o QR Code ou copie o código PIX abaixo." : "Conclua o pagamento na aba do Mercado Pago."}
+                </DialogDescription>
+              </DialogHeader>
+
+              {!storeMethod ? (
+                <div className="space-y-3">
+                  <div className="rounded-xl border bg-card p-3">
+                    <div className="text-xs text-muted-foreground">Valor</div>
+                    <div className="text-xl font-bold">{brl(storeItem.price_cents)}</div>
+                  </div>
+                  <Button variant="outline" className="w-full h-auto py-3 justify-start" onClick={() => chooseStoreMethod("pix")}>
+                    <Smartphone className="mr-3 h-5 w-5 text-emerald-600" />
+                    <div className="flex flex-col items-start">
+                      <span className="font-semibold">PIX</span>
+                      <span className="text-xs text-muted-foreground">Aprovação imediata · {brl(storeItem.price_cents)}</span>
+                    </div>
+                  </Button>
+                  {(() => {
+                    const cardTotal = Math.ceil(storeItem.price_cents / (1 - 4.99 / 100));
+                    const fee = cardTotal - storeItem.price_cents;
+                    return (
+                      <Button variant="outline" className="w-full h-auto py-3 justify-start" onClick={() => chooseStoreMethod("card")}>
+                        <CreditCard className="mr-3 h-5 w-5 text-primary" />
+                        <div className="flex flex-col items-start">
+                          <span className="font-semibold">Cartão de crédito (até 12x)</span>
+                          <span className="text-xs text-muted-foreground">
+                            {brl(storeItem.price_cents)} + taxa {brl(fee)} = <strong className="text-foreground">{brl(cardTotal)}</strong>
+                          </span>
+                        </div>
+                      </Button>
+                    );
+                  })()}
+                  <p className="text-[11px] text-muted-foreground">A taxa do cartão (4,99%) é repassada para cobrir os custos do Mercado Pago.</p>
+                </div>
+              ) : storeMethod === "pix" ? (
+                <div className="space-y-3">
+                  <div className="rounded-xl border bg-card p-3">
+                    <div className="text-xs text-muted-foreground">Valor a pagar</div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-xl font-bold">{brl(storeItem.price_cents)}</div>
+                      <Button size="sm" variant="outline" onClick={() => copy((storeItem.price_cents / 100).toFixed(2))}>
+                        {valCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar
+                      </Button>
+                    </div>
+                  </div>
+
+                  {storeCreating && (
+                    <div className="flex items-center justify-center gap-2 rounded-xl border bg-card p-6 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />Gerando QR Code...
+                    </div>
+                  )}
+
+                  {storeQrBase64 && !storeCreating && (
+                    <div className="flex flex-col items-center gap-2 rounded-xl border-2 border-primary/40 bg-white p-3">
+                      <img src={`data:image/png;base64,${storeQrBase64}`} alt="QR Code PIX" className="h-56 w-56" />
+                      <div className="text-xs text-muted-foreground">Escaneie no app do seu banco</div>
+                    </div>
+                  )}
+
+                  {storePixPayload && !storeCreating && (
+                    <div className="rounded-xl border bg-card p-3">
+                      <div className="mb-1 text-xs text-muted-foreground">PIX Copia e Cola</div>
+                      <div className="break-all rounded-md bg-muted/50 p-2 font-mono text-[10px] leading-tight">{storePixPayload}</div>
+                      <Button size="sm" className="mt-2 w-full" onClick={() => { void navigator.clipboard.writeText(storePixPayload); setBrCopied(true); setTimeout(() => setBrCopied(false), 2000); toast.success("Código PIX copiado!"); }}>
+                        {brCopied ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}Copiar código PIX
+                      </Button>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 rounded-xl border bg-card p-3 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                    <span>Aguardando pagamento... A confirmação é automática.</span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1" onClick={() => { setStoreMethod(null); setStoreQrBase64(null); setStorePixPayload(""); setRenewalId(null); setPaymentStatus("pending"); }}>Voltar</Button>
+                    <Button className="flex-1" onClick={() => setStoreOpen(false)}>Fechar</Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {(() => {
+                    const cardTotal = Math.ceil(storeItem.price_cents / (1 - 4.99 / 100));
+                    const fee = cardTotal - storeItem.price_cents;
+                    return (
+                      <div className="rounded-xl border bg-card p-3 text-sm text-muted-foreground">
+                        Valor: <strong className="text-foreground">{brl(storeItem.price_cents)}</strong>
+                        <span className="mx-1">+</span>taxa {brl(fee)} = <strong className="text-foreground">{brl(cardTotal)}</strong>
+                      </div>
+                    );
+                  })()}
+
+                  {storeCreating && (
+                    <div className="flex items-center justify-center gap-2 rounded-xl border bg-card p-6 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />Abrindo checkout do cartão...
+                    </div>
+                  )}
+
+                  {storeCardLink && !storeCreating && (
+                    <>
+                      <a href={storeCardLink} target="_blank" rel="noopener noreferrer" className="block">
+                        <Button className="w-full"><ExternalLink className="mr-2 h-4 w-4" />Abrir checkout do cartão</Button>
+                      </a>
+                      <div className="flex items-center gap-2 rounded-xl border bg-card p-3 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                        <span>Aguardando confirmação do pagamento...</span>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1" onClick={() => { setStoreMethod(null); setStoreCardLink(null); setRenewalId(null); setPaymentStatus("pending"); }}>Voltar</Button>
+                    <Button className="flex-1" onClick={() => setStoreOpen(false)}>Fechar</Button>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
 
       {/* refetch helper hidden */}
       <button hidden onClick={() => refetch()} />

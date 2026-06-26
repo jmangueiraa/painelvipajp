@@ -67,6 +67,7 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
             days: number;
             amount_cents: number | null;
             status: string;
+            label: string | null;
           };
 
           const isApproved = payment.status === "approved";
@@ -97,28 +98,29 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
             return json({ ok: true, skipped: "already processed" });
           }
 
-          // Adiciona os dias ao vencimento do cliente
-          const { data: clientRow } = await supabaseAdmin
-            .from("clients")
-            .select("id, due_date")
-            .eq("id", renewal.client_id)
-            .maybeSingle();
-
-          if (clientRow) {
-            const today = new Date();
-            today.setUTCHours(0, 0, 0, 0);
-            const current = (clientRow as { due_date: string | null }).due_date;
-            // Sempre conta a partir do vencimento atual (mesmo vencido); só usa hoje se não houver vencimento
-            const start = current ? new Date(current + "T00:00:00Z") : today;
-            const next = new Date(start);
-            next.setUTCDate(next.getUTCDate() + Number(renewal.days || 0));
-            const newDueDate = next.toISOString().slice(0, 10);
-
-
-            await supabaseAdmin
+          // Para renovações (days > 0), estende o vencimento do cliente.
+          // Para compras avulsas (days = 0, ex.: ChatGPT/Spotify/YouTube), não altera o vencimento.
+          if (renewal.days > 0) {
+            const { data: clientRow } = await supabaseAdmin
               .from("clients")
-              .update({ due_date: newDueDate })
-              .eq("id", renewal.client_id);
+              .select("id, due_date")
+              .eq("id", renewal.client_id)
+              .maybeSingle();
+
+            if (clientRow) {
+              const today = new Date();
+              today.setUTCHours(0, 0, 0, 0);
+              const current = (clientRow as { due_date: string | null }).due_date;
+              const start = current ? new Date(current + "T00:00:00Z") : today;
+              const next = new Date(start);
+              next.setUTCDate(next.getUTCDate() + Number(renewal.days || 0));
+              const newDueDate = next.toISOString().slice(0, 10);
+
+              await supabaseAdmin
+                .from("clients")
+                .update({ due_date: newDueDate })
+                .eq("id", renewal.client_id);
+            }
           }
 
           // Registra o pagamento no histórico com cliente, data e hora do Mercado Pago
@@ -126,13 +128,17 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
             renewal.amount_cents ??
             (payment.transaction_amount ? Math.round(payment.transaction_amount * 100) : 0);
 
+          const notes = renewal.days > 0
+            ? `Renovação ${renewal.days} dias - Mercado Pago (id ${payment.id})`
+            : `${renewal.label ?? "Produto avulso"} - Mercado Pago (id ${payment.id})`;
+
           const { error: payErr } = await supabaseAdmin.from("payments").insert({
             client_id: renewal.client_id,
             user_id: renewal.user_id,
             amount_cents: amountCents,
             paid_at: paidAtIso,
             method: "pix_mercadopago",
-            notes: `Renovação ${renewal.days} dias - Mercado Pago (id ${payment.id})`,
+            notes,
           });
           if (payErr) {
             console.error("[mp-webhook] payments insert failed", payErr);
