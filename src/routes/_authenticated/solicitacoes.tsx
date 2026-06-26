@@ -156,9 +156,11 @@ function SolicitacoesPage() {
                     <div className="text-xs font-medium text-primary">
                       {r.days === 0 ? "🛒 " : ""}{itemLabel(r)}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {r.clients?.phone} · vence {r.clients ? formatDateBR(r.clients.due_date) : "—"} · {brl(r.clients?.price_cents ?? 0)}
-                    </div>
+                    {r.days !== 0 && (
+                      <div className="text-xs text-muted-foreground">
+                        {r.clients?.phone} · vence {r.clients ? formatDateBR(r.clients.due_date) : "—"} · {brl(r.clients?.price_cents ?? 0)}
+                      </div>
+                    )}
                     <div className="text-xs text-muted-foreground">Solicitado em {formatDateBR(r.created_at)}</div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
