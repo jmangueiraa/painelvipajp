@@ -170,6 +170,12 @@ function PortalDashboard() {
               setRenewalId(null);
               setPaymentId(null);
               setPaymentStatus("pending");
+              setStoreOpen(false);
+              setStoreItem(null);
+              setStoreMethod(null);
+              setStoreQrBase64(null);
+              setStorePixPayload("");
+              setStoreCardLink(null);
             }, 3500);
           } else if (r.status === "rejected" || r.status === "cancelled") {
             toast.error("Pagamento não aprovado. Gere um novo PIX.");
