@@ -223,6 +223,45 @@ function PortalDashboard() {
     onSettled: () => setCreating(false),
   });
 
+  const buyExtra = useMutation({
+    mutationFn: (o: { method: "pix" | "card"; label: string; amount_cents: number }) =>
+      portalFetch<{ renewal_id: string; payment_id?: string; qr_code?: string; qr_code_base64?: string; init_point?: string }>(
+        "/api/public/portal/mp-create-extra",
+        { method: "POST", body: JSON.stringify(o) },
+      ),
+    onSuccess: (r, vars) => {
+      setRenewalId(r.renewal_id);
+      setPaymentStatus("pending");
+      if (vars.method === "pix") {
+        setStorePixPayload(r.qr_code ?? "");
+        setStoreQrBase64(r.qr_code_base64 ?? null);
+        toast.success("QR Code PIX gerado!");
+      } else if (r.init_point) {
+        setStoreCardLink(r.init_point);
+        window.open(r.init_point, "_blank", "noopener,noreferrer");
+        toast.success("Checkout do cartão aberto em nova aba.");
+      }
+    },
+    onError: (e: Error) => { toast.error(e.message); setStoreMethod(null); },
+    onSettled: () => setStoreCreating(false),
+  });
+
+  function openStoreItem(p: StoreItem) {
+    setStoreItem(p);
+    setStoreMethod(null);
+    setStoreQrBase64(null);
+    setStorePixPayload("");
+    setStoreCardLink(null);
+    setStoreOpen(true);
+  }
+
+  function chooseStoreMethod(m: "pix" | "card") {
+    if (!storeItem) return;
+    setStoreMethod(m);
+    setStoreCreating(true);
+    buyExtra.mutate({ method: m, label: storeItem.label, amount_cents: storeItem.price_cents });
+  }
+
   function choosePix() {
     if (!chosenPeriod) return;
     setMethod("pix");
