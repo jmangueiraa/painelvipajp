@@ -337,7 +337,7 @@ export const renewSubscriberDays = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), days: z.number().int().min(1).max(3650) }).parse(d),
   )
   .handler(async ({ context, data }) => {
-    await assertAdminOrReseller(context);
+    const { isAdmin, isReseller } = await assertAdminOrReseller(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: s } = await supabaseAdmin
       .from("settings")
@@ -348,12 +348,15 @@ export const renewSubscriberDays = createServerFn({ method: "POST" })
     const base = current && new Date(current) > new Date() ? new Date(current) : new Date();
     base.setDate(base.getDate() + data.days);
     const newExpiry = base.toISOString().slice(0, 10);
+    const payload: any = { user_id: data.userId, subscription_expires_at: newExpiry };
+    if (isReseller && !isAdmin) payload.reseller_user_id = context.userId;
     const { error } = await supabaseAdmin
       .from("settings")
-      .upsert({ user_id: data.userId, subscription_expires_at: newExpiry }, { onConflict: "user_id" });
+      .upsert(payload, { onConflict: "user_id" });
     if (error) throw error;
     return { ok: true, expires_at: newExpiry };
   });
+
 
 export const deleteSubscriber = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
