@@ -371,8 +371,15 @@ function ClientesPage() {
       a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })
     );
     if (nameSort === "desc") sorted.reverse();
+    if (dueSort) {
+      sorted.sort((a, b) => {
+        const da = a.due_date ?? "";
+        const db = b.due_date ?? "";
+        return dueSort === "asc" ? da.localeCompare(db) : db.localeCompare(da);
+      });
+    }
     return sorted;
-  }, [clients, q, chip, nameSort]);
+  }, [clients, q, chip, nameSort, dueSort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
