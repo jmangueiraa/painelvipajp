@@ -21,31 +21,12 @@ export const Route = createFileRoute("/api/public/app/mp-webhook")({
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-          // Try platform token first
-          const platformToken = process.env.MERCADOPAGO_ACCESS_TOKEN?.trim();
-          let token: string | null = platformToken || null;
-          let mp: { status?: string; external_reference?: string } = {};
+          const token = process.env.MERCADOPAGO_ACCESS_TOKEN?.trim();
+          if (!token) return json({ ok: true });
 
-          if (token) {
-            const r = await fetch(`${MP_API}/${paymentId}`, { headers: { Authorization: `Bearer ${token}` } });
-            if (r.ok) mp = (await r.json().catch(() => ({}))) as typeof mp;
-          }
-
-          // If platform token couldn't find payment, try each reseller token
-          if (!mp.external_reference) {
-            const { data: resellers } = await supabaseAdmin
-              .from("settings")
-              .select("mp_access_token")
-              .not("mp_access_token", "is", null);
-            for (const r of (resellers ?? []) as Array<{ mp_access_token: string | null }>) {
-              const t = r.mp_access_token?.trim();
-              if (!t) continue;
-              const rr = await fetch(`${MP_API}/${paymentId}`, { headers: { Authorization: `Bearer ${t}` } });
-              if (!rr.ok) continue;
-              const m = (await rr.json().catch(() => ({}))) as typeof mp;
-              if (m.external_reference) { mp = m; break; }
-            }
-          }
+          const r = await fetch(`${MP_API}/${paymentId}`, { headers: { Authorization: `Bearer ${token}` } });
+          if (!r.ok) return json({ ok: true });
+          const mp = (await r.json().catch(() => ({}))) as { status?: string; external_reference?: string };
 
           if (!mp.external_reference) return json({ ok: true });
 
