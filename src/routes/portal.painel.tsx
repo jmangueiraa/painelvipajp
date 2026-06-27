@@ -122,6 +122,7 @@ function PortalDashboard() {
     { id: "chatgpt", label: "ChatGPT Plus - 30 dias", price_cents: 3000, emoji: "🤖", gradient: "from-emerald-500 to-teal-600" },
     { id: "spotify", label: "Spotify Premium - 30 dias", price_cents: 1500, emoji: "🎵", gradient: "from-green-500 to-emerald-600" },
     { id: "youtube", label: "YouTube Premium - 30 dias", price_cents: 1500, emoji: "▶️", gradient: "from-red-500 to-rose-600" },
+    { id: "smatone", label: "Smatone - 1 ano", price_cents: 2000, emoji: "🔑", gradient: "from-indigo-500 to-purple-600" },
   ];
   const [storeOpen, setStoreOpen] = useState(false);
   const [storeItem, setStoreItem] = useState<StoreItem | null>(null);
