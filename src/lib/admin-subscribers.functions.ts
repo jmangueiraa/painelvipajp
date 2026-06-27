@@ -68,8 +68,10 @@ export const listSubscribers = createServerFn({ method: "GET" })
     if (payErr) throw payErr;
     if (setErr) throw setErr;
     if (renErr) throw renErr;
+    if (arErr) throw arErr;
     if (usersRes.error) throw usersRes.error;
 
+    const adminSet = new Set((adminRoles ?? []).map((r) => r.user_id));
     const planMap = new Map((plans ?? []).map((p) => [p.id, p.name]));
     const subMap = new Map((subs ?? []).map((s) => [s.user_id, s]));
     const settingsMap = new Map((settingsRows ?? []).map((s) => [s.user_id, s]));
@@ -85,7 +87,7 @@ export const listSubscribers = createServerFn({ method: "GET" })
 
     const now = Date.now();
 
-    const rows: SubscriberRow[] = (profiles ?? []).map((p) => {
+    const rows: SubscriberRow[] = (profiles ?? []).filter((p) => !adminSet.has(p.id)).map((p) => {
       const sub = subMap.get(p.id);
       const set = settingsMap.get(p.id);
       const u = userMap.get(p.id);
