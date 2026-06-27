@@ -578,7 +578,7 @@ function PortalDashboard() {
       </main>
 
       <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setChosenPeriod(null); setMethod(null); setPixPeriod(null); setValCopied(false); setBrCopied(false); setQrBase64(null); setPixPayload(""); setRenewalId(null); setPaymentId(null); setPaymentStatus("pending"); setCardLink(null); } }}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm max-h-[90vh] overflow-y-auto">
           {paymentStatus === "approved" ? (
             <div className="flex flex-col items-center gap-4 py-8 text-center">
               <div className="grid h-20 w-20 place-items-center rounded-full bg-emerald-500/15 animate-in zoom-in duration-500">
