@@ -1,14 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
-  ShieldCheck, Users as UsersIcon, BadgeCheck, AlertTriangle, Ban, DollarSign, Search, Eye, Loader2,
+  ShieldCheck, Users as UsersIcon, BadgeCheck, AlertTriangle, Ban, DollarSign, Search, Loader2,
+  RefreshCw, Pencil, Trash2,
 } from "lucide-react";
 
-import { listSubscribers, type SubscriberRow } from "@/lib/admin-subscribers.functions";
+import { listSubscribers, renewSubscriberDays, deleteSubscriber, type SubscriberRow } from "@/lib/admin-subscribers.functions";
 import { useIsAdmin } from "@/hooks/use-is-admin";
-import { brl, formatDateBR, formatDateTimeBR } from "@/lib/format";
+import { translateError } from "@/lib/translate-error";
+import { brl, formatDateBR } from "@/lib/format";
 
 import { PageHeader } from "@/components/page-header";
 import { KpiCard } from "@/components/kpi-card";
