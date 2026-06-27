@@ -22,7 +22,7 @@ import { sendChargesNow as sendChargesNowFn } from "@/lib/auto-charges.functions
 
 
 import { PageHeader } from "@/components/page-header";
-import { ActionPillButton } from "@/components/action-pill-button";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -525,10 +525,29 @@ function ClientesPage() {
                 <Trash2 className="size-4" /> Excluir selecionados ({selectedIds.size})
               </Button>
             )}
-            <ActionPillButton color="cyan" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("advance_5d")}>Cobrar Antecipado (5d)</ActionPillButton>
-            <ActionPillButton color="rose" icon={<AlertTriangle className="size-4" />} onClick={() => cobranca("overdue")}>Cobrar Vencidos</ActionPillButton>
-            <ActionPillButton color="amber" icon={<CalendarClock className="size-4" />} onClick={() => cobranca("due_tomorrow")}>Cobrar Vencendo Amanhã</ActionPillButton>
-            <ActionPillButton color="emerald" icon={<Send className="size-4" />} onClick={() => cobranca("due_today")}>Cobrar vence hoje</ActionPillButton>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="rounded-full" variant="outline">
+                  <Send className="size-4" /> Cobranças
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuLabel>Enviar via WhatsApp</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => cobranca("due_today")}>
+                  <Send className="size-4 text-emerald-400" /> Vence hoje
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => cobranca("due_tomorrow")}>
+                  <CalendarClock className="size-4 text-amber-400" /> Vence amanhã
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => cobranca("advance_5d")}>
+                  <CalendarClock className="size-4 text-cyan-400" /> Antecipado (5 dias)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => cobranca("overdue")}>
+                  <AlertTriangle className="size-4 text-rose-400" /> Vencidos
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="outline" className="rounded-full" onClick={() => { setImportResult(null); setImportOpen(true); }}>
               <FileSpreadsheet className="size-4" /> Importar Excel
             </Button>
