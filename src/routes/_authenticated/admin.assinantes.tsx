@@ -250,13 +250,17 @@ function AssinantesPage() {
                     <TableCell className="text-right tabular-nums">{brl(r.subscription.price_cents)}</TableCell>
                     <TableCell className="text-sm capitalize">{r.subscription.payment_method ?? "—"}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => navigate({ to: "/admin/assinantes/$id", params: { id: r.user_id } })}
-                      >
-                        <Eye className="size-4 mr-1" /> Detalhes
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button size="sm" variant="outline" onClick={() => setRenewTarget(r)} title="Renovar">
+                          <RefreshCw className="size-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => navigate({ to: "/admin/assinantes/$id", params: { id: r.user_id } })} title="Editar">
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-rose-400 hover:text-rose-300" onClick={() => setDeleteTarget(r)} title="Excluir">
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
