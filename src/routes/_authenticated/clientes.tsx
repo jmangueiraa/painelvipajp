@@ -335,10 +335,10 @@ function ClientesPage() {
     return p ? `tel:+${p}` : "#";
   };
   const supportHref = (c: Client) => {
-    const p = intlPhone(c.phone);
-    const msg = encodeURIComponent(`Olá ${c.name}, como podemos ajudar?`);
-    return p ? `https://wa.me/${p}?text=${msg}` : "#";
+    const msg = encodeURIComponent(`Olá, preciso de suporte referente ao cliente ${c.name}.`);
+    return `https://wa.me/5519981386505?text=${msg}`;
   };
+
   const copyCredentials = async (c: Client) => {
     const txt = [c.iptv_login && `Login: ${c.iptv_login}`, c.iptv_password && `Senha: ${c.iptv_password}`].filter(Boolean).join("\n");
     if (!txt) return toast.error("Sem credenciais cadastradas");
