@@ -67,9 +67,10 @@ function PortalLoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <img
-            src={portalIcon.url}
+            src="/portal-icon-192.png"
             alt="Portal do Cliente"
             className="mx-auto mb-3 h-16 w-16 object-contain"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
           />
 
           <CardTitle className="text-2xl">Portal do Cliente</CardTitle>
