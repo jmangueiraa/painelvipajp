@@ -19,22 +19,29 @@ export const Route = createFileRoute("/api/public/portal/login-password")({
           const portal = await import("@/integrations/portal/session.server");
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-          // Aceita tanto o usuário do portal quanto o login IPTV cadastrado.
+          const normalize = (value: string | null | undefined) => (value ?? "").trim().toLowerCase();
+          const onlyDigits = (value: string) => value.replace(/\D/g, "");
+          const usernameLower = normalize(username);
+          const usernameDigits = onlyDigits(username);
+
+          // Aceita usuário do portal, login IPTV ou telefone do cliente.
+          // Muitos cadastros antigos não possuem portal_username/portal_password_hash,
+          // então a validação precisa cair para login/senha IPTV.
           const { data: rows, error } = await supabaseAdmin
             .from("clients")
-            .select("id,portal_username,portal_password_hash,iptv_login,iptv_password")
-            .or(`portal_username.ilike.${username},iptv_login.ilike.${username}`)
-            .limit(10);
+            .select("id,phone,portal_username,portal_password_hash,iptv_login,iptv_password")
+            .limit(1000);
           if (error) return json({ error: "Falha ao consultar." }, { status: 500 });
 
-          const usernameLower = username.toLowerCase();
           const match = (rows ?? []).find((r) => {
-            const portalUserMatches = (r.portal_username ?? "").trim().toLowerCase() === usernameLower;
-            const iptvUserMatches = (r.iptv_login ?? "").trim().toLowerCase() === usernameLower;
+            const portalUserMatches = normalize(r.portal_username) === usernameLower;
+            const iptvUserMatches = normalize(r.iptv_login) === usernameLower;
+            const phoneDigits = onlyDigits(r.phone ?? "");
+            const phoneMatches = usernameDigits.length >= 8 && phoneDigits.endsWith(usernameDigits.slice(-8));
             const portalPasswordMatches = portal.verifyPassword(password, r.portal_password_hash);
             const iptvPasswordMatches = (r.iptv_password ?? "").trim() === password;
 
-            return (portalUserMatches && portalPasswordMatches) || (iptvUserMatches && iptvPasswordMatches);
+            return (portalUserMatches || iptvUserMatches || phoneMatches) && (portalPasswordMatches || iptvPasswordMatches);
           });
           if (!match) return json({ error: "Login ou senha incorretos." }, { status: 401 });
 
