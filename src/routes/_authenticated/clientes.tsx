@@ -564,7 +564,7 @@ function ClientesPage() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button className="rounded-full" variant="outline">
-                  <Send className="size-4" /> Cobranças
+                  <Send className="size-4" /> <span className="hidden sm:inline">Cobranças</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-60">
@@ -584,11 +584,23 @@ function ClientesPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="outline" className="rounded-full" onClick={() => { setImportResult(null); setImportOpen(true); }}>
-              <FileSpreadsheet className="size-4" /> Importar Excel
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="rounded-full">
+                  <FileSpreadsheet className="size-4" /> <span className="hidden sm:inline">Planilha</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => { setImportResult(null); setImportOpen(true); }}>
+                  <Upload className="size-4" /> Importar clientes
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportClients}>
+                  <Download className="size-4" /> Exportar clientes
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button className="btn-premium rounded-full" onClick={openCreate}>
-              <Plus className="size-4" /> Novo cliente
+              <Plus className="size-4" /> <span className="hidden sm:inline">Novo cliente</span>
             </Button>
           </>
         }
