@@ -49,8 +49,16 @@ export const Route = createFileRoute("/api/public/app/mp-webhook")({
               .select("subscription_expires_at")
               .eq("user_id", req.user_id)
               .maybeSingle();
+            const { count: paidCount } = await supabaseAdmin
+              .from("app_renewal_requests")
+              .select("id", { count: "exact", head: true })
+              .eq("user_id", req.user_id)
+              .eq("status", "paid");
             const current = (settings as { subscription_expires_at?: string | null } | null)?.subscription_expires_at;
-            const base = current && new Date(current).getTime() > Date.now() ? new Date(current) : new Date();
+            const hasPaidBefore = (paidCount ?? 0) > 0;
+            const base = hasPaidBefore && current && new Date(current).getTime() > Date.now()
+              ? new Date(current)
+              : new Date();
             base.setUTCDate(base.getUTCDate() + req.days);
             const newExpiry = base.toISOString().slice(0, 10);
 
