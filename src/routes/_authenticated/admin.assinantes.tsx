@@ -1,14 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
-  ShieldCheck, Users as UsersIcon, BadgeCheck, AlertTriangle, Ban, DollarSign, Search, Eye, Loader2,
+  ShieldCheck, Users as UsersIcon, BadgeCheck, AlertTriangle, Ban, DollarSign, Search, Loader2,
+  RefreshCw, Pencil, Trash2,
 } from "lucide-react";
 
-import { listSubscribers, type SubscriberRow } from "@/lib/admin-subscribers.functions";
+import { listSubscribers, renewSubscriberDays, deleteSubscriber, type SubscriberRow } from "@/lib/admin-subscribers.functions";
 import { useIsAdmin } from "@/hooks/use-is-admin";
-import { brl, formatDateBR, formatDateTimeBR } from "@/lib/format";
+import { translateError } from "@/lib/translate-error";
+import { brl, formatDateBR } from "@/lib/format";
 
 import { PageHeader } from "@/components/page-header";
 import { KpiCard } from "@/components/kpi-card";
@@ -19,6 +22,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/assinantes")({
   head: () => ({ meta: [{ title: "Assinantes — Painel VIP" }] }),
@@ -53,6 +62,34 @@ function AssinantesPage() {
   const navigate = useNavigate();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
   const listFn = useServerFn(listSubscribers);
+  const renewFn = useServerFn(renewSubscriberDays);
+  const deleteFn = useServerFn(deleteSubscriber);
+  const qc = useQueryClient();
+
+  const [renewTarget, setRenewTarget] = useState<SubscriberRow | null>(null);
+  const [renewDays, setRenewDays] = useState("30");
+  const [deleteTarget, setDeleteTarget] = useState<SubscriberRow | null>(null);
+
+  const renewMut = useMutation({
+    mutationFn: async () => renewFn({ data: { userId: renewTarget!.user_id, days: Number(renewDays) } }),
+    onSuccess: () => {
+      toast.success("Assinatura renovada.");
+      setRenewTarget(null);
+      setRenewDays("30");
+      qc.invalidateQueries({ queryKey: ["admin", "subscribers"] });
+    },
+    onError: (e) => toast.error(translateError(e)),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: async () => deleteFn({ data: { userId: deleteTarget!.user_id } }),
+    onSuccess: () => {
+      toast.success("Assinante excluído.");
+      setDeleteTarget(null);
+      qc.invalidateQueries({ queryKey: ["admin", "subscribers"] });
+    },
+    onError: (e) => toast.error(translateError(e)),
+  });
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("todos");
@@ -241,13 +278,17 @@ function AssinantesPage() {
                     <TableCell className="text-right tabular-nums">{brl(r.subscription.price_cents)}</TableCell>
                     <TableCell className="text-sm capitalize">{r.subscription.payment_method ?? "—"}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => navigate({ to: "/admin/assinantes/$id", params: { id: r.user_id } })}
-                      >
-                        <Eye className="size-4 mr-1" /> Detalhes
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button size="sm" variant="outline" onClick={() => setRenewTarget(r)} title="Renovar">
+                          <RefreshCw className="size-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => navigate({ to: "/admin/assinantes/$id", params: { id: r.user_id } })} title="Editar">
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-rose-400 hover:text-rose-300" onClick={() => setDeleteTarget(r)} title="Excluir">
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -256,6 +297,57 @@ function AssinantesPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!renewTarget} onOpenChange={(o) => !o && setRenewTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renovar assinatura</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              {renewTarget?.full_name || renewTarget?.email}
+            </p>
+            <div>
+              <Label>Dias a adicionar</Label>
+              <Input
+                type="number"
+                min={1}
+                value={renewDays}
+                onChange={(e) => setRenewDays(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenewTarget(null)}>Cancelar</Button>
+            <Button onClick={() => renewMut.mutate()} disabled={renewMut.isPending || !Number(renewDays)}>
+              {renewMut.isPending && <Loader2 className="size-4 mr-1 animate-spin" />}
+              Renovar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir assinante?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação removerá a conta de <strong>{deleteTarget?.full_name || deleteTarget?.email}</strong> permanentemente, incluindo todos os dados vinculados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-rose-600 hover:bg-rose-700"
+              onClick={(e) => { e.preventDefault(); deleteMut.mutate(); }}
+              disabled={deleteMut.isPending}
+            >
+              {deleteMut.isPending && <Loader2 className="size-4 mr-1 animate-spin" />}
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
