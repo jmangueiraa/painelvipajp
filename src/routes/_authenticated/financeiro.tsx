@@ -173,28 +173,30 @@ function FinanceiroPage() {
       <Card>
         <CardHeader><CardTitle>Histórico de pagamentos</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Método</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {payments.length === 0 ? (
-                <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Nenhum pagamento registrado.</TableCell></TableRow>
-              ) : payments.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-medium">{clientMap.get(p.client_id)?.name ?? "—"}</TableCell>
-                  <TableCell>{formatDateTimeBR(p.paid_at)}</TableCell>
-                  <TableCell className="capitalize">{p.method ?? "—"}</TableCell>
-                  <TableCell className="text-right tabular-nums">{brl(p.amount_cents)}</TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Método</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {payments.length === 0 ? (
+                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Nenhum pagamento registrado.</TableCell></TableRow>
+                ) : payments.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium whitespace-nowrap">{clientMap.get(p.client_id)?.name ?? "—"}</TableCell>
+                    <TableCell className="whitespace-nowrap">{formatDateTimeBR(p.paid_at)}</TableCell>
+                    <TableCell className="capitalize whitespace-nowrap">{p.method ?? "—"}</TableCell>
+                    <TableCell className="text-right tabular-nums whitespace-nowrap">{brl(p.amount_cents)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 

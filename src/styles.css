@@ -141,6 +141,18 @@
     background-image: var(--gradient-page);
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+  /* Mobile-friendly tap targets */
+  button, [role="button"], a {
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Prevent iOS zoom on inputs */
+  @media (max-width: 640px) {
+    input, select, textarea {
+      font-size: 16px;
+    }
   }
 }
 
