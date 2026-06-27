@@ -51,7 +51,7 @@ export type SubscriberRow = {
 export const listSubscribers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdminOrReseller(context);
+    const { isAdmin } = await assertAdminOrReseller(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [
@@ -68,8 +68,8 @@ export const listSubscribers = createServerFn({ method: "GET" })
       supabaseAdmin.from("app_subscriptions").select("*"),
       supabaseAdmin.from("app_plans").select("id, name"),
       supabaseAdmin.from("app_subscription_payments").select("user_id, paid_at, amount_cents, method").order("paid_at", { ascending: false }),
-      supabaseAdmin.from("settings").select("user_id, subscription_expires_at, subscription_monthly_cents, created_at"),
-      supabaseAdmin.from("app_renewal_requests").select("user_id, paid_at, amount_cents, plan_id, status").eq("status", "paid").order("paid_at", { ascending: false }),
+      supabaseAdmin.from("settings").select("user_id, subscription_expires_at, subscription_monthly_cents, created_at, reseller_user_id"),
+      supabaseAdmin.from("app_renewal_requests").select("user_id, paid_at, amount_cents, plan_id, status, reseller_user_id").eq("status", "paid").order("paid_at", { ascending: false }),
       supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin"),
       supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
     ]);
@@ -96,9 +96,30 @@ export const listSubscribers = createServerFn({ method: "GET" })
       if (!lastRenMap.has(r.user_id)) lastRenMap.set(r.user_id, r);
     }
 
+    // Set of users that paid via this reseller's MP
+    const resellerUserSet = new Set<string>();
+    if (!isAdmin) {
+      for (const r of renewals ?? []) {
+        if ((r as any).reseller_user_id === context.userId) resellerUserSet.add(r.user_id);
+      }
+      for (const s of settingsRows ?? []) {
+        if ((s as any).reseller_user_id === context.userId) resellerUserSet.add(s.user_id);
+      }
+    }
+
     const now = Date.now();
 
-    const rows: SubscriberRow[] = (profiles ?? []).filter((p) => !adminSet.has(p.id)).map((p) => {
+    const filteredProfiles = (profiles ?? []).filter((p) => {
+      if (adminSet.has(p.id)) return false;
+      if (!isAdmin) {
+        if (p.id === context.userId) return false;
+        return resellerUserSet.has(p.id);
+      }
+      return true;
+    });
+
+    const rows: SubscriberRow[] = filteredProfiles.map((p) => {
+
       const sub = subMap.get(p.id);
       const set = settingsMap.get(p.id);
       const u = userMap.get(p.id);
