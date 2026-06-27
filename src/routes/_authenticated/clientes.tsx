@@ -749,11 +749,6 @@ function ClientesPage() {
                               <MessageCircle className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Mensagem (WhatsApp)
                             </a>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <a href={telHref(c)}>
-                              <Phone className="size-4" style={{ color: "var(--kpi-cyan)" }} /> Ligar
-                            </a>
-                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => copyCredentials(c)}>
                             <Copy className="size-4" style={{ color: "var(--kpi-cyan)" }} /> Copiar credenciais
                           </DropdownMenuItem>
