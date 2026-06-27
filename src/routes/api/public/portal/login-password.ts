@@ -1,19 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { portalCorsHeaders, portalOptions } from "@/lib/portal-cors";
 
-function json(data: unknown, init?: ResponseInit) {
-  return Response.json(data, { ...init, headers: { "Cache-Control": "no-store", ...(init?.headers ?? {}) } });
+function json(data: unknown, request: Request, init?: ResponseInit) {
+  return Response.json(data, { ...init, headers: { "Cache-Control": "no-store", ...portalCorsHeaders(request), ...(init?.headers ?? {}) } });
 }
 
 export const Route = createFileRoute("/api/public/portal/login-password")({
   server: {
     handlers: {
+      OPTIONS: async ({ request }) => portalOptions(request),
       POST: async ({ request }) => {
         try {
           const body = (await request.json().catch(() => ({}))) as { username?: string; password?: string };
           const username = (body.username ?? "").trim();
           const password = (body.password ?? "").trim();
           if (username.length < 1 || password.length < 1) {
-            return json({ error: "Informe login e senha." }, { status: 400 });
+            return json({ error: "Informe login e senha." }, request, { status: 400 });
           }
 
           const portal = await import("@/integrations/portal/session.server");
@@ -31,7 +33,7 @@ export const Route = createFileRoute("/api/public/portal/login-password")({
             .from("clients")
             .select("id,phone,portal_username,portal_password_hash,iptv_login,iptv_password")
             .limit(1000);
-          if (error) return json({ error: "Falha ao consultar." }, { status: 500 });
+          if (error) return json({ error: "Falha ao consultar." }, request, { status: 500 });
 
           const match = (rows ?? []).find((r) => {
             const portalUserMatches = normalize(r.portal_username) === usernameLower;
@@ -43,7 +45,7 @@ export const Route = createFileRoute("/api/public/portal/login-password")({
 
             return (portalUserMatches || iptvUserMatches || phoneMatches) && (portalPasswordMatches || iptvPasswordMatches);
           });
-          if (!match) return json({ error: "Login ou senha incorretos." }, { status: 401 });
+          if (!match) return json({ error: "Login ou senha incorretos." }, request, { status: 401 });
 
           const token = portal.genSessionToken();
           const tokenHash = portal.sha256(token);
@@ -54,9 +56,9 @@ export const Route = createFileRoute("/api/public/portal/login-password")({
             expires_at: expires,
           });
 
-          return json({ token, expires_at: expires });
+          return json({ token, expires_at: expires }, request);
         } catch (e) {
-          return json({ error: (e as Error).message }, { status: 500 });
+          return json({ error: (e as Error).message }, request, { status: 500 });
         }
       },
     },

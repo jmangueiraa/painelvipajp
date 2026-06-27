@@ -1,17 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { portalCorsHeaders, portalOptions } from "@/lib/portal-cors";
 
-function json(data: unknown, init?: ResponseInit) {
-  return Response.json(data, { ...init, headers: { "Cache-Control": "no-store", ...(init?.headers ?? {}) } });
+function json(data: unknown, request: Request, init?: ResponseInit) {
+  return Response.json(data, { ...init, headers: { "Cache-Control": "no-store", ...portalCorsHeaders(request), ...(init?.headers ?? {}) } });
 }
 
 export const Route = createFileRoute("/api/public/portal/me")({
   server: {
     handlers: {
+      OPTIONS: async ({ request }) => portalOptions(request),
       GET: async ({ request }) => {
         try {
           const portal = await import("@/integrations/portal/session.server");
           const client = await portal.getSessionFromRequest(request);
-          if (!client) return json({ error: "Sessão inválida" }, { status: 401 });
+          if (!client) return json({ error: "Sessão inválida" }, request, { status: 401 });
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -63,9 +65,9 @@ export const Route = createFileRoute("/api/public/portal/me")({
             settings: settings ?? { referral_reward_days: 30, referral_enabled: true },
             plans: plans ?? [],
             updates: updates ?? [],
-          });
+          }, request);
         } catch (e) {
-          return json({ error: (e as Error).message }, { status: 500 });
+          return json({ error: (e as Error).message }, request, { status: 500 });
         }
       },
     },
