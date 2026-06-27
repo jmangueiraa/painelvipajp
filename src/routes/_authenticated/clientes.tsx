@@ -103,6 +103,7 @@ function ClientesPage() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ ok: number; fail: number; errors: string[] } | null>(null);
   const [nameSort, setNameSort] = useState<"asc" | "desc">("asc");
+  const [dueSort, setDueSort] = useState<"asc" | "desc" | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
