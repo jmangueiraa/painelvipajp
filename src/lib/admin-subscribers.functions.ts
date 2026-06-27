@@ -334,6 +334,19 @@ export const deleteSubscriber = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+export const promoteToReseller = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { userId: string }) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("user_roles")
+      .upsert({ user_id: data.userId, role: "revendedor" as any }, { onConflict: "user_id,role" });
+    if (error) throw error;
+    return { ok: true };
+  });
 export const checkIsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

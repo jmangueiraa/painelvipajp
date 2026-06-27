@@ -5,10 +5,10 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   ShieldCheck, Users as UsersIcon, BadgeCheck, AlertTriangle, Ban, DollarSign, Search, Loader2,
-  RefreshCw, Pencil, Trash2,
+  RefreshCw, Store, Trash2,
 } from "lucide-react";
 
-import { listSubscribers, renewSubscriberDays, deleteSubscriber, type SubscriberRow } from "@/lib/admin-subscribers.functions";
+import { listSubscribers, renewSubscriberDays, deleteSubscriber, promoteToReseller, type SubscriberRow } from "@/lib/admin-subscribers.functions";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { translateError } from "@/lib/translate-error";
 import { brl, formatDateBR } from "@/lib/format";
@@ -64,6 +64,7 @@ function AssinantesPage() {
   const listFn = useServerFn(listSubscribers);
   const renewFn = useServerFn(renewSubscriberDays);
   const deleteFn = useServerFn(deleteSubscriber);
+  const promoteFn = useServerFn(promoteToReseller);
   const qc = useQueryClient();
 
   const [renewTarget, setRenewTarget] = useState<SubscriberRow | null>(null);
@@ -86,6 +87,15 @@ function AssinantesPage() {
     onSuccess: () => {
       toast.success("Assinante excluído.");
       setDeleteTarget(null);
+      qc.invalidateQueries({ queryKey: ["admin", "subscribers"] });
+    },
+    onError: (e) => toast.error(translateError(e)),
+  });
+
+  const promoteMut = useMutation({
+    mutationFn: async (userId: string) => promoteFn({ data: { userId } }),
+    onSuccess: () => {
+      toast.success("Assinante promovido a revendedor.");
       qc.invalidateQueries({ queryKey: ["admin", "subscribers"] });
     },
     onError: (e) => toast.error(translateError(e)),
@@ -282,8 +292,8 @@ function AssinantesPage() {
                         <Button size="sm" variant="outline" onClick={() => setRenewTarget(r)} title="Renovar">
                           <RefreshCw className="size-4" />
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => navigate({ to: "/admin/assinantes/$id", params: { id: r.user_id } })} title="Editar">
-                          <Pencil className="size-4" />
+                        <Button size="sm" variant="outline" onClick={() => promoteMut.mutate(r.user_id)} disabled={promoteMut.isPending} title="Tornar revenda">
+                          <Store className="size-4" />
                         </Button>
                         <Button size="sm" variant="outline" className="text-rose-400 hover:text-rose-300" onClick={() => setDeleteTarget(r)} title="Excluir">
                           <Trash2 className="size-4" />
