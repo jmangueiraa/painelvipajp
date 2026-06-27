@@ -359,10 +359,10 @@ export const promoteToReseller = createServerFn({ method: "POST" })
 export const checkIsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (error) return { isAdmin: false };
-    return { isAdmin: !!data };
+    const [{ data: isAdmin }, { data: isReseller }] = await Promise.all([
+      context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" }),
+      context.supabase.rpc("has_role", { _user_id: context.userId, _role: "revendedor" }),
+    ]);
+    return { isAdmin: !!isAdmin || !!isReseller };
   });
+
