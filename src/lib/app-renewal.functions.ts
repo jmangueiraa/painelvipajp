@@ -264,14 +264,24 @@ export const checkAppRenewalStatus = createServerFn({ method: "POST" })
 
     const { data: req } = await supabaseAdmin
       .from("app_renewal_requests")
-      .select("id,user_id,plan_id,days,status,mp_payment_id,paid_at")
+      .select("id,user_id,plan_id,days,status,mp_payment_id,paid_at,reseller_user_id")
       .eq("id", data.renewal_id)
       .maybeSingle();
     if (!req || req.user_id !== userId) throw new Error("Solicitação não encontrada");
 
     if (req.status === "paid") return { status: "paid" as const };
 
-    const token = getToken();
+    let overrideToken: string | null = null;
+    if ((req as any).reseller_user_id) {
+      const { data: r } = await supabaseAdmin
+        .from("settings")
+        .select("mp_access_token")
+        .eq("user_id", (req as any).reseller_user_id)
+        .maybeSingle();
+      overrideToken = (r as { mp_access_token?: string | null } | null)?.mp_access_token?.trim() || null;
+    }
+    const token = getToken(overrideToken);
+
     let paymentId = req.mp_payment_id as string | null;
     let mpStatus: string | undefined;
 
