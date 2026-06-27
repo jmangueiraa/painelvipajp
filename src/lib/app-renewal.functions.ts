@@ -155,8 +155,9 @@ export const createAppRenewalCardCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ plan_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const token = getToken();
     const { supabase, userId } = context;
+    const { token: resellerToken, resellerId } = await resolveResellerToken(userId);
+    const token = getToken(resellerToken);
 
     const { data: plan, error: planErr } = await supabase
       .from("app_plans")
@@ -177,10 +178,12 @@ export const createAppRenewalCardCheckout = createServerFn({ method: "POST" })
         days: plan.duration_days,
         amount_cents: amount_with_fee,
         status: "awaiting_payment",
+        reseller_user_id: resellerId,
       })
       .select("id")
       .single();
     if (reqErr || !req) throw new Error("Falha ao registrar solicitação");
+
 
     const { data: profile } = await supabaseAdmin
       .from("profiles")
