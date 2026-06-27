@@ -11,17 +11,6 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
   if (!data) throw new Error("Acesso restrito a administradores");
 }
 
-async function assertAdminOrReseller(ctx: { supabase: any; userId: string }) {
-  const [{ data: isAdmin }, { data: isReseller }] = await Promise.all([
-    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" }),
-    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "revendedor" }),
-  ]);
-  if (!isAdmin && !isReseller) throw new Error("Acesso restrito");
-  return { isAdmin: !!isAdmin, isReseller: !!isReseller };
-}
-
-
-
 export type SubscriberRow = {
   user_id: string;
   full_name: string | null;
@@ -51,7 +40,7 @@ export type SubscriberRow = {
 export const listSubscribers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { isAdmin } = await assertAdminOrReseller(context);
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [
@@ -68,8 +57,8 @@ export const listSubscribers = createServerFn({ method: "GET" })
       supabaseAdmin.from("app_subscriptions").select("*"),
       supabaseAdmin.from("app_plans").select("id, name"),
       supabaseAdmin.from("app_subscription_payments").select("user_id, paid_at, amount_cents, method").order("paid_at", { ascending: false }),
-      supabaseAdmin.from("settings").select("user_id, subscription_expires_at, subscription_monthly_cents, created_at, reseller_user_id"),
-      supabaseAdmin.from("app_renewal_requests").select("user_id, paid_at, amount_cents, plan_id, status, reseller_user_id").eq("status", "paid").order("paid_at", { ascending: false }),
+      supabaseAdmin.from("settings").select("user_id, subscription_expires_at, subscription_monthly_cents, created_at"),
+      supabaseAdmin.from("app_renewal_requests").select("user_id, paid_at, amount_cents, plan_id, status").eq("status", "paid").order("paid_at", { ascending: false }),
       supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin"),
       supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
     ]);
@@ -96,27 +85,9 @@ export const listSubscribers = createServerFn({ method: "GET" })
       if (!lastRenMap.has(r.user_id)) lastRenMap.set(r.user_id, r);
     }
 
-    // Set of users that paid via this reseller's MP
-    const resellerUserSet = new Set<string>();
-    if (!isAdmin) {
-      for (const r of renewals ?? []) {
-        if ((r as any).reseller_user_id === context.userId) resellerUserSet.add(r.user_id);
-      }
-      for (const s of settingsRows ?? []) {
-        if ((s as any).reseller_user_id === context.userId) resellerUserSet.add(s.user_id);
-      }
-    }
-
     const now = Date.now();
 
-    const filteredProfiles = (profiles ?? []).filter((p) => {
-      if (adminSet.has(p.id)) return false;
-      if (!isAdmin) {
-        if (p.id === context.userId) return false;
-        return resellerUserSet.has(p.id);
-      }
-      return true;
-    });
+    const filteredProfiles = (profiles ?? []).filter((p) => !adminSet.has(p.id));
 
     const rows: SubscriberRow[] = filteredProfiles.map((p) => {
 
@@ -178,7 +149,7 @@ export const getSubscriberDetail = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { userId: string }) => z.object({ userId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdminOrReseller(context);
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [{ data: profile, error: pErr }, { data: sub, error: sErr }, { data: payments, error: payErr }, userRes, { data: plans }] = await Promise.all([
@@ -229,10 +200,9 @@ export const updateSubscription = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ context, data }) => {
-    await assertAdminOrReseller(context);
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // upsert subscription
     const { data: existing } = await supabaseAdmin
       .from("app_subscriptions")
       .select("id")
@@ -263,7 +233,7 @@ export const cancelSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { userId: string }) => z.object({ userId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdminOrReseller(context);
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("app_subscriptions")
@@ -293,7 +263,7 @@ export const markAsPaid = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ context, data }) => {
-    const { isAdmin, isReseller } = await assertAdminOrReseller(context);
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: sub, error: sErr } = await supabaseAdmin
@@ -329,11 +299,6 @@ export const markAsPaid = createServerFn({ method: "POST" })
       .eq("id", sub.id);
     if (upErr) throw upErr;
 
-    if (isReseller && !isAdmin) {
-      await supabaseAdmin
-        .from("settings")
-        .upsert({ user_id: data.userId, reseller_user_id: context.userId }, { onConflict: "user_id" });
-    }
     return { ok: true };
   });
 
@@ -344,7 +309,7 @@ export const renewSubscriberDays = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), days: z.number().int().min(1).max(3650) }).parse(d),
   )
   .handler(async ({ context, data }) => {
-    const { isAdmin, isReseller } = await assertAdminOrReseller(context);
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: s } = await supabaseAdmin
       .from("settings")
@@ -355,11 +320,9 @@ export const renewSubscriberDays = createServerFn({ method: "POST" })
     const base = current && new Date(current) > new Date() ? new Date(current) : new Date();
     base.setDate(base.getDate() + data.days);
     const newExpiry = base.toISOString().slice(0, 10);
-    const payload: any = { user_id: data.userId, subscription_expires_at: newExpiry };
-    if (isReseller && !isAdmin) payload.reseller_user_id = context.userId;
     const { error } = await supabaseAdmin
       .from("settings")
-      .upsert(payload, { onConflict: "user_id" });
+      .upsert({ user_id: data.userId, subscription_expires_at: newExpiry }, { onConflict: "user_id" });
     if (error) throw error;
     return { ok: true, expires_at: newExpiry };
   });
@@ -377,25 +340,12 @@ export const deleteSubscriber = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const promoteToReseller = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: { userId: string }) => z.object({ userId: z.string().uuid() }).parse(d))
-  .handler(async ({ context, data }) => {
-    await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
-      .from("user_roles")
-      .upsert({ user_id: data.userId, role: "revendedor" as any }, { onConflict: "user_id,role" });
-    if (error) throw error;
-    return { ok: true };
-  });
 export const checkIsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const [{ data: isAdmin }, { data: isReseller }] = await Promise.all([
-      context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" }),
-      context.supabase.rpc("has_role", { _user_id: context.userId, _role: "revendedor" }),
-    ]);
-    return { isAdmin: !!isAdmin || !!isReseller };
+    const { data } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    return { isAdmin: !!data };
   });
-
