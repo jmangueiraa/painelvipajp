@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Users, UserCheck, AlertTriangle, CalendarClock, CalendarDays } from "lucide-react";
@@ -133,11 +133,11 @@ function DashboardPage() {
       <PageHeader title="Dashboard" description="Visão geral em tempo real do seu negócio" />
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
-        <KpiCard label="Total de clientes" value={stats.total} icon={Users} color="violet" />
-        <KpiCard label="Clientes ativos" value={stats.ativos} icon={UserCheck} color="emerald" />
-        <KpiCard label="Vencidos" value={stats.vencidos} icon={AlertTriangle} color="rose" />
-        <KpiCard label="Vencem hoje" value={stats.hoje} icon={CalendarClock} color="cyan" />
-        <KpiCard label="A vencer no mês" value={stats.mes} icon={CalendarDays} color="violet" />
+        <Link to="/clientes" search={{ filter: "todos" }} className="block"><KpiCard label="Total de clientes" value={stats.total} icon={Users} color="violet" /></Link>
+        <Link to="/clientes" search={{ filter: "em_dia" }} className="block"><KpiCard label="Clientes ativos" value={stats.ativos} icon={UserCheck} color="emerald" /></Link>
+        <Link to="/clientes" search={{ filter: "vencidos" }} className="block"><KpiCard label="Vencidos" value={stats.vencidos} icon={AlertTriangle} color="rose" /></Link>
+        <Link to="/clientes" search={{ filter: "vencem_hoje" }} className="block"><KpiCard label="Vencem hoje" value={stats.hoje} icon={CalendarClock} color="cyan" /></Link>
+        <Link to="/clientes" search={{ filter: "a_vencer" }} className="block"><KpiCard label="A vencer no mês" value={stats.mes} icon={CalendarDays} color="violet" /></Link>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
