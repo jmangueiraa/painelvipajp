@@ -64,6 +64,7 @@ function AssinantesPage() {
   const listFn = useServerFn(listSubscribers);
   const renewFn = useServerFn(renewSubscriberDays);
   const deleteFn = useServerFn(deleteSubscriber);
+  const promoteFn = useServerFn(promoteToReseller);
   const qc = useQueryClient();
 
   const [renewTarget, setRenewTarget] = useState<SubscriberRow | null>(null);
