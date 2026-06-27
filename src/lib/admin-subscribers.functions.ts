@@ -50,6 +50,7 @@ export const listSubscribers = createServerFn({ method: "GET" })
       { data: pays, error: payErr },
       { data: settingsRows, error: setErr },
       { data: renewals, error: renErr },
+      { data: adminRoles, error: arErr },
       usersRes,
     ] = await Promise.all([
       supabaseAdmin.from("profiles").select("id, full_name, company_name, phone, created_at"),
@@ -58,6 +59,7 @@ export const listSubscribers = createServerFn({ method: "GET" })
       supabaseAdmin.from("app_subscription_payments").select("user_id, paid_at, amount_cents, method").order("paid_at", { ascending: false }),
       supabaseAdmin.from("settings").select("user_id, subscription_expires_at, subscription_monthly_cents, created_at"),
       supabaseAdmin.from("app_renewal_requests").select("user_id, paid_at, amount_cents, plan_id, status").eq("status", "paid").order("paid_at", { ascending: false }),
+      supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin"),
       supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
     ]);
     if (pErr) throw pErr;
@@ -66,8 +68,10 @@ export const listSubscribers = createServerFn({ method: "GET" })
     if (payErr) throw payErr;
     if (setErr) throw setErr;
     if (renErr) throw renErr;
+    if (arErr) throw arErr;
     if (usersRes.error) throw usersRes.error;
 
+    const adminSet = new Set((adminRoles ?? []).map((r) => r.user_id));
     const planMap = new Map((plans ?? []).map((p) => [p.id, p.name]));
     const subMap = new Map((subs ?? []).map((s) => [s.user_id, s]));
     const settingsMap = new Map((settingsRows ?? []).map((s) => [s.user_id, s]));
@@ -83,7 +87,7 @@ export const listSubscribers = createServerFn({ method: "GET" })
 
     const now = Date.now();
 
-    const rows: SubscriberRow[] = (profiles ?? []).map((p) => {
+    const rows: SubscriberRow[] = (profiles ?? []).filter((p) => !adminSet.has(p.id)).map((p) => {
       const sub = subMap.get(p.id);
       const set = settingsMap.get(p.id);
       const u = userMap.get(p.id);
