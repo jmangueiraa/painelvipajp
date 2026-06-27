@@ -670,7 +670,17 @@ function ClientesPage() {
                 </TableHead>
                 
                 <TableHead>Valor</TableHead>
-                <TableHead>Vencimento</TableHead>
+                <TableHead>
+                  <button
+                    type="button"
+                    onClick={() => setDueSort((s) => (s === "asc" ? "desc" : "asc"))}
+                    className="inline-flex items-center gap-1 font-medium hover:text-foreground transition-colors"
+                    title="Ordenar por vencimento"
+                  >
+                    Vencimento
+                    {dueSort === "asc" ? <ArrowUp className="size-3.5" /> : dueSort === "desc" ? <ArrowDown className="size-3.5" /> : <ArrowUpDown className="size-3.5 opacity-60" />}
+                  </button>
+                </TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
