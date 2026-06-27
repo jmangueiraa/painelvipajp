@@ -25,7 +25,7 @@ export const Route = createFileRoute("/portal/")({
       { name: "mobile-web-app-capable", content: "yes" },
     ],
     links: [
-      { rel: "manifest", href: "/portal-manifest.webmanifest?v=4" },
+      { rel: "manifest", href: "/portal-manifest.webmanifest?v=5" },
       { rel: "apple-touch-icon", href: "/portal-icon-192.png" },
       { rel: "icon", type: "image/png", sizes: "192x192", href: "/portal-icon-192.png" },
       { rel: "icon", type: "image/png", sizes: "512x512", href: "/portal-icon-512.png" },

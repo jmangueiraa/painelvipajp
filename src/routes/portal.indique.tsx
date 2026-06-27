@@ -20,7 +20,7 @@ export const Route = createFileRoute("/portal/indique")({
       { name: "mobile-web-app-capable", content: "yes" },
     ],
     links: [
-      { rel: "manifest", href: "/portal-manifest.webmanifest?v=4" },
+      { rel: "manifest", href: "/portal-manifest.webmanifest?v=5" },
       { rel: "apple-touch-icon", href: "/portal-icon-192.png" },
     ],
   }),
