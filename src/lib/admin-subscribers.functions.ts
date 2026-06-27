@@ -49,7 +49,7 @@ export type SubscriberRow = {
 export const listSubscribers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context);
+    await assertAdminOrReseller(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [
@@ -155,7 +155,7 @@ export const getSubscriberDetail = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { userId: string }) => z.object({ userId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context);
+    await assertAdminOrReseller(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [{ data: profile, error: pErr }, { data: sub, error: sErr }, { data: payments, error: payErr }, userRes, { data: plans }] = await Promise.all([
@@ -206,7 +206,7 @@ export const updateSubscription = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ context, data }) => {
-    await assertAdmin(context);
+    await assertAdminOrReseller(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // upsert subscription
@@ -240,7 +240,7 @@ export const cancelSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { userId: string }) => z.object({ userId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context);
+    await assertAdminOrReseller(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("app_subscriptions")
@@ -270,7 +270,7 @@ export const markAsPaid = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ context, data }) => {
-    await assertAdmin(context);
+    await assertAdminOrReseller(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: sub, error: sErr } = await supabaseAdmin
@@ -314,7 +314,7 @@ export const renewSubscriberDays = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), days: z.number().int().min(1).max(3650) }).parse(d),
   )
   .handler(async ({ context, data }) => {
-    await assertAdmin(context);
+    await assertAdminOrReseller(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: s } = await supabaseAdmin
       .from("settings")
