@@ -43,31 +43,75 @@ export const listSubscribers = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [{ data: profiles, error: pErr }, { data: subs, error: sErr }, { data: plans, error: plErr }, { data: pays, error: payErr }, usersRes] = await Promise.all([
+    const [
+      { data: profiles, error: pErr },
+      { data: subs, error: sErr },
+      { data: plans, error: plErr },
+      { data: pays, error: payErr },
+      { data: settingsRows, error: setErr },
+      { data: renewals, error: renErr },
+      usersRes,
+    ] = await Promise.all([
       supabaseAdmin.from("profiles").select("id, full_name, company_name, phone, created_at"),
       supabaseAdmin.from("app_subscriptions").select("*"),
       supabaseAdmin.from("app_plans").select("id, name"),
       supabaseAdmin.from("app_subscription_payments").select("user_id, paid_at, amount_cents, method").order("paid_at", { ascending: false }),
+      supabaseAdmin.from("settings").select("user_id, subscription_expires_at, subscription_monthly_cents, created_at"),
+      supabaseAdmin.from("app_renewal_requests").select("user_id, paid_at, amount_cents, plan_id, status").eq("status", "paid").order("paid_at", { ascending: false }),
       supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
     ]);
     if (pErr) throw pErr;
     if (sErr) throw sErr;
     if (plErr) throw plErr;
     if (payErr) throw payErr;
+    if (setErr) throw setErr;
+    if (renErr) throw renErr;
     if (usersRes.error) throw usersRes.error;
 
     const planMap = new Map((plans ?? []).map((p) => [p.id, p.name]));
     const subMap = new Map((subs ?? []).map((s) => [s.user_id, s]));
+    const settingsMap = new Map((settingsRows ?? []).map((s) => [s.user_id, s]));
     const userMap = new Map(usersRes.data.users.map((u) => [u.id, u]));
     const lastPayMap = new Map<string, any>();
     for (const p of pays ?? []) {
       if (!lastPayMap.has(p.user_id)) lastPayMap.set(p.user_id, p);
     }
+    const lastRenMap = new Map<string, any>();
+    for (const r of renewals ?? []) {
+      if (!lastRenMap.has(r.user_id)) lastRenMap.set(r.user_id, r);
+    }
+
+    const now = Date.now();
 
     const rows: SubscriberRow[] = (profiles ?? []).map((p) => {
       const sub = subMap.get(p.id);
+      const set = settingsMap.get(p.id);
       const u = userMap.get(p.id);
-      const last = lastPayMap.get(p.id);
+      const lastPay = lastPayMap.get(p.id);
+      const lastRen = lastRenMap.get(p.id);
+
+      const expiresAt = sub?.current_period_end ?? set?.subscription_expires_at ?? null;
+      const priceCents = sub?.price_cents ?? set?.subscription_monthly_cents ?? 0;
+      const startedAt = sub?.started_at ?? set?.created_at ?? p.created_at ?? null;
+
+      let status: string | null = sub?.status ?? null;
+      if (!status) {
+        if (!expiresAt) status = "pendente";
+        else status = new Date(expiresAt).getTime() >= now ? "ativa" : "vencida";
+      }
+
+      const planId = sub?.plan_id ?? lastRen?.plan_id ?? null;
+      const planName = planId ? planMap.get(planId) ?? null : null;
+
+      const renPayAt = lastRen?.paid_at ? new Date(lastRen.paid_at).getTime() : 0;
+      const subPayAt = lastPay?.paid_at ? new Date(lastPay.paid_at).getTime() : 0;
+      const useRen = renPayAt && renPayAt >= subPayAt;
+      const last_payment = useRen
+        ? { paid_at: lastRen.paid_at, amount_cents: lastRen.amount_cents ?? 0, method: "pix" }
+        : lastPay
+        ? { paid_at: lastPay.paid_at, amount_cents: lastPay.amount_cents ?? 0, method: lastPay.method }
+        : null;
+
       return {
         user_id: p.id,
         full_name: p.full_name,
@@ -78,18 +122,16 @@ export const listSubscribers = createServerFn({ method: "GET" })
         last_sign_in_at: u?.last_sign_in_at ?? null,
         subscription: {
           id: sub?.id ?? null,
-          status: sub?.status ?? null,
-          plan_id: sub?.plan_id ?? null,
-          plan_name: sub?.plan_id ? planMap.get(sub.plan_id) ?? null : null,
-          price_cents: sub?.price_cents ?? 0,
-          started_at: sub?.started_at ?? null,
-          current_period_end: sub?.current_period_end ?? null,
-          payment_method: sub?.payment_method ?? null,
+          status,
+          plan_id: planId,
+          plan_name: planName,
+          price_cents: priceCents,
+          started_at: startedAt,
+          current_period_end: expiresAt,
+          payment_method: sub?.payment_method ?? (useRen ? "pix" : null),
           cancelled_at: sub?.cancelled_at ?? null,
         },
-        last_payment: last
-          ? { paid_at: last.paid_at, amount_cents: last.amount_cents, method: last.method }
-          : null,
+        last_payment,
       };
     });
 
