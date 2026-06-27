@@ -295,7 +295,43 @@ export const markAsPaid = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const checkIsAdmin = createServerFn({ method: "GET" })
+export const renewSubscriberDays = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { userId: string; days: number }) =>
+    z.object({ userId: z.string().uuid(), days: z.number().int().min(1).max(3650) }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: s } = await supabaseAdmin
+      .from("settings")
+      .select("subscription_expires_at")
+      .eq("user_id", data.userId)
+      .maybeSingle();
+    const current = s?.subscription_expires_at;
+    const base = current && new Date(current) > new Date() ? new Date(current) : new Date();
+    base.setDate(base.getDate() + data.days);
+    const newExpiry = base.toISOString().slice(0, 10);
+    const { error } = await supabaseAdmin
+      .from("settings")
+      .upsert({ user_id: data.userId, subscription_expires_at: newExpiry }, { onConflict: "user_id" });
+    if (error) throw error;
+    return { ok: true, expires_at: newExpiry };
+  });
+
+export const deleteSubscriber = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { userId: string }) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context);
+    if (data.userId === context.userId) throw new Error("Você não pode excluir sua própria conta.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase.rpc("has_role", {
