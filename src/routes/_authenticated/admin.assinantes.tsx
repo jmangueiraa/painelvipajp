@@ -216,7 +216,7 @@ function AssinantesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Usuário</TableHead>
-                  <TableHead>Contato</TableHead>
+                  
                   <TableHead>Plano</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Assinou em</TableHead>
@@ -233,10 +233,6 @@ function AssinantesPage() {
                     <TableCell>
                       <div className="font-medium truncate max-w-[180px]">{r.full_name || "—"}</div>
                       {r.company_name && <div className="text-xs text-muted-foreground truncate max-w-[180px]">{r.company_name}</div>}
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm truncate max-w-[200px]">{r.email ?? "—"}</div>
-                      <div className="text-xs text-muted-foreground">{r.phone ?? "—"}</div>
                     </TableCell>
                     <TableCell>{r.subscription.plan_name ?? <span className="text-muted-foreground">—</span>}</TableCell>
                     <TableCell><StatusBadge status={r.subscription.status} /></TableCell>
