@@ -216,7 +216,7 @@ function AssinantesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Usuário</TableHead>
-                  <TableHead>Contato</TableHead>
+                  
                   <TableHead>Plano</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Assinou em</TableHead>
