@@ -15,9 +15,9 @@ function applyCardFee(price_cents: number) {
   return Math.ceil(price_cents / (1 - CARD_FEE_PERCENT / 100));
 }
 
-function getToken() {
-  const t = process.env.MERCADOPAGO_ACCESS_TOKEN?.trim();
-  if (!t) throw new Error("Mercado Pago não configurado. Defina MERCADOPAGO_ACCESS_TOKEN.");
+function getToken(override?: string | null) {
+  const t = (override?.trim() || process.env.MERCADOPAGO_ACCESS_TOKEN?.trim()) ?? "";
+  if (!t) throw new Error("Mercado Pago não configurado.");
   if (t.startsWith("TEST-")) {
     throw new Error(
       "Access Token de TESTE detectado. Use o token de PRODUÇÃO do Mercado Pago (começa com APP_USR-).",
@@ -25,6 +25,25 @@ function getToken() {
   }
   return t;
 }
+
+async function resolveResellerToken(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: s } = await supabaseAdmin
+    .from("settings")
+    .select("reseller_user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const resellerId = (s as { reseller_user_id?: string | null } | null)?.reseller_user_id ?? null;
+  if (!resellerId) return { token: null as string | null, resellerId: null as string | null };
+  const { data: r } = await supabaseAdmin
+    .from("settings")
+    .select("mp_access_token")
+    .eq("user_id", resellerId)
+    .maybeSingle();
+  const token = (r as { mp_access_token?: string | null } | null)?.mp_access_token?.trim() || null;
+  return { token, resellerId };
+}
+
 
 async function getOrigin() {
   try {
