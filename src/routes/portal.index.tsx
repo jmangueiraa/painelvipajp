@@ -72,8 +72,7 @@ function PortalLoginPage() {
           onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
         />
         <CardHeader className="text-center">
-            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-          />
+
 
           <CardTitle className="text-2xl">Portal do Cliente</CardTitle>
           <CardDescription>Entre com o login e senha cadastrados no seu acesso.</CardDescription>
