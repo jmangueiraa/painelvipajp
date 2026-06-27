@@ -52,7 +52,8 @@ export const Route = createFileRoute("/api/public/portal/mp-create-card")({
 
           const url = new URL(request.url);
           const origin = `${url.protocol}//${url.host}`;
-          const back = `${origin}/portal/painel`;
+          const portalOrigin = request.headers.get("x-portal-origin") || origin;
+          const back = `${portalOrigin}/portal/painel`;
 
           const mpRes = await fetch("https://api.mercadopago.com/checkout/preferences", {
             method: "POST",

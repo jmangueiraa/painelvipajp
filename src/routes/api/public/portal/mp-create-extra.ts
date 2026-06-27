@@ -60,6 +60,7 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
 
           const url = new URL(request.url);
           const origin = `${url.protocol}//${url.host}`;
+          const portalOrigin = request.headers.get("x-portal-origin") || origin;
           const payerEmail = `cliente.${client.id.slice(0, 8)}@painelvip.app`;
           const description = `${label} - ${client.name}`;
 
@@ -103,7 +104,7 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
           }
 
           // Cartão (Checkout Pro)
-          const back = `${origin}/portal/painel`;
+          const back = `${portalOrigin}/portal/painel`;
           const mpRes = await fetch("https://api.mercadopago.com/checkout/preferences", {
             method: "POST",
             headers: {

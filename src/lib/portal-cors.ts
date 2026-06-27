@@ -11,7 +11,7 @@ export function portalCorsHeaders(request?: Request): Record<string, string> {
   return {
     "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, X-Portal-Origin, Accept, Origin",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
   };

@@ -1,10 +1,15 @@
 const TOKEN_KEY = "portal_token";
 const PORTAL_API_ORIGIN = "https://painelvipajp.lovable.app";
 
+function isCustomPortalDomain(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.location.hostname === "ajpvip.com.br" || window.location.hostname === "www.ajpvip.com.br";
+}
+
 function getPortalApiUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) return path;
   if (typeof window === "undefined") return path;
-  if (window.location.hostname === "ajpvip.com.br" || window.location.hostname === "www.ajpvip.com.br") {
+  if (isCustomPortalDomain()) {
     return `${PORTAL_API_ORIGIN}${path}`;
   }
   return path;
@@ -39,6 +44,7 @@ export async function portalFetch<T = unknown>(path: string, init?: RequestInit)
     "Content-Type": "application/json",
     ...((init?.headers as Record<string, string>) ?? {}),
   };
+  if (isCustomPortalDomain()) headers["X-Portal-Origin"] = window.location.origin;
   if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(getPortalApiUrl(path), { ...init, headers });
   const body = await res.json().catch(() => ({}));
