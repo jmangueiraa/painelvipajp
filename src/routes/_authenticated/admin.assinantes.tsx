@@ -292,8 +292,8 @@ function AssinantesPage() {
                         <Button size="sm" variant="outline" onClick={() => setRenewTarget(r)} title="Renovar">
                           <RefreshCw className="size-4" />
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => navigate({ to: "/admin/assinantes/$id", params: { id: r.user_id } })} title="Editar">
-                          <Pencil className="size-4" />
+                        <Button size="sm" variant="outline" onClick={() => promoteMut.mutate(r.user_id)} disabled={promoteMut.isPending} title="Tornar revenda">
+                          <Store className="size-4" />
                         </Button>
                         <Button size="sm" variant="outline" className="text-rose-400 hover:text-rose-300" onClick={() => setDeleteTarget(r)} title="Excluir">
                           <Trash2 className="size-4" />
