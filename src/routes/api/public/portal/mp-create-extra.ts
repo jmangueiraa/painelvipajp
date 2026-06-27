@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { portalCorsHeaders, portalOptions } from "@/lib/portal-cors";
 
-function json(data: unknown, init?: ResponseInit) {
-  return Response.json(data, { ...init, headers: { "Cache-Control": "no-store", ...(init?.headers ?? {}) } });
+function json(data: unknown, request: Request, init?: ResponseInit) {
+  return Response.json(data, { ...init, headers: { "Cache-Control": "no-store", ...portalCorsHeaders(request), ...(init?.headers ?? {}) } });
 }
 
 const CARD_FEE_PERCENT = 4.99;
@@ -10,11 +11,12 @@ const applyCardFee = (c: number) => Math.ceil(c / (1 - CARD_FEE_PERCENT / 100));
 export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
   server: {
     handlers: {
+      OPTIONS: async ({ request }) => portalOptions(request),
       POST: async ({ request }) => {
         try {
           const portal = await import("@/integrations/portal/session.server");
           const client = await portal.getSessionFromRequest(request);
-          if (!client) return json({ error: "Sessão inválida" }, { status: 401 });
+          if (!client) return json({ error: "Sessão inválida" }, request, { status: 401 });
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { data: ownerSettings } = await supabaseAdmin
@@ -23,9 +25,9 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
             .eq("user_id", client.user_id)
             .maybeSingle();
           const token = (ownerSettings as { mp_access_token?: string | null } | null)?.mp_access_token?.trim();
-          if (!token) return json({ error: "Mercado Pago não configurado pelo administrador" }, { status: 500 });
+          if (!token) return json({ error: "Mercado Pago não configurado pelo administrador" }, request, { status: 500 });
           if (token.startsWith("TEST-")) {
-            return json({ error: "Token de TESTE. Use o token de PRODUÇÃO (APP_USR-)." }, { status: 500 });
+            return json({ error: "Token de TESTE. Use o token de PRODUÇÃO (APP_USR-)." }, request, { status: 500 });
           }
 
           const body = (await request.json().catch(() => ({}))) as {
@@ -36,9 +38,9 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
           const method = body.method;
           const label = (body.label ?? "").trim();
           const base_cents = Number(body.amount_cents);
-          if (method !== "pix" && method !== "card") return json({ error: "Método inválido" }, { status: 400 });
-          if (!label) return json({ error: "Produto inválido" }, { status: 400 });
-          if (!Number.isFinite(base_cents) || base_cents < 100) return json({ error: "Valor inválido" }, { status: 400 });
+          if (method !== "pix" && method !== "card") return json({ error: "Método inválido" }, request, { status: 400 });
+          if (!label) return json({ error: "Produto inválido" }, request, { status: 400 });
+          if (!Number.isFinite(base_cents) || base_cents < 100) return json({ error: "Valor inválido" }, request, { status: 400 });
 
           const amount_cents = method === "card" ? applyCardFee(base_cents) : base_cents;
 
@@ -54,10 +56,11 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
             })
             .select("id")
             .single();
-          if (insErr || !renewal) return json({ error: "Falha ao registrar solicitação" }, { status: 500 });
+          if (insErr || !renewal) return json({ error: "Falha ao registrar solicitação" }, request, { status: 500 });
 
           const url = new URL(request.url);
           const origin = `${url.protocol}//${url.host}`;
+          const portalOrigin = request.headers.get("x-portal-origin") || origin;
           const payerEmail = `cliente.${client.id.slice(0, 8)}@painelvip.app`;
           const description = `${label} - ${client.name}`;
 
@@ -88,7 +91,7 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
               point_of_interaction?: { transaction_data?: { qr_code?: string; qr_code_base64?: string } };
             };
             if (!mpRes.ok) {
-              return json({ error: "Falha no Mercado Pago", detail: mp.message ?? mpRes.statusText }, { status: 502 });
+              return json({ error: "Falha no Mercado Pago", detail: mp.message ?? mpRes.statusText }, request, { status: 502 });
             }
             const qr_code = mp.point_of_interaction?.transaction_data?.qr_code ?? "";
             const qr_code_base64 = mp.point_of_interaction?.transaction_data?.qr_code_base64 ?? "";
@@ -97,11 +100,11 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
               .from("renewal_requests")
               .update({ mp_payment_id, mp_status: mp.status ?? "pending", pix_qr_code: qr_code, pix_qr_base64: qr_code_base64 })
               .eq("id", renewal.id);
-            return json({ ok: true, renewal_id: renewal.id, payment_id: mp_payment_id, qr_code, qr_code_base64, amount_cents });
+            return json({ ok: true, renewal_id: renewal.id, payment_id: mp_payment_id, qr_code, qr_code_base64, amount_cents }, request);
           }
 
           // Cartão (Checkout Pro)
-          const back = `${origin}/portal/painel`;
+          const back = `${portalOrigin}/portal/painel`;
           const mpRes = await fetch("https://api.mercadopago.com/checkout/preferences", {
             method: "POST",
             headers: {
@@ -135,12 +138,12 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
           });
           const mp = (await mpRes.json().catch(() => ({}))) as { init_point?: string; message?: string };
           if (!mpRes.ok || !mp.init_point) {
-            return json({ error: "Falha no Mercado Pago", detail: mp.message ?? mpRes.statusText }, { status: 502 });
+            return json({ error: "Falha no Mercado Pago", detail: mp.message ?? mpRes.statusText }, request, { status: 502 });
           }
           await supabaseAdmin.from("renewal_requests").update({ mp_status: "pending" }).eq("id", renewal.id);
-          return json({ ok: true, renewal_id: renewal.id, init_point: mp.init_point, amount_cents, base_cents });
+          return json({ ok: true, renewal_id: renewal.id, init_point: mp.init_point, amount_cents, base_cents }, request);
         } catch (e) {
-          return json({ error: (e as Error).message }, { status: 500 });
+          return json({ error: (e as Error).message }, request, { status: 500 });
         }
       },
     },

@@ -1,21 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { portalCorsHeaders, portalOptions } from "@/lib/portal-cors";
 
-function json(data: unknown, init?: ResponseInit) {
-  return Response.json(data, { ...init, headers: { "Cache-Control": "no-store", ...(init?.headers ?? {}) } });
+function json(data: unknown, request: Request, init?: ResponseInit) {
+  return Response.json(data, { ...init, headers: { "Cache-Control": "no-store", ...portalCorsHeaders(request), ...(init?.headers ?? {}) } });
 }
 
 export const Route = createFileRoute("/api/public/portal/renew-request")({
   server: {
     handlers: {
+      OPTIONS: async ({ request }) => portalOptions(request),
       POST: async ({ request }) => {
         try {
           const portal = await import("@/integrations/portal/session.server");
           const client = await portal.getSessionFromRequest(request);
-          if (!client) return json({ error: "Sessão inválida" }, { status: 401 });
+          if (!client) return json({ error: "Sessão inválida" }, request, { status: 401 });
 
           const body = (await request.json().catch(() => ({}))) as { days?: number };
           const days = Number(body.days);
-          if (!Number.isFinite(days) || days < 1 || days > 3650) return json({ error: "Período inválido" }, { status: 400 });
+          if (!Number.isFinite(days) || days < 1 || days > 3650) return json({ error: "Período inválido" }, request, { status: 400 });
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { error } = await supabaseAdmin.from("renewal_requests").insert({
@@ -23,7 +25,7 @@ export const Route = createFileRoute("/api/public/portal/renew-request")({
             user_id: client.user_id,
             days,
           });
-          if (error) return json({ error: "Falha ao registrar solicitação" }, { status: 500 });
+          if (error) return json({ error: "Falha ao registrar solicitação" }, request, { status: 500 });
 
           // Notifica o dono via WhatsApp (best-effort)
           try {
@@ -38,9 +40,9 @@ export const Route = createFileRoute("/api/public/portal/renew-request")({
             }
           } catch { /* noop */ }
 
-          return json({ ok: true });
+          return json({ ok: true }, request);
         } catch (e) {
-          return json({ error: (e as Error).message }, { status: 500 });
+          return json({ error: (e as Error).message }, request, { status: 500 });
         }
       },
     },

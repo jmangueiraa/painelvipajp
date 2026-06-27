@@ -1,17 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { portalCorsHeaders, portalOptions } from "@/lib/portal-cors";
 
-function json(data: unknown, init?: ResponseInit) {
-  return Response.json(data, { ...init, headers: { "Cache-Control": "no-store", ...(init?.headers ?? {}) } });
+function json(data: unknown, request: Request, init?: ResponseInit) {
+  return Response.json(data, { ...init, headers: { "Cache-Control": "no-store", ...portalCorsHeaders(request), ...(init?.headers ?? {}) } });
 }
 
 export const Route = createFileRoute("/api/public/portal/mp-create-pix")({
   server: {
     handlers: {
+      OPTIONS: async ({ request }) => portalOptions(request),
       POST: async ({ request }) => {
         try {
           const portal = await import("@/integrations/portal/session.server");
           const client = await portal.getSessionFromRequest(request);
-          if (!client) return json({ error: "Sessão inválida" }, { status: 401 });
+          if (!client) return json({ error: "Sessão inválida" }, request, { status: 401 });
 
           const { supabaseAdmin: adminEarly } = await import("@/integrations/supabase/client.server");
           const { data: ownerSettings } = await adminEarly
@@ -20,18 +22,18 @@ export const Route = createFileRoute("/api/public/portal/mp-create-pix")({
             .eq("user_id", client.user_id)
             .maybeSingle();
           const token = (ownerSettings as { mp_access_token?: string | null } | null)?.mp_access_token?.trim();
-          if (!token) return json({ error: "Mercado Pago não configurado pelo administrador" }, { status: 500 });
+          if (!token) return json({ error: "Mercado Pago não configurado pelo administrador" }, request, { status: 500 });
           if (token.startsWith("TEST-")) {
             return json({
               error: "Access Token de TESTE detectado. Use o token de PRODUÇÃO do Mercado Pago (começa com APP_USR-) para que o PIX possa ser pago em bancos reais.",
-            }, { status: 500 });
+            }, request, { status: 500 });
           }
 
           const body = (await request.json().catch(() => ({}))) as { days?: number; amount_cents?: number; label?: string };
           const days = Number(body.days);
           const amount_cents = Number(body.amount_cents);
-          if (!Number.isFinite(days) || days < 1 || days > 3650) return json({ error: "Período inválido" }, { status: 400 });
-          if (!Number.isFinite(amount_cents) || amount_cents < 100) return json({ error: "Valor inválido" }, { status: 400 });
+          if (!Number.isFinite(days) || days < 1 || days > 3650) return json({ error: "Período inválido" }, request, { status: 400 });
+          if (!Number.isFinite(amount_cents) || amount_cents < 100) return json({ error: "Valor inválido" }, request, { status: 400 });
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -41,7 +43,7 @@ export const Route = createFileRoute("/api/public/portal/mp-create-pix")({
             .insert({ client_id: client.id, user_id: client.user_id, days, amount_cents, status: "awaiting_payment" })
             .select("id")
             .single();
-          if (insErr || !renewal) return json({ error: "Falha ao registrar solicitação" }, { status: 500 });
+          if (insErr || !renewal) return json({ error: "Falha ao registrar solicitação" }, request, { status: 500 });
 
           // Cria o pagamento PIX no Mercado Pago
           const amount = amount_cents / 100;
@@ -71,7 +73,7 @@ export const Route = createFileRoute("/api/public/portal/mp-create-pix")({
 
           const mp = await mpRes.json().catch(() => ({} as Record<string, unknown>));
           if (!mpRes.ok) {
-            return json({ error: "Falha no Mercado Pago", detail: (mp as { message?: string }).message ?? mpRes.statusText }, { status: 502 });
+            return json({ error: "Falha no Mercado Pago", detail: (mp as { message?: string }).message ?? mpRes.statusText }, request, { status: 502 });
           }
 
           const mpData = mp as {
@@ -100,9 +102,9 @@ export const Route = createFileRoute("/api/public/portal/mp-create-pix")({
             qr_code,
             qr_code_base64,
             amount_cents,
-          });
+          }, request);
         } catch (e) {
-          return json({ error: (e as Error).message }, { status: 500 });
+          return json({ error: (e as Error).message }, request, { status: 500 });
         }
       },
     },
