@@ -352,13 +352,16 @@ function ClientesPage() {
     if (!clients) return [];
     const term = q.trim().toLowerCase();
     const today = todayISO();
-    const in30 = addDaysISO(today, 30);
+    const now = new Date();
+    const eom = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const endOfMonthISO = `${eom.getFullYear()}-${String(eom.getMonth() + 1).padStart(2, "0")}-${String(eom.getDate()).padStart(2, "0")}`;
     const list = clients.filter((c) => {
       if (chip === "em_dia" && c.status !== "ativo") return false;
       if (chip === "vencidos" && c.status !== "vencido") return false;
       if (chip === "bloqueados" && !(c.status === "suspenso" || c.status === "cancelado")) return false;
       if (chip === "vencem_hoje" && c.due_date !== today) return false;
-      if (chip === "a_vencer" && !(c.due_date >= today && c.due_date <= in30)) return false;
+      if (chip === "a_vencer" && !(c.due_date >= today && c.due_date <= endOfMonthISO)) return false;
+
       if (!term) return true;
       return (
         c.name.toLowerCase().includes(term) ||

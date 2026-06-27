@@ -62,17 +62,20 @@ function DashboardPage() {
 
   const stats = useMemo(() => {
     const today = todayISO();
-    const in30 = addDaysISO(today, 30);
+    const now = new Date();
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const endOfMonthISO = `${endOfMonth.getFullYear()}-${String(endOfMonth.getMonth() + 1).padStart(2, "0")}-${String(endOfMonth.getDate()).padStart(2, "0")}`;
     let total = 0, ativos = 0, vencidos = 0, hoje = 0, mes = 0;
     for (const c of clients) {
       total++;
       if (c.status === "ativo") ativos++;
       if (c.status === "vencido") vencidos++;
       if (c.due_date === today) hoje++;
-      if (c.due_date >= today && c.due_date <= in30) mes++;
+      if (c.due_date >= today && c.due_date <= endOfMonthISO) mes++;
     }
     return { total, ativos, vencidos, hoje, mes };
   }, [clients]);
+
 
   const revenue = useMemo(() => {
     const months: { key: string; label: string; total: number }[] = [];
