@@ -5,7 +5,7 @@
   "id": "/portal/",
   "start_url": "/portal/painel",
   "scope": "/portal/",
-  "display": "standalone",
+  "display": "fullscreen",
   "display_override": ["fullscreen", "standalone", "minimal-ui"],
   "prefer_related_applications": false,
   "orientation": "portrait",
