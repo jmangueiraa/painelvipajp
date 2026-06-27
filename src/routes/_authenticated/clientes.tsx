@@ -97,7 +97,8 @@ function ClientesPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
   const [q, setQ] = useState("");
-  const [chip, setChip] = useState<FilterChip>("todos");
+  const search = Route.useSearch();
+  const [chip, setChip] = useState<FilterChip>(search.filter ?? "todos");
   const [importOpen, setImportOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ ok: number; fail: number; errors: string[] } | null>(null);
