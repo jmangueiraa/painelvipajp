@@ -5,10 +5,10 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   ShieldCheck, Users as UsersIcon, BadgeCheck, AlertTriangle, Ban, DollarSign, Search, Loader2,
-  RefreshCw, Pencil, Trash2,
+  RefreshCw, Store, Trash2,
 } from "lucide-react";
 
-import { listSubscribers, renewSubscriberDays, deleteSubscriber, type SubscriberRow } from "@/lib/admin-subscribers.functions";
+import { listSubscribers, renewSubscriberDays, deleteSubscriber, promoteToReseller, type SubscriberRow } from "@/lib/admin-subscribers.functions";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { translateError } from "@/lib/translate-error";
 import { brl, formatDateBR } from "@/lib/format";
