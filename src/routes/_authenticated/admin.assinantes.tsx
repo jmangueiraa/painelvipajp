@@ -62,6 +62,34 @@ function AssinantesPage() {
   const navigate = useNavigate();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
   const listFn = useServerFn(listSubscribers);
+  const renewFn = useServerFn(renewSubscriberDays);
+  const deleteFn = useServerFn(deleteSubscriber);
+  const qc = useQueryClient();
+
+  const [renewTarget, setRenewTarget] = useState<SubscriberRow | null>(null);
+  const [renewDays, setRenewDays] = useState("30");
+  const [deleteTarget, setDeleteTarget] = useState<SubscriberRow | null>(null);
+
+  const renewMut = useMutation({
+    mutationFn: async () => renewFn({ data: { userId: renewTarget!.user_id, days: Number(renewDays) } }),
+    onSuccess: () => {
+      toast.success("Assinatura renovada.");
+      setRenewTarget(null);
+      setRenewDays("30");
+      qc.invalidateQueries({ queryKey: ["admin", "subscribers"] });
+    },
+    onError: (e) => toast.error(translateError(e)),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: async () => deleteFn({ data: { userId: deleteTarget!.user_id } }),
+    onSuccess: () => {
+      toast.success("Assinante excluído.");
+      setDeleteTarget(null);
+      qc.invalidateQueries({ queryKey: ["admin", "subscribers"] });
+    },
+    onError: (e) => toast.error(translateError(e)),
+  });
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("todos");
