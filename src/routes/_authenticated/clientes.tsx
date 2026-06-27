@@ -103,6 +103,7 @@ function ClientesPage() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ ok: number; fail: number; errors: string[] } | null>(null);
   const [nameSort, setNameSort] = useState<"asc" | "desc">("asc");
+  const [dueSort, setDueSort] = useState<"asc" | "desc" | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
@@ -370,8 +371,15 @@ function ClientesPage() {
       a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })
     );
     if (nameSort === "desc") sorted.reverse();
+    if (dueSort) {
+      sorted.sort((a, b) => {
+        const da = a.due_date ?? "";
+        const db = b.due_date ?? "";
+        return dueSort === "asc" ? da.localeCompare(db) : db.localeCompare(da);
+      });
+    }
     return sorted;
-  }, [clients, q, chip, nameSort]);
+  }, [clients, q, chip, nameSort, dueSort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -662,7 +670,17 @@ function ClientesPage() {
                 </TableHead>
                 
                 <TableHead>Valor</TableHead>
-                <TableHead>Vencimento</TableHead>
+                <TableHead>
+                  <button
+                    type="button"
+                    onClick={() => setDueSort((s) => (s === "asc" ? "desc" : "asc"))}
+                    className="inline-flex items-center gap-1 font-medium hover:text-foreground transition-colors"
+                    title="Ordenar por vencimento"
+                  >
+                    Vencimento
+                    {dueSort === "asc" ? <ArrowUp className="size-3.5" /> : dueSort === "desc" ? <ArrowDown className="size-3.5" /> : <ArrowUpDown className="size-3.5 opacity-60" />}
+                  </button>
+                </TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
