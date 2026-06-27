@@ -50,6 +50,7 @@ export const listSubscribers = createServerFn({ method: "GET" })
       { data: pays, error: payErr },
       { data: settingsRows, error: setErr },
       { data: renewals, error: renErr },
+      { data: adminRoles, error: arErr },
       usersRes,
     ] = await Promise.all([
       supabaseAdmin.from("profiles").select("id, full_name, company_name, phone, created_at"),
@@ -58,6 +59,7 @@ export const listSubscribers = createServerFn({ method: "GET" })
       supabaseAdmin.from("app_subscription_payments").select("user_id, paid_at, amount_cents, method").order("paid_at", { ascending: false }),
       supabaseAdmin.from("settings").select("user_id, subscription_expires_at, subscription_monthly_cents, created_at"),
       supabaseAdmin.from("app_renewal_requests").select("user_id, paid_at, amount_cents, plan_id, status").eq("status", "paid").order("paid_at", { ascending: false }),
+      supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin"),
       supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
     ]);
     if (pErr) throw pErr;
