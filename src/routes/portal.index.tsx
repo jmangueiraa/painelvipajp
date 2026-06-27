@@ -73,7 +73,7 @@ function PortalLoginPage() {
           />
 
           <CardTitle className="text-2xl">Portal do Cliente</CardTitle>
-          <CardDescription>Entre com seu usuário e senha.</CardDescription>
+          <CardDescription>Entre com o login e senha cadastrados no seu acesso.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={loginPassword} className="space-y-4">
@@ -110,7 +110,7 @@ function PortalLoginPage() {
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
             </Button>
             <p className="text-xs text-muted-foreground text-center">
-              Peça ao seu provedor o usuário e senha do portal.
+              Você também pode usar seu telefone no campo de usuário.
             </p>
           </form>
         </CardContent>
