@@ -297,6 +297,57 @@ function AssinantesPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!renewTarget} onOpenChange={(o) => !o && setRenewTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renovar assinatura</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              {renewTarget?.full_name || renewTarget?.email}
+            </p>
+            <div>
+              <Label>Dias a adicionar</Label>
+              <Input
+                type="number"
+                min={1}
+                value={renewDays}
+                onChange={(e) => setRenewDays(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenewTarget(null)}>Cancelar</Button>
+            <Button onClick={() => renewMut.mutate()} disabled={renewMut.isPending || !Number(renewDays)}>
+              {renewMut.isPending && <Loader2 className="size-4 mr-1 animate-spin" />}
+              Renovar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir assinante?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação removerá a conta de <strong>{deleteTarget?.full_name || deleteTarget?.email}</strong> permanentemente, incluindo todos os dados vinculados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-rose-600 hover:bg-rose-700"
+              onClick={(e) => { e.preventDefault(); deleteMut.mutate(); }}
+              disabled={deleteMut.isPending}
+            >
+              {deleteMut.isPending && <Loader2 className="size-4 mr-1 animate-spin" />}
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
