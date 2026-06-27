@@ -92,6 +92,15 @@ function AssinantesPage() {
     onError: (e) => toast.error(translateError(e)),
   });
 
+  const promoteMut = useMutation({
+    mutationFn: async (userId: string) => promoteFn({ data: { userId } }),
+    onSuccess: () => {
+      toast.success("Assinante promovido a revendedor.");
+      qc.invalidateQueries({ queryKey: ["admin", "subscribers"] });
+    },
+    onError: (e) => toast.error(translateError(e)),
+  });
+
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("todos");
   const [planFilter, setPlanFilter] = useState<string>("todos");
