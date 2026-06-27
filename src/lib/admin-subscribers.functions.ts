@@ -293,7 +293,7 @@ export const markAsPaid = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ context, data }) => {
-    await assertAdminOrReseller(context);
+    const { isAdmin, isReseller } = await assertAdminOrReseller(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: sub, error: sErr } = await supabaseAdmin
@@ -328,8 +328,15 @@ export const markAsPaid = createServerFn({ method: "POST" })
       })
       .eq("id", sub.id);
     if (upErr) throw upErr;
+
+    if (isReseller && !isAdmin) {
+      await supabaseAdmin
+        .from("settings")
+        .upsert({ user_id: data.userId, reseller_user_id: context.userId }, { onConflict: "user_id" });
+    }
     return { ok: true };
   });
+
 
 export const renewSubscriberDays = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
