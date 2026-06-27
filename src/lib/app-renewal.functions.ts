@@ -15,9 +15,9 @@ function applyCardFee(price_cents: number) {
   return Math.ceil(price_cents / (1 - CARD_FEE_PERCENT / 100));
 }
 
-function getToken() {
-  const t = process.env.MERCADOPAGO_ACCESS_TOKEN?.trim();
-  if (!t) throw new Error("Mercado Pago não configurado. Defina MERCADOPAGO_ACCESS_TOKEN.");
+function getToken(override?: string | null) {
+  const t = (override?.trim() || process.env.MERCADOPAGO_ACCESS_TOKEN?.trim()) ?? "";
+  if (!t) throw new Error("Mercado Pago não configurado.");
   if (t.startsWith("TEST-")) {
     throw new Error(
       "Access Token de TESTE detectado. Use o token de PRODUÇÃO do Mercado Pago (começa com APP_USR-).",
@@ -25,6 +25,25 @@ function getToken() {
   }
   return t;
 }
+
+async function resolveResellerToken(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: s } = await supabaseAdmin
+    .from("settings")
+    .select("reseller_user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const resellerId = (s as { reseller_user_id?: string | null } | null)?.reseller_user_id ?? null;
+  if (!resellerId) return { token: null as string | null, resellerId: null as string | null };
+  const { data: r } = await supabaseAdmin
+    .from("settings")
+    .select("mp_access_token")
+    .eq("user_id", resellerId)
+    .maybeSingle();
+  const token = (r as { mp_access_token?: string | null } | null)?.mp_access_token?.trim() || null;
+  return { token, resellerId };
+}
+
 
 async function getOrigin() {
   try {
@@ -42,8 +61,9 @@ export const createAppRenewalPix = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ plan_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const token = getToken();
     const { supabase, userId } = context;
+    const { token: resellerToken, resellerId } = await resolveResellerToken(userId);
+    const token = getToken(resellerToken);
 
     const { data: plan, error: planErr } = await supabase
       .from("app_plans")
@@ -62,10 +82,12 @@ export const createAppRenewalPix = createServerFn({ method: "POST" })
         days: plan.duration_days,
         amount_cents: plan.price_cents,
         status: "awaiting_payment",
+        reseller_user_id: resellerId,
       })
       .select("id")
       .single();
     if (reqErr || !req) throw new Error("Falha ao registrar solicitação");
+
 
     const { data: profile } = await supabaseAdmin
       .from("profiles")
@@ -133,8 +155,9 @@ export const createAppRenewalCardCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ plan_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const token = getToken();
     const { supabase, userId } = context;
+    const { token: resellerToken, resellerId } = await resolveResellerToken(userId);
+    const token = getToken(resellerToken);
 
     const { data: plan, error: planErr } = await supabase
       .from("app_plans")
@@ -155,10 +178,12 @@ export const createAppRenewalCardCheckout = createServerFn({ method: "POST" })
         days: plan.duration_days,
         amount_cents: amount_with_fee,
         status: "awaiting_payment",
+        reseller_user_id: resellerId,
       })
       .select("id")
       .single();
     if (reqErr || !req) throw new Error("Falha ao registrar solicitação");
+
 
     const { data: profile } = await supabaseAdmin
       .from("profiles")
@@ -239,14 +264,24 @@ export const checkAppRenewalStatus = createServerFn({ method: "POST" })
 
     const { data: req } = await supabaseAdmin
       .from("app_renewal_requests")
-      .select("id,user_id,plan_id,days,status,mp_payment_id,paid_at")
+      .select("id,user_id,plan_id,days,status,mp_payment_id,paid_at,reseller_user_id")
       .eq("id", data.renewal_id)
       .maybeSingle();
     if (!req || req.user_id !== userId) throw new Error("Solicitação não encontrada");
 
     if (req.status === "paid") return { status: "paid" as const };
 
-    const token = getToken();
+    let overrideToken: string | null = null;
+    if ((req as any).reseller_user_id) {
+      const { data: r } = await supabaseAdmin
+        .from("settings")
+        .select("mp_access_token")
+        .eq("user_id", (req as any).reseller_user_id)
+        .maybeSingle();
+      overrideToken = (r as { mp_access_token?: string | null } | null)?.mp_access_token?.trim() || null;
+    }
+    const token = getToken(overrideToken);
+
     let paymentId = req.mp_payment_id as string | null;
     let mpStatus: string | undefined;
 

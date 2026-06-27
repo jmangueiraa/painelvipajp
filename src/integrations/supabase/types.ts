@@ -62,6 +62,7 @@ export type Database = {
           pix_qr_base64: string | null
           pix_qr_code: string | null
           plan_id: string | null
+          reseller_user_id: string | null
           status: string
           updated_at: string
           user_id: string
@@ -77,6 +78,7 @@ export type Database = {
           pix_qr_base64?: string | null
           pix_qr_code?: string | null
           plan_id?: string | null
+          reseller_user_id?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -92,6 +94,7 @@ export type Database = {
           pix_qr_base64?: string | null
           pix_qr_code?: string | null
           plan_id?: string | null
+          reseller_user_id?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -687,6 +690,7 @@ export type Database = {
           pix_receiver: string | null
           referral_enabled: boolean
           referral_reward_days: number
+          reseller_user_id: string | null
           subscription_expires_at: string | null
           subscription_monthly_cents: number
           support_message: string | null
@@ -717,6 +721,7 @@ export type Database = {
           pix_receiver?: string | null
           referral_enabled?: boolean
           referral_reward_days?: number
+          reseller_user_id?: string | null
           subscription_expires_at?: string | null
           subscription_monthly_cents?: number
           support_message?: string | null
@@ -747,6 +752,7 @@ export type Database = {
           pix_receiver?: string | null
           referral_enabled?: boolean
           referral_reward_days?: number
+          reseller_user_id?: string | null
           subscription_expires_at?: string | null
           subscription_monthly_cents?: number
           support_message?: string | null
