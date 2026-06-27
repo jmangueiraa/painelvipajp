@@ -11,6 +11,15 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
   if (!data) throw new Error("Acesso restrito a administradores");
 }
 
+async function assertAdminOrReseller(ctx: { supabase: any; userId: string }) {
+  const [{ data: isAdmin }, { data: isReseller }] = await Promise.all([
+    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" }),
+    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "revendedor" }),
+  ]);
+  if (!isAdmin && !isReseller) throw new Error("Acesso restrito");
+}
+
+
 export type SubscriberRow = {
   user_id: string;
   full_name: string | null;
@@ -40,7 +49,7 @@ export type SubscriberRow = {
 export const listSubscribers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context);
+    await assertAdminOrReseller(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [
@@ -146,7 +155,7 @@ export const getSubscriberDetail = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { userId: string }) => z.object({ userId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context);
+    await assertAdminOrReseller(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [{ data: profile, error: pErr }, { data: sub, error: sErr }, { data: payments, error: payErr }, userRes, { data: plans }] = await Promise.all([
@@ -197,7 +206,7 @@ export const updateSubscription = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ context, data }) => {
-    await assertAdmin(context);
+    await assertAdminOrReseller(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // upsert subscription
@@ -231,7 +240,7 @@ export const cancelSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { userId: string }) => z.object({ userId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context);
+    await assertAdminOrReseller(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("app_subscriptions")
@@ -261,7 +270,7 @@ export const markAsPaid = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ context, data }) => {
-    await assertAdmin(context);
+    await assertAdminOrReseller(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: sub, error: sErr } = await supabaseAdmin
@@ -305,7 +314,7 @@ export const renewSubscriberDays = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), days: z.number().int().min(1).max(3650) }).parse(d),
   )
   .handler(async ({ context, data }) => {
-    await assertAdmin(context);
+    await assertAdminOrReseller(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: s } = await supabaseAdmin
       .from("settings")
@@ -350,10 +359,10 @@ export const promoteToReseller = createServerFn({ method: "POST" })
 export const checkIsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (error) return { isAdmin: false };
-    return { isAdmin: !!data };
+    const [{ data: isAdmin }, { data: isReseller }] = await Promise.all([
+      context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" }),
+      context.supabase.rpc("has_role", { _user_id: context.userId, _role: "revendedor" }),
+    ]);
+    return { isAdmin: !!isAdmin || !!isReseller };
   });
+
