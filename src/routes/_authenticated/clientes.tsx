@@ -53,6 +53,9 @@ function getPageItems(current: number, total: number): (number | "...")[] {
 
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({ meta: [{ title: "Clientes — Painel VIP" }] }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    filter: (search.filter as FilterChip | undefined) ?? undefined,
+  }),
   component: ClientesPage,
 });
 
