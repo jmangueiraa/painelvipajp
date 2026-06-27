@@ -11,9 +11,6 @@ export const Route = createFileRoute("/api/public/app/mp-webhook")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const token = process.env.MERCADOPAGO_ACCESS_TOKEN?.trim();
-          if (!token) return json({ ok: true });
-
           const body = (await request.json().catch(() => ({}))) as {
             data?: { id?: string | number };
             type?: string;
@@ -22,16 +19,36 @@ export const Route = createFileRoute("/api/public/app/mp-webhook")({
           const paymentId = body?.data?.id ? String(body.data.id) : null;
           if (!paymentId) return json({ ok: true });
 
-          const mpRes = await fetch(`${MP_API}/${paymentId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const mp = (await mpRes.json().catch(() => ({}))) as {
-            status?: string;
-            external_reference?: string;
-          };
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+          // Try platform token first
+          const platformToken = process.env.MERCADOPAGO_ACCESS_TOKEN?.trim();
+          let token: string | null = platformToken || null;
+          let mp: { status?: string; external_reference?: string } = {};
+
+          if (token) {
+            const r = await fetch(`${MP_API}/${paymentId}`, { headers: { Authorization: `Bearer ${token}` } });
+            if (r.ok) mp = (await r.json().catch(() => ({}))) as typeof mp;
+          }
+
+          // If platform token couldn't find payment, try each reseller token
+          if (!mp.external_reference) {
+            const { data: resellers } = await supabaseAdmin
+              .from("settings")
+              .select("mp_access_token")
+              .not("mp_access_token", "is", null);
+            for (const r of (resellers ?? []) as Array<{ mp_access_token: string | null }>) {
+              const t = r.mp_access_token?.trim();
+              if (!t) continue;
+              const rr = await fetch(`${MP_API}/${paymentId}`, { headers: { Authorization: `Bearer ${t}` } });
+              if (!rr.ok) continue;
+              const m = (await rr.json().catch(() => ({}))) as typeof mp;
+              if (m.external_reference) { mp = m; break; }
+            }
+          }
+
           if (!mp.external_reference) return json({ ok: true });
 
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { data: req } = await supabaseAdmin
             .from("app_renewal_requests")
             .select("id,user_id,days,status")
@@ -43,6 +60,7 @@ export const Route = createFileRoute("/api/public/app/mp-webhook")({
             .from("app_renewal_requests")
             .update({ mp_status: mp.status ?? null })
             .eq("id", req.id);
+
 
           if (mp.status === "approved" && req.status !== "paid") {
             const { data: settings } = await supabaseAdmin
