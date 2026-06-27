@@ -64,12 +64,14 @@ function PortalLoginPage() {
 
   return (
     <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md overflow-hidden">
+        <img
+          src="/portal-icon-192.png"
+          alt="Portal do Cliente"
+          className="block w-full h-auto"
+          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+        />
         <CardHeader className="text-center">
-          <img
-            src="/portal-icon-192.png"
-            alt="Portal do Cliente"
-            className="mx-auto mb-3 h-16 w-16 object-contain"
             onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
           />
 
