@@ -223,7 +223,7 @@ function AssinantesPage() {
                   <TableHead>Vence em</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                   <TableHead>Pagamento</TableHead>
-                  <TableHead>Último pago</TableHead>
+                  
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
