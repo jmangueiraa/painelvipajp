@@ -17,7 +17,9 @@ async function assertAdminOrReseller(ctx: { supabase: any; userId: string }) {
     ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "revendedor" }),
   ]);
   if (!isAdmin && !isReseller) throw new Error("Acesso restrito");
+  return { isAdmin: !!isAdmin, isReseller: !!isReseller };
 }
+
 
 
 export type SubscriberRow = {
