@@ -11,6 +11,15 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
   if (!data) throw new Error("Acesso restrito a administradores");
 }
 
+async function assertAdminOrReseller(ctx: { supabase: any; userId: string }) {
+  const [{ data: isAdmin }, { data: isReseller }] = await Promise.all([
+    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" }),
+    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "revendedor" }),
+  ]);
+  if (!isAdmin && !isReseller) throw new Error("Acesso restrito");
+}
+
+
 export type SubscriberRow = {
   user_id: string;
   full_name: string | null;
