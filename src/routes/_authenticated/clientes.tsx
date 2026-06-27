@@ -412,6 +412,42 @@ function ClientesPage() {
     XLSX.writeFile(wb, "modelo-clientes.xlsx");
   };
 
+  const exportClients = () => {
+    if (!clients || clients.length === 0) {
+      toast.error("Nenhum cliente para exportar");
+      return;
+    }
+    const planById = new Map((plans ?? []).map((p) => [p.id, p.name]));
+    const serverById = new Map((servers ?? []).map((s) => [s.id, s.name]));
+    const statusLabel: Record<string, string> = {
+      ativo: "Ativo", vencendo: "Vencendo", vencido: "Vencido", bloqueado: "Bloqueado", cancelado: "Cancelado",
+    };
+    const fmtDate = (iso: string | null) => {
+      if (!iso) return "";
+      const [y, m, d] = iso.slice(0, 10).split("-");
+      return `${d}/${m}/${y}`;
+    };
+    const rows = clients.map((c) => ({
+      nome: c.name,
+      whatsapp: c.phone ?? "",
+      vencimento: fmtDate(c.due_date),
+      login_iptv: c.iptv_login ?? "",
+      senha_iptv: c.iptv_password ?? "",
+      plano: c.plan_id ? planById.get(c.plan_id) ?? "" : "",
+      valor: ((c.price_cents ?? 0) / 100).toFixed(2).replace(".", ","),
+      servidor: c.server_id ? serverById.get(c.server_id) ?? "" : "",
+      status: statusLabel[c.status as string] ?? (c.status ?? ""),
+      cobranca_automatica: c.auto_charge ? "sim" : "não",
+      observacoes: c.notes ?? "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Clientes");
+    const today = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `clientes-${today}.xlsx`);
+    toast.success(`${rows.length} cliente(s) exportado(s)`);
+  };
+
   const parseDateCell = (v: unknown): string | null => {
     if (v == null || v === "") return null;
     if (v instanceof Date) return v.toISOString().slice(0, 10);
