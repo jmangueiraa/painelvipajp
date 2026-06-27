@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, KeyRound, User } from "lucide-react";
-import portalIcon from "@/assets/portal-icon.png.asset.json";
+
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
