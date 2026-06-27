@@ -330,8 +330,7 @@ export const deleteSubscriber = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
-
-
+export const checkIsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase.rpc("has_role", {
