@@ -223,7 +223,7 @@ function AssinantesPage() {
                   <TableHead>Vence em</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                   <TableHead>Pagamento</TableHead>
-                  <TableHead>Último pago</TableHead>
+                  
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -244,11 +244,6 @@ function AssinantesPage() {
                     <TableCell className="text-sm">{r.subscription.current_period_end ? formatDateBR(r.subscription.current_period_end) : "—"}</TableCell>
                     <TableCell className="text-right tabular-nums">{brl(r.subscription.price_cents)}</TableCell>
                     <TableCell className="text-sm capitalize">{r.subscription.payment_method ?? "—"}</TableCell>
-                    <TableCell className="text-sm">
-                      {r.last_payment
-                        ? `${formatDateTimeBR(r.last_payment.paid_at!)} · ${brl(r.last_payment.amount_cents ?? 0)}`
-                        : "—"}
-                    </TableCell>
                     <TableCell className="text-right">
                       <Button
                         size="sm"
