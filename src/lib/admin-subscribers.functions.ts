@@ -2,13 +2,20 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-async function assertAdmin(ctx: { supabase: any; userId: string }) {
-  const { data, error } = await ctx.supabase.rpc("has_role", {
-    _user_id: ctx.userId,
-    _role: "admin",
-  });
+async function getIsAdmin(ctx: { supabase: any; userId: string }) {
+  const { data, error } = await ctx.supabase
+    .from("user_roles")
+    .select("user_id")
+    .eq("user_id", ctx.userId)
+    .eq("role", "admin")
+    .maybeSingle();
+
   if (error) throw new Error("Falha ao validar permissões");
-  if (!data) throw new Error("Acesso restrito a administradores");
+  return !!data;
+}
+
+async function assertAdmin(ctx: { supabase: any; userId: string }) {
+  if (!(await getIsAdmin(ctx))) throw new Error("Acesso restrito a administradores");
 }
 
 export type SubscriberRow = {
@@ -343,9 +350,5 @@ export const deleteSubscriber = createServerFn({ method: "POST" })
 export const checkIsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    return { isAdmin: !!data };
+    return { isAdmin: await getIsAdmin(context) };
   });
