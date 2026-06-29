@@ -124,6 +124,7 @@ function PortalDashboard() {
     { id: "youtube", label: "YouTube Premium - 30 dias", price_cents: 1500, emoji: "▶️", gradient: "from-red-500 to-rose-600" },
     { id: "smatone", label: "Smatone - 1 ano", price_cents: 2000, emoji: "🔑", gradient: "from-indigo-500 to-purple-600" },
     { id: "globoplay", label: "Globo Play - 30 dias", price_cents: 1500, emoji: "📺", gradient: "from-blue-500 to-sky-600" },
+    { id: "primevideo", label: "Prime Video - 30 dias", price_cents: 1500, emoji: "🎬", gradient: "from-sky-500 to-blue-700" },
   ];
   const [storeOpen, setStoreOpen] = useState(false);
   const [storeItem, setStoreItem] = useState<StoreItem | null>(null);
