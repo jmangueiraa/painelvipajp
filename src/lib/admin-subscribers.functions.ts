@@ -3,7 +3,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
 async function getIsAdmin(ctx: { supabase: any; userId: string }) {
-  const { data, error } = await ctx.supabase
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("user_id")
     .eq("user_id", ctx.userId)
