@@ -201,6 +201,46 @@ function LojaProdutosPage() {
                     <Input inputMode="numeric" value={form.duration_days} onChange={(e) => setForm({ ...form, duration_days: e.target.value })} />
                   </div>
                 </div>
+                <div>
+                  <Label>Foto do produto</Label>
+                  <div className="mt-1 flex items-center gap-3">
+                    {form.image_url ? (
+                      <div className="relative">
+                        <img src={form.image_url} alt="" className="h-20 w-20 rounded-lg object-cover border" />
+                        <button
+                          type="button"
+                          onClick={() => setForm({ ...form, image_url: "" })}
+                          className="absolute -top-2 -right-2 rounded-full bg-destructive text-destructive-foreground p-0.5"
+                          aria-label="Remover imagem"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="h-20 w-20 rounded-lg border border-dashed flex items-center justify-center text-2xl bg-muted/30">
+                        {form.emoji || "🛒"}
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <input
+                        ref={fileRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleUpload(f);
+                          e.target.value = "";
+                        }}
+                      />
+                      <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
+                        {uploading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Upload className="mr-1 h-4 w-4" />}
+                        {form.image_url ? "Trocar imagem" : "Enviar imagem"}
+                      </Button>
+                      <p className="mt-1 text-xs text-muted-foreground">PNG ou JPG, até 5MB. Se vazio, usa o emoji.</p>
+                    </div>
+                  </div>
+                </div>
                 <div className="flex items-center justify-between rounded-lg border p-3">
                   <Label htmlFor="active">Ativo (exibir no portal)</Label>
                   <Switch id="active" checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
