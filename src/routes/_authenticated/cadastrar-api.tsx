@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Wallet, Send, MessageSquare, QrCode, RefreshCw, LogOut } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+
 import { translateError } from "@/lib/translate-error";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
