@@ -18,7 +18,7 @@ export const Route = createFileRoute("/api/public/portal/store-products")({
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { data, error } = await supabaseAdmin
             .from("store_products")
-            .select("id,key,label,sale_cents,duration_days,emoji,gradient,sort_order")
+            .select("id,key,label,sale_cents,duration_days,emoji,gradient,sort_order,image_url")
             .eq("user_id", client.user_id)
             .eq("active", true)
             .order("sort_order", { ascending: true });
@@ -30,6 +30,7 @@ export const Route = createFileRoute("/api/public/portal/store-products")({
             price_cents: p.sale_cents,
             emoji: p.emoji ?? "🛒",
             gradient: p.gradient ?? "from-emerald-500 to-teal-600",
+            image_url: p.image_url ?? null,
           }));
           return json({ products }, request);
         } catch (e) {
