@@ -113,6 +113,7 @@ function PortalDashboard() {
   const [paymentStatus, setPaymentStatus] = useState<string>("pending");
   const [creating, setCreating] = useState(false);
   const [cardLink, setCardLink] = useState<string | null>(null);
+  const [payPage, setPayPage] = useState(1);
   const pollRef = useRef<number | null>(null);
   const [updatesKind, setUpdatesKind] = useState<"movie" | "series" | "games" | null>(null);
 
