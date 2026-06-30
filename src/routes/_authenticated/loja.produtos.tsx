@@ -130,6 +130,7 @@ function LojaProdutosPage() {
       duration_days: String(p.duration_days),
       emoji: p.emoji ?? "🛒",
       active: p.active,
+      image_url: p.image_url ?? "",
     });
     setOpen(true);
   }
