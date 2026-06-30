@@ -220,37 +220,8 @@ function FinanceiroPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader><CardTitle>Histórico de pagamentos</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Origem</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Método/Produto</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {historyEntries.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum pagamento registrado.</TableCell></TableRow>
-                ) : historyEntries.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium whitespace-nowrap">{p.name}</TableCell>
-                    <TableCell className="whitespace-nowrap text-xs">{p.kind}</TableCell>
-                    <TableCell className="whitespace-nowrap">{formatDateTimeBR(p.date)}</TableCell>
-                    <TableCell className="capitalize whitespace-nowrap">{p.method}</TableCell>
-                    <TableCell className="text-right tabular-nums whitespace-nowrap">{brl(p.amount)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      <HistoryCard entries={historyEntries} />
+
 
 
       <Card className="kpi-card" style={{ "--kpi-color": "var(--kpi-emerald)" } as React.CSSProperties}>
