@@ -101,7 +101,7 @@ function ConfiguracoesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("settings")
-        .select("whatsapp_instance,support_message,subscription_expires_at,subscription_monthly_cents,app_android_url,app_ios_url,mp_access_token,updates_movies_text,updates_series_text,updates_games_text")
+        .select("whatsapp_instance,support_message,subscription_expires_at,subscription_monthly_cents,app_android_url,app_ios_url,mp_access_token,updates_movies_text,updates_series_text,updates_games_text,store_slug,store_title,store_description")
         .maybeSingle();
       if (error) throw error;
       return data;
