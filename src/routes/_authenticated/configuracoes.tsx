@@ -206,6 +206,55 @@ function ConfiguracoesPage() {
     onError: (e: Error) => toast.error(translateError(e)),
   });
 
+  const { data: notifCfg } = useQuery({
+    queryKey: ["notifications_config"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("notifications_config").select("*").eq("id", "global").maybeSingle();
+      if (error) throw error;
+      return (data ?? {
+        notify_new_sale: true,
+        notify_payment_approved: true,
+        notify_renewal: true,
+        notify_new_client: true,
+        notify_trial: true,
+        notify_payment_rejected: true,
+      }) as Record<string, boolean | string>;
+    },
+  });
+
+  const toggleNotif = useMutation({
+    mutationFn: async (patch: Record<string, boolean>) => {
+      const { error } = await supabase
+        .from("notifications_config")
+        .upsert({ id: "global", ...patch }, { onConflict: "id" });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications_config"] }),
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  const testTelegram = useMutation({
+    mutationFn: async () => {
+      const { notifyEventFn } = await import("@/lib/notifications.functions");
+      const r = await notifyEventFn({ data: {
+        event: "new_sale",
+        payload: { nome: "Teste", plano: "Mensagem de teste", valor: "0,00", metodo: "Telegram" },
+      } });
+      if (!r.ok) throw new Error(r.reason ?? "Falha");
+    },
+    onSuccess: () => toast.success("Mensagem de teste enviada"),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const NOTIF_EVENTS: { key: string; label: string; desc: string }[] = [
+    { key: "notify_new_sale", label: "Nova venda", desc: "Loja ou produto avulso aprovado" },
+    { key: "notify_payment_approved", label: "Pagamento aprovado", desc: "Qualquer pagamento confirmado pelo Mercado Pago" },
+    { key: "notify_renewal", label: "Renovação realizada", desc: "Cliente IPTV ou assinante renovou" },
+    { key: "notify_new_client", label: "Novo cliente cadastrado", desc: "Cliente adicionado no painel" },
+    { key: "notify_trial", label: "Teste gratuito criado", desc: "Novo assinante iniciou o trial de 7 dias" },
+    { key: "notify_payment_rejected", label: "Pagamento recusado", desc: "Pagamento foi rejeitado ou cancelado" },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader title="Configurações" description="Perfil e integrações" />
