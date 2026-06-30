@@ -117,7 +117,7 @@ function PortalDashboard() {
   const [updatesKind, setUpdatesKind] = useState<"movie" | "series" | "games" | null>(null);
 
   // Loja de produtos avulsos (lê do admin via API; fallback para padrão)
-  type StoreItem = { id: string; label: string; price_cents: number; emoji: string; gradient: string };
+  type StoreItem = { id: string; label: string; price_cents: number; emoji: string; gradient: string; image_url?: string | null };
   const fallbackProducts: StoreItem[] = [
     { id: "chatgpt", label: "ChatGPT Plus - 30 dias", price_cents: 3000, emoji: "🤖", gradient: "from-emerald-500 to-teal-600" },
     { id: "spotify", label: "Spotify Premium - 30 dias", price_cents: 1500, emoji: "🎵", gradient: "from-green-500 to-emerald-600" },
