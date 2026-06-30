@@ -62,12 +62,13 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
 
           const renewal = renewalRaw as {
             id: string;
-            client_id: string;
+            client_id: string | null;
             user_id: string;
             days: number;
             amount_cents: number | null;
             status: string;
             label: string | null;
+            buyer_id: string | null;
           };
 
           const isApproved = payment.status === "approved";
