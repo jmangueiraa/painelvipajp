@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { Loader2, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
-  ssr: false,
   head: () => ({ meta: [{ title: "Entrar — Painel VIP" }] }),
   component: AuthPage,
 });
