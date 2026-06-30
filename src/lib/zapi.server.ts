@@ -23,19 +23,38 @@ export function normalizeBrPhone(phone: string): string {
   return d;
 }
 
+async function getZapiCreds() {
+  let instance = process.env.Z_API_INSTANCE_ID;
+  let token = process.env.Z_API_TOKEN;
+  let clientToken = process.env.Z_API_CLIENT_TOKEN;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("settings")
+      .select("zapi_instance_id,zapi_token,zapi_client_token")
+      .limit(1)
+      .maybeSingle();
+    if (data?.zapi_instance_id) instance = data.zapi_instance_id;
+    if (data?.zapi_token) token = data.zapi_token;
+    if (data?.zapi_client_token) clientToken = data.zapi_client_token;
+  } catch {
+    /* ignore */
+  }
+  return { instance, token, clientToken };
+}
+
 export async function sendZapiText(args: {
   phone: string;
   message: string;
 }): Promise<{ ok: boolean; status: number; body: unknown }> {
-  const instance = process.env.Z_API_INSTANCE_ID;
-  const token = process.env.Z_API_TOKEN;
-  const clientToken = process.env.Z_API_CLIENT_TOKEN;
+  const { instance, token, clientToken } = await getZapiCreds();
   if (!instance || !token) {
     throw new Error("Z-API não configurada (Z_API_INSTANCE_ID/Z_API_TOKEN ausentes)");
   }
   const url = `https://api.z-api.io/instances/${instance}/token/${token}/send-text`;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (clientToken) headers["Client-Token"] = clientToken;
+
   const res = await fetch(url, {
     method: "POST",
     headers,

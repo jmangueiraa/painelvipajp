@@ -729,6 +729,8 @@ export type Database = {
           subscription_expires_at: string | null
           subscription_monthly_cents: number
           support_message: string | null
+          telegram_bot_token: string | null
+          telegram_chat_id: string | null
           updated_at: string
           updates_games_text: string | null
           updates_games_updated_at: string | null
@@ -738,6 +740,9 @@ export type Database = {
           updates_series_updated_at: string | null
           user_id: string
           whatsapp_instance: string | null
+          zapi_client_token: string | null
+          zapi_instance_id: string | null
+          zapi_token: string | null
         }
         Insert: {
           app_android_url?: string | null
@@ -762,6 +767,8 @@ export type Database = {
           subscription_expires_at?: string | null
           subscription_monthly_cents?: number
           support_message?: string | null
+          telegram_bot_token?: string | null
+          telegram_chat_id?: string | null
           updated_at?: string
           updates_games_text?: string | null
           updates_games_updated_at?: string | null
@@ -771,6 +778,9 @@ export type Database = {
           updates_series_updated_at?: string | null
           user_id: string
           whatsapp_instance?: string | null
+          zapi_client_token?: string | null
+          zapi_instance_id?: string | null
+          zapi_token?: string | null
         }
         Update: {
           app_android_url?: string | null
@@ -795,6 +805,8 @@ export type Database = {
           subscription_expires_at?: string | null
           subscription_monthly_cents?: number
           support_message?: string | null
+          telegram_bot_token?: string | null
+          telegram_chat_id?: string | null
           updated_at?: string
           updates_games_text?: string | null
           updates_games_updated_at?: string | null
@@ -804,6 +816,9 @@ export type Database = {
           updates_series_updated_at?: string | null
           user_id?: string
           whatsapp_instance?: string | null
+          zapi_client_token?: string | null
+          zapi_instance_id?: string | null
+          zapi_token?: string | null
         }
         Relationships: []
       }

@@ -4,7 +4,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown, Camera, ShieldCheck, Inbox, ShoppingBag, Store,
+  LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown, Camera, ShieldCheck, Inbox, ShoppingBag, Store, KeyRound,
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import {
@@ -32,7 +32,9 @@ const items = [
   { title: "Solicitações", url: "/solicitacoes", icon: Inbox },
   { title: "Loja - Produtos", url: "/loja/produtos", icon: Store },
   { title: "Loja - Clientes", url: "/loja/clientes", icon: ShoppingBag },
+  { title: "Cadastrar API", url: "/cadastrar-api", icon: KeyRound },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
+
 ];
 
 function SidebarAvatar({ collapsed }: { collapsed: boolean }) {
