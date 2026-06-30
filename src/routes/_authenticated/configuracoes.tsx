@@ -175,6 +175,9 @@ function ConfiguracoesPage() {
     updates_movies_updated_at: string | null;
     updates_series_updated_at: string | null;
     updates_games_text: string | null;
+    store_slug: string | null;
+    store_title: string | null;
+    store_description: string | null;
     updates_games_updated_at: string | null;
   }>;
   const saveSettings = useMutation({
