@@ -119,7 +119,7 @@ function CadastrarApiPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Cadastrar API" subtitle="Configure as integrações do seu sistema: Mercado Pago, Telegram e WhatsApp." />
+      <PageHeader title="Cadastrar API" description="Configure as integrações do seu sistema: Mercado Pago, Telegram e WhatsApp." />
 
       <SectionCard
         title="Mercado Pago"
