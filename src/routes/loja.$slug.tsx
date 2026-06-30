@@ -28,11 +28,23 @@ const formatBRL = (cents: number) =>
 
 function StorePage() {
   const { slug } = Route.useParams();
+
+  // O domínio customizado pode estar servindo um build antigo sem as server functions da loja.
+  // Redirecionamos para o domínio canônico para garantir o funcionamento.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const host = window.location.hostname;
+    if (host === "ajpvip.com.br" || host === "www.ajpvip.com.br") {
+      window.location.replace(`https://painelvipajp.lovable.app/loja/${slug}${window.location.search}`);
+    }
+  }, [slug]);
+
   const fetchStore = useServerFn(getStorePublic);
   const fetchMine = useServerFn(getMyStoreData);
   const createPayment = useServerFn(createStorePayment);
   const checkStatus = useServerFn(getStoreOrderStatus);
   const qc = useQueryClient();
+
 
   const [session, setSession] = useState<{ user: { id: string; email?: string } } | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
