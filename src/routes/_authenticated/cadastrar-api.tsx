@@ -93,15 +93,11 @@ function CadastrarApiPage() {
 
   const save = useMutation({
     mutationFn: async (patch: Partial<Settings>) => {
-      const { data: existing } = await supabase.from("settings").select("id").maybeSingle();
-      if (existing?.id) {
-        const { error } = await supabase.from("settings").update(patch).eq("id", existing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("settings").insert(patch);
-        if (error) throw error;
-      }
+      if (!user) throw new Error("Sem sessão");
+      const { error } = await supabase.from("settings").update(patch).eq("user_id", user.id);
+      if (error) throw error;
     },
+
     onSuccess: () => {
       toast.success("Salvo");
       qc.invalidateQueries({ queryKey: ["settings"] });
