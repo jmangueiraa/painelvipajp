@@ -83,6 +83,19 @@ export const Route = createFileRoute("/api/public/app/mp-webhook")({
               .from("app_renewal_requests")
               .update({ status: "paid", paid_at: new Date().toISOString() })
               .eq("id", req.id);
+
+            try {
+              const { data: prof } = await supabaseAdmin.from("profiles").select("full_name").eq("id", req.user_id).maybeSingle();
+              const payload = {
+                nome: (prof as { full_name?: string | null } | null)?.full_name ?? "Assinante",
+                plano: `Painel ${req.days} dias`,
+                metodo: "Mercado Pago",
+              };
+              await notify("renewal", payload);
+              await notify("payment_approved", payload);
+            } catch (e) {
+              console.error("[app mp-webhook] notify failed", e);
+            }
           }
 
           return json({ ok: true });
