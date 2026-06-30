@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { translateError } from "@/lib/translate-error";
+import { notifyEventFn } from "@/lib/notifications.functions";
 import { addDaysISO, brl, formatDateBR, todayISO } from "@/lib/format";
 import { computeStatus } from "@/lib/status";
 import { PageHeader } from "@/components/page-header";
@@ -141,6 +142,25 @@ function SolicitacoesPage() {
       if (ePay) throw ePay;
       const { error: e2 } = await supabase.from("renewal_requests").update({ status: "approved" }).eq("id", req.id);
       if (e2) throw e2;
+
+      // Notifica Telegram (best-effort)
+      try {
+        const payload = {
+          nome: req.clients.name,
+          telefone: req.clients.phone,
+          plano: isExtra ? (req.label ?? "Produto avulso") : `Renovação ${periodLabel(req.days)}`,
+          valor: (amount / 100).toFixed(2).replace(".", ","),
+          metodo: "Manual (admin)",
+        };
+        if (isExtra) {
+          await notifyEventFn({ data: { event: "new_sale", payload } });
+        } else {
+          await notifyEventFn({ data: { event: "renewal", payload } });
+        }
+        await notifyEventFn({ data: { event: "payment_approved", payload } });
+      } catch (err) {
+        console.error("[solicitacoes] notify failed", err);
+      }
     },
     onSuccess: () => {
       toast.success("Solicitação aprovada");
