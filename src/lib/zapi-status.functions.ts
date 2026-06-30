@@ -1,15 +1,27 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-function zapiBase() {
-  const instance = process.env.Z_API_INSTANCE_ID;
-  const token = process.env.Z_API_TOKEN;
-  if (!instance || !token) throw new Error("Z-API não configurada (defina Z_API_INSTANCE_ID e Z_API_TOKEN nos secrets)");
+async function zapiBase() {
+  let instance = process.env.Z_API_INSTANCE_ID;
+  let token = process.env.Z_API_TOKEN;
+  let clientToken = process.env.Z_API_CLIENT_TOKEN;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("settings")
+      .select("zapi_instance_id,zapi_token,zapi_client_token")
+      .limit(1)
+      .maybeSingle();
+    if (data?.zapi_instance_id) instance = data.zapi_instance_id;
+    if (data?.zapi_token) token = data.zapi_token;
+    if (data?.zapi_client_token) clientToken = data.zapi_client_token;
+  } catch { /* ignore */ }
+  if (!instance || !token) throw new Error("Z-API não configurada (cadastre em Cadastrar API)");
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  const clientToken = process.env.Z_API_CLIENT_TOKEN;
   if (clientToken) headers["Client-Token"] = clientToken;
   return { url: `https://api.z-api.io/instances/${instance}/token/${token}`, headers };
 }
+
 
 export const getZapiStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
