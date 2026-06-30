@@ -24,11 +24,14 @@ import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedLojaProdutosRouteImport } from './routes/_authenticated/loja.produtos'
+import { Route as AuthenticatedLojaClientesRouteImport } from './routes/_authenticated/loja.clientes'
 import { Route as AuthenticatedAdminAssinantesRouteImport } from './routes/_authenticated/admin.assinantes'
 import { Route as ApiPublicZapiStatusRouteImport } from './routes/api/public/zapi/status'
 import { Route as ApiPublicZapiQrRouteImport } from './routes/api/public/zapi/qr'
 import { Route as ApiPublicZapiDisconnectRouteImport } from './routes/api/public/zapi/disconnect'
 import { Route as ApiPublicPortalVerifyOtpRouteImport } from './routes/api/public/portal/verify-otp'
+import { Route as ApiPublicPortalStoreProductsRouteImport } from './routes/api/public/portal/store-products'
 import { Route as ApiPublicPortalRequestOtpRouteImport } from './routes/api/public/portal/request-otp'
 import { Route as ApiPublicPortalRenewalStatusRouteImport } from './routes/api/public/portal/renewal-status'
 import { Route as ApiPublicPortalRenewRequestRouteImport } from './routes/api/public/portal/renew-request'
@@ -119,6 +122,18 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedLojaProdutosRoute =
+  AuthenticatedLojaProdutosRouteImport.update({
+    id: '/loja/produtos',
+    path: '/loja/produtos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedLojaClientesRoute =
+  AuthenticatedLojaClientesRouteImport.update({
+    id: '/loja/clientes',
+    path: '/loja/clientes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminAssinantesRoute =
   AuthenticatedAdminAssinantesRouteImport.update({
     id: '/admin/assinantes',
@@ -144,6 +159,12 @@ const ApiPublicPortalVerifyOtpRoute =
   ApiPublicPortalVerifyOtpRouteImport.update({
     id: '/api/public/portal/verify-otp',
     path: '/api/public/portal/verify-otp',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalStoreProductsRoute =
+  ApiPublicPortalStoreProductsRouteImport.update({
+    id: '/api/public/portal/store-products',
+    path: '/api/public/portal/store-products',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicPortalRequestOtpRoute =
@@ -238,6 +259,8 @@ export interface FileRoutesByFullPath {
   '/portal/painel': typeof PortalPainelRoute
   '/portal/': typeof PortalIndexRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
+  '/loja/clientes': typeof AuthenticatedLojaClientesRoute
+  '/loja/produtos': typeof AuthenticatedLojaProdutosRoute
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
@@ -251,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
+  '/api/public/portal/store-products': typeof ApiPublicPortalStoreProductsRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
@@ -272,6 +296,8 @@ export interface FileRoutesByTo {
   '/portal/painel': typeof PortalPainelRoute
   '/portal': typeof PortalIndexRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
+  '/loja/clientes': typeof AuthenticatedLojaClientesRoute
+  '/loja/produtos': typeof AuthenticatedLojaProdutosRoute
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
@@ -285,6 +311,7 @@ export interface FileRoutesByTo {
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
+  '/api/public/portal/store-products': typeof ApiPublicPortalStoreProductsRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
@@ -308,6 +335,8 @@ export interface FileRoutesById {
   '/portal/painel': typeof PortalPainelRoute
   '/portal/': typeof PortalIndexRoute
   '/_authenticated/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
+  '/_authenticated/loja/clientes': typeof AuthenticatedLojaClientesRoute
+  '/_authenticated/loja/produtos': typeof AuthenticatedLojaProdutosRoute
   '/_authenticated/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
@@ -321,6 +350,7 @@ export interface FileRoutesById {
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
+  '/api/public/portal/store-products': typeof ApiPublicPortalStoreProductsRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
@@ -344,6 +374,8 @@ export interface FileRouteTypes {
     | '/portal/painel'
     | '/portal/'
     | '/admin/assinantes'
+    | '/loja/clientes'
+    | '/loja/produtos'
     | '/admin/assinantes/$id'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
@@ -357,6 +389,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/renew-request'
     | '/api/public/portal/renewal-status'
     | '/api/public/portal/request-otp'
+    | '/api/public/portal/store-products'
     | '/api/public/portal/verify-otp'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
@@ -378,6 +411,8 @@ export interface FileRouteTypes {
     | '/portal/painel'
     | '/portal'
     | '/admin/assinantes'
+    | '/loja/clientes'
+    | '/loja/produtos'
     | '/admin/assinantes/$id'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
@@ -391,6 +426,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/renew-request'
     | '/api/public/portal/renewal-status'
     | '/api/public/portal/request-otp'
+    | '/api/public/portal/store-products'
     | '/api/public/portal/verify-otp'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
@@ -413,6 +449,8 @@ export interface FileRouteTypes {
     | '/portal/painel'
     | '/portal/'
     | '/_authenticated/admin/assinantes'
+    | '/_authenticated/loja/clientes'
+    | '/_authenticated/loja/produtos'
     | '/_authenticated/admin/assinantes/$id'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
@@ -426,6 +464,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/renew-request'
     | '/api/public/portal/renewal-status'
     | '/api/public/portal/request-otp'
+    | '/api/public/portal/store-products'
     | '/api/public/portal/verify-otp'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
@@ -452,6 +491,7 @@ export interface RootRouteChildren {
   ApiPublicPortalRenewRequestRoute: typeof ApiPublicPortalRenewRequestRoute
   ApiPublicPortalRenewalStatusRoute: typeof ApiPublicPortalRenewalStatusRoute
   ApiPublicPortalRequestOtpRoute: typeof ApiPublicPortalRequestOtpRoute
+  ApiPublicPortalStoreProductsRoute: typeof ApiPublicPortalStoreProductsRoute
   ApiPublicPortalVerifyOtpRoute: typeof ApiPublicPortalVerifyOtpRoute
   ApiPublicZapiDisconnectRoute: typeof ApiPublicZapiDisconnectRoute
   ApiPublicZapiQrRoute: typeof ApiPublicZapiQrRoute
@@ -565,6 +605,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/loja/produtos': {
+      id: '/_authenticated/loja/produtos'
+      path: '/loja/produtos'
+      fullPath: '/loja/produtos'
+      preLoaderRoute: typeof AuthenticatedLojaProdutosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/loja/clientes': {
+      id: '/_authenticated/loja/clientes'
+      path: '/loja/clientes'
+      fullPath: '/loja/clientes'
+      preLoaderRoute: typeof AuthenticatedLojaClientesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/assinantes': {
       id: '/_authenticated/admin/assinantes'
       path: '/admin/assinantes'
@@ -598,6 +652,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/portal/verify-otp'
       fullPath: '/api/public/portal/verify-otp'
       preLoaderRoute: typeof ApiPublicPortalVerifyOtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/store-products': {
+      id: '/api/public/portal/store-products'
+      path: '/api/public/portal/store-products'
+      fullPath: '/api/public/portal/store-products'
+      preLoaderRoute: typeof ApiPublicPortalStoreProductsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/portal/request-otp': {
@@ -718,6 +779,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedServidoresRoute: typeof AuthenticatedServidoresRoute
   AuthenticatedSolicitacoesRoute: typeof AuthenticatedSolicitacoesRoute
   AuthenticatedAdminAssinantesRoute: typeof AuthenticatedAdminAssinantesRouteWithChildren
+  AuthenticatedLojaClientesRoute: typeof AuthenticatedLojaClientesRoute
+  AuthenticatedLojaProdutosRoute: typeof AuthenticatedLojaProdutosRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -731,6 +794,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSolicitacoesRoute: AuthenticatedSolicitacoesRoute,
   AuthenticatedAdminAssinantesRoute:
     AuthenticatedAdminAssinantesRouteWithChildren,
+  AuthenticatedLojaClientesRoute: AuthenticatedLojaClientesRoute,
+  AuthenticatedLojaProdutosRoute: AuthenticatedLojaProdutosRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -756,6 +821,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPortalRenewRequestRoute: ApiPublicPortalRenewRequestRoute,
   ApiPublicPortalRenewalStatusRoute: ApiPublicPortalRenewalStatusRoute,
   ApiPublicPortalRequestOtpRoute: ApiPublicPortalRequestOtpRoute,
+  ApiPublicPortalStoreProductsRoute: ApiPublicPortalStoreProductsRoute,
   ApiPublicPortalVerifyOtpRoute: ApiPublicPortalVerifyOtpRoute,
   ApiPublicZapiDisconnectRoute: ApiPublicZapiDisconnectRoute,
   ApiPublicZapiQrRoute: ApiPublicZapiQrRoute,

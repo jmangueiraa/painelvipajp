@@ -65,6 +65,33 @@ function SolicitacoesPage() {
       // Se já foi pago via Mercado Pago, apenas marca como entregue/aprovado
       // (pagamento e extensão já foram registrados pelo webhook).
       if (alreadyPaid) {
+        // Para produtos da loja, registra a compra com vencimento
+        if (isExtra) {
+          const label = req.label ?? "Produto avulso";
+          const { data: prod } = await supabase
+            .from("store_products")
+            .select("id,sale_cents,cost_cents,duration_days")
+            .eq("user_id", req.clients.user_id)
+            .eq("label", label)
+            .maybeSingle();
+          const duration = prod?.duration_days ?? 30;
+          const sale = prod?.sale_cents ?? 0;
+          const cost = prod?.cost_cents ?? 0;
+          const due = addDaysISO(todayISO(), duration);
+          const { error: eBuy } = await supabase.from("store_purchases").insert({
+            user_id: req.clients.user_id,
+            client_id: req.client_id,
+            product_id: prod?.id ?? null,
+            label,
+            sale_cents: sale,
+            cost_cents: cost,
+            duration_days: duration,
+            due_date: due,
+            status: "ativo",
+            renewal_request_id: req.id,
+          });
+          if (eBuy) throw eBuy;
+        }
         const { error } = await supabase.from("renewal_requests").update({ status: "approved" }).eq("id", req.id);
         if (error) throw error;
         return;

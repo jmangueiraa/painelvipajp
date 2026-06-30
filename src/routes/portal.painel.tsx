@@ -116,9 +116,9 @@ function PortalDashboard() {
   const pollRef = useRef<number | null>(null);
   const [updatesKind, setUpdatesKind] = useState<"movie" | "series" | "games" | null>(null);
 
-  // Loja de produtos avulsos (ChatGPT, Spotify, YouTube)
+  // Loja de produtos avulsos (lê do admin via API; fallback para padrão)
   type StoreItem = { id: string; label: string; price_cents: number; emoji: string; gradient: string };
-  const storeProducts: StoreItem[] = [
+  const fallbackProducts: StoreItem[] = [
     { id: "chatgpt", label: "ChatGPT Plus - 30 dias", price_cents: 3000, emoji: "🤖", gradient: "from-emerald-500 to-teal-600" },
     { id: "spotify", label: "Spotify Premium - 30 dias", price_cents: 1500, emoji: "🎵", gradient: "from-green-500 to-emerald-600" },
     { id: "youtube", label: "YouTube Premium - 30 dias", price_cents: 1500, emoji: "▶️", gradient: "from-red-500 to-rose-600" },
@@ -127,6 +127,14 @@ function PortalDashboard() {
     { id: "primevideo", label: "Prime Video - 30 dias", price_cents: 1500, emoji: "🎬", gradient: "from-sky-500 to-blue-700" },
     { id: "netflix", label: "Netflix 1 tela - 30 dias", price_cents: 1500, emoji: "🎞️", gradient: "from-red-600 to-black" },
   ];
+  const { data: remoteProducts } = useQuery({
+    queryKey: ["portal-store-products"],
+    queryFn: async () => {
+      const j = await portalFetch<{ products: StoreItem[] }>("/api/public/portal/store-products");
+      return j.products ?? [];
+    },
+  });
+  const storeProducts: StoreItem[] = remoteProducts && remoteProducts.length > 0 ? remoteProducts : fallbackProducts;
   const [storeOpen, setStoreOpen] = useState(false);
   const [storeItem, setStoreItem] = useState<StoreItem | null>(null);
   const [storeMethod, setStoreMethod] = useState<"pix" | "card" | null>(null);
