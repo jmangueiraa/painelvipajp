@@ -42,10 +42,7 @@ export function UserMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
-          <div className="flex flex-col">
-            <span className="font-medium">{name}</span>
-            <span className="text-xs text-muted-foreground truncate">{email}</span>
-          </div>
+          <span className="font-medium">{name}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate({ to: "/configuracoes" })}>
