@@ -29,21 +29,35 @@ const formatBRL = (cents: number) =>
 function StorePage() {
   const { slug } = Route.useParams();
 
-  // O domínio customizado pode estar servindo um build antigo sem as server functions da loja.
-  // Redirecionamos para o domínio canônico para garantir o funcionamento.
+  // No domínio customizado as server functions da loja não respondem;
+  // servimos o conteúdo via iframe do domínio canônico mantendo a URL pública.
+  const [isCustomHost, setIsCustomHost] = useState(false);
+  const [hostChecked, setHostChecked] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
     const host = window.location.hostname;
-    if (host === "ajpvip.com.br" || host === "www.ajpvip.com.br") {
-      window.location.replace(`https://painelvipajp.lovable.app/loja/${slug}${window.location.search}`);
-    }
-  }, [slug]);
+    setIsCustomHost(host === "ajpvip.com.br" || host === "www.ajpvip.com.br");
+    setHostChecked(true);
+  }, []);
 
   const fetchStore = useServerFn(getStorePublic);
   const fetchMine = useServerFn(getMyStoreData);
   const createPayment = useServerFn(createStorePayment);
   const checkStatus = useServerFn(getStoreOrderStatus);
   const qc = useQueryClient();
+
+  if (hostChecked && isCustomHost) {
+    return (
+      <iframe
+        src={`https://painelvipajp.lovable.app/loja/${slug}${typeof window !== "undefined" ? window.location.search : ""}`}
+        title="Loja"
+        style={{ position: "fixed", inset: 0, width: "100%", height: "100%", border: "0" }}
+        allow="clipboard-write; payment"
+      />
+    );
+  }
+
+
 
 
   const [session, setSession] = useState<{ user: { id: string; email?: string } } | null>(null);
