@@ -27,7 +27,7 @@ export const getZapiStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
     try {
-      const { url, headers } = zapiBase();
+      const { url, headers } = await zapiBase();
       const res = await fetch(`${url}/status`, { headers });
       const body = (await res.json().catch(() => ({}))) as { connected?: boolean; smartphoneConnected?: boolean; error?: string };
       return {
@@ -43,7 +43,7 @@ export const getZapiStatus = createServerFn({ method: "GET" })
 export const getZapiQrCode = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
-    const { url, headers } = zapiBase();
+    const { url, headers } = await zapiBase();
     // First check status — if already connected, no QR needed
     const st = await fetch(`${url}/status`, { headers }).then((r) => r.json()).catch(() => ({} as { connected?: boolean }));
     if (st?.connected) return { connected: true, image: null as string | null };
@@ -60,7 +60,7 @@ export const getZapiQrCode = createServerFn({ method: "GET" })
 export const disconnectZapi = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
-    const { url, headers } = zapiBase();
+    const { url, headers } = await zapiBase();
     const res = await fetch(`${url}/disconnect`, { method: "GET", headers });
     if (!res.ok) throw new Error(`Falha ao desconectar (HTTP ${res.status})`);
     return { ok: true };
