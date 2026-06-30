@@ -119,6 +119,9 @@ function ConfiguracoesPage() {
   const [moviesText, setMoviesText] = useState("");
   const [seriesText, setSeriesText] = useState("");
   const [gamesText, setGamesText] = useState("");
+  const [storeSlug, setStoreSlug] = useState("");
+  const [storeTitle, setStoreTitle] = useState("");
+  const [storeDescription, setStoreDescription] = useState("");
   const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
