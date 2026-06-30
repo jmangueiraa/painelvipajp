@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
 import { Route as PortalPainelRouteImport } from './routes/portal.painel'
 import { Route as PortalIndiqueRouteImport } from './routes/portal.indique'
+import { Route as LojaSlugRouteImport } from './routes/loja.$slug'
 import { Route as AuthenticatedSolicitacoesRouteImport } from './routes/_authenticated/solicitacoes'
 import { Route as AuthenticatedServidoresRouteImport } from './routes/_authenticated/servidores'
 import { Route as AuthenticatedRenovacaoRouteImport } from './routes/_authenticated/renovacao'
@@ -78,6 +79,11 @@ const PortalPainelRoute = PortalPainelRouteImport.update({
 const PortalIndiqueRoute = PortalIndiqueRouteImport.update({
   id: '/portal/indique',
   path: '/portal/indique',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LojaSlugRoute = LojaSlugRouteImport.update({
+  id: '/loja/$slug',
+  path: '/loja/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedSolicitacoesRoute =
@@ -255,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
+  '/loja/$slug': typeof LojaSlugRoute
   '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
   '/portal/': typeof PortalIndexRoute
@@ -292,6 +299,7 @@ export interface FileRoutesByTo {
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
+  '/loja/$slug': typeof LojaSlugRoute
   '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
   '/portal': typeof PortalIndexRoute
@@ -331,6 +339,7 @@ export interface FileRoutesById {
   '/_authenticated/renovacao': typeof AuthenticatedRenovacaoRoute
   '/_authenticated/servidores': typeof AuthenticatedServidoresRoute
   '/_authenticated/solicitacoes': typeof AuthenticatedSolicitacoesRoute
+  '/loja/$slug': typeof LojaSlugRoute
   '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
   '/portal/': typeof PortalIndexRoute
@@ -370,6 +379,7 @@ export interface FileRouteTypes {
     | '/renovacao'
     | '/servidores'
     | '/solicitacoes'
+    | '/loja/$slug'
     | '/portal/indique'
     | '/portal/painel'
     | '/portal/'
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
     | '/renovacao'
     | '/servidores'
     | '/solicitacoes'
+    | '/loja/$slug'
     | '/portal/indique'
     | '/portal/painel'
     | '/portal'
@@ -445,6 +456,7 @@ export interface FileRouteTypes {
     | '/_authenticated/renovacao'
     | '/_authenticated/servidores'
     | '/_authenticated/solicitacoes'
+    | '/loja/$slug'
     | '/portal/indique'
     | '/portal/painel'
     | '/portal/'
@@ -476,6 +488,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  LojaSlugRoute: typeof LojaSlugRoute
   PortalIndiqueRoute: typeof PortalIndiqueRoute
   PortalPainelRoute: typeof PortalPainelRoute
   PortalIndexRoute: typeof PortalIndexRoute
@@ -547,6 +560,13 @@ declare module '@tanstack/react-router' {
       path: '/portal/indique'
       fullPath: '/portal/indique'
       preLoaderRoute: typeof PortalIndiqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/loja/$slug': {
+      id: '/loja/$slug'
+      path: '/loja/$slug'
+      fullPath: '/loja/$slug'
+      preLoaderRoute: typeof LojaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/solicitacoes': {
@@ -806,6 +826,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  LojaSlugRoute: LojaSlugRoute,
   PortalIndiqueRoute: PortalIndiqueRoute,
   PortalPainelRoute: PortalPainelRoute,
   PortalIndexRoute: PortalIndexRoute,
