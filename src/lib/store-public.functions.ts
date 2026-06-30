@@ -109,7 +109,9 @@ export const getMyStoreData = createServerFn({ method: "GET" })
 export const createStorePayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { slug: string; product_key: string; method: "pix" | "card" }) => data)
-  .handler(async ({ data, context, request }) => {
+  .handler(async ({ data, context }) => {
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const request = getRequest();
     if (data.method !== "pix" && data.method !== "card") {
       return { ok: false as const, error: "Método inválido" };
     }
