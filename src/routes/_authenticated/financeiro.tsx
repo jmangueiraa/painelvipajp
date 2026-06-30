@@ -227,20 +227,22 @@ function FinanceiroPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Cliente</TableHead>
+                  <TableHead>Origem</TableHead>
                   <TableHead>Data</TableHead>
-                  <TableHead>Método</TableHead>
+                  <TableHead>Método/Produto</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {payments.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Nenhum pagamento registrado.</TableCell></TableRow>
-                ) : payments.map((p) => (
+                {historyEntries.length === 0 ? (
+                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum pagamento registrado.</TableCell></TableRow>
+                ) : historyEntries.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell className="font-medium whitespace-nowrap">{clientMap.get(p.client_id)?.name ?? "—"}</TableCell>
-                    <TableCell className="whitespace-nowrap">{formatDateTimeBR(p.paid_at)}</TableCell>
-                    <TableCell className="capitalize whitespace-nowrap">{p.method ?? "—"}</TableCell>
-                    <TableCell className="text-right tabular-nums whitespace-nowrap">{brl(p.amount_cents)}</TableCell>
+                    <TableCell className="font-medium whitespace-nowrap">{p.name}</TableCell>
+                    <TableCell className="whitespace-nowrap text-xs">{p.kind}</TableCell>
+                    <TableCell className="whitespace-nowrap">{formatDateTimeBR(p.date)}</TableCell>
+                    <TableCell className="capitalize whitespace-nowrap">{p.method}</TableCell>
+                    <TableCell className="text-right tabular-nums whitespace-nowrap">{brl(p.amount)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -248,6 +250,7 @@ function FinanceiroPage() {
           </div>
         </CardContent>
       </Card>
+
 
       <Card className="kpi-card" style={{ "--kpi-color": "var(--kpi-emerald)" } as React.CSSProperties}>
         <CardContent className="p-5 flex items-center justify-between gap-3">
