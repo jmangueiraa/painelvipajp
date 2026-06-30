@@ -113,6 +113,7 @@ function PortalDashboard() {
   const [paymentStatus, setPaymentStatus] = useState<string>("pending");
   const [creating, setCreating] = useState(false);
   const [cardLink, setCardLink] = useState<string | null>(null);
+  const [payPage, setPayPage] = useState(1);
   const pollRef = useRef<number | null>(null);
   const [updatesKind, setUpdatesKind] = useState<"movie" | "series" | "games" | null>(null);
 
@@ -546,34 +547,61 @@ function PortalDashboard() {
           </div>
           {data.payments.length === 0 ? (
             <p className="px-1 text-sm text-muted-foreground">Nenhum pagamento registrado ainda.</p>
-          ) : (
-            <ul className="space-y-2">
-              {data.payments.map((p) => (
-                <li
-                  key={p.id}
-                  className="flex items-center gap-3 rounded-2xl border bg-card px-4 py-3 shadow-sm transition hover:border-primary/40"
-                >
-                  <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-500" strokeWidth={2} />
-                  <div className="flex-1">
-                    <div className="text-xs text-muted-foreground">Vencimento</div>
-                    <div className="text-base font-bold tracking-tight">{formatDateBR(p.paid_at)}</div>
+          ) : (() => {
+            const pageSize = 10;
+            const totalPages = Math.max(1, Math.ceil(data.payments.length / pageSize));
+            const page = Math.min(payPage, totalPages);
+            const start = (page - 1) * pageSize;
+            const slice = data.payments.slice(start, start + pageSize);
+            return (
+              <>
+                <ul className="space-y-2">
+                  {slice.map((p) => (
+                    <li
+                      key={p.id}
+                      className="flex items-center gap-3 rounded-2xl border bg-card px-4 py-3 shadow-sm transition hover:border-primary/40"
+                    >
+                      <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-500" strokeWidth={2} />
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground">Vencimento</div>
+                        <div className="text-base font-bold tracking-tight">{formatDateBR(p.paid_at)}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-muted-foreground">Original</div>
+                        <div className="text-base font-bold tracking-tight">{brl(p.amount_cents)}</div>
+                      </div>
+                      <button
+                        onClick={() => downloadReceipt(p)}
+                        className="ml-1 grid h-9 w-9 place-items-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                        aria-label="Baixar comprovante"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                {totalPages > 1 && (
+                  <div className="mt-3 flex items-center justify-between px-1 text-xs text-muted-foreground">
+                    <span>Página {page} de {totalPages} · {data.payments.length} pagamentos</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setPayPage((p) => Math.max(1, p - 1))}
+                        disabled={page <= 1}
+                        className="rounded-md border px-3 py-1 disabled:opacity-40 hover:bg-muted"
+                      >Anterior</button>
+                      <button
+                        onClick={() => setPayPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={page >= totalPages}
+                        className="rounded-md border px-3 py-1 disabled:opacity-40 hover:bg-muted"
+                      >Próxima</button>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-xs text-muted-foreground">Original</div>
-                    <div className="text-base font-bold tracking-tight">{brl(p.amount_cents)}</div>
-                  </div>
-                  <button
-                    onClick={() => downloadReceipt(p)}
-                    className="ml-1 grid h-9 w-9 place-items-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                    aria-label="Baixar comprovante"
-                  >
-                    <Download className="h-4 w-4" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+                )}
+              </>
+            );
+          })()}
         </section>
+
 
         {/* Indique e ganhe */}
         {data.settings.referral_enabled && data.client.referral_code && (
