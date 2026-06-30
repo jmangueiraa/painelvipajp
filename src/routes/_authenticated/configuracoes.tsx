@@ -3,7 +3,8 @@ import { translateError } from "@/lib/translate-error";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { User, MessageSquare, KeyRound, Camera, QrCode, RefreshCw, LogOut, Smartphone, Wallet } from "lucide-react";
+import { User, MessageSquare, KeyRound, Camera, QrCode, RefreshCw, LogOut, Smartphone, Wallet, Bell, Send } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -205,6 +206,55 @@ function ConfiguracoesPage() {
     onError: (e: Error) => toast.error(translateError(e)),
   });
 
+  const { data: notifCfg } = useQuery({
+    queryKey: ["notifications_config"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("notifications_config").select("*").eq("id", "global").maybeSingle();
+      if (error) throw error;
+      return (data ?? {
+        notify_new_sale: true,
+        notify_payment_approved: true,
+        notify_renewal: true,
+        notify_new_client: true,
+        notify_trial: true,
+        notify_payment_rejected: true,
+      }) as Record<string, boolean | string>;
+    },
+  });
+
+  const toggleNotif = useMutation({
+    mutationFn: async (patch: Record<string, boolean>) => {
+      const { error } = await supabase
+        .from("notifications_config")
+        .upsert({ id: "global", ...patch }, { onConflict: "id" });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications_config"] }),
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  const testTelegram = useMutation({
+    mutationFn: async () => {
+      const { notifyEventFn } = await import("@/lib/notifications.functions");
+      const r = await notifyEventFn({ data: {
+        event: "new_sale",
+        payload: { nome: "Teste", plano: "Mensagem de teste", valor: "0,00", metodo: "Telegram" },
+      } });
+      if (!r.ok) throw new Error(r.reason ?? "Falha");
+    },
+    onSuccess: () => toast.success("Mensagem de teste enviada"),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const NOTIF_EVENTS: { key: string; label: string; desc: string }[] = [
+    { key: "notify_new_sale", label: "Nova venda", desc: "Loja ou produto avulso aprovado" },
+    { key: "notify_payment_approved", label: "Pagamento aprovado", desc: "Qualquer pagamento confirmado pelo Mercado Pago" },
+    { key: "notify_renewal", label: "Renovação realizada", desc: "Cliente IPTV ou assinante renovou" },
+    { key: "notify_new_client", label: "Novo cliente cadastrado", desc: "Cliente adicionado no painel" },
+    { key: "notify_trial", label: "Teste gratuito criado", desc: "Novo assinante iniciou o trial de 7 dias" },
+    { key: "notify_payment_rejected", label: "Pagamento recusado", desc: "Pagamento foi rejeitado ou cancelado" },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader title="Configurações" description="Perfil e integrações" />
@@ -403,6 +453,41 @@ function ConfiguracoesPage() {
 
 
 
+
+      <SectionCard
+        title="Central de Notificações"
+        description="Escolha quais eventos você deseja receber no Telegram. Token e Chat ID ficam protegidos no servidor."
+        icon={Bell}
+        color="var(--kpi-amber)"
+      >
+        <div className="space-y-2">
+          {NOTIF_EVENTS.map((ev) => {
+            const checked = (notifCfg?.[ev.key] as boolean | undefined) ?? true;
+            return (
+              <div key={ev.key} className="flex items-start justify-between gap-3 rounded-xl border border-border/60 px-3 py-2.5">
+                <div className="min-w-0">
+                  <div className="text-sm font-medium">{ev.label}</div>
+                  <div className="text-xs text-muted-foreground">{ev.desc}</div>
+                </div>
+                <Switch
+                  checked={checked}
+                  onCheckedChange={(v) => toggleNotif.mutate({ [ev.key]: v })}
+                  disabled={toggleNotif.isPending}
+                />
+              </div>
+            );
+          })}
+        </div>
+        <Button
+          variant="outline"
+          className="rounded-full mt-2"
+          onClick={() => testTelegram.mutate()}
+          disabled={testTelegram.isPending}
+        >
+          <Send className="size-4 mr-2" />
+          {testTelegram.isPending ? "Enviando..." : "Enviar mensagem de teste"}
+        </Button>
+      </SectionCard>
 
       <SectionCard title="Alterar senha" icon={KeyRound} color="var(--kpi-violet)">
         <div className="space-y-1">

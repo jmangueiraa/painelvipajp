@@ -58,6 +58,18 @@ function AuthPage() {
     });
     setLoading(false);
     if (error) return toast.error("Erro ao criar conta", { description: translateError(error) });
+    try {
+      const { notifyEventFn } = await import("@/lib/notifications.functions");
+      await notifyEventFn({ data: {
+        event: "trial",
+        payload: {
+          nome: String(fd.get("full_name") || ""),
+          email: String(fd.get("email") || ""),
+          plano: "Trial 7 dias",
+          extra: `Empresa: ${String(fd.get("company_name") || "—")}`,
+        },
+      } });
+    } catch (err) { console.error(err); }
     toast.success("Conta criada!", { description: "Verifique seu e-mail se a confirmação estiver ativa." });
     setTab("login");
   }
