@@ -10,7 +10,7 @@ export function useIsAdmin() {
     staleTime: 5 * 60_000,
     retry: 2,
     queryFn: async () => {
-      const { data: rpcData, error: rpcError } = await supabase.rpc("is_current_user_admin" as never);
+      const { data: rpcData, error: rpcError } = await supabase.rpc("is_current_user_admin" as any);
       if (!rpcError) return rpcData === true;
 
       const { data, error } = await supabase
