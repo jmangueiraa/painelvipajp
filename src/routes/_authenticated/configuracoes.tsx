@@ -141,6 +141,10 @@ function ConfiguracoesPage() {
       setMoviesText(settings.updates_movies_text ?? "");
       setSeriesText(settings.updates_series_text ?? "");
       setGamesText((settings as { updates_games_text?: string | null }).updates_games_text ?? "");
+      const s = settings as { store_slug?: string | null; store_title?: string | null; store_description?: string | null };
+      setStoreSlug(s.store_slug ?? "");
+      setStoreTitle(s.store_title ?? "");
+      setStoreDescription(s.store_description ?? "");
     }
   }, [settings]);
 
