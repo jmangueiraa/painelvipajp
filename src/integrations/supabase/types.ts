@@ -589,7 +589,8 @@ export type Database = {
       renewal_requests: {
         Row: {
           amount_cents: number | null
-          client_id: string
+          buyer_id: string | null
+          client_id: string | null
           created_at: string
           days: number
           id: string
@@ -604,7 +605,8 @@ export type Database = {
         }
         Insert: {
           amount_cents?: number | null
-          client_id: string
+          buyer_id?: string | null
+          client_id?: string | null
           created_at?: string
           days: number
           id?: string
@@ -619,7 +621,8 @@ export type Database = {
         }
         Update: {
           amount_cents?: number | null
-          client_id?: string
+          buyer_id?: string | null
+          client_id?: string | null
           created_at?: string
           days?: number
           id?: string
@@ -687,6 +690,9 @@ export type Database = {
           pix_receiver: string | null
           referral_enabled: boolean
           referral_reward_days: number
+          store_description: string | null
+          store_slug: string | null
+          store_title: string | null
           subscription_expires_at: string | null
           subscription_monthly_cents: number
           support_message: string | null
@@ -717,6 +723,9 @@ export type Database = {
           pix_receiver?: string | null
           referral_enabled?: boolean
           referral_reward_days?: number
+          store_description?: string | null
+          store_slug?: string | null
+          store_title?: string | null
           subscription_expires_at?: string | null
           subscription_monthly_cents?: number
           support_message?: string | null
@@ -747,6 +756,9 @@ export type Database = {
           pix_receiver?: string | null
           referral_enabled?: boolean
           referral_reward_days?: number
+          store_description?: string | null
+          store_slug?: string | null
+          store_title?: string | null
           subscription_expires_at?: string | null
           subscription_monthly_cents?: number
           support_message?: string | null
@@ -759,6 +771,39 @@ export type Database = {
           updates_series_updated_at?: string | null
           user_id?: string
           whatsapp_instance?: string | null
+        }
+        Relationships: []
+      }
+      store_buyers: {
+        Row: {
+          auth_user_id: string
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth_user_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth_user_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -815,7 +860,10 @@ export type Database = {
       }
       store_purchases: {
         Row: {
-          client_id: string
+          buyer_email: string | null
+          buyer_id: string | null
+          buyer_name: string | null
+          client_id: string | null
           cost_cents: number
           created_at: string
           due_date: string
@@ -831,7 +879,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          client_id: string
+          buyer_email?: string | null
+          buyer_id?: string | null
+          buyer_name?: string | null
+          client_id?: string | null
           cost_cents?: number
           created_at?: string
           due_date: string
@@ -847,7 +898,10 @@ export type Database = {
           user_id: string
         }
         Update: {
-          client_id?: string
+          buyer_email?: string | null
+          buyer_id?: string | null
+          buyer_name?: string | null
+          client_id?: string | null
           cost_cents?: number
           created_at?: string
           due_date?: string
@@ -976,6 +1030,14 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      find_store_owner_by_slug: {
+        Args: { _slug: string }
+        Returns: {
+          store_description: string
+          store_title: string
+          user_id: string
+        }[]
+      }
       gen_referral_code: { Args: { _name: string }; Returns: string }
       has_role: {
         Args: {
@@ -985,6 +1047,19 @@ export type Database = {
         Returns: boolean
       }
       is_current_user_admin: { Args: never; Returns: boolean }
+      list_store_products: {
+        Args: { _owner: string }
+        Returns: {
+          duration_days: number
+          emoji: string
+          gradient: string
+          image_url: string
+          key: string
+          label: string
+          sale_cents: number
+          sort_order: number
+        }[]
+      }
       seed_default_store_products: {
         Args: { _user_id: string }
         Returns: undefined

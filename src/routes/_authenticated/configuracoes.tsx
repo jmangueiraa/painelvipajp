@@ -101,7 +101,7 @@ function ConfiguracoesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("settings")
-        .select("whatsapp_instance,support_message,subscription_expires_at,subscription_monthly_cents,app_android_url,app_ios_url,mp_access_token,updates_movies_text,updates_series_text,updates_games_text")
+        .select("whatsapp_instance,support_message,subscription_expires_at,subscription_monthly_cents,app_android_url,app_ios_url,mp_access_token,updates_movies_text,updates_series_text,updates_games_text,store_slug,store_title,store_description")
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -119,6 +119,9 @@ function ConfiguracoesPage() {
   const [moviesText, setMoviesText] = useState("");
   const [seriesText, setSeriesText] = useState("");
   const [gamesText, setGamesText] = useState("");
+  const [storeSlug, setStoreSlug] = useState("");
+  const [storeTitle, setStoreTitle] = useState("");
+  const [storeDescription, setStoreDescription] = useState("");
   const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
@@ -138,6 +141,10 @@ function ConfiguracoesPage() {
       setMoviesText(settings.updates_movies_text ?? "");
       setSeriesText(settings.updates_series_text ?? "");
       setGamesText((settings as { updates_games_text?: string | null }).updates_games_text ?? "");
+      const s = settings as { store_slug?: string | null; store_title?: string | null; store_description?: string | null };
+      setStoreSlug(s.store_slug ?? "");
+      setStoreTitle(s.store_title ?? "");
+      setStoreDescription(s.store_description ?? "");
     }
   }, [settings]);
 
@@ -168,6 +175,9 @@ function ConfiguracoesPage() {
     updates_movies_updated_at: string | null;
     updates_series_updated_at: string | null;
     updates_games_text: string | null;
+    store_slug: string | null;
+    store_title: string | null;
+    store_description: string | null;
     updates_games_updated_at: string | null;
   }>;
   const saveSettings = useMutation({
@@ -293,6 +303,43 @@ function ConfiguracoesPage() {
           Salvar Access Token
         </Button>
       </SectionCard>
+
+      <SectionCard title="Loja pública (compradores sem IPTV)" description="Define um link público para vender produtos da loja a clientes que não são assinantes do IPTV. Eles se cadastram com e-mail e senha." icon={Smartphone} color="var(--kpi-emerald)">
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label>Slug da loja</Label>
+            <Input
+              placeholder="ex: ajp"
+              value={storeSlug}
+              onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+            />
+            <p className="text-xs text-muted-foreground">
+              Link: <span className="font-mono">{typeof window !== "undefined" ? window.location.origin : ""}/loja/{storeSlug || "seu-slug"}</span>
+            </p>
+          </div>
+          <div className="space-y-1">
+            <Label>Título da loja</Label>
+            <Input placeholder="Ex: Loja AJP" value={storeTitle} onChange={(e) => setStoreTitle(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label>Descrição curta</Label>
+            <Input placeholder="Ex: Streaming, contas premium, licenças..." value={storeDescription} onChange={(e) => setStoreDescription(e.target.value)} />
+          </div>
+          <Button
+            className="btn-premium rounded-full"
+            onClick={() => saveSettings.mutate({
+              store_slug: storeSlug.trim() || null,
+              store_title: storeTitle.trim() || null,
+              store_description: storeDescription.trim() || null,
+            })}
+            disabled={saveSettings.isPending}
+          >
+            Salvar loja
+          </Button>
+        </div>
+      </SectionCard>
+
+
 
 
       <SectionCard title="Atualizações" description="Cole o texto completo das atualizações. Categorias entre parênteses, ex: *(LANÇAMENTO)*, *(AÇÃO)*, *(DRAMA)*. Os itens listados abaixo aparecem agrupados por categoria no portal." icon={Smartphone} color="var(--kpi-violet)">
