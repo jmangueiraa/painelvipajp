@@ -304,6 +304,43 @@ function ConfiguracoesPage() {
         </Button>
       </SectionCard>
 
+      <SectionCard title="Loja pública (compradores sem IPTV)" description="Define um link público para vender produtos da loja a clientes que não são assinantes do IPTV. Eles se cadastram com e-mail e senha." icon={Smartphone} color="var(--kpi-emerald)">
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label>Slug da loja</Label>
+            <Input
+              placeholder="ex: ajp"
+              value={storeSlug}
+              onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+            />
+            <p className="text-xs text-muted-foreground">
+              Link: <span className="font-mono">{typeof window !== "undefined" ? window.location.origin : ""}/loja/{storeSlug || "seu-slug"}</span>
+            </p>
+          </div>
+          <div className="space-y-1">
+            <Label>Título da loja</Label>
+            <Input placeholder="Ex: Loja AJP" value={storeTitle} onChange={(e) => setStoreTitle(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label>Descrição curta</Label>
+            <Input placeholder="Ex: Streaming, contas premium, licenças..." value={storeDescription} onChange={(e) => setStoreDescription(e.target.value)} />
+          </div>
+          <Button
+            className="btn-premium rounded-full"
+            onClick={() => saveSettings.mutate({
+              store_slug: storeSlug.trim() || null,
+              store_title: storeTitle.trim() || null,
+              store_description: storeDescription.trim() || null,
+            })}
+            disabled={saveSettings.isPending}
+          >
+            Salvar loja
+          </Button>
+        </div>
+      </SectionCard>
+
+
+
 
       <SectionCard title="Atualizações" description="Cole o texto completo das atualizações. Categorias entre parênteses, ex: *(LANÇAMENTO)*, *(AÇÃO)*, *(DRAMA)*. Os itens listados abaixo aparecem agrupados por categoria no portal." icon={Smartphone} color="var(--kpi-violet)">
         <div className="grid md:grid-cols-3 gap-4">
