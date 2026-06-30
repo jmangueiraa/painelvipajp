@@ -37,6 +37,20 @@ function FinanceiroPage() {
     },
   });
 
+  const { data: storeSales = [] } = useQuery({
+    queryKey: ["store_purchases", "fin"],
+    queryFn: async () => {
+      const since = new Date(); since.setMonth(since.getMonth() - 11); since.setDate(1);
+      const { data, error } = await supabase
+        .from("store_purchases")
+        .select("id,label,sale_cents,cost_cents,purchased_at,buyer_name,client_id")
+        .gte("purchased_at", since.toISOString())
+        .order("purchased_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as { id: string; label: string; sale_cents: number; cost_cents: number; purchased_at: string; buyer_name: string | null; client_id: string | null }[];
+    },
+  });
+
   const { data: clients = [] } = useQuery({
     queryKey: ["clients", "fin"],
     queryFn: async () => {
