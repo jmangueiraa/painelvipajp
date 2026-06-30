@@ -162,6 +162,7 @@ function DashboardPage() {
         <Link to="/loja/clientes" className="block"><KpiCard label="Vendas da loja" value={brl(storeStats?.venda ?? 0)} icon={ShoppingBag} color="cyan" /></Link>
         <Link to="/loja/clientes" className="block"><KpiCard label="Gasto da loja" value={brl(storeStats?.custo ?? 0)} icon={TrendingDown} color="rose" /></Link>
         <Link to="/loja/clientes" className="block"><KpiCard label="Lucro da loja" value={brl(storeStats?.lucro ?? 0)} icon={TrendingUp} color="emerald" /></Link>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
