@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Users, UserCheck, AlertTriangle, CalendarClock, CalendarDays } from "lucide-react";
+import { Users, UserCheck, AlertTriangle, CalendarClock, CalendarDays, ShoppingBag, TrendingDown, TrendingUp } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +44,21 @@ function DashboardPage() {
         .gte("paid_at", since.toISOString());
       if (error) throw error;
       return data as PaymentRow[];
+    },
+  });
+
+  const { data: storeStats } = useQuery({
+    queryKey: ["store-stats", "dash"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_purchases")
+        .select("sale_cents,cost_cents");
+      if (error) throw error;
+      let venda = 0, custo = 0;
+      for (const r of (data as { sale_cents: number; cost_cents: number }[])) {
+        venda += r.sale_cents; custo += r.cost_cents;
+      }
+      return { venda, custo, lucro: venda - custo, qtd: data.length };
     },
   });
 
@@ -142,6 +157,11 @@ function DashboardPage() {
         <Link to="/clientes" search={{ filter: "vencem_hoje" }} className="block"><KpiCard label="Vencem hoje" value={stats.hoje} icon={CalendarClock} color="cyan" /></Link>
         <Link to="/clientes" search={{ filter: "a_vencer" }} className="block"><KpiCard label="A vencer no mês" value={stats.mes} icon={CalendarDays} color="violet" /></Link>
       </div>
+
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
+        <Link to="/loja/clientes" className="block"><KpiCard label="Vendas da loja" value={brl(storeStats?.venda ?? 0)} icon={ShoppingBag} color="cyan" /></Link>
+        <Link to="/loja/clientes" className="block"><KpiCard label="Gasto da loja" value={brl(storeStats?.custo ?? 0)} icon={TrendingDown} color="rose" /></Link>
+        <Link to="/loja/clientes" className="block"><KpiCard label="Lucro da loja" value={brl(storeStats?.lucro ?? 0)} icon={TrendingUp} color="emerald" /></Link>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
