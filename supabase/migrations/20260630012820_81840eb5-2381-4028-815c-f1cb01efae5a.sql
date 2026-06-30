@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.seed_default_store_products(uuid) FROM PUBLIC, anon, authenticated;
