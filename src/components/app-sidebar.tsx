@@ -32,7 +32,9 @@ const items = [
   { title: "Solicitações", url: "/solicitacoes", icon: Inbox },
   { title: "Loja - Produtos", url: "/loja/produtos", icon: Store },
   { title: "Loja - Clientes", url: "/loja/clientes", icon: ShoppingBag },
+  { title: "Cadastrar API", url: "/cadastrar-api", icon: KeyRound },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
+
 ];
 
 function SidebarAvatar({ collapsed }: { collapsed: boolean }) {
