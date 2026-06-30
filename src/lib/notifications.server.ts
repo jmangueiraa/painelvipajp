@@ -56,11 +56,18 @@ export function buildMessage(event: NotifyEvent, p: NotifyPayload): string {
 
 export async function notify(event: NotifyEvent, payload: NotifyPayload): Promise<{ ok: boolean; reason?: string }> {
   try {
-    const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
-    const chatId = process.env.TELEGRAM_CHAT_ID?.trim();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: s } = await supabaseAdmin
+      .from("settings")
+      .select("telegram_bot_token,telegram_chat_id")
+      .limit(1)
+      .maybeSingle();
+
+    const token = (s?.telegram_bot_token?.trim() || process.env.TELEGRAM_BOT_TOKEN?.trim());
+    const chatId = (s?.telegram_chat_id?.trim() || process.env.TELEGRAM_CHAT_ID?.trim());
     if (!token || !chatId) return { ok: false, reason: "telegram não configurado" };
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: cfg } = await supabaseAdmin
       .from("notifications_config")
       .select("*")
@@ -70,6 +77,7 @@ export async function notify(event: NotifyEvent, payload: NotifyPayload): Promis
     const flag = EVENT_TO_FLAG[event];
     const enabled = cfg ? ((cfg as Record<string, unknown>)[flag] ?? true) === true : true;
     if (!enabled) return { ok: false, reason: "evento desativado" };
+
 
     const text = buildMessage(event, payload);
     const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
