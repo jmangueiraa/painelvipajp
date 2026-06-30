@@ -124,6 +124,15 @@ function FinanceiroPage() {
       if (ym(d) === curYM) lucroPagamentosMes += profit;
     }
 
+    // Soma vendas da loja
+    for (const s of storeSales) {
+      const d = new Date(s.purchased_at);
+      const profit = s.sale_cents - (s.cost_cents ?? 0);
+      lucroTotal += profit;
+      if (d.getFullYear() === curYear) lucroAno += profit;
+      if (ym(d) === curYM) lucroPagamentosMes += profit;
+    }
+
     const projecaoMes = receitaMes - despesaMes;
     return {
       receitaMes,
@@ -132,7 +141,7 @@ function FinanceiroPage() {
       lucroAno: lucroAno || projecaoMes,
       lucroTotal: lucroTotal || projecaoMes,
     };
-  }, [payments, clients, serverCost]);
+  }, [payments, storeSales, clients, serverCost]);
 
   const chart = useMemo(() => {
     const months: { key: string; label: string; total: number }[] = [];
@@ -147,8 +156,34 @@ function FinanceiroPage() {
       const m = months.find((x) => x.key === `${d.getFullYear()}-${d.getMonth()}`);
       if (m) m.total += p.amount_cents / 100;
     }
+    for (const s of storeSales) {
+      const d = new Date(s.purchased_at);
+      const m = months.find((x) => x.key === `${d.getFullYear()}-${d.getMonth()}`);
+      if (m) m.total += s.sale_cents / 100;
+    }
     return months;
-  }, [payments]);
+  }, [payments, storeSales]);
+
+  const historyEntries = useMemo(() => {
+    const iptv = payments.map((p) => ({
+      id: `p-${p.id}`,
+      name: clientMap.get(p.client_id)?.name ?? "—",
+      date: p.paid_at,
+      method: p.method ?? "—",
+      amount: p.amount_cents,
+      kind: "IPTV",
+    }));
+    const store = storeSales.map((s) => ({
+      id: `s-${s.id}`,
+      name: s.buyer_name ?? clientMap.get(s.client_id ?? "")?.name ?? "Loja",
+      date: s.purchased_at,
+      method: s.label,
+      amount: s.sale_cents,
+      kind: "Loja",
+    }));
+    return [...iptv, ...store].sort((a, b) => (a.date < b.date ? 1 : -1));
+  }, [payments, storeSales, clientMap]);
+
 
   const totalClientesValor = useMemo(() => clients.reduce((acc, c) => acc + c.price_cents, 0), [clients]);
 
