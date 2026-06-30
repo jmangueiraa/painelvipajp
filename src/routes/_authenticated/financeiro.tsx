@@ -37,6 +37,20 @@ function FinanceiroPage() {
     },
   });
 
+  const { data: storeSales = [] } = useQuery({
+    queryKey: ["store_purchases", "fin"],
+    queryFn: async () => {
+      const since = new Date(); since.setMonth(since.getMonth() - 11); since.setDate(1);
+      const { data, error } = await supabase
+        .from("store_purchases")
+        .select("id,label,sale_cents,cost_cents,purchased_at,buyer_name,client_id")
+        .gte("purchased_at", since.toISOString())
+        .order("purchased_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as { id: string; label: string; sale_cents: number; cost_cents: number; purchased_at: string; buyer_name: string | null; client_id: string | null }[];
+    },
+  });
+
   const { data: clients = [] } = useQuery({
     queryKey: ["clients", "fin"],
     queryFn: async () => {
@@ -110,6 +124,15 @@ function FinanceiroPage() {
       if (ym(d) === curYM) lucroPagamentosMes += profit;
     }
 
+    // Soma vendas da loja
+    for (const s of storeSales) {
+      const d = new Date(s.purchased_at);
+      const profit = s.sale_cents - (s.cost_cents ?? 0);
+      lucroTotal += profit;
+      if (d.getFullYear() === curYear) lucroAno += profit;
+      if (ym(d) === curYM) lucroPagamentosMes += profit;
+    }
+
     const projecaoMes = receitaMes - despesaMes;
     return {
       receitaMes,
@@ -118,7 +141,7 @@ function FinanceiroPage() {
       lucroAno: lucroAno || projecaoMes,
       lucroTotal: lucroTotal || projecaoMes,
     };
-  }, [payments, clients, serverCost]);
+  }, [payments, storeSales, clients, serverCost]);
 
   const chart = useMemo(() => {
     const months: { key: string; label: string; total: number }[] = [];
@@ -133,8 +156,34 @@ function FinanceiroPage() {
       const m = months.find((x) => x.key === `${d.getFullYear()}-${d.getMonth()}`);
       if (m) m.total += p.amount_cents / 100;
     }
+    for (const s of storeSales) {
+      const d = new Date(s.purchased_at);
+      const m = months.find((x) => x.key === `${d.getFullYear()}-${d.getMonth()}`);
+      if (m) m.total += s.sale_cents / 100;
+    }
     return months;
-  }, [payments]);
+  }, [payments, storeSales]);
+
+  const historyEntries = useMemo(() => {
+    const iptv = payments.map((p) => ({
+      id: `p-${p.id}`,
+      name: clientMap.get(p.client_id)?.name ?? "—",
+      date: p.paid_at,
+      method: p.method ?? "—",
+      amount: p.amount_cents,
+      kind: "IPTV",
+    }));
+    const store = storeSales.map((s) => ({
+      id: `s-${s.id}`,
+      name: s.buyer_name ?? clientMap.get(s.client_id ?? "")?.name ?? "Loja",
+      date: s.purchased_at,
+      method: s.label,
+      amount: s.sale_cents,
+      kind: "Loja",
+    }));
+    return [...iptv, ...store].sort((a, b) => (a.date < b.date ? 1 : -1));
+  }, [payments, storeSales, clientMap]);
+
 
   const totalClientesValor = useMemo(() => clients.reduce((acc, c) => acc + c.price_cents, 0), [clients]);
 
@@ -178,20 +227,22 @@ function FinanceiroPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Cliente</TableHead>
+                  <TableHead>Origem</TableHead>
                   <TableHead>Data</TableHead>
-                  <TableHead>Método</TableHead>
+                  <TableHead>Método/Produto</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {payments.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Nenhum pagamento registrado.</TableCell></TableRow>
-                ) : payments.map((p) => (
+                {historyEntries.length === 0 ? (
+                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum pagamento registrado.</TableCell></TableRow>
+                ) : historyEntries.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell className="font-medium whitespace-nowrap">{clientMap.get(p.client_id)?.name ?? "—"}</TableCell>
-                    <TableCell className="whitespace-nowrap">{formatDateTimeBR(p.paid_at)}</TableCell>
-                    <TableCell className="capitalize whitespace-nowrap">{p.method ?? "—"}</TableCell>
-                    <TableCell className="text-right tabular-nums whitespace-nowrap">{brl(p.amount_cents)}</TableCell>
+                    <TableCell className="font-medium whitespace-nowrap">{p.name}</TableCell>
+                    <TableCell className="whitespace-nowrap text-xs">{p.kind}</TableCell>
+                    <TableCell className="whitespace-nowrap">{formatDateTimeBR(p.date)}</TableCell>
+                    <TableCell className="capitalize whitespace-nowrap">{p.method}</TableCell>
+                    <TableCell className="text-right tabular-nums whitespace-nowrap">{brl(p.amount)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -199,6 +250,7 @@ function FinanceiroPage() {
           </div>
         </CardContent>
       </Card>
+
 
       <Card className="kpi-card" style={{ "--kpi-color": "var(--kpi-emerald)" } as React.CSSProperties}>
         <CardContent className="p-5 flex items-center justify-between gap-3">
