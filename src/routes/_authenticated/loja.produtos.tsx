@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +36,7 @@ type Product = {
   gradient: string | null;
   sort_order: number;
   active: boolean;
+  image_url: string | null;
 };
 
 type FormState = {
@@ -47,9 +48,10 @@ type FormState = {
   duration_days: string;
   emoji: string;
   active: boolean;
+  image_url: string;
 };
 
-const empty: FormState = { key: "", label: "", sale: "", cost: "", duration_days: "30", emoji: "🛒", active: true };
+const empty: FormState = { key: "", label: "", sale: "", cost: "", duration_days: "30", emoji: "🛒", active: true, image_url: "" };
 
 function toCents(s: string) {
   const n = Number(String(s).replace(",", ".").replace(/[^\d.]/g, ""));
@@ -61,6 +63,35 @@ function LojaProdutosPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(empty);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function handleUpload(file: File) {
+    if (!user) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem muito grande (máx 5MB)");
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("store-products").upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type,
+      });
+      if (error) throw error;
+      const { data } = supabase.storage.from("store-products").getPublicUrl(path);
+      setForm((f) => ({ ...f, image_url: data.publicUrl }));
+      toast.success("Imagem enviada");
+    } catch (e) {
+      toast.error(translateError(e as Error));
+    } finally {
+      setUploading(false);
+    }
+  }
+
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["store_products"],
@@ -86,6 +117,7 @@ function LojaProdutosPage() {
         duration_days: Math.max(1, Number(f.duration_days) || 30),
         emoji: f.emoji || "🛒",
         active: f.active,
+        image_url: f.image_url.trim() || null,
       };
       if (!payload.label) throw new Error("Nome do produto obrigatório");
       if (f.id) {
@@ -127,6 +159,7 @@ function LojaProdutosPage() {
       duration_days: String(p.duration_days),
       emoji: p.emoji ?? "🛒",
       active: p.active,
+      image_url: p.image_url ?? "",
     });
     setOpen(true);
   }
@@ -168,6 +201,46 @@ function LojaProdutosPage() {
                     <Input inputMode="numeric" value={form.duration_days} onChange={(e) => setForm({ ...form, duration_days: e.target.value })} />
                   </div>
                 </div>
+                <div>
+                  <Label>Foto do produto</Label>
+                  <div className="mt-1 flex items-center gap-3">
+                    {form.image_url ? (
+                      <div className="relative">
+                        <img src={form.image_url} alt="" className="h-20 w-20 rounded-lg object-cover border" />
+                        <button
+                          type="button"
+                          onClick={() => setForm({ ...form, image_url: "" })}
+                          className="absolute -top-2 -right-2 rounded-full bg-destructive text-destructive-foreground p-0.5"
+                          aria-label="Remover imagem"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="h-20 w-20 rounded-lg border border-dashed flex items-center justify-center text-2xl bg-muted/30">
+                        {form.emoji || "🛒"}
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <input
+                        ref={fileRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleUpload(f);
+                          e.target.value = "";
+                        }}
+                      />
+                      <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
+                        {uploading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Upload className="mr-1 h-4 w-4" />}
+                        {form.image_url ? "Trocar imagem" : "Enviar imagem"}
+                      </Button>
+                      <p className="mt-1 text-xs text-muted-foreground">PNG ou JPG, até 5MB. Se vazio, usa o emoji.</p>
+                    </div>
+                  </div>
+                </div>
                 <div className="flex items-center justify-between rounded-lg border p-3">
                   <Label htmlFor="active">Ativo (exibir no portal)</Label>
                   <Switch id="active" checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
@@ -205,8 +278,12 @@ function LojaProdutosPage() {
                   {data.map((p) => (
                     <tr key={p.id} className="border-t">
                       <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl">{p.emoji ?? "🛒"}</span>
+                        <div className="flex items-center gap-3">
+                          {p.image_url ? (
+                            <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover border" />
+                          ) : (
+                            <span className="text-xl w-10 text-center">{p.emoji ?? "🛒"}</span>
+                          )}
                           <span className="font-medium">{p.label}</span>
                         </div>
                       </td>

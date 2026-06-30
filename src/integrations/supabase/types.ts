@@ -771,6 +771,7 @@ export type Database = {
           emoji: string | null
           gradient: string | null
           id: string
+          image_url: string | null
           key: string
           label: string
           sale_cents: number
@@ -786,6 +787,7 @@ export type Database = {
           emoji?: string | null
           gradient?: string | null
           id?: string
+          image_url?: string | null
           key: string
           label: string
           sale_cents?: number
@@ -801,6 +803,7 @@ export type Database = {
           emoji?: string | null
           gradient?: string | null
           id?: string
+          image_url?: string | null
           key?: string
           label?: string
           sale_cents?: number
