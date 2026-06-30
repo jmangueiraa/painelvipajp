@@ -278,8 +278,12 @@ function LojaProdutosPage() {
                   {data.map((p) => (
                     <tr key={p.id} className="border-t">
                       <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl">{p.emoji ?? "🛒"}</span>
+                        <div className="flex items-center gap-3">
+                          {p.image_url ? (
+                            <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover border" />
+                          ) : (
+                            <span className="text-xl w-10 text-center">{p.emoji ?? "🛒"}</span>
+                          )}
                           <span className="font-medium">{p.label}</span>
                         </div>
                       </td>
