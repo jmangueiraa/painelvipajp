@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { CalendarClock, CreditCard, Gift, LogOut, RefreshCw, Server as ServerIcon, Tv, Download, Copy, Check, CheckCircle2, ChevronUp, Smartphone, ExternalLink, Loader2 } from "lucide-react";
+import { CalendarClock, CreditCard, Gift, LogOut, RefreshCw, Server as ServerIcon, Tv, Download, Copy, Check, CheckCircle2, ChevronUp, Smartphone, ExternalLink, Loader2, ShoppingBag } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -520,13 +520,14 @@ function PortalDashboard() {
                   onClick={() => openStoreItem(p)}
                   className="group flex w-28 shrink-0 snap-start flex-col items-center gap-2 rounded-xl border bg-card p-3 text-center transition hover:border-primary/50 hover:shadow-md"
                 >
-                  <div className={`grid h-16 w-16 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br ${p.gradient} text-3xl text-white shadow-md transition group-hover:scale-105`}>
+                  <div className={`grid h-16 w-16 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br ${p.gradient} text-white shadow-md transition group-hover:scale-105`}>
                     {p.image_url ? (
                       <img src={p.image_url} alt={p.label} className="h-full w-full object-cover" />
                     ) : (
-                      <span>{p.emoji}</span>
+                      <ShoppingBag className="h-7 w-7" />
                     )}
                   </div>
+
                   <div className="text-xs font-semibold leading-tight">{p.label}</div>
                   <div className="text-sm font-bold text-primary">{brl(p.price_cents)}</div>
                 </button>
@@ -863,7 +864,7 @@ function PortalDashboard() {
             <>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <span className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${storeItem.gradient} text-lg text-white`}>{storeItem.emoji}</span>
+                  <span className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${storeItem.gradient} text-white`}><ShoppingBag className="h-4 w-4" /></span>
                   {storeItem.label}
                 </DialogTitle>
                 <DialogDescription>

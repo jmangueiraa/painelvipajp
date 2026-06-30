@@ -286,13 +286,14 @@ function Authed({
               onClick={() => { setProduct(p); setOpen(true); }}
               className={`snap-start shrink-0 w-40 rounded-2xl overflow-hidden bg-gradient-to-br ${p.gradient ?? "from-emerald-500 to-teal-600"} text-white text-left shadow-lg active:scale-95 transition`}
             >
-              <div className="aspect-square flex items-center justify-center text-5xl bg-black/10">
+              <div className="aspect-square flex items-center justify-center bg-black/10">
                 {p.image_url ? (
                   <img src={p.image_url} alt={p.label} className="w-full h-full object-cover" />
                 ) : (
-                  <span>{p.emoji ?? "🛒"}</span>
+                  <ShoppingBag className="w-12 h-12 opacity-80" />
                 )}
               </div>
+
               <div className="p-3">
                 <p className="text-xs font-medium leading-tight line-clamp-2 min-h-[2.5rem]">{p.label}</p>
                 <p className="text-base font-bold mt-1">{formatBRL(p.sale_cents)}</p>
@@ -341,8 +342,9 @@ function Authed({
         <DialogContent className="max-w-sm max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <span className="text-2xl">{product?.emoji ?? "🛒"}</span>
+              <ShoppingBag className="w-5 h-5" />
               {product?.label}
+
             </DialogTitle>
             <DialogDescription>
               {product && <>Valor: <strong>{formatBRL(product.sale_cents)}</strong></>}
