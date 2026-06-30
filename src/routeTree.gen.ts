@@ -25,6 +25,7 @@ import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedCadastrarApiRouteImport } from './routes/_authenticated/cadastrar-api'
 import { Route as AuthenticatedLojaProdutosRouteImport } from './routes/_authenticated/loja.produtos'
 import { Route as AuthenticatedLojaClientesRouteImport } from './routes/_authenticated/loja.clientes'
 import { Route as AuthenticatedAdminAssinantesRouteImport } from './routes/_authenticated/admin.assinantes'
@@ -128,6 +129,12 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCadastrarApiRoute =
+  AuthenticatedCadastrarApiRouteImport.update({
+    id: '/cadastrar-api',
+    path: '/cadastrar-api',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedLojaProdutosRoute =
   AuthenticatedLojaProdutosRouteImport.update({
     id: '/loja/produtos',
@@ -253,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/cadastrar-api': typeof AuthenticatedCadastrarApiRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -291,6 +299,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/cadastrar-api': typeof AuthenticatedCadastrarApiRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -331,6 +340,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/cadastrar-api': typeof AuthenticatedCadastrarApiRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -371,6 +381,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/cadastrar-api'
     | '/clientes'
     | '/configuracoes'
     | '/dashboard'
@@ -409,6 +420,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/cadastrar-api'
     | '/clientes'
     | '/configuracoes'
     | '/dashboard'
@@ -448,6 +460,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/cadastrar-api'
     | '/_authenticated/clientes'
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
@@ -625,6 +638,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cadastrar-api': {
+      id: '/_authenticated/cadastrar-api'
+      path: '/cadastrar-api'
+      fullPath: '/cadastrar-api'
+      preLoaderRoute: typeof AuthenticatedCadastrarApiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/loja/produtos': {
       id: '/_authenticated/loja/produtos'
       path: '/loja/produtos'
@@ -790,6 +810,7 @@ const AuthenticatedAdminAssinantesRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCadastrarApiRoute: typeof AuthenticatedCadastrarApiRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -804,6 +825,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCadastrarApiRoute: AuthenticatedCadastrarApiRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
