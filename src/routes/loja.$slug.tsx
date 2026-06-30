@@ -342,8 +342,9 @@ function Authed({
         <DialogContent className="max-w-sm max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <span className="text-2xl">{product?.emoji ?? "🛒"}</span>
+              <ShoppingBag className="w-5 h-5" />
               {product?.label}
+
             </DialogTitle>
             <DialogDescription>
               {product && <>Valor: <strong>{formatBRL(product.sale_cents)}</strong></>}
