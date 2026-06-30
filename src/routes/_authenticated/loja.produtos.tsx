@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +36,7 @@ type Product = {
   gradient: string | null;
   sort_order: number;
   active: boolean;
+  image_url: string | null;
 };
 
 type FormState = {
@@ -47,9 +48,10 @@ type FormState = {
   duration_days: string;
   emoji: string;
   active: boolean;
+  image_url: string;
 };
 
-const empty: FormState = { key: "", label: "", sale: "", cost: "", duration_days: "30", emoji: "🛒", active: true };
+const empty: FormState = { key: "", label: "", sale: "", cost: "", duration_days: "30", emoji: "🛒", active: true, image_url: "" };
 
 function toCents(s: string) {
   const n = Number(String(s).replace(",", ".").replace(/[^\d.]/g, ""));
