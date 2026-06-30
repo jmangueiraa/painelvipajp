@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Wallet, TrendingUp, ArrowUpRight, ArrowDownRight, Users } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -219,37 +220,8 @@ function FinanceiroPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader><CardTitle>Histórico de pagamentos</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Origem</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Método/Produto</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {historyEntries.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum pagamento registrado.</TableCell></TableRow>
-                ) : historyEntries.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium whitespace-nowrap">{p.name}</TableCell>
-                    <TableCell className="whitespace-nowrap text-xs">{p.kind}</TableCell>
-                    <TableCell className="whitespace-nowrap">{formatDateTimeBR(p.date)}</TableCell>
-                    <TableCell className="capitalize whitespace-nowrap">{p.method}</TableCell>
-                    <TableCell className="text-right tabular-nums whitespace-nowrap">{brl(p.amount)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      <HistoryCard entries={historyEntries} />
+
 
 
       <Card className="kpi-card" style={{ "--kpi-color": "var(--kpi-emerald)" } as React.CSSProperties}>
@@ -265,5 +237,62 @@ function FinanceiroPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+type HistoryEntry = { id: string; name: string; date: string; method: string; amount: number; kind: string };
+
+function HistoryCard({ entries }: { entries: HistoryEntry[] }) {
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const totalPages = Math.max(1, Math.ceil(entries.length / pageSize));
+  const current = Math.min(page, totalPages);
+  const start = (current - 1) * pageSize;
+  const pageItems = entries.slice(start, start + pageSize);
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Histórico de pagamentos</CardTitle></CardHeader>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Origem</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Método/Produto</TableHead>
+                <TableHead className="text-right">Valor</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {pageItems.length === 0 ? (
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum pagamento registrado.</TableCell></TableRow>
+              ) : pageItems.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell className="font-medium whitespace-nowrap">{p.name}</TableCell>
+                  <TableCell className="whitespace-nowrap text-xs">{p.kind}</TableCell>
+                  <TableCell className="whitespace-nowrap">{formatDateTimeBR(p.date)}</TableCell>
+                  <TableCell className="capitalize whitespace-nowrap">{p.method}</TableCell>
+                  <TableCell className="text-right tabular-nums whitespace-nowrap">{brl(p.amount)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        {entries.length > pageSize && (
+          <div className="flex items-center justify-between gap-2 p-3 border-t">
+            <span className="text-xs text-muted-foreground">
+              {start + 1}–{Math.min(start + pageSize, entries.length)} de {entries.length}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" disabled={current <= 1} onClick={() => setPage(current - 1)}>Anterior</Button>
+              <span className="text-xs tabular-nums">{current}/{totalPages}</span>
+              <Button size="sm" variant="outline" disabled={current >= totalPages} onClick={() => setPage(current + 1)}>Próxima</Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
