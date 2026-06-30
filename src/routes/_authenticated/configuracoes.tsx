@@ -454,6 +454,41 @@ function ConfiguracoesPage() {
 
 
 
+      <SectionCard
+        title="Central de Notificações"
+        description="Escolha quais eventos você deseja receber no Telegram. Token e Chat ID ficam protegidos no servidor."
+        icon={Bell}
+        color="var(--kpi-amber)"
+      >
+        <div className="space-y-2">
+          {NOTIF_EVENTS.map((ev) => {
+            const checked = (notifCfg?.[ev.key] as boolean | undefined) ?? true;
+            return (
+              <div key={ev.key} className="flex items-start justify-between gap-3 rounded-xl border border-border/60 px-3 py-2.5">
+                <div className="min-w-0">
+                  <div className="text-sm font-medium">{ev.label}</div>
+                  <div className="text-xs text-muted-foreground">{ev.desc}</div>
+                </div>
+                <Switch
+                  checked={checked}
+                  onCheckedChange={(v) => toggleNotif.mutate({ [ev.key]: v })}
+                  disabled={toggleNotif.isPending}
+                />
+              </div>
+            );
+          })}
+        </div>
+        <Button
+          variant="outline"
+          className="rounded-full mt-2"
+          onClick={() => testTelegram.mutate()}
+          disabled={testTelegram.isPending}
+        >
+          <Send className="size-4 mr-2" />
+          {testTelegram.isPending ? "Enviando..." : "Enviar mensagem de teste"}
+        </Button>
+      </SectionCard>
+
       <SectionCard title="Alterar senha" icon={KeyRound} color="var(--kpi-violet)">
         <div className="space-y-1">
           <Label>Senha atual</Label>
