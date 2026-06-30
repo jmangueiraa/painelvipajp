@@ -864,7 +864,7 @@ function PortalDashboard() {
             <>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <span className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${storeItem.gradient} text-lg text-white`}>{storeItem.emoji}</span>
+                  <span className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${storeItem.gradient} text-white`}><ShoppingBag className="h-4 w-4" /></span>
                   {storeItem.label}
                 </DialogTitle>
                 <DialogDescription>
