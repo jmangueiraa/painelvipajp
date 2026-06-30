@@ -236,7 +236,7 @@ function PortalDashboard() {
   });
 
   const buyExtra = useMutation({
-    mutationFn: (o: { method: "pix" | "card"; label: string; amount_cents: number }) =>
+    mutationFn: (o: { method: "pix" | "card"; product_key: string; label: string; amount_cents: number }) =>
       portalFetch<{ renewal_id: string; payment_id?: string; qr_code?: string; qr_code_base64?: string; init_point?: string }>(
         "/api/public/portal/mp-create-extra",
         { method: "POST", body: JSON.stringify(o) },
@@ -271,7 +271,7 @@ function PortalDashboard() {
     if (!storeItem) return;
     setStoreMethod(m);
     setStoreCreating(true);
-    buyExtra.mutate({ method: m, label: storeItem.label, amount_cents: storeItem.price_cents });
+    buyExtra.mutate({ method: m, product_key: storeItem.id, label: storeItem.label, amount_cents: storeItem.price_cents });
   }
 
   function choosePix() {

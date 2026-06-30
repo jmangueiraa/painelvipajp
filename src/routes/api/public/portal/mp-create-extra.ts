@@ -32,13 +32,39 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
 
           const body = (await request.json().catch(() => ({}))) as {
             method?: "pix" | "card";
+            product_key?: string;
             label?: string;
             amount_cents?: number;
           };
           const method = body.method;
-          const label = (body.label ?? "").trim();
-          const base_cents = Number(body.amount_cents);
+          const requestedLabel = (body.label ?? "").trim();
+          const productKey = (body.product_key ?? "").trim();
           if (method !== "pix" && method !== "card") return json({ error: "Método inválido" }, request, { status: 400 });
+
+          let product: { label: string; sale_cents: number } | null = null;
+          if (productKey) {
+            const { data } = await supabaseAdmin
+              .from("store_products")
+              .select("label,sale_cents")
+              .eq("user_id", client.user_id)
+              .eq("key", productKey)
+              .eq("active", true)
+              .maybeSingle();
+            product = data as typeof product;
+          }
+          if (!product && requestedLabel) {
+            const { data } = await supabaseAdmin
+              .from("store_products")
+              .select("label,sale_cents")
+              .eq("user_id", client.user_id)
+              .eq("label", requestedLabel)
+              .eq("active", true)
+              .maybeSingle();
+            product = data as typeof product;
+          }
+
+          const label = product?.label ?? requestedLabel;
+          const base_cents = product?.sale_cents ?? Number(body.amount_cents);
           if (!label) return json({ error: "Produto inválido" }, request, { status: 400 });
           if (!Number.isFinite(base_cents) || base_cents < 100) return json({ error: "Valor inválido" }, request, { status: 400 });
 

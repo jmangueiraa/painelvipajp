@@ -21,6 +21,7 @@ type RenewalRequest = {
   id: string;
   client_id: string;
   days: number;
+  amount_cents: number | null;
   status: string;
   created_at: string;
   label: string | null;
@@ -40,6 +41,15 @@ function itemLabel(r: RenewalRequest) {
   return r.label ? `${periodLabel(r.days)} · ${r.label}` : periodLabel(r.days);
 }
 
+function normalizeProductLabel(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function SolicitacoesPage() {
   const qc = useQueryClient();
 
@@ -48,7 +58,7 @@ function SolicitacoesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("renewal_requests")
-        .select("id,client_id,days,status,created_at,label,clients:client_id(id,name,phone,portal_username,due_date,price_cents,plan_id,user_id)")
+        .select("id,client_id,days,amount_cents,status,created_at,label,clients:client_id(id,name,phone,portal_username,due_date,price_cents,plan_id,user_id)")
         .neq("status", "awaiting_payment")
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -68,14 +78,18 @@ function SolicitacoesPage() {
         // Para produtos da loja, registra a compra com vencimento
         if (isExtra) {
           const label = req.label ?? "Produto avulso";
-          const { data: prod } = await supabase
+          const { data: products, error: prodErr } = await supabase
             .from("store_products")
-            .select("id,sale_cents,cost_cents,duration_days")
+            .select("id,label,sale_cents,cost_cents,duration_days")
             .eq("user_id", req.clients.user_id)
-            .eq("label", label)
-            .maybeSingle();
+            .order("sort_order", { ascending: true });
+          if (prodErr) throw prodErr;
+          const normalizedLabel = normalizeProductLabel(label);
+          const prod = (products ?? []).find((p) => normalizeProductLabel(p.label) === normalizedLabel)
+            ?? (products ?? []).find((p) => req.amount_cents != null && p.sale_cents === req.amount_cents)
+            ?? null;
           const duration = prod?.duration_days ?? 30;
-          const sale = prod?.sale_cents ?? 0;
+          const sale = prod?.sale_cents ?? req.amount_cents ?? 0;
           const cost = prod?.cost_cents ?? 0;
           const due = addDaysISO(todayISO(), duration);
           const { error: eBuy } = await supabase.from("store_purchases").insert({
