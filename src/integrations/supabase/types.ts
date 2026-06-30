@@ -404,6 +404,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications_config: {
+        Row: {
+          id: string
+          notify_new_client: boolean
+          notify_new_sale: boolean
+          notify_payment_approved: boolean
+          notify_payment_rejected: boolean
+          notify_renewal: boolean
+          notify_trial: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          notify_new_client?: boolean
+          notify_new_sale?: boolean
+          notify_payment_approved?: boolean
+          notify_payment_rejected?: boolean
+          notify_renewal?: boolean
+          notify_trial?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          notify_new_client?: boolean
+          notify_new_sale?: boolean
+          notify_payment_approved?: boolean
+          notify_payment_rejected?: boolean
+          notify_renewal?: boolean
+          notify_trial?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount_cents: number
