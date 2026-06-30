@@ -520,8 +520,12 @@ function PortalDashboard() {
                   onClick={() => openStoreItem(p)}
                   className="group flex w-28 shrink-0 snap-start flex-col items-center gap-2 rounded-xl border bg-card p-3 text-center transition hover:border-primary/50 hover:shadow-md"
                 >
-                  <div className={`grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br ${p.gradient} text-3xl text-white shadow-md transition group-hover:scale-105`}>
-                    <span>{p.emoji}</span>
+                  <div className={`grid h-16 w-16 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br ${p.gradient} text-3xl text-white shadow-md transition group-hover:scale-105`}>
+                    {p.image_url ? (
+                      <img src={p.image_url} alt={p.label} className="h-full w-full object-cover" />
+                    ) : (
+                      <span>{p.emoji}</span>
+                    )}
                   </div>
                   <div className="text-xs font-semibold leading-tight">{p.label}</div>
                   <div className="text-sm font-bold text-primary">{brl(p.price_cents)}</div>
