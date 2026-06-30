@@ -56,6 +56,8 @@ function SectionCard({
 
 function CadastrarApiPage() {
   const qc = useQueryClient();
+  const { user } = useAuth();
+
 
   const { data: settings } = useQuery({
     queryKey: ["settings", "apis"],
