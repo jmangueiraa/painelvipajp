@@ -217,7 +217,7 @@ function Authed({
   const [qrBase64, setQrBase64] = useState<string | null>(null);
   const [pixPayload, setPixPayload] = useState("");
   const [status, setStatus] = useState<"pending" | "approved">("pending");
-  const [copied, setCopied] = useState(false);
+  const [, setCopied] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const reset = () => {
