@@ -99,9 +99,8 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
             return json({ ok: true, skipped: "already processed" });
           }
 
-          // Para renovações (days > 0), estende o vencimento do cliente.
-          // Para compras avulsas (days = 0, ex.: ChatGPT/Spotify/YouTube), não altera o vencimento.
-          if (renewal.days > 0) {
+          // Para renovações (days > 0) com cliente IPTV, estende o vencimento.
+          if (renewal.days > 0 && renewal.client_id) {
             const { data: clientRow } = await supabaseAdmin
               .from("clients")
               .select("id, due_date")
@@ -124,7 +123,6 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
             }
           }
 
-          // Registra o pagamento no histórico com cliente, data e hora do Mercado Pago
           const amountCents =
             renewal.amount_cents ??
             (payment.transaction_amount ? Math.round(payment.transaction_amount * 100) : 0);
@@ -133,17 +131,57 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
             ? `Renovação ${renewal.days} dias - Mercado Pago (id ${payment.id})`
             : `${renewal.label ?? "Produto avulso"} - Mercado Pago (id ${payment.id})`;
 
-          const { error: payErr } = await supabaseAdmin.from("payments").insert({
-            client_id: renewal.client_id,
-            user_id: renewal.user_id,
-            amount_cents: amountCents,
-            paid_at: paidAtIso,
-            method: "pix_mercadopago",
-            notes,
-          });
-          if (payErr) {
-            console.error("[mp-webhook] payments insert failed", payErr);
+          // Histórico de pagamentos (apenas para clientes IPTV)
+          if (renewal.client_id) {
+            const { error: payErr } = await supabaseAdmin.from("payments").insert({
+              client_id: renewal.client_id,
+              user_id: renewal.user_id,
+              amount_cents: amountCents,
+              paid_at: paidAtIso,
+              method: "pix_mercadopago",
+              notes,
+            });
+            if (payErr) console.error("[mp-webhook] payments insert failed", payErr);
           }
+
+          // Compras da loja por comprador externo (buyer) - registra automaticamente
+          if (renewal.buyer_id && renewal.days === 0 && renewal.label) {
+            const { data: buyer } = await supabaseAdmin
+              .from("store_buyers")
+              .select("name, email")
+              .eq("id", renewal.buyer_id)
+              .maybeSingle();
+            const b = (buyer as { name: string | null; email: string | null } | null) ?? { name: null, email: null };
+
+            const { data: prod } = await supabaseAdmin
+              .from("store_products")
+              .select("id, cost_cents, duration_days")
+              .eq("user_id", renewal.user_id)
+              .eq("label", renewal.label)
+              .maybeSingle();
+            const p = (prod as { id: string; cost_cents: number; duration_days: number } | null);
+            const duration = p?.duration_days ?? 30;
+            const dueDate = new Date();
+            dueDate.setUTCDate(dueDate.getUTCDate() + duration);
+
+            await supabaseAdmin.from("store_purchases").insert({
+              user_id: renewal.user_id,
+              client_id: null,
+              buyer_id: renewal.buyer_id,
+              buyer_name: b.name,
+              buyer_email: b.email,
+              product_id: p?.id ?? null,
+              label: renewal.label,
+              sale_cents: amountCents,
+              cost_cents: p?.cost_cents ?? 0,
+              duration_days: duration,
+              purchased_at: paidAtIso,
+              due_date: dueDate.toISOString().slice(0, 10),
+              status: "active",
+              renewal_request_id: renewal.id,
+            });
+          }
+
 
           return json({ ok: true });
         } catch (e) {
