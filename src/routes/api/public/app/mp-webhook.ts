@@ -42,6 +42,19 @@ export const Route = createFileRoute("/api/public/app/mp-webhook")({
             .update({ mp_status: mp.status ?? null })
             .eq("id", req.id);
 
+          const { notify } = await import("@/lib/notifications.server");
+
+          if (mp.status === "rejected" || mp.status === "cancelled") {
+            const { data: prof } = await supabaseAdmin.from("profiles").select("full_name").eq("id", req.user_id).maybeSingle();
+            await notify("payment_rejected", {
+              nome: (prof as { full_name?: string | null } | null)?.full_name ?? "Assinante",
+              plano: `Painel ${req.days} dias`,
+              metodo: "Mercado Pago",
+              extra: `Status: ${mp.status}`,
+            });
+          }
+
+
 
           if (mp.status === "approved" && req.status !== "paid") {
             const { data: settings } = await supabaseAdmin
