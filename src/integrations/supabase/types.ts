@@ -762,6 +762,120 @@ export type Database = {
         }
         Relationships: []
       }
+      store_products: {
+        Row: {
+          active: boolean
+          cost_cents: number
+          created_at: string
+          duration_days: number
+          emoji: string | null
+          gradient: string | null
+          id: string
+          key: string
+          label: string
+          sale_cents: number
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          cost_cents?: number
+          created_at?: string
+          duration_days?: number
+          emoji?: string | null
+          gradient?: string | null
+          id?: string
+          key: string
+          label: string
+          sale_cents?: number
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          cost_cents?: number
+          created_at?: string
+          duration_days?: number
+          emoji?: string | null
+          gradient?: string | null
+          id?: string
+          key?: string
+          label?: string
+          sale_cents?: number
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      store_purchases: {
+        Row: {
+          client_id: string
+          cost_cents: number
+          created_at: string
+          due_date: string
+          duration_days: number
+          id: string
+          label: string
+          product_id: string | null
+          purchased_at: string
+          renewal_request_id: string | null
+          sale_cents: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          cost_cents?: number
+          created_at?: string
+          due_date: string
+          duration_days?: number
+          id?: string
+          label: string
+          product_id?: string | null
+          purchased_at?: string
+          renewal_request_id?: string | null
+          sale_cents?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          cost_cents?: number
+          created_at?: string
+          due_date?: string
+          duration_days?: number
+          id?: string
+          label?: string
+          product_id?: string | null
+          purchased_at?: string
+          renewal_request_id?: string | null
+          sale_cents?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_purchases_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "store_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -868,6 +982,10 @@ export type Database = {
         Returns: boolean
       }
       is_current_user_admin: { Args: never; Returns: boolean }
+      seed_default_store_products: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user" | "revendedor"

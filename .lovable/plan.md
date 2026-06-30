@@ -1,68 +1,69 @@
-# Portal do Cliente + Indicação Premiada
+## O que vai ser entregue
 
-## O que será entregue
+### 1. Tela "Produtos da Loja" (admin)
+Nova página em **Configurações → Loja** (ou item lateral "Loja - Produtos") com CRUD:
+- Nome do produto (ex: ChatGPT Plus)
+- Preço de venda
+- Custo (quanto você paga ao fornecedor)
+- Validade em dias (30 / 90 / 365…)
+- Emoji + ativo/inativo
 
-**1. Portal do Cliente** (rotas públicas, sem login no painel principal)
-- `/portal` — tela de login: cliente digita WhatsApp, recebe código de 6 dígitos via Z-API, confirma e entra
-- `/portal/painel` — vê plano atual, vencimento, status, valor, histórico de pagamentos, último login IPTV
-- Botão "Renovar agora" — abre escolha de período (mensal/trimestral/semestral/anual) com Pix manual (você pode evoluir para Pix automático depois)
-- Botão "Baixar comprovante" para cada pagamento (PDF simples gerado no cliente)
-- Sessão fica salva no navegador por 30 dias (token assinado)
+A loja do **Portal do Cliente** passa a ler dessa tabela em vez do array fixo de hoje. Você adiciona/remove/edita produtos sem precisar de código.
 
-**2. Indicação Premiada**
-- Cada cliente recebe automaticamente um **código de indicação único** (ex.: `JOAO-A4F2`)
-- Dentro do portal: tela "Indique e ganhe" com o link `https://seudominio/portal?ref=JOAO-A4F2` + botão "Compartilhar no WhatsApp"
-- Quando o indicado paga a 1ª renovação, o indicador ganha **X dias grátis** automaticamente (configurável em Configurações → padrão 7 dias)
-- Painel mostra: total de indicações, indicações pagas, dias ganhos
+Os 7 produtos atuais (ChatGPT, Spotify, YouTube, Smatone, Globo Play, Prime Video, Netflix) já entram automaticamente cadastrados, com **custo = R$ 0** para você preencher depois.
 
-## Estrutura técnica
+### 2. Tela "Clientes da Loja" (admin)
+Novo item no menu lateral. Lista cada compra entregue por:
+- Cliente (vinculado ao cadastro IPTV existente)
+- Produto
+- Data da compra · Vencimento · Status (Ativo / Vence em X dias / Vencido)
+- Valor de venda · Custo · Lucro
+- Botão **Renovar** (cria nova entrega manual, soma os dias do produto na data atual)
+- Botão **Excluir**
 
-### Banco (migration)
-- `clients`: adicionar `referral_code TEXT UNIQUE`, `referred_by UUID NULL REFERENCES clients(id)`, `bonus_days INT DEFAULT 0`
-- `settings`: adicionar `referral_reward_days INT DEFAULT 7`
-- Nova tabela `portal_otp_codes` (whatsapp, code_hash, expires_at, used_at)
-- Nova tabela `portal_sessions` (id, client_id, token_hash, expires_at, created_at)
-- Função `gen_referral_code()` + trigger para preencher em todo cliente novo/existente
-- Função `apply_referral_bonus(client_id)` chamada quando renovação é feita por indicado pela 1ª vez
-- RLS: tabelas portal_* só acessadas via service role (rotas públicas validam token manualmente)
+Filtros: por status (todos / ativos / vencidos) e busca por nome.
 
-### Rotas públicas (`src/routes/api/public/portal/`)
-- `request-otp.ts` — POST { whatsapp } → gera código, envia via Z-API
-- `verify-otp.ts` — POST { whatsapp, code } → retorna session token
-- `me.ts` — GET (Bearer token) → dados do cliente + pagamentos + indicações
-- `renew-request.ts` — POST { period } → marca solicitação de renovação (notifica dono via WhatsApp)
-- Todas validam token consultando `portal_sessions` via `supabaseAdmin`
+### 3. Entrega automática registra na nova área
+Em **Solicitações**, quando você clica em **Entregar** num pedido da loja (status "Pago" do Mercado Pago):
+- Cria registro em `clientes_loja` com vencimento = hoje + dias do produto
+- Marca a solicitação como entregue
+- Pagamento e custo já ficam contabilizados pro dashboard
 
-### Páginas do portal (`src/routes/portal.*`)
-- `portal.index.tsx` — tela de login (2 passos: telefone → código)
-- `portal.painel.tsx` — dashboard do cliente (plano, vencimento, pagamentos, renovar)
-- `portal.indique.tsx` — link de indicação + estatísticas
-- Layout próprio simples (sem sidebar do painel admin), mobile-first
+### 4. Dashboard
+Dois novos cards (linha de baixo, ao lado dos KPIs financeiros):
+- **Gasto da Loja** (mês atual) — soma de custos de todas as entregas
+- **Lucro da Loja** (mês atual) — venda − custo
 
-### Painel admin (ajustes)
-- `clientes.tsx`: mostrar coluna "Indicado por" + badge de dias bônus
-- `configuracoes.tsx`: campo "Dias grátis por indicação paga" + ativar/desativar
-- Aviso WhatsApp opcional ao dono quando cliente solicita renovação pelo portal
+### Detalhes técnicos
 
-## Detalhes técnicos
+**Banco — novas tabelas:**
 
-- **OTP**: código de 6 dígitos, válido 10 minutos, hash com bcrypt antes de salvar, máx. 5 tentativas
-- **Sessão**: token aleatório de 32 bytes, hash SHA-256 no banco, expira em 30 dias, renovação a cada `me()`
-- **Comprovante**: gerado no navegador com jsPDF (sem custo de servidor)
-- **Indicação**: trigger no insert/update de `payments` verifica se é a 1ª paga do cliente E `referred_by` está setado → soma `referral_reward_days` em `bonus_days` do indicador e estende `due_date` em N dias
-- **Z-API**: usa a integração já existente para enviar OTP
+```text
+store_products(id, user_id, key, label, sale_cents, cost_cents,
+               duration_days, emoji, gradient, sort_order, active)
+store_purchases(id, user_id, client_id, product_id,
+                label, sale_cents, cost_cents,
+                purchased_at, due_date, status,
+                renewal_request_id)
+```
 
-## Fora do escopo (próximas iterações)
+Ambas com RLS escopada por `user_id = auth.uid()`, GRANTs para `authenticated` e `service_role`. Trigger de seed insere os 7 produtos padrão para cada `settings.user_id` existente e para novos cadastros (via `handle_new_user`).
 
-- Pix automático com baixa via webhook (Mercado Pago/Asaas)
-- App PWA instalável
-- Notificações push
-- Recompensa por níveis (10 indicações = 30 dias)
+**Endpoint público:** novo `/api/public/portal/store-products.ts` retorna produtos ativos do dono do cliente logado — usa `supabaseAdmin` apenas para ler colunas seguras.
 
-## Pergunta antes de começar
+**Portal cliente:** `portal.painel.tsx` substitui o array `storeProducts` por `useQuery` que chama o endpoint acima (com fallback para os produtos atuais caso a tabela esteja vazia).
 
-1. **Domínio do portal**: usar `/portal` no mesmo domínio do painel admin (mais simples) ou subdomínio separado depois?
-2. **Bônus padrão**: 7 dias por indicação paga te atende? Posso deixar editável em Configurações de qualquer forma.
-3. **Renovação no portal**: por enquanto só "solicitar renovação" (você confirma o pagamento no painel) ou já implementar **Pix manual** (gera QR Code estático que você configura uma vez em Configurações)?
+**Solicitações:** mutação `approve` em `solicitacoes.tsx`, no branch `isExtra && alreadyPaid`, faz lookup em `store_products` pelo label do `renewal_request` para pegar `cost_cents` e `duration_days`, e insere em `store_purchases`.
 
-Confirma os 3 pontos acima que eu começo a implementação.
+**Rotas novas:**
+- `src/routes/_authenticated/loja.produtos.tsx`
+- `src/routes/_authenticated/loja.clientes.tsx`
+
+**Sidebar:** novo grupo "Loja" com dois itens (Produtos, Clientes), abaixo de "Solicitações".
+
+**Dashboard:** dois `KpiCard` adicionais consultando `store_purchases` do mês corrente.
+
+### O que NÃO muda
+- Estrutura de `renewal_requests` continua igual (fluxo de pagamento via Mercado Pago intocado)
+- Layout do Portal do Cliente (só a fonte dos produtos muda)
+- Cadastro de clientes IPTV permanece como está
