@@ -88,6 +88,7 @@ function LojaProdutosPage() {
         duration_days: Math.max(1, Number(f.duration_days) || 30),
         emoji: f.emoji || "🛒",
         active: f.active,
+        image_url: f.image_url.trim() || null,
       };
       if (!payload.label) throw new Error("Nome do produto obrigatório");
       if (f.id) {
