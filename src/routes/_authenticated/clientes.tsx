@@ -218,6 +218,19 @@ function ClientesPage() {
       } else {
         const { error } = await supabase.from("clients").insert(payload);
         if (error) throw error;
+        try {
+          const { notifyEventFn } = await import("@/lib/notifications.functions");
+          await notifyEventFn({ data: {
+            event: "new_client",
+            payload: {
+              nome: payload.name,
+              telefone: payload.phone,
+              plano: payload.plan_id ? "—" : null,
+              valor: (payload.price_cents / 100).toFixed(2).replace(".", ","),
+              extra: `Vencimento: ${payload.due_date}`,
+            },
+          } });
+        } catch (e) { console.error(e); }
       }
     },
     onSuccess: () => {
