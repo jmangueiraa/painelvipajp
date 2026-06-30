@@ -205,7 +205,35 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
               renewal_request_id: renewal.id,
             });
           }
-
+          // Notificações Telegram
+          try {
+            let nome: string | null = null;
+            let telefone: string | null = null;
+            let email: string | null = null;
+            if (renewal.client_id) {
+              const { data: c } = await supabaseAdmin.from("clients").select("name,phone").eq("id", renewal.client_id).maybeSingle();
+              nome = (c as { name?: string | null } | null)?.name ?? null;
+              telefone = (c as { phone?: string | null } | null)?.phone ?? null;
+            } else if (renewal.buyer_id) {
+              const { data: b } = await supabaseAdmin.from("store_buyers").select("name,email").eq("id", renewal.buyer_id).maybeSingle();
+              nome = (b as { name?: string | null } | null)?.name ?? null;
+              email = (b as { email?: string | null } | null)?.email ?? null;
+            }
+            const payload = {
+              nome, telefone, email,
+              plano: renewal.days > 0 ? `Renovação ${renewal.days} dias` : (renewal.label ?? "Produto avulso"),
+              valor: (amountCents / 100).toFixed(2).replace(".", ","),
+              metodo: "PIX Mercado Pago",
+            };
+            if (renewal.days > 0) {
+              await notify("renewal", payload);
+            } else {
+              await notify("new_sale", payload);
+            }
+            await notify("payment_approved", payload);
+          } catch (e) {
+            console.error("[mp-webhook] notify failed", e);
+          }
 
           return json({ ok: true });
         } catch (e) {
