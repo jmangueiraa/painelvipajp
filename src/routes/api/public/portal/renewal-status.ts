@@ -66,22 +66,30 @@ export const Route = createFileRoute("/api/public/portal/renewal-status")({
 
               if (payment?.status) {
                 const isApproved = payment.status === "approved";
-                await supabaseAdmin
-                  .from("renewal_requests")
-                  .update({
-                    mp_payment_id: paymentId,
+                if (isApproved) {
+                  const { finalizePaidRenewal } = await import("@/lib/portal-renewal-finalize.server");
+                  await finalizePaidRenewal(id, {
+                    id: paymentId ?? payment.id,
+                    status: payment.status,
+                    date_approved: payment.date_approved,
+                  });
+                  row = {
+                    ...row,
+                    mp_payment_id: paymentId ?? (payment.id ? String(payment.id) : row.mp_payment_id),
                     mp_status: payment.status,
-                    paid_at: isApproved ? (payment.date_approved ?? new Date().toISOString()) : row.paid_at,
-                    status: isApproved ? "paid" : row.status ?? "awaiting_payment",
-                  })
-                  .eq("id", id);
-                row = {
-                  ...row,
-                  mp_payment_id: paymentId,
-                  mp_status: payment.status,
-                  paid_at: isApproved ? (payment.date_approved ?? new Date().toISOString()) : row.paid_at,
-                  status: isApproved ? "paid" : row.status,
-                };
+                    paid_at: payment.date_approved ?? new Date().toISOString(),
+                    status: "paid",
+                  };
+                } else {
+                  await supabaseAdmin
+                    .from("renewal_requests")
+                    .update({
+                      mp_payment_id: paymentId,
+                      mp_status: payment.status,
+                    })
+                    .eq("id", id);
+                  row = { ...row, mp_payment_id: paymentId, mp_status: payment.status };
+                }
               }
             }
           }
