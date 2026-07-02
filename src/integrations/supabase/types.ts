@@ -1442,6 +1442,27 @@ export type Database = {
         Returns: boolean
       }
       is_current_user_admin: { Args: never; Returns: boolean }
+      link_driver_to_current_user: {
+        Args: { _email: string }
+        Returns: {
+          active: boolean
+          auth_user_id: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+          vehicle: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "drivers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       list_store_products: {
         Args: { _owner: string }
         Returns: {
