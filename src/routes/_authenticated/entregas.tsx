@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Plus, MapPin, Zap, Trash2, Loader2, Truck, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { Plus, MapPin, Zap, Trash2, Loader2, Truck, CheckCircle2, AlertCircle, Clock, User, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translateError } from "@/lib/translate-error";
 import { brl, parseBrlToCents } from "@/lib/format";
