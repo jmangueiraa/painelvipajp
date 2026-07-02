@@ -238,7 +238,16 @@ function EntregasPage() {
                 </div>
                 {d.phone && <div className="text-xs text-muted-foreground">{d.phone}{d.value_cents ? ` · ${brl(d.value_cents)}` : ""}</div>}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Select value={d.driver_id ?? "none"} onValueChange={(v) => assignDriver.mutate({ id: d.id, driver_id: v === "none" ? null : v })}>
+                  <SelectTrigger className="w-36 h-8"><SelectValue placeholder="Motorista" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem motorista</SelectItem>
+                    {drivers.map((dr: any) => (
+                      <SelectItem key={dr.id} value={dr.id}>{dr.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Select value={d.status} onValueChange={(v) => changeStatus.mutate({ id: d.id, status: v })}>
                   <SelectTrigger className="w-32 h-8"><SelectValue /></SelectTrigger>
                   <SelectContent>
