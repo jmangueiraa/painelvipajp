@@ -97,6 +97,15 @@ function EntregasPage() {
     onError: (e: Error) => toast.error(translateError(e)),
   });
 
+  const assignDriver = useMutation({
+    mutationFn: async ({ id, driver_id }: { id: string; driver_id: string | null }) => {
+      const { error } = await supabase.from("deliveries").update({ driver_id }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["deliveries"] }),
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
   const geocode = useMutation({
     mutationFn: async () => await geocodeFn({}),
     onSuccess: (r) => { toast.success(`Geocodificadas: ${r.ok} · Falhas: ${r.fail}`); qc.invalidateQueries({ queryKey: ["deliveries"] }); },
