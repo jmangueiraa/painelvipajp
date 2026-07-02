@@ -156,17 +156,12 @@ function LoginView({ onLoggedIn }: { onLoggedIn: (d: Driver) => void }) {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { data: signUpData, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: `${window.location.origin}/motorista` },
         });
         if (error) throw error;
-        // If email confirmation is required there's no session — sign in anyway.
-        if (!signUpData.session) {
-          const { error: siErr } = await supabase.auth.signInWithPassword({ email, password });
-          if (siErr) throw new Error("Conta criada. Faça login novamente.");
-        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -176,20 +171,11 @@ function LoginView({ onLoggedIn }: { onLoggedIn: (d: Driver) => void }) {
         _email: email,
       });
       if (linkErr) throw linkErr;
-      if (!data) throw new Error("Motorista não cadastrado. Peça acesso ao gestor.");
       onLoggedIn(data as Driver);
       toast.success(`Olá, ${(data as Driver).name}!`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Falha no login";
-      toast.error(
-        msg.includes("não cadastrado")
-          ? "Motorista não cadastrado. Peça ao gestor para cadastrar seu e-mail."
-          : msg.includes("already registered") || msg.includes("already been registered")
-          ? "E-mail já cadastrado. Use a opção Entrar."
-          : msg.includes("Invalid login")
-          ? "E-mail ou senha inválidos."
-          : msg,
-      );
+      toast.error(msg.includes("não cadastrado") ? "Motorista não cadastrado. Peça acesso ao gestor." : msg);
     } finally {
       setLoading(false);
     }
