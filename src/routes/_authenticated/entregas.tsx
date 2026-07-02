@@ -64,6 +64,14 @@ function EntregasPage() {
     },
   });
 
+  const { data: drivers = [] } = useQuery({
+    queryKey: ["drivers"],
+    queryFn: async () => {
+      const { data } = await supabase.from("drivers").select("*").order("name");
+      return data ?? [];
+    },
+  });
+
   const stats = useMemo(() => {
     const s = { pending: 0, in_route: 0, delivered: 0, failed: 0, total: deliveries.length };
     for (const d of deliveries) s[d.status as keyof typeof s] = ((s[d.status as keyof typeof s] as number) ?? 0) + 1;
