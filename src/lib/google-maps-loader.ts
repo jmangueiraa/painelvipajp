@@ -1,3 +1,4 @@
+/// <reference types="google.maps" />
 // Carrega a Google Maps JavaScript API sob demanda no cliente.
 let promise: Promise<typeof google> | null = null;
 

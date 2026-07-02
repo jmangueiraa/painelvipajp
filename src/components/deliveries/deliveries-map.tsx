@@ -1,3 +1,4 @@
+/// <reference types="google.maps" />
 import { useEffect, useRef } from "react";
 import { loadGoogleMaps } from "@/lib/google-maps-loader";
 
