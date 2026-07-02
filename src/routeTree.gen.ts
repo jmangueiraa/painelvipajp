@@ -22,6 +22,7 @@ import { Route as AuthenticatedServidoresRouteImport } from './routes/_authentic
 import { Route as AuthenticatedRenovacaoRouteImport } from './routes/_authenticated/renovacao'
 import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
+import { Route as AuthenticatedEntregasRouteImport } from './routes/_authenticated/entregas'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
@@ -111,6 +112,11 @@ const AuthenticatedPlanosRoute = AuthenticatedPlanosRouteImport.update({
 const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEntregasRoute = AuthenticatedEntregasRouteImport.update({
+  id: '/entregas',
+  path: '/entregas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -264,6 +270,7 @@ export interface FileRoutesByFullPath {
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/entregas': typeof AuthenticatedEntregasRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/planos': typeof AuthenticatedPlanosRoute
   '/renovacao': typeof AuthenticatedRenovacaoRoute
@@ -303,6 +310,7 @@ export interface FileRoutesByTo {
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/entregas': typeof AuthenticatedEntregasRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/planos': typeof AuthenticatedPlanosRoute
   '/renovacao': typeof AuthenticatedRenovacaoRoute
@@ -344,6 +352,7 @@ export interface FileRoutesById {
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/entregas': typeof AuthenticatedEntregasRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/planos': typeof AuthenticatedPlanosRoute
   '/_authenticated/renovacao': typeof AuthenticatedRenovacaoRoute
@@ -385,6 +394,7 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/configuracoes'
     | '/dashboard'
+    | '/entregas'
     | '/financeiro'
     | '/planos'
     | '/renovacao'
@@ -424,6 +434,7 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/configuracoes'
     | '/dashboard'
+    | '/entregas'
     | '/financeiro'
     | '/planos'
     | '/renovacao'
@@ -464,6 +475,7 @@ export interface FileRouteTypes {
     | '/_authenticated/clientes'
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
+    | '/_authenticated/entregas'
     | '/_authenticated/financeiro'
     | '/_authenticated/planos'
     | '/_authenticated/renovacao'
@@ -615,6 +627,13 @@ declare module '@tanstack/react-router' {
       path: '/financeiro'
       fullPath: '/financeiro'
       preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/entregas': {
+      id: '/_authenticated/entregas'
+      path: '/entregas'
+      fullPath: '/entregas'
+      preLoaderRoute: typeof AuthenticatedEntregasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -814,6 +833,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEntregasRoute: typeof AuthenticatedEntregasRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedPlanosRoute: typeof AuthenticatedPlanosRoute
   AuthenticatedRenovacaoRoute: typeof AuthenticatedRenovacaoRoute
@@ -829,6 +849,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEntregasRoute: AuthenticatedEntregasRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedPlanosRoute: AuthenticatedPlanosRoute,
   AuthenticatedRenovacaoRoute: AuthenticatedRenovacaoRoute,
