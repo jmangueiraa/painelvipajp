@@ -352,3 +352,101 @@ function DeliveryFormDialog({ onDone }: { onDone: () => void }) {
     </DialogContent>
   );
 }
+
+function DriversCard({ drivers }: { drivers: any[] }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", phone: "", vehicle: "" });
+  const appUrl = typeof window !== "undefined" ? `${window.location.origin}/motorista` : "/motorista";
+
+  const create = useMutation({
+    mutationFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("Sessão expirada");
+      if (!form.name || !form.email) throw new Error("Nome e e-mail são obrigatórios");
+      const { error } = await supabase.from("drivers").insert({
+        user_id: u.user.id,
+        name: form.name,
+        email: form.email.trim().toLowerCase(),
+        phone: form.phone || null,
+        vehicle: form.vehicle || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Motorista cadastrado");
+      setForm({ name: "", email: "", phone: "", vehicle: "" });
+      setOpen(false);
+      qc.invalidateQueries({ queryKey: ["drivers"] });
+    },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("drivers").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Removido"); qc.invalidateQueries({ queryKey: ["drivers"] }); },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Motoristas</CardTitle>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(appUrl); toast.success("Link copiado"); }}>
+            <Copy className="size-4" /> Link do app
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><Plus className="size-4" /> Novo</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Novo motorista</DialogTitle></DialogHeader>
+              <div className="space-y-3">
+                <div><Label>Nome *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+                <div><Label>E-mail *</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+                <div><Label>Telefone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+                <div><Label>Veículo</Label><Input placeholder="Moto, Fiorino…" value={form.vehicle} onChange={(e) => setForm({ ...form, vehicle: e.target.value })} /></div>
+                <p className="text-xs text-muted-foreground">
+                  O motorista entra em <strong>{appUrl}</strong> com esse e-mail e cria a senha no primeiro acesso.
+                </p>
+              </div>
+              <DialogFooter>
+                <Button onClick={() => create.mutate()} disabled={create.isPending}>
+                  {create.isPending && <Loader2 className="size-4 animate-spin" />} Salvar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {drivers.length === 0 && <p className="text-sm text-muted-foreground">Nenhum motorista cadastrado.</p>}
+        {drivers.map((d) => (
+          <div key={d.id} className="flex items-center gap-3 p-3 rounded-lg border border-border">
+            <div className="size-9 rounded-full bg-muted flex items-center justify-center"><User className="size-4" /></div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-medium truncate">{d.name}</span>
+                {d.auth_user_id ? (
+                  <Badge variant="outline" className="bg-green-500/15 text-green-600 border-green-500/30 text-xs">Ativo</Badge>
+                ) : (
+                  <Badge variant="outline" className="text-xs">Aguardando 1º acesso</Badge>
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground truncate">
+                {d.email}{d.phone ? ` · ${d.phone}` : ""}{d.vehicle ? ` · ${d.vehicle}` : ""}
+              </div>
+            </div>
+            <Button size="icon" variant="ghost" onClick={() => { if (confirm(`Remover ${d.name}?`)) remove.mutate(d.id); }}>
+              <Trash2 className="size-4 text-destructive" />
+            </Button>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
