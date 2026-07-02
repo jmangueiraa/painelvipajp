@@ -1,69 +1,48 @@
-## O que vai ser entregue
+## Módulo de Entregas / Roteirização (estilo Circuit)
 
-### 1. Tela "Produtos da Loja" (admin)
-Nova página em **Configurações → Loja** (ou item lateral "Loja - Produtos") com CRUD:
-- Nome do produto (ex: ChatGPT Plus)
-- Preço de venda
-- Custo (quanto você paga ao fornecedor)
-- Validade em dias (30 / 90 / 365…)
-- Emoji + ativo/inativo
+Escopo grande. Vou entregar em **3 fases** para você já usar valor cedo, sem esperar tudo pronto.
 
-A loja do **Portal do Cliente** passa a ler dessa tabela em vez do array fixo de hoje. Você adiciona/remove/edita produtos sem precisar de código.
+Antes de começar preciso confirmar alguns pontos — são decisões que mudam bastante o esforço:
 
-Os 7 produtos atuais (ChatGPT, Spotify, YouTube, Smatone, Globo Play, Prime Video, Netflix) já entram automaticamente cadastrados, com **custo = R$ 0** para você preencher depois.
+### Perguntas rápidas
+1. **Google Maps API** — você já tem uma conta Google Cloud com billing ativo e uma API Key? (precisa das APIs: Maps JavaScript, Geocoding, Routes, Route Optimization). Sem isso o mapa e a otimização não funcionam.
+2. **Motoristas** — eles vão logar como *usuários novos do sistema* (com role `driver`) ou como *clientes* do portal atual? Vou criar uma role nova `driver` se você não disser o contrário.
+3. **Rastreamento em tempo real** — ok usar Supabase Realtime (localização a cada 10s grava no banco e o admin escuta)? É o caminho natural aqui.
+4. **App do motorista** — é a mesma PWA do portal do cliente (rota `/motorista`) ou você quer um domínio/PWA separado?
 
-### 2. Tela "Clientes da Loja" (admin)
-Novo item no menu lateral. Lista cada compra entregue por:
-- Cliente (vinculado ao cadastro IPTV existente)
-- Produto
-- Data da compra · Vencimento · Status (Ativo / Vence em X dias / Vencido)
-- Valor de venda · Custo · Lucro
-- Botão **Renovar** (cria nova entrega manual, soma os dias do produto na data atual)
-- Botão **Excluir**
+---
 
-Filtros: por status (todos / ativos / vencidos) e busca por nome.
+### Fase 1 — Núcleo (essa entrega)
+- Tabelas: `drivers`, `deliveries`, `routes`, `route_stops`, `delivery_proofs`, `driver_locations`, `delivery_logs` (com RLS + GRANTs)
+- Bucket `delivery-proofs` (fotos + assinaturas)
+- CRUD de entregas no admin (`/entregas`): cadastro completo (cliente, telefone, endereço, bairro, cidade, CEP, obs, janela, valor, status)
+- Mapa admin com marcadores coloridos por status (Google Maps JS)
+- Geocodificação automática do endereço no cadastro (server fn → Google Geocoding)
+- Botão "Otimizar rota" → Google Routes API `computeRoutes` com `optimizeWaypointOrder`
+- Dashboard de entregas (pendentes / em rota / concluídas / % / km e tempo estimados)
 
-### 3. Entrega automática registra na nova área
-Em **Solicitações**, quando você clica em **Entregar** num pedido da loja (status "Pago" do Mercado Pago):
-- Cria registro em `clientes_loja` com vencimento = hoje + dias do produto
-- Marca a solicitação como entregue
-- Pagamento e custo já ficam contabilizados pro dashboard
+### Fase 2 — App do motorista
+- Rota `/motorista` (PWA, login separado com role `driver`)
+- Lista de paradas + mapa em tempo real
+- Botões: Iniciar rota / Próxima parada / Concluir / Não entregue
+- Deep-link `https://www.google.com/maps/dir/?api=1&destination=...` para navegação
+- Envio de localização a cada 10s (`navigator.geolocation.watchPosition` + insert em `driver_locations`)
+- Prova de entrega: foto (câmera), assinatura (canvas), nome do recebedor, timestamp, GPS
 
-### 4. Dashboard
-Dois novos cards (linha de baixo, ao lado dos KPIs financeiros):
-- **Gasto da Loja** (mês atual) — soma de custos de todas as entregas
-- **Lucro da Loja** (mês atual) — venda − custo
+### Fase 3 — Tempo real no admin
+- Realtime: posição do motorista aparece no mapa admin ao vivo
+- Log de ações em `delivery_logs` (mudanças de status, tentativas, falhas)
+- Histórico por entrega e por motorista
+
+---
 
 ### Detalhes técnicos
+- Frontend: rotas TanStack sob `_authenticated/entregas.*` e público `/motorista`
+- Google Maps carregado via `<script>` no `__root.tsx` com sua API key em `VITE_GOOGLE_MAPS_API_KEY`
+- Server functions: `geocode-address.functions.ts`, `optimize-route.functions.ts` (chamam Google server-side com `GOOGLE_MAPS_SERVER_KEY` — secret)
+- Sidebar: novo grupo "Entregas" (Painel, Cadastros, Motoristas, Rotas)
+- Mobile-first: cards empilháveis, mapa fullscreen no motorista
 
-**Banco — novas tabelas:**
+---
 
-```text
-store_products(id, user_id, key, label, sale_cents, cost_cents,
-               duration_days, emoji, gradient, sort_order, active)
-store_purchases(id, user_id, client_id, product_id,
-                label, sale_cents, cost_cents,
-                purchased_at, due_date, status,
-                renewal_request_id)
-```
-
-Ambas com RLS escopada por `user_id = auth.uid()`, GRANTs para `authenticated` e `service_role`. Trigger de seed insere os 7 produtos padrão para cada `settings.user_id` existente e para novos cadastros (via `handle_new_user`).
-
-**Endpoint público:** novo `/api/public/portal/store-products.ts` retorna produtos ativos do dono do cliente logado — usa `supabaseAdmin` apenas para ler colunas seguras.
-
-**Portal cliente:** `portal.painel.tsx` substitui o array `storeProducts` por `useQuery` que chama o endpoint acima (com fallback para os produtos atuais caso a tabela esteja vazia).
-
-**Solicitações:** mutação `approve` em `solicitacoes.tsx`, no branch `isExtra && alreadyPaid`, faz lookup em `store_products` pelo label do `renewal_request` para pegar `cost_cents` e `duration_days`, e insere em `store_purchases`.
-
-**Rotas novas:**
-- `src/routes/_authenticated/loja.produtos.tsx`
-- `src/routes/_authenticated/loja.clientes.tsx`
-
-**Sidebar:** novo grupo "Loja" com dois itens (Produtos, Clientes), abaixo de "Solicitações".
-
-**Dashboard:** dois `KpiCard` adicionais consultando `store_purchases` do mês corrente.
-
-### O que NÃO muda
-- Estrutura de `renewal_requests` continua igual (fluxo de pagamento via Mercado Pago intocado)
-- Layout do Portal do Cliente (só a fonte dos produtos muda)
-- Cadastro de clientes IPTV permanece como está
+**Confirma as 4 perguntas acima e eu começo pela Fase 1?** Se quiser cortar/adiar algo (ex.: pular otimização e ficar só com CRUD + mapa), me diz também.
