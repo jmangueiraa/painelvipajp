@@ -217,6 +217,9 @@ function EntregasPage() {
         </Card>
       )}
 
+      <DriversCard drivers={drivers} />
+
+
       <Card>
         <CardHeader><CardTitle>Entregas</CardTitle></CardHeader>
         <CardContent className="space-y-2">
