@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Users, UserCheck, AlertTriangle, CalendarClock, CalendarDays, ShoppingBag, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { Users, UserCheck, AlertTriangle, CalendarClock, CalendarDays, ShoppingBag, TrendingDown, TrendingUp } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -18,11 +18,9 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
-type ClientRow = { id: string; name: string; price_cents: number; due_date: string; status: "ativo" | "vencido" | "suspenso" | "cancelado"; server_id: string | null; plan_id: string | null };
-type PaymentRow = { amount_cents: number; paid_at: string; client_id: string };
+type ClientRow = { id: string; name: string; price_cents: number; due_date: string; status: "ativo" | "vencido" | "suspenso" | "cancelado" };
+type PaymentRow = { amount_cents: number; paid_at: string };
 type Settings = { subscription_expires_at: string | null; subscription_monthly_cents: number };
-type PlanRow = { id: string; duration_days: number };
-type ServerRow = { id: string; credit_cost_cents: number };
 
 function DashboardPage() {
   const { user } = useAuth();
@@ -30,44 +28,22 @@ function DashboardPage() {
   const { data: clients = [] } = useQuery({
     queryKey: ["clients", "dash"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("id,name,price_cents,due_date,status,server_id,plan_id");
+      const { data, error } = await supabase.from("clients").select("id,name,price_cents,due_date,status");
       if (error) throw error;
       return (data as ClientRow[]).map((c) => ({ ...c, status: computeStatus(c.due_date, c.status) }));
     },
   });
 
-  const { data: paymentsAll = [] } = useQuery({
-    queryKey: ["payments", "dash", "all"],
+  const { data: payments = [] } = useQuery({
+    queryKey: ["payments", "dash"],
     queryFn: async () => {
+      const since = new Date(); since.setMonth(since.getMonth() - 5); since.setDate(1);
       const { data, error } = await supabase
         .from("payments")
-        .select("amount_cents,paid_at,client_id");
+        .select("amount_cents,paid_at")
+        .gte("paid_at", since.toISOString());
       if (error) throw error;
       return data as PaymentRow[];
-    },
-  });
-
-  const payments = useMemo(() => {
-    const since = new Date(); since.setMonth(since.getMonth() - 5); since.setDate(1);
-    const sinceISO = since.toISOString();
-    return paymentsAll.filter((p) => p.paid_at >= sinceISO);
-  }, [paymentsAll]);
-
-  const { data: plans = [] } = useQuery({
-    queryKey: ["plans", "dash"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("plans").select("id,duration_days");
-      if (error) throw error;
-      return data as PlanRow[];
-    },
-  });
-
-  const { data: servers = [] } = useQuery({
-    queryKey: ["servers", "dash"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("servers").select("id,credit_cost_cents");
-      if (error) throw error;
-      return data as ServerRow[];
     },
   });
 
@@ -159,34 +135,6 @@ function DashboardPage() {
     return { dateBR: formatDateBR(settings.subscription_expires_at), days: diff };
   }, [settings]);
 
-  const profitTotals = useMemo(() => {
-    const planMap = new Map(plans.map((p) => [p.id, p]));
-    const serverMap = new Map(servers.map((s) => [s.id, s]));
-    const clientMap = new Map(clients.map((c) => [c.id, c]));
-    const costForPayment = (clientId: string) => {
-      const c = clientMap.get(clientId);
-      if (!c?.server_id) return 0;
-      const s = serverMap.get(c.server_id);
-      if (!s) return 0;
-      const p = c.plan_id ? planMap.get(c.plan_id) : undefined;
-      const months = Math.max(1, Math.round((p?.duration_days ?? 30) / 30));
-      return s.credit_cost_cents * months;
-    };
-    let recebido = 0, custo = 0;
-    for (const p of paymentsAll) {
-      recebido += p.amount_cents;
-      custo += costForPayment(p.client_id);
-    }
-    const lojaLucro = storeStats?.lucro ?? 0;
-    const lucroTotal = (recebido - custo) + lojaLucro;
-    return { recebido, custo, lojaLucro, lucroTotal };
-  }, [paymentsAll, plans, servers, clients, storeStats]);
-
-  const receitaMesRecorrente = useMemo(
-    () => clients.filter((c) => c.status !== "cancelado" && c.status !== "suspenso").reduce((a, c) => a + c.price_cents, 0),
-    [clients],
-  );
-
   return (
     <div className="space-y-6">
       {subInfo && (
@@ -214,12 +162,6 @@ function DashboardPage() {
         <Link to="/loja/clientes" className="block"><KpiCard label="Vendas da loja" value={brl(storeStats?.venda ?? 0)} icon={ShoppingBag} color="cyan" /></Link>
         <Link to="/loja/clientes" className="block"><KpiCard label="Gasto da loja" value={brl(storeStats?.custo ?? 0)} icon={TrendingDown} color="rose" /></Link>
         <Link to="/loja/clientes" className="block"><KpiCard label="Lucro da loja" value={brl(storeStats?.lucro ?? 0)} icon={TrendingUp} color="emerald" /></Link>
-      </div>
-
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
-        <KpiCard label="Receita do mês (recorrente)" value={brl(receitaMesRecorrente)} icon={CalendarDays} color="cyan" />
-        <Link to="/financeiro" className="block"><KpiCard label="Já recebido (total)" value={brl(profitTotals.recebido)} icon={TrendingUp} color="emerald" /></Link>
-        <Link to="/financeiro" className="block"><KpiCard label="Lucro total" value={brl(profitTotals.lucroTotal)} icon={Wallet} color="violet" /></Link>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
