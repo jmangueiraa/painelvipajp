@@ -18,9 +18,11 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
-type ClientRow = { id: string; name: string; price_cents: number; due_date: string; status: "ativo" | "vencido" | "suspenso" | "cancelado" };
-type PaymentRow = { amount_cents: number; paid_at: string };
+type ClientRow = { id: string; name: string; price_cents: number; due_date: string; status: "ativo" | "vencido" | "suspenso" | "cancelado"; server_id: string | null; plan_id: string | null };
+type PaymentRow = { amount_cents: number; paid_at: string; client_id: string };
 type Settings = { subscription_expires_at: string | null; subscription_monthly_cents: number };
+type PlanRow = { id: string; duration_days: number };
+type ServerRow = { id: string; credit_cost_cents: number };
 
 function DashboardPage() {
   const { user } = useAuth();
