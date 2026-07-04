@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Users, UserCheck, AlertTriangle, CalendarClock, CalendarDays, ShoppingBag, TrendingDown, TrendingUp } from "lucide-react";
+import { Users, UserCheck, AlertTriangle, CalendarClock, CalendarDays, ShoppingBag, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 import { supabase } from "@/integrations/supabase/client";
