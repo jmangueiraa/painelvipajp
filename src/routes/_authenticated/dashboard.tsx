@@ -216,6 +216,12 @@ function DashboardPage() {
         <Link to="/loja/clientes" className="block"><KpiCard label="Lucro da loja" value={brl(storeStats?.lucro ?? 0)} icon={TrendingUp} color="emerald" /></Link>
       </div>
 
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
+        <KpiCard label="Receita do mês (recorrente)" value={brl(receitaMesRecorrente)} icon={CalendarDays} color="cyan" />
+        <Link to="/financeiro" className="block"><KpiCard label="Já recebido (total)" value={brl(profitTotals.recebido)} icon={TrendingUp} color="emerald" /></Link>
+        <Link to="/financeiro" className="block"><KpiCard label="Lucro total" value={brl(profitTotals.lucroTotal)} icon={Wallet} color="violet" /></Link>
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-start justify-between gap-2">
