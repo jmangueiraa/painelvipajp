@@ -159,6 +159,34 @@ function DashboardPage() {
     return { dateBR: formatDateBR(settings.subscription_expires_at), days: diff };
   }, [settings]);
 
+  const profitTotals = useMemo(() => {
+    const planMap = new Map(plans.map((p) => [p.id, p]));
+    const serverMap = new Map(servers.map((s) => [s.id, s]));
+    const clientMap = new Map(clients.map((c) => [c.id, c]));
+    const costForPayment = (clientId: string) => {
+      const c = clientMap.get(clientId);
+      if (!c?.server_id) return 0;
+      const s = serverMap.get(c.server_id);
+      if (!s) return 0;
+      const p = c.plan_id ? planMap.get(c.plan_id) : undefined;
+      const months = Math.max(1, Math.round((p?.duration_days ?? 30) / 30));
+      return s.credit_cost_cents * months;
+    };
+    let recebido = 0, custo = 0;
+    for (const p of paymentsAll) {
+      recebido += p.amount_cents;
+      custo += costForPayment(p.client_id);
+    }
+    const lojaLucro = storeStats?.lucro ?? 0;
+    const lucroTotal = (recebido - custo) + lojaLucro;
+    return { recebido, custo, lojaLucro, lucroTotal };
+  }, [paymentsAll, plans, servers, clients, storeStats]);
+
+  const receitaMesRecorrente = useMemo(
+    () => clients.filter((c) => c.status !== "cancelado" && c.status !== "suspenso").reduce((a, c) => a + c.price_cents, 0),
+    [clients],
+  );
+
   return (
     <div className="space-y-6">
       {subInfo && (
