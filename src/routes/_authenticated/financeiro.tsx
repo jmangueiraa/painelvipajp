@@ -263,7 +263,7 @@ function HistoryCard({ entries }: { entries: HistoryEntry[] }) {
 
   return (
     <Card>
-      <CardHeader><CardTitle>Histórico de pagamentos</CardTitle></CardHeader>
+      <CardHeader><CardTitle>Histórico de pagamentos — mês atual</CardTitle></CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table>
