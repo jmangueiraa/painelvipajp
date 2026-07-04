@@ -30,22 +30,44 @@ function DashboardPage() {
   const { data: clients = [] } = useQuery({
     queryKey: ["clients", "dash"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("id,name,price_cents,due_date,status");
+      const { data, error } = await supabase.from("clients").select("id,name,price_cents,due_date,status,server_id,plan_id");
       if (error) throw error;
       return (data as ClientRow[]).map((c) => ({ ...c, status: computeStatus(c.due_date, c.status) }));
     },
   });
 
-  const { data: payments = [] } = useQuery({
-    queryKey: ["payments", "dash"],
+  const { data: paymentsAll = [] } = useQuery({
+    queryKey: ["payments", "dash", "all"],
     queryFn: async () => {
-      const since = new Date(); since.setMonth(since.getMonth() - 5); since.setDate(1);
       const { data, error } = await supabase
         .from("payments")
-        .select("amount_cents,paid_at")
-        .gte("paid_at", since.toISOString());
+        .select("amount_cents,paid_at,client_id");
       if (error) throw error;
       return data as PaymentRow[];
+    },
+  });
+
+  const payments = useMemo(() => {
+    const since = new Date(); since.setMonth(since.getMonth() - 5); since.setDate(1);
+    const sinceISO = since.toISOString();
+    return paymentsAll.filter((p) => p.paid_at >= sinceISO);
+  }, [paymentsAll]);
+
+  const { data: plans = [] } = useQuery({
+    queryKey: ["plans", "dash"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("plans").select("id,duration_days");
+      if (error) throw error;
+      return data as PlanRow[];
+    },
+  });
+
+  const { data: servers = [] } = useQuery({
+    queryKey: ["servers", "dash"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("servers").select("id,credit_cost_cents");
+      if (error) throw error;
+      return data as ServerRow[];
     },
   });
 
