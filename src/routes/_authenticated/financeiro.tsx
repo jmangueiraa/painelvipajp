@@ -166,22 +166,33 @@ function FinanceiroPage() {
   }, [payments, storeSales]);
 
   const historyEntries = useMemo(() => {
-    const iptv = payments.map((p) => ({
-      id: `p-${p.id}`,
-      name: clientMap.get(p.client_id)?.name ?? "—",
-      date: p.paid_at,
-      method: p.method ?? "—",
-      amount: p.amount_cents,
-      kind: "IPTV",
-    }));
-    const store = storeSales.map((s) => ({
-      id: `s-${s.id}`,
-      name: s.buyer_name ?? clientMap.get(s.client_id ?? "")?.name ?? "Loja",
-      date: s.purchased_at,
-      method: s.label,
-      amount: s.sale_cents,
-      kind: "Loja",
-    }));
+    const now = new Date();
+    const curY = now.getFullYear();
+    const curM = now.getMonth();
+    const inCurMonth = (iso: string) => {
+      const d = new Date(iso);
+      return d.getFullYear() === curY && d.getMonth() === curM;
+    };
+    const iptv = payments
+      .filter((p) => inCurMonth(p.paid_at))
+      .map((p) => ({
+        id: `p-${p.id}`,
+        name: clientMap.get(p.client_id)?.name ?? "—",
+        date: p.paid_at,
+        method: p.method ?? "—",
+        amount: p.amount_cents,
+        kind: "IPTV",
+      }));
+    const store = storeSales
+      .filter((s) => inCurMonth(s.purchased_at))
+      .map((s) => ({
+        id: `s-${s.id}`,
+        name: s.buyer_name ?? clientMap.get(s.client_id ?? "")?.name ?? "Loja",
+        date: s.purchased_at,
+        method: s.label,
+        amount: s.sale_cents,
+        kind: "Loja",
+      }));
     return [...iptv, ...store].sort((a, b) => (a.date < b.date ? 1 : -1));
   }, [payments, storeSales, clientMap]);
 
@@ -252,7 +263,7 @@ function HistoryCard({ entries }: { entries: HistoryEntry[] }) {
 
   return (
     <Card>
-      <CardHeader><CardTitle>Histórico de pagamentos</CardTitle></CardHeader>
+      <CardHeader><CardTitle>Histórico de pagamentos — mês atual</CardTitle></CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table>
