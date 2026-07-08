@@ -980,6 +980,23 @@ function ClientesPage() {
                   <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 </FormItem>
               )} />
+              {!editing && (
+                <FormField control={form.control} name="referred_by_code" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Código de indicação (opcional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Ex.: ABC123"
+                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                      />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">Se o cliente foi indicado, informe o código. O indicador ganha dias bônus ao 1º pagamento.</p>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              )}
+
               <DialogFooter>
                 <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
                 <Button type="submit" className="btn-premium rounded-full" disabled={save.isPending}>
