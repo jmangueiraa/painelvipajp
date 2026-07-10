@@ -201,8 +201,7 @@ export const createAppRenewalCardCheckout = createServerFn({ method: "POST" })
         external_reference: req.id,
         notification_url: `${origin}/api/public/app/mp-webhook`,
         back_urls: { success: back, pending: back, failure: back },
-        auto_return: "approved",
-        statement_descriptor: "PAINEL VIP",
+        statement_descriptor: "PAINELVIP",
       }),
     });
 
@@ -211,9 +210,17 @@ export const createAppRenewalCardCheckout = createServerFn({ method: "POST" })
       init_point?: string;
       sandbox_init_point?: string;
       message?: string;
+      error?: string;
+      cause?: Array<{ code?: string | number; description?: string }>;
     };
     if (!mpRes.ok || !mp.init_point) {
-      throw new Error(`Mercado Pago: ${mp.message ?? mpRes.statusText}`);
+      const detail =
+        mp.cause?.map((c) => c.description).filter(Boolean).join("; ") ||
+        mp.message ||
+        mp.error ||
+        mpRes.statusText;
+      console.error("[app-renewal] MP error", mpRes.status, JSON.stringify(mp));
+      throw new Error(`Mercado Pago: ${detail}`);
     }
 
     await supabaseAdmin
