@@ -331,12 +331,12 @@ function ClientesPage() {
     const dd = String(due.getDate()).padStart(2, "0");
     const mm = String(due.getMonth() + 1).padStart(2, "0");
     const yyyy = due.getFullYear();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const diffDays = Math.floor((today.getTime() - due.getTime()) / 86400000);
-    const overdue = Math.max(0, diffDays);
     const identifier = c.iptv_login || c.name;
-    return `Ola!  ${identifier} seu vencimento é: *${dd}/${mm}/${yyyy}  vencido há ${overdue}* dias. Aguardo contato para renovação`;
+    const credLines: string[] = [];
+    if (c.iptv_login) credLines.push(`👤 Usuário: ${c.iptv_login}`);
+    if (c.iptv_password) credLines.push(`🔑 Senha: ${c.iptv_password}`);
+    const credBlock = credLines.length ? `\n\n${credLines.join("\n")}\n` : "\n";
+    return `🚨 Seu acesso ${identifier} expirou!\n\nOlá! Seu acesso ${identifier} venceu em ${dd}/${mm}/${yyyy}.\n\nPara continuar aproveitando o serviço sem interrupções, renove agora mesmo pelo nosso portal:\n\n🌐 ajpvip.com.br/portal\n${credBlock}\nA renovação é rápida e, após a confirmação do pagamento, a liberação do acesso é feita automaticamente.\n\nAgradecemos pela preferência e esperamos você de volta! 😊`;
   };
   // Abre no WhatsApp Business como padrão. No Android usa intent:// apontando para com.whatsapp.w4b.
   // Em outros dispositivos usa o esquema whatsapp:// (abre o app padrão instalado) com fallback para wa.me.
