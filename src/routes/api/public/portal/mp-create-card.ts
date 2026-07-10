@@ -73,11 +73,6 @@ export const Route = createFileRoute("/api/public/portal/mp-create-card")({
                   unit_price: Number((amount_cents / 100).toFixed(2)),
                 },
               ],
-              payer: {
-                name: client.name?.split(" ")[0] || "Cliente",
-                surname: client.name?.split(" ").slice(1).join(" ") || "VIP",
-                email: `cliente.${client.id.slice(0, 8)}@painelvip.app`,
-              },
               payment_methods: {
                 excluded_payment_types: [{ id: "ticket" }, { id: "atm" }, { id: "bank_transfer" }],
                 installments: 12,
