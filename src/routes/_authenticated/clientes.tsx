@@ -18,7 +18,7 @@ import { getStateFromPhone } from "@/lib/br-states";
 import { statusLabel, statusVariant, computeStatus, type ClientStatus } from "@/lib/status";
 import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
-import { sendChargesNow as sendChargesNowFn } from "@/lib/auto-charges.functions";
+import { sendChargesNow as sendChargesNowFn, sendChargesToIds as sendChargesToIdsFn } from "@/lib/auto-charges.functions";
 
 
 import { PageHeader } from "@/components/page-header";
@@ -435,6 +435,17 @@ function ClientesPage() {
   const cobranca = (filter: "due_today" | "due_tomorrow" | "advance_5d" | "overdue" | "auto_due_or_overdue") =>
     sendCharges.mutate(filter);
 
+  const sendChargesToIds = useServerFn(sendChargesToIdsFn);
+  const sendBulk = useMutation({
+    mutationFn: async (ids: string[]) => await sendChargesToIds({ data: { ids } }),
+    onSuccess: (r) => {
+      if (r.total === 0) toast.info("Nenhum cliente selecionado");
+      else if (r.failed === 0) toast.success(`${r.sent} cobrança(s) enviada(s) via WhatsApp`);
+      else toast.warning(`Enviadas: ${r.sent} • Falhas: ${r.failed}${r.errors.length ? " — " + r.errors[0] : ""}`);
+    },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
   const downloadTemplate = () => {
     const headers = [
       "nome", "whatsapp", "vencimento",
@@ -597,9 +608,19 @@ function ClientesPage() {
         actions={
           <>
             {selectedIds.size > 0 && (
-              <Button variant="destructive" className="rounded-full" onClick={() => setBulkDeleteOpen(true)}>
-                <Trash2 className="size-4" /> Excluir selecionados ({selectedIds.size})
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => sendBulk.mutate(Array.from(selectedIds))}
+                  disabled={sendBulk.isPending}
+                >
+                  <Send className="size-4" /> Enviar WhatsApp ({selectedIds.size})
+                </Button>
+                <Button variant="destructive" className="rounded-full" onClick={() => setBulkDeleteOpen(true)}>
+                  <Trash2 className="size-4" /> Excluir selecionados ({selectedIds.size})
+                </Button>
+              </>
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
