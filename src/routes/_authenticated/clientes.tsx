@@ -608,9 +608,19 @@ function ClientesPage() {
         actions={
           <>
             {selectedIds.size > 0 && (
-              <Button variant="destructive" className="rounded-full" onClick={() => setBulkDeleteOpen(true)}>
-                <Trash2 className="size-4" /> Excluir selecionados ({selectedIds.size})
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => sendBulk.mutate(Array.from(selectedIds))}
+                  disabled={sendBulk.isPending}
+                >
+                  <Send className="size-4" /> Enviar WhatsApp ({selectedIds.size})
+                </Button>
+                <Button variant="destructive" className="rounded-full" onClick={() => setBulkDeleteOpen(true)}>
+                  <Trash2 className="size-4" /> Excluir selecionados ({selectedIds.size})
+                </Button>
+              </>
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
