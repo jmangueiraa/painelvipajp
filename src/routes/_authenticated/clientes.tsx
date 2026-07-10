@@ -435,6 +435,17 @@ function ClientesPage() {
   const cobranca = (filter: "due_today" | "due_tomorrow" | "advance_5d" | "overdue" | "auto_due_or_overdue") =>
     sendCharges.mutate(filter);
 
+  const sendChargesToIds = useServerFn(sendChargesToIdsFn);
+  const sendBulk = useMutation({
+    mutationFn: async (ids: string[]) => await sendChargesToIds({ data: { ids } }),
+    onSuccess: (r) => {
+      if (r.total === 0) toast.info("Nenhum cliente selecionado");
+      else if (r.failed === 0) toast.success(`${r.sent} cobrança(s) enviada(s) via WhatsApp`);
+      else toast.warning(`Enviadas: ${r.sent} • Falhas: ${r.failed}${r.errors.length ? " — " + r.errors[0] : ""}`);
+    },
+    onError: (e: Error) => toast.error(translateError(e)),
+  });
+
   const downloadTemplate = () => {
     const headers = [
       "nome", "whatsapp", "vencimento",
