@@ -159,13 +159,23 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
               external_reference: renewal.id,
               notification_url: `${origin}/api/public/portal/mp-webhook?external_reference=${renewal.id}`,
               back_urls: { success: back, pending: back, failure: back },
-              auto_return: "approved",
-              statement_descriptor: "PAINEL VIP",
+              statement_descriptor: "PAINELVIP",
             }),
           });
-          const mp = (await mpRes.json().catch(() => ({}))) as { init_point?: string; message?: string };
+          const mp = (await mpRes.json().catch(() => ({}))) as {
+            init_point?: string;
+            message?: string;
+            error?: string;
+            cause?: Array<{ code?: string | number; description?: string }>;
+          };
           if (!mpRes.ok || !mp.init_point) {
-            return json({ error: "Falha no Mercado Pago", detail: mp.message ?? mpRes.statusText }, request, { status: 502 });
+            const detail =
+              mp.cause?.map((c) => c.description).filter(Boolean).join("; ") ||
+              mp.message ||
+              mp.error ||
+              mpRes.statusText;
+            console.error("[mp-create-extra] MP error", mpRes.status, JSON.stringify(mp));
+            return json({ error: "Falha no Mercado Pago", detail }, request, { status: 502 });
           }
           await supabaseAdmin.from("renewal_requests").update({ mp_status: "pending" }).eq("id", renewal.id);
           return json({ ok: true, renewal_id: renewal.id, init_point: mp.init_point, amount_cents, base_cents }, request);

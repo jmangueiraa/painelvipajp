@@ -243,13 +243,23 @@ export const createStorePayment = createServerFn({ method: "POST" })
         external_reference: (renewal as { id: string }).id,
         notification_url: `${origin}/api/public/portal/mp-webhook?external_reference=${(renewal as { id: string }).id}`,
         back_urls: { success: back, pending: back, failure: back },
-        auto_return: "approved",
         statement_descriptor: "LOJA",
       }),
     });
-    const mp = (await mpRes.json().catch(() => ({}))) as { init_point?: string; message?: string };
+    const mp = (await mpRes.json().catch(() => ({}))) as {
+      init_point?: string;
+      message?: string;
+      error?: string;
+      cause?: Array<{ code?: string | number; description?: string }>;
+    };
     if (!mpRes.ok || !mp.init_point) {
-      return { ok: false as const, error: `Falha no Mercado Pago: ${mp.message ?? mpRes.statusText}` };
+      const detail =
+        mp.cause?.map((c) => c.description).filter(Boolean).join("; ") ||
+        mp.message ||
+        mp.error ||
+        mpRes.statusText;
+      console.error("[store-public] MP error", mpRes.status, JSON.stringify(mp));
+      return { ok: false as const, error: `Falha no Mercado Pago: ${detail}` };
     }
     await supabaseAdmin.from("renewal_requests").update({ mp_status: "pending" }).eq("id", (renewal as { id: string }).id);
     return { ok: true as const, renewal_id: (renewal as { id: string }).id, init_point: mp.init_point, amount_cents };
