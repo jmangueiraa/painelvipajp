@@ -189,11 +189,6 @@ export const createAppRenewalCardCheckout = createServerFn({ method: "POST" })
             unit_price: Number((amount_with_fee / 100).toFixed(2)),
           },
         ],
-        payer: {
-          name: fullName.split(" ")[0] || "Assinante",
-          surname: fullName.split(" ").slice(1).join(" ") || "VIP",
-          email: `assinante.${userId.slice(0, 8)}@painelvip.app`,
-        },
         payment_methods: {
           excluded_payment_types: [{ id: "ticket" }, { id: "atm" }, { id: "bank_transfer" }],
           installments: 12,
