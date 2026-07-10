@@ -341,7 +341,7 @@ function ClientesPage() {
     const msg = encodeURIComponent(
       `Ola!  ${identifier} seu vencimento é: *${dd}/${mm}/${yyyy}  vencido há ${overdue}* dias. Aguardo contato para renovação`
     );
-    return `https://wa.me/${p}?text=${msg}`;
+    return `whatsapp://send?phone=${p}&text=${msg}`;
   };
   const telHref = (c: Client) => {
     const p = intlPhone(c.phone);
@@ -349,7 +349,7 @@ function ClientesPage() {
   };
   const supportHref = (c: Client) => {
     const msg = encodeURIComponent(`Olá, preciso de suporte referente ao cliente ${c.name}.`);
-    return `https://wa.me/5519981356505?text=${msg}`;
+    return `whatsapp://send?phone=5519981356505&text=${msg}`;
   };
 
   const copyCredentials = async (c: Client) => {
