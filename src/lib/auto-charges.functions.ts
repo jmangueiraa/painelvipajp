@@ -6,11 +6,71 @@ const FilterSchema = z.object({
   filter: z.enum(["due_today", "due_tomorrow", "advance_5d", "overdue", "auto_due_or_overdue"]),
 });
 
+const IdsSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(500),
+});
+
 function addDaysISO(iso: string, days: number) {
   const d = new Date(iso + "T00:00:00");
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 }
+
+export const sendChargesToIds = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => IdsSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: rows, error } = await supabase
+      .from("clients")
+      .select("id,name,phone,iptv_login,iptv_password,due_date,status")
+      .in("id", data.ids);
+    if (error) throw new Error(error.message);
+
+    const { sendZapiText, normalizeBrPhone } = await import("./zapi.server");
+
+    const buildMsg = (c: {
+      name: string;
+      iptv_login: string | null;
+      iptv_password: string | null;
+      due_date: string;
+    }) => {
+      const due = new Date(c.due_date + "T00:00:00");
+      const dd = String(due.getDate()).padStart(2, "0");
+      const mm = String(due.getMonth() + 1).padStart(2, "0");
+      const yyyy = due.getFullYear();
+      const identifier = c.iptv_login || c.name;
+      const credLines: string[] = [];
+      if (c.iptv_login) credLines.push(`👤 Usuário: ${c.iptv_login}`);
+      if (c.iptv_password) credLines.push(`🔑 Senha: ${c.iptv_password}`);
+      const credBlock = credLines.length ? `\n\n${credLines.join("\n")}\n` : "\n";
+      return `🚨 Seu acesso ${identifier} expirou!\n\nOlá! Seu acesso ${identifier} venceu em ${dd}/${mm}/${yyyy}.\n\nPara continuar aproveitando o serviço sem interrupções, renove agora mesmo pelo nosso portal:\n\n🌐 ajpvip.com.br/portal\n${credBlock}\nA renovação é rápida e, após a confirmação do pagamento, a liberação do acesso é feita automaticamente.\n\nAgradecemos pela preferência e esperamos você de volta! 😊`;
+    };
+
+    let sent = 0;
+    let failed = 0;
+    const errors: string[] = [];
+    for (const c of rows ?? []) {
+      const phone = normalizeBrPhone(c.phone || "");
+      if (!phone) {
+        failed++;
+        errors.push(`${c.name}: telefone inválido`);
+        continue;
+      }
+      try {
+        const r = await sendZapiText({ phone, message: buildMsg(c) });
+        if (r.ok) sent++;
+        else {
+          failed++;
+          errors.push(`${c.name}: HTTP ${r.status}`);
+        }
+      } catch (e) {
+        failed++;
+        errors.push(`${c.name}: ${(e as Error).message}`);
+      }
+    }
+    return { total: rows?.length ?? 0, sent, failed, errors: errors.slice(0, 10) };
+  });
 
 export const sendChargesNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
