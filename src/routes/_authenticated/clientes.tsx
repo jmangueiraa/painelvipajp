@@ -773,18 +773,14 @@ function ClientesPage() {
                           <DropdownMenuItem onClick={() => setRenewTarget(c)}>
                             <RefreshCw className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Renovar
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <a href={whatsappHref(c)} target="_blank" rel="noreferrer">
-                              <MessageCircle className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Mensagem (WhatsApp)
-                            </a>
+                          <DropdownMenuItem onClick={() => sendClientWhatsapp(c)}>
+                            <MessageCircle className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Mensagem (WhatsApp Business)
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => copyCredentials(c)}>
                             <Copy className="size-4" style={{ color: "var(--kpi-cyan)" }} /> Copiar credenciais
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <a href={supportHref(c)} target="_blank" rel="noreferrer">
-                              <LifeBuoy className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Suporte
-                            </a>
+                          <DropdownMenuItem onClick={() => sendSupportWhatsapp(c)}>
+                            <LifeBuoy className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Suporte
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => toggleBlock.mutate(c)}>
                             {c.status === "suspenso" || c.status === "cancelado" ? (
