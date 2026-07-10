@@ -18,7 +18,7 @@ import { getStateFromPhone } from "@/lib/br-states";
 import { statusLabel, statusVariant, computeStatus, type ClientStatus } from "@/lib/status";
 import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
-import { sendChargesNow as sendChargesNowFn } from "@/lib/auto-charges.functions";
+import { sendChargesNow as sendChargesNowFn, sendChargesToIds as sendChargesToIdsFn } from "@/lib/auto-charges.functions";
 
 
 import { PageHeader } from "@/components/page-header";
