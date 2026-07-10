@@ -326,9 +326,7 @@ function ClientesPage() {
     if (d.length === 10 || d.length === 11) return "55" + d; // BR sem DDI
     return d;
   };
-  const whatsappHref = (c: Client) => {
-    const p = intlPhone(c.phone);
-    if (!p) return "#";
+  const buildChargeMsg = (c: Client) => {
     const due = new Date(c.due_date + "T00:00:00");
     const dd = String(due.getDate()).padStart(2, "0");
     const mm = String(due.getMonth() + 1).padStart(2, "0");
@@ -338,19 +336,37 @@ function ClientesPage() {
     const diffDays = Math.floor((today.getTime() - due.getTime()) / 86400000);
     const overdue = Math.max(0, diffDays);
     const identifier = c.iptv_login || c.name;
-    const msg = encodeURIComponent(
-      `Ola!  ${identifier} seu vencimento é: *${dd}/${mm}/${yyyy}  vencido há ${overdue}* dias. Aguardo contato para renovação`
-    );
-    return `whatsapp://send?phone=${p}&text=${msg}`;
+    return `Ola!  ${identifier} seu vencimento é: *${dd}/${mm}/${yyyy}  vencido há ${overdue}* dias. Aguardo contato para renovação`;
   };
-  const telHref = (c: Client) => {
-    const p = intlPhone(c.phone);
-    return p ? `tel:+${p}` : "#";
+  // Abre no WhatsApp Business como padrão. No Android usa intent:// apontando para com.whatsapp.w4b.
+  // Em outros dispositivos usa o esquema whatsapp:// (abre o app padrão instalado) com fallback para wa.me.
+  const openWhatsappBusiness = (phoneIntl: string, message: string) => {
+    if (!phoneIntl) return;
+    const msg = encodeURIComponent(message);
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    const isAndroid = /Android/i.test(ua);
+    if (isAndroid) {
+      const intentUrl = `intent://send?phone=${phoneIntl}&text=${msg}#Intent;scheme=whatsapp;package=com.whatsapp.w4b;S.browser_fallback_url=${encodeURIComponent(
+        `https://wa.me/${phoneIntl}?text=${msg}`
+      )};end`;
+      window.location.href = intentUrl;
+      return;
+    }
+    // iOS/Desktop: tenta abrir o app; se falhar, cai para wa.me
+    const fallback = `https://wa.me/${phoneIntl}?text=${msg}`;
+    const t = window.setTimeout(() => { window.open(fallback, "_blank"); }, 800);
+    try {
+      window.location.href = `whatsapp://send?phone=${phoneIntl}&text=${msg}`;
+      window.addEventListener("blur", () => window.clearTimeout(t), { once: true });
+    } catch {
+      window.clearTimeout(t);
+      window.open(fallback, "_blank");
+    }
   };
-  const supportHref = (c: Client) => {
-    const msg = encodeURIComponent(`Olá, preciso de suporte referente ao cliente ${c.name}.`);
-    return `whatsapp://send?phone=5519981356505&text=${msg}`;
-  };
+  const sendClientWhatsapp = (c: Client) => openWhatsappBusiness(intlPhone(c.phone), buildChargeMsg(c));
+  const sendSupportWhatsapp = (c: Client) =>
+    openWhatsappBusiness("5519981356505", `Olá, preciso de suporte referente ao cliente ${c.name}.`);
+
 
   const copyCredentials = async (c: Client) => {
     const txt = [c.iptv_login && `Login: ${c.iptv_login}`, c.iptv_password && `Senha: ${c.iptv_password}`].filter(Boolean).join("\n");
@@ -757,18 +773,14 @@ function ClientesPage() {
                           <DropdownMenuItem onClick={() => setRenewTarget(c)}>
                             <RefreshCw className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Renovar
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <a href={whatsappHref(c)} target="_blank" rel="noreferrer">
-                              <MessageCircle className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Mensagem (WhatsApp)
-                            </a>
+                          <DropdownMenuItem onClick={() => sendClientWhatsapp(c)}>
+                            <MessageCircle className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Mensagem (WhatsApp Business)
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => copyCredentials(c)}>
                             <Copy className="size-4" style={{ color: "var(--kpi-cyan)" }} /> Copiar credenciais
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <a href={supportHref(c)} target="_blank" rel="noreferrer">
-                              <LifeBuoy className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Suporte
-                            </a>
+                          <DropdownMenuItem onClick={() => sendSupportWhatsapp(c)}>
+                            <LifeBuoy className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Suporte
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => toggleBlock.mutate(c)}>
                             {c.status === "suspenso" || c.status === "cancelado" ? (
