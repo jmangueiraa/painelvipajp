@@ -349,7 +349,7 @@ function ClientesPage() {
   };
   const supportHref = (c: Client) => {
     const msg = encodeURIComponent(`Olá, preciso de suporte referente ao cliente ${c.name}.`);
-    return `https://wa.me/5519981356505?text=${msg}`;
+    return `whatsapp://send?phone=5519981356505&text=${msg}`;
   };
 
   const copyCredentials = async (c: Client) => {
