@@ -341,7 +341,7 @@ function ClientesPage() {
     const msg = encodeURIComponent(
       `Ola!  ${identifier} seu vencimento é: *${dd}/${mm}/${yyyy}  vencido há ${overdue}* dias. Aguardo contato para renovação`
     );
-    return `https://wa.me/${p}?text=${msg}`;
+    return `whatsapp://send?phone=${p}&text=${msg}`;
   };
   const telHref = (c: Client) => {
     const p = intlPhone(c.phone);
