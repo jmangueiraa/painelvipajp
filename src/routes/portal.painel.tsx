@@ -229,8 +229,7 @@ function PortalDashboard() {
       setRenewalId(r.renewal_id);
       setPaymentStatus("pending");
       setCardLink(r.init_point);
-      window.open(r.init_point, "_blank", "noopener,noreferrer");
-      toast.success("Checkout do cartão aberto em nova aba.");
+      window.location.assign(r.init_point);
     },
     onError: (e: Error) => { toast.error(e.message); setMethod(null); },
     onSettled: () => setCreating(false),
@@ -251,8 +250,7 @@ function PortalDashboard() {
         toast.success("QR Code PIX gerado!");
       } else if (r.init_point) {
         setStoreCardLink(r.init_point);
-        window.open(r.init_point, "_blank", "noopener,noreferrer");
-        toast.success("Checkout do cartão aberto em nova aba.");
+        window.location.assign(r.init_point);
       }
     },
     onError: (e: Error) => { toast.error(e.message); setStoreMethod(null); },
@@ -844,7 +842,7 @@ function PortalDashboard() {
 
               {cardLink && !creating && (
                 <>
-                  <a href={cardLink} target="_blank" rel="noopener noreferrer" className="block">
+                  <a href={cardLink} className="block">
                     <Button className="w-full">
                       <ExternalLink className="mr-2 h-4 w-4" />Abrir checkout do cartão
                     </Button>
@@ -996,7 +994,7 @@ function PortalDashboard() {
 
                   {storeCardLink && !storeCreating && (
                     <>
-                      <a href={storeCardLink} target="_blank" rel="noopener noreferrer" className="block">
+                        <a href={storeCardLink} className="block">
                         <Button className="w-full"><ExternalLink className="mr-2 h-4 w-4" />Abrir checkout do cartão</Button>
                       </a>
                       <div className="flex items-center gap-2 rounded-xl border bg-card p-3 text-sm text-muted-foreground">
