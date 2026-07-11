@@ -145,7 +145,7 @@ function RenovacaoPage() {
       setPix(null);
       setMethodPlan(null);
       setPaid(false);
-      window.open(res.init_point, "_blank", "noopener");
+      window.location.assign(res.init_point);
     } catch (e) {
       toast.error((e as Error).message || "Falha ao iniciar checkout");
     } finally {
@@ -371,8 +371,8 @@ function RenovacaoPage() {
           {card && !paid && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Abrimos o checkout seguro do Mercado Pago em uma nova aba. Conclua o pagamento por lá — esta tela será
-                atualizada automaticamente quando aprovarmos.
+                Abra o checkout seguro do Mercado Pago e conclua o pagamento. Ao retornar, esta tela será atualizada
+                automaticamente quando aprovarmos.
               </p>
               <div className="rounded-lg border bg-muted/40 p-3 text-xs">
                 Valor do plano: <span className="font-medium text-foreground">{brl(card.base_cents)}</span>
@@ -383,7 +383,7 @@ function RenovacaoPage() {
                 Total a pagar: <span className="font-semibold text-foreground">{brl(card.amount_cents)}</span>
               </div>
               <Button
-                onClick={() => window.open(card.init_point, "_blank", "noopener")}
+                onClick={() => window.location.assign(card.init_point)}
                 className="w-full"
               >
                 <CreditCard className="size-4 mr-2" /> Abrir checkout novamente
