@@ -39,13 +39,32 @@ export const sendChargesToIds = createServerFn({ method: "POST" })
       const dd = String(due.getDate()).padStart(2, "0");
       const mm = String(due.getMonth() + 1).padStart(2, "0");
       const yyyy = due.getFullYear();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const diffDays = Math.round((due.getTime() - today.getTime()) / 86400000);
       const identifier = c.iptv_login || c.name;
       const credLines: string[] = [];
       if (c.iptv_login) credLines.push(`👤 Usuário: ${c.iptv_login}`);
       if (c.iptv_password) credLines.push(`🔑 Senha: ${c.iptv_password}`);
       const credBlock = credLines.length ? `\n\n${credLines.join("\n")}\n` : "\n";
-      return `🚨 Seu acesso ${identifier} expirou!\n\nOlá! Seu acesso ${identifier} venceu em ${dd}/${mm}/${yyyy}.\n\nPara continuar aproveitando o serviço sem interrupções, renove agora mesmo pelo nosso portal:\n\n🌐 ajpvip.com.br/portal\n${credBlock}\nA renovação é rápida e, após a confirmação do pagamento, a liberação do acesso é feita automaticamente.\n\nAgradecemos pela preferência e esperamos você de volta! 😊`;
+
+      let header: string;
+      let statusLine: string;
+      if (diffDays > 0) {
+        header = `⏰ Faltam ${diffDays} ${diffDays === 1 ? "dia" : "dias"} para o vencimento do seu acesso ${identifier}!`;
+        statusLine = `Olá! Seu acesso ${identifier} vence em ${dd}/${mm}/${yyyy} (faltam ${diffDays} ${diffDays === 1 ? "dia" : "dias"}).`;
+      } else if (diffDays === 0) {
+        header = `⚠️ Seu acesso ${identifier} vence HOJE!`;
+        statusLine = `Olá! Seu acesso ${identifier} vence hoje (${dd}/${mm}/${yyyy}).`;
+      } else {
+        const overdue = Math.abs(diffDays);
+        header = `🚨 Seu acesso ${identifier} expirou!`;
+        statusLine = `Olá! Seu acesso ${identifier} venceu em ${dd}/${mm}/${yyyy} (${overdue} ${overdue === 1 ? "dia" : "dias"} em atraso).`;
+      }
+
+      return `${header}\n\n${statusLine}\n\nPara continuar aproveitando o serviço sem interrupções, renove agora mesmo pelo nosso portal:\n\n🌐 ajpvip.com.br/portal\n${credBlock}\nA renovação é rápida e, após a confirmação do pagamento, a liberação do acesso é feita automaticamente.\n\nAgradecemos pela preferência e esperamos você de volta! 😊`;
     };
+
 
     let sent = 0;
     let failed = 0;
