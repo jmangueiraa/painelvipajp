@@ -118,6 +118,19 @@ function PortalDashboard() {
   const pollRef = useRef<number | null>(null);
   const [updatesKind, setUpdatesKind] = useState<"movie" | "series" | "games" | null>(null);
 
+  // Open updates dialog automatically when navigated with ?updates=movie|series|games
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const u = params.get("updates");
+    if (u === "movie" || u === "series" || u === "games") {
+      setUpdatesKind(u);
+      params.delete("updates");
+      const qs = params.toString();
+      window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : ""));
+    }
+  }, []);
+
   // Loja de produtos avulsos (lê do admin via API; fallback para padrão)
   type StoreItem = { id: string; label: string; price_cents: number; emoji: string; gradient: string; image_url?: string | null };
   const fallbackProducts: StoreItem[] = [
