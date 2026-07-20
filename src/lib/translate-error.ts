@@ -1,5 +1,6 @@
 // Traduz mensagens de erro comuns do Supabase/Auth para PT-BR.
 const MAP: Array<[RegExp, string]> = [
+  [/Unexpected token .* is not valid JSON/i, "Uma configuração do serviço está em formato inválido"],
   [/password is known to be weak.*different one\.?/i, "Esta senha é considerada fraca e fácil de adivinhar. Escolha uma senha mais forte."],
   [/password.*(weak|pwned|leaked|compromised|breach)/i, "Esta senha é fraca ou já apareceu em vazamentos. Escolha outra."],
   [/new password should be different from the old password/i, "A nova senha deve ser diferente da senha atual"],
@@ -13,7 +14,7 @@ const MAP: Array<[RegExp, string]> = [
   [/invalid email/i, "E-mail inválido"],
   [/rate limit|too many requests/i, "Muitas tentativas. Aguarde e tente novamente"],
   [/network|failed to fetch/i, "Falha de conexão. Verifique sua internet"],
-  [/jwt|token/i, "Sessão expirada. Entre novamente"],
+  [/\b(jwt|access token|refresh token|auth token)\b/i, "Sessão expirada. Entre novamente"],
   [/row-level security|permission denied/i, "Você não tem permissão para esta ação"],
   [/duplicate key|already exists/i, "Registro já existe"],
   [/not found/i, "Registro não encontrado"],
