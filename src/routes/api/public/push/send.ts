@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
+import { portalCorsHeaders, portalOptions } from "@/lib/portal-cors";
 
 const SendSchema = z.object({
   title: z.string().trim().min(1).max(120),
@@ -11,21 +12,24 @@ const SendSchema = z.object({
   clientIds: z.array(z.string().uuid()).max(5000).default([]),
 });
 
-function response(data: unknown, status = 200) {
+function response(data: unknown, status = 200, request?: Request) {
   return Response.json(data, {
     status,
-    headers: { "Cache-Control": "no-store" },
+    headers: { "Cache-Control": "no-store", ...portalCorsHeaders(request) },
   });
 }
+
 
 export const Route = createFileRoute("/api/public/push/send")({
   server: {
     handlers: {
+      OPTIONS: ({ request }) => portalOptions(request),
       POST: async ({ request }) => {
         try {
+
           const authorization = request.headers.get("authorization") ?? "";
           if (!authorization.startsWith("Bearer ")) {
-            return response({ error: "Sessão inválida. Entre novamente." }, 401);
+            return response({ error: "Sessão inválida. Entre novamente." }, 401, request);
           }
 
           const input = SendSchema.parse(await request.json());
@@ -33,7 +37,7 @@ export const Route = createFileRoute("/api/public/push/send")({
           const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
           const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
           if (!supabaseUrl || !publishableKey) {
-            return response({ error: "Conexão com o backend indisponível." }, 503);
+            return response({ error: "Conexão com o backend indisponível." }, 503, request);
           }
           const supabase = createClient<Database>(supabaseUrl, publishableKey, {
             global: { headers: { Authorization: authorization } },
@@ -41,7 +45,7 @@ export const Route = createFileRoute("/api/public/push/send")({
           });
           const { data: authData, error: authError } = await supabase.auth.getUser(token);
           if (authError || !authData.user) {
-            return response({ error: "Sessão expirada. Entre novamente." }, 401);
+            return response({ error: "Sessão expirada. Entre novamente." }, 401, request);
           }
 
           const userId = authData.user.id;
@@ -106,17 +110,18 @@ export const Route = createFileRoute("/api/public/push/send")({
             error: sendError,
           });
           if (logError) throw new Error(logError.message);
-          if (sendError) return response({ error: sendError }, 502);
+          if (sendError) return response({ error: sendError }, 502, request);
 
           return response({
             scheduled: false,
             targets: clientIds.length,
             tokens: tokens.length,
             ...result,
-          });
+          }, 200, request);
+
         } catch (error) {
-          if (error instanceof z.ZodError) return response({ error: "Dados da notificação inválidos." }, 400);
-          return response({ error: error instanceof Error ? error.message : "Erro ao enviar notificação." }, 500);
+          if (error instanceof z.ZodError) return response({ error: "Dados da notificação inválidos." }, 400, request);
+          return response({ error: error instanceof Error ? error.message : "Erro ao enviar notificação." }, 500, request);
         }
       },
     },
