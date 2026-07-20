@@ -8,7 +8,10 @@ const SAVED_TOKEN_KEY = "portal_fcm_token";
 async function registerSw(): Promise<ServiceWorkerRegistration | null> {
   if (!("serviceWorker" in navigator)) return null;
   try {
-    const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js", { scope: "/" });
+    // Use the portal's single service worker for both PWA caching and FCM.
+    // Overlapping workers at / and /portal/ are unreliable on installed PWAs,
+    // particularly on iOS.
+    const registration = await navigator.serviceWorker.register("/portal-sw.js", { scope: "/portal/" });
     await registration.update();
     return registration;
   } catch (e) {
@@ -22,11 +25,12 @@ export async function initPortalPush(opts: { silent?: boolean } = {}): Promise<s
   if (!("Notification" in window)) return null;
   if (!getPortalToken()) return null;
 
-  const messaging = await getMessagingIfSupported();
-  if (!messaging) return null;
-
   let permission = Notification.permission;
   if (permission === "default") {
+    // Mobile browsers, especially installed iOS PWAs, only allow this prompt
+    // while handling a direct user gesture. Silent initialization must never
+    // consume or attempt that prompt.
+    if (opts.silent) return null;
     try {
       permission = await Notification.requestPermission();
     } catch {
@@ -34,6 +38,9 @@ export async function initPortalPush(opts: { silent?: boolean } = {}): Promise<s
     }
   }
   if (permission !== "granted") return null;
+
+  const messaging = await getMessagingIfSupported();
+  if (!messaging) return null;
 
   const swReg = await registerSw();
   if (!swReg) return null;
@@ -59,6 +66,7 @@ export async function initPortalPush(opts: { silent?: boolean } = {}): Promise<s
   } catch (e) {
     console.warn("[fcm] save token failed", e);
     if (!opts.silent) toast.error("Não foi possível registrar este aparelho para notificações");
+    return null;
   }
 
   onMessage(messaging, async (payload) => {

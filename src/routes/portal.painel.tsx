@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { brl, formatDateBR } from "@/lib/format";
 import { clearPortalToken, getPortalToken, portalFetch, PortalFetchError } from "@/lib/portal-client";
 import { InstallAppCard } from "@/components/portal/install-app-card";
+import { PushNotificationCard } from "@/components/portal/push-notification-card";
 
 export const Route = createFileRoute("/portal/painel")({
   ssr: false,
@@ -376,6 +377,7 @@ function PortalDashboard() {
 
       <main className="mx-auto max-w-3xl space-y-4 px-4 py-6">
         <InstallAppCard />
+        <PushNotificationCard />
 
         {/* Status do plano */}
         <Card>
