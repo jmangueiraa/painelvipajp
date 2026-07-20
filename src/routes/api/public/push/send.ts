@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import type { Database } from "@/integrations/supabase/types";
 
 const SendSchema = z.object({
   title: z.string().trim().min(1).max(120),
@@ -28,8 +30,16 @@ export const Route = createFileRoute("/api/public/push/send")({
 
           const input = SendSchema.parse(await request.json());
           const token = authorization.slice(7);
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+          if (!supabaseUrl || !publishableKey) {
+            return response({ error: "Conexão com o backend indisponível." }, 503);
+          }
+          const supabase = createClient<Database>(supabaseUrl, publishableKey, {
+            global: { headers: { Authorization: authorization } },
+            auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
+          });
+          const { data: authData, error: authError } = await supabase.auth.getUser(token);
           if (authError || !authData.user) {
             return response({ error: "Sessão expirada. Entre novamente." }, 401);
           }
@@ -38,14 +48,14 @@ export const Route = createFileRoute("/api/public/push/send")({
           let clientIds = input.clientIds;
           if (input.audience !== "specific") {
             const today = new Date().toISOString().slice(0, 10);
-            let query = supabaseAdmin.from("clients").select("id").eq("user_id", userId);
+            let query = supabase.from("clients").select("id").eq("user_id", userId);
             if (input.audience === "active") query = query.gte("due_date", today);
             if (input.audience === "expired") query = query.lt("due_date", today);
             const { data, error } = await query;
             if (error) throw new Error(error.message);
             clientIds = (data ?? []).map((client) => client.id);
           } else if (clientIds.length) {
-            const { data, error } = await supabaseAdmin
+            const { data, error } = await supabase
               .from("clients")
               .select("id")
               .eq("user_id", userId)
@@ -54,7 +64,7 @@ export const Route = createFileRoute("/api/public/push/send")({
             clientIds = (data ?? []).map((client) => client.id);
           }
 
-          const { data: tokenRows, error: tokenError } = await supabaseAdmin
+          const { data: tokenRows, error: tokenError } = await supabase
             .from("push_tokens")
             .select("token")
             .eq("user_id", userId)
@@ -76,7 +86,11 @@ export const Route = createFileRoute("/api/public/push/send")({
             sendError = error instanceof Error ? error.message : "Falha ao enviar notificação";
           }
 
-          const { error: logError } = await supabaseAdmin.from("push_notifications_log").insert({
+          if (result.invalidTokens.length > 0) {
+            await supabase.from("push_tokens").delete().in("token", result.invalidTokens);
+          }
+
+          const { error: logError } = await supabase.from("push_notifications_log").insert({
             user_id: userId,
             title: input.title,
             body: input.body,

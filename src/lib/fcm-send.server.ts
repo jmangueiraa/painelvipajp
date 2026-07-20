@@ -135,12 +135,5 @@ export async function sendPushToTokens(input: SendPushInput): Promise<SendPushRe
   }
   await Promise.all(Array.from({ length: Math.min(concurrency, tokens.length) }, worker));
 
-  if (invalid.length > 0) {
-    try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      await supabaseAdmin.from("push_tokens").delete().in("token", invalid);
-    } catch {}
-  }
-
   return { success, failure, invalidTokens: invalid };
 }
