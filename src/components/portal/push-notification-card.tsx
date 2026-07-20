@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
-import { Bell, BellRing, CheckCircle2, Loader2 } from "lucide-react";
+import { Bell, BellRing, CheckCircle2, Loader2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+function detectPlatform(): "ios" | "android" | "desktop" {
+  if (typeof navigator === "undefined") return "desktop";
+  const ua = navigator.userAgent || "";
+  if (/iPad|iPhone|iPod/.test(ua)) return "ios";
+  if (/Android/i.test(ua)) return "android";
+  return "desktop";
+}
 
 type PushState = "checking" | "unsupported" | "blocked" | "inactive" | "activating" | "active" | "error";
 
