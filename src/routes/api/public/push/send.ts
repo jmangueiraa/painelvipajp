@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/public/push/send")({
 
           const authorization = request.headers.get("authorization") ?? "";
           if (!authorization.startsWith("Bearer ")) {
-            return response({ error: "Sessão inválida. Entre novamente." }, 401);
+            return response({ error: "Sessão inválida. Entre novamente." }, 401, request);
           }
 
           const input = SendSchema.parse(await request.json());
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/public/push/send")({
           const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
           const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
           if (!supabaseUrl || !publishableKey) {
-            return response({ error: "Conexão com o backend indisponível." }, 503);
+            return response({ error: "Conexão com o backend indisponível." }, 503, request);
           }
           const supabase = createClient<Database>(supabaseUrl, publishableKey, {
             global: { headers: { Authorization: authorization } },
@@ -45,7 +45,7 @@ export const Route = createFileRoute("/api/public/push/send")({
           });
           const { data: authData, error: authError } = await supabase.auth.getUser(token);
           if (authError || !authData.user) {
-            return response({ error: "Sessão expirada. Entre novamente." }, 401);
+            return response({ error: "Sessão expirada. Entre novamente." }, 401, request);
           }
 
           const userId = authData.user.id;
@@ -110,7 +110,7 @@ export const Route = createFileRoute("/api/public/push/send")({
             error: sendError,
           });
           if (logError) throw new Error(logError.message);
-          if (sendError) return response({ error: sendError }, 502);
+          if (sendError) return response({ error: sendError }, 502, request);
 
           return response({
             scheduled: false,
@@ -119,8 +119,8 @@ export const Route = createFileRoute("/api/public/push/send")({
             ...result,
           });
         } catch (error) {
-          if (error instanceof z.ZodError) return response({ error: "Dados da notificação inválidos." }, 400);
-          return response({ error: error instanceof Error ? error.message : "Erro ao enviar notificação." }, 500);
+          if (error instanceof z.ZodError) return response({ error: "Dados da notificação inválidos." }, 400, request);
+          return response({ error: error instanceof Error ? error.message : "Erro ao enviar notificação." }, 500, request);
         }
       },
     },
