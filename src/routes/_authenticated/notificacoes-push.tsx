@@ -283,9 +283,31 @@ function NotificacoesPushPage() {
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Histórico</CardTitle>
-            <CardDescription>Últimas 50 notificações</CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+            <div>
+              <CardTitle>Histórico</CardTitle>
+              <CardDescription>Últimas 50 notificações</CardDescription>
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" disabled={hist.length === 0 || clearMut.isPending}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Limpar histórico
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Limpar histórico?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Isso remove todas as notificações enviadas, falhas e canceladas. Agendamentos pendentes serão mantidos.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => clearMut.mutate()}>Limpar</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardHeader>
           <CardContent>
             {hist.length === 0 ? (
