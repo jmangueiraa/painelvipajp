@@ -62,12 +62,14 @@ export function PushNotificationCard() {
             </div>
           </div>
         </div>
-        {state !== "blocked" && (
-          <Button type="button" className="w-full" onClick={activate} disabled={state === "activating"}>
-            {state === "activating" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bell className="mr-2 h-4 w-4" />}
-            {state === "activating" ? "Ativando..." : "Permitir notificações"}
-          </Button>
-        )}
+        <Button type="button" className="w-full" onClick={activate} disabled={state === "activating"}>
+          {state === "activating" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bell className="mr-2 h-4 w-4" />}
+          {state === "activating"
+            ? "Ativando..."
+            : state === "blocked"
+              ? "Tentar ativar novamente"
+              : "Permitir notificações"}
+        </Button>
       </CardContent>
     </Card>
   );
