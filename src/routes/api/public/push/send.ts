@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
+import { portalCorsHeaders, portalOptions } from "@/lib/portal-cors";
 
 const SendSchema = z.object({
   title: z.string().trim().min(1).max(120),
@@ -11,12 +12,13 @@ const SendSchema = z.object({
   clientIds: z.array(z.string().uuid()).max(5000).default([]),
 });
 
-function response(data: unknown, status = 200) {
+function response(data: unknown, status = 200, request?: Request) {
   return Response.json(data, {
     status,
-    headers: { "Cache-Control": "no-store" },
+    headers: { "Cache-Control": "no-store", ...portalCorsHeaders(request) },
   });
 }
+
 
 export const Route = createFileRoute("/api/public/push/send")({
   server: {
