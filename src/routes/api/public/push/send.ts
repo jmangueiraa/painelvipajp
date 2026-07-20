@@ -12,6 +12,15 @@ const SendSchema = z.object({
   clientIds: z.array(z.string().uuid()).max(5000).default([]),
 });
 
+function deriveUrl(title: string, provided?: string | null): string | null {
+  if (provided) return provided;
+  const t = title.toLowerCase().trim();
+  if (/\bfilmes?\b/.test(t)) return "/portal/painel?updates=movie";
+  if (/\bs[ée]ries?\b/.test(t)) return "/portal/painel?updates=series";
+  if (/\bjogos?\b/.test(t)) return "/portal/painel?updates=games";
+  return null;
+}
+
 function response(data: unknown, status = 200, request?: Request) {
   return Response.json(data, {
     status,
