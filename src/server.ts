@@ -2,6 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { setRuntimeFirebaseServiceAccount } from "./lib/fcm-send.server";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -13,9 +14,7 @@ function exposeRuntimeSecrets(env: unknown) {
   if (!env || typeof env !== "object") return;
   const runtimeEnv = env as RuntimeEnv;
   const firebaseCredential = runtimeEnv.FIREBASE_SERVICE_ACCOUNT_JSON;
-  if (typeof firebaseCredential === "string" && firebaseCredential.trim()) {
-    process.env.FIREBASE_SERVICE_ACCOUNT_JSON = firebaseCredential;
-  }
+  setRuntimeFirebaseServiceAccount(firebaseCredential);
 }
 
 let serverEntryPromise: Promise<ServerEntry> | undefined;

@@ -9,9 +9,18 @@ type ServiceAccount = {
 };
 
 let cachedToken: { token: string; exp: number } | null = null;
+let runtimeServiceAccountJson: string | undefined;
+
+export function setRuntimeFirebaseServiceAccount(value: unknown) {
+  if (typeof value === "string" && value.trim()) {
+    runtimeServiceAccountJson = value.trim();
+  }
+}
 
 function getServiceAccount(serviceAccountJson?: string): ServiceAccount {
-  const raw = serviceAccountJson?.trim() || process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
+  const raw = serviceAccountJson?.trim()
+    || runtimeServiceAccountJson
+    || process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
   if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON não configurada");
   if (!raw.startsWith("{")) {
     throw new Error("Credencial do Firebase inválida. Cadastre o JSON completo da conta de serviço, não a chave VAPID.");
