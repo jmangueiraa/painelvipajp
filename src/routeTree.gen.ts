@@ -27,6 +27,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedCadastrarApiRouteImport } from './routes/_authenticated/cadastrar-api'
+import { Route as ApiPublicPushCronRouteImport } from './routes/api/public/push-cron'
 import { Route as AuthenticatedLojaProdutosRouteImport } from './routes/_authenticated/loja.produtos'
 import { Route as AuthenticatedLojaClientesRouteImport } from './routes/_authenticated/loja.clientes'
 import { Route as AuthenticatedAdminAssinantesRouteImport } from './routes/_authenticated/admin.assinantes'
@@ -143,6 +144,11 @@ const AuthenticatedCadastrarApiRoute =
     path: '/cadastrar-api',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicPushCronRoute = ApiPublicPushCronRouteImport.update({
+  id: '/api/public/push-cron',
+  path: '/api/public/push-cron',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedLojaProdutosRoute =
   AuthenticatedLojaProdutosRouteImport.update({
     id: '/loja/produtos',
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/loja/clientes': typeof AuthenticatedLojaClientesRoute
   '/loja/produtos': typeof AuthenticatedLojaProdutosRoute
+  '/api/public/push-cron': typeof ApiPublicPushCronRoute
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
@@ -332,6 +339,7 @@ export interface FileRoutesByTo {
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/loja/clientes': typeof AuthenticatedLojaClientesRoute
   '/loja/produtos': typeof AuthenticatedLojaProdutosRoute
+  '/api/public/push-cron': typeof ApiPublicPushCronRoute
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
@@ -375,6 +383,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/_authenticated/loja/clientes': typeof AuthenticatedLojaClientesRoute
   '/_authenticated/loja/produtos': typeof AuthenticatedLojaProdutosRoute
+  '/api/public/push-cron': typeof ApiPublicPushCronRoute
   '/_authenticated/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
@@ -418,6 +427,7 @@ export interface FileRouteTypes {
     | '/admin/assinantes'
     | '/loja/clientes'
     | '/loja/produtos'
+    | '/api/public/push-cron'
     | '/admin/assinantes/$id'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
@@ -459,6 +469,7 @@ export interface FileRouteTypes {
     | '/admin/assinantes'
     | '/loja/clientes'
     | '/loja/produtos'
+    | '/api/public/push-cron'
     | '/admin/assinantes/$id'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
@@ -501,6 +512,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/assinantes'
     | '/_authenticated/loja/clientes'
     | '/_authenticated/loja/produtos'
+    | '/api/public/push-cron'
     | '/_authenticated/admin/assinantes/$id'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
@@ -531,6 +543,7 @@ export interface RootRouteChildren {
   PortalIndiqueRoute: typeof PortalIndiqueRoute
   PortalPainelRoute: typeof PortalPainelRoute
   PortalIndexRoute: typeof PortalIndexRoute
+  ApiPublicPushCronRoute: typeof ApiPublicPushCronRoute
   ApiPublicAppMpWebhookRoute: typeof ApiPublicAppMpWebhookRoute
   ApiPublicHooksAutoChargesRoute: typeof ApiPublicHooksAutoChargesRoute
   ApiPublicPortalLoginPasswordRoute: typeof ApiPublicPortalLoginPasswordRoute
@@ -678,6 +691,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/cadastrar-api'
       preLoaderRoute: typeof AuthenticatedCadastrarApiRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/push-cron': {
+      id: '/api/public/push-cron'
+      path: '/api/public/push-cron'
+      fullPath: '/api/public/push-cron'
+      preLoaderRoute: typeof ApiPublicPushCronRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/loja/produtos': {
       id: '/_authenticated/loja/produtos'
@@ -895,6 +915,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortalIndiqueRoute: PortalIndiqueRoute,
   PortalPainelRoute: PortalPainelRoute,
   PortalIndexRoute: PortalIndexRoute,
+  ApiPublicPushCronRoute: ApiPublicPushCronRoute,
   ApiPublicAppMpWebhookRoute: ApiPublicAppMpWebhookRoute,
   ApiPublicHooksAutoChargesRoute: ApiPublicHooksAutoChargesRoute,
   ApiPublicPortalLoginPasswordRoute: ApiPublicPortalLoginPasswordRoute,
