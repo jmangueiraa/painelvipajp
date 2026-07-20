@@ -18,6 +18,9 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   const n = payload.notification || {};
   const data = payload.data || {};
+  // Messages with Web Push notification fields are displayed automatically
+  // by Firebase. Avoid a duplicate if the background callback also runs.
+  if (n.title || n.body) return;
   const title = n.title || data.title || "Portal VIP";
   const options = {
     body: n.body || data.body || "",
@@ -28,7 +31,7 @@ messaging.onBackgroundMessage((payload) => {
     renotify: true,
     data: { url: data.url || "/portal/painel", ...data },
   };
-  self.registration.showNotification(title, options);
+  return self.registration.showNotification(title, options);
 });
 
 self.addEventListener("notificationclick", (event) => {

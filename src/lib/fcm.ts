@@ -8,7 +8,9 @@ const SAVED_TOKEN_KEY = "portal_fcm_token";
 async function registerSw(): Promise<ServiceWorkerRegistration | null> {
   if (!("serviceWorker" in navigator)) return null;
   try {
-    return await navigator.serviceWorker.register("/firebase-messaging-sw.js", { scope: "/firebase-cloud-messaging-push-scope" });
+    const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js", { scope: "/" });
+    await registration.update();
+    return registration;
   } catch (e) {
     console.warn("[fcm] sw register failed", e);
     return null;
@@ -46,17 +48,17 @@ export async function initPortalPush(opts: { silent?: boolean } = {}): Promise<s
   }
   if (!token) return null;
 
-  const prev = window.localStorage.getItem(SAVED_TOKEN_KEY);
-  if (prev !== token) {
-    try {
-      await portalFetch("/api/public/portal/save-push-token", {
-        method: "POST",
-        body: JSON.stringify({ token, platform: navigator.userAgent }),
-      });
-      window.localStorage.setItem(SAVED_TOKEN_KEY, token);
-    } catch (e) {
-      console.warn("[fcm] save token failed", e);
-    }
+  try {
+    // Refresh the server record on every portal session. This repairs tokens
+    // that were generated locally but failed to save during an earlier visit.
+    await portalFetch("/api/public/portal/save-push-token", {
+      method: "POST",
+      body: JSON.stringify({ token, platform: navigator.userAgent }),
+    });
+    window.localStorage.setItem(SAVED_TOKEN_KEY, token);
+  } catch (e) {
+    console.warn("[fcm] save token failed", e);
+    if (!opts.silent) toast.error("Não foi possível registrar este aparelho para notificações");
   }
 
   onMessage(messaging, async (payload) => {
