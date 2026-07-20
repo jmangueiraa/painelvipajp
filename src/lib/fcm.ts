@@ -8,7 +8,10 @@ const SAVED_TOKEN_KEY = "portal_fcm_token";
 async function registerSw(): Promise<ServiceWorkerRegistration | null> {
   if (!("serviceWorker" in navigator)) return null;
   try {
-    const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js", { scope: "/" });
+    // Use the portal's single service worker for both PWA caching and FCM.
+    // Overlapping workers at / and /portal/ are unreliable on installed PWAs,
+    // particularly on iOS.
+    const registration = await navigator.serviceWorker.register("/portal-sw.js", { scope: "/portal/" });
     await registration.update();
     return registration;
   } catch (e) {

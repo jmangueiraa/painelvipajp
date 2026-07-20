@@ -49,7 +49,7 @@ function isPreviewOrDev() {
   return false;
 }
 
-// Registra/desregistra o service worker do portal
+// Registra o único service worker do portal (PWA + notificações Firebase).
 export function useRegisterPortalSW() {
   useEffect(() => {
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
@@ -63,6 +63,7 @@ export function useRegisterPortalSW() {
     }
     navigator.serviceWorker
       .register("/portal-sw.js", { scope: "/portal/" })
+      .then((registration) => registration.update())
       .catch(() => undefined);
   }, []);
 }

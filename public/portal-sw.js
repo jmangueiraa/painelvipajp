@@ -1,8 +1,55 @@
-// Portal VIP - Service Worker (NetworkFirst para HTML, CacheFirst para estáticos)
-const VERSION = "v2";
+// Portal VIP - unified PWA cache and Firebase Messaging service worker.
+importScripts("https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js");
+
+firebase.initializeApp({
+  apiKey: "AIzaSyCZqQWOBh3VLQX_JZpM2s9llgA3exZ-Zsk",
+  authDomain: "ajpnot.firebaseapp.com",
+  projectId: "ajpnot",
+  storageBucket: "ajpnot.firebasestorage.app",
+  messagingSenderId: "854860774617",
+  appId: "1:854860774617:web:a094a08e00183834fb52c8",
+  measurementId: "G-Q3NHR9HN5Y",
+});
+
+const messaging = firebase.messaging();
+const VERSION = "v3";
 const STATIC_CACHE = `portal-static-${VERSION}`;
 const RUNTIME_CACHE = `portal-runtime-${VERSION}`;
 const APP_SHELL = ["/portal/", "/portal/painel", "/portal-manifest.webmanifest", "/portal-icon-192.png", "/portal-icon-512.png"];
+
+messaging.onBackgroundMessage((payload) => {
+  const notification = payload.notification || {};
+  const data = payload.data || {};
+
+  // FCM displays payloads containing notification fields automatically.
+  // Data-only messages are displayed here so they also work with the PWA closed.
+  if (notification.title || notification.body) return;
+
+  return self.registration.showNotification(data.title || "Portal VIP", {
+    body: data.body || "",
+    icon: "/portal-icon-192.png",
+    badge: "/portal-icon-192.png",
+    requireInteraction: true,
+    tag: `portal-vip-${Date.now()}`,
+    renotify: true,
+    data: { ...data, url: data.url || "/portal/painel" },
+  });
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = event.notification.data?.url || "/portal/painel";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (clients) => {
+      for (const client of clients) {
+        if ("navigate" in client) await client.navigate(target).catch(() => undefined);
+        if ("focus" in client) return client.focus();
+      }
+      return self.clients.openWindow ? self.clients.openWindow(target) : undefined;
+    }),
+  );
+});
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
