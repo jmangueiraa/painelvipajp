@@ -117,7 +117,8 @@ export const Route = createFileRoute("/api/public/push/send")({
             targets: clientIds.length,
             tokens: tokens.length,
             ...result,
-          });
+          }, 200, request);
+
         } catch (error) {
           if (error instanceof z.ZodError) return response({ error: "Dados da notificação inválidos." }, 400, request);
           return response({ error: error instanceof Error ? error.message : "Erro ao enviar notificação." }, 500, request);
