@@ -59,11 +59,24 @@ export async function initPortalPush(opts: { silent?: boolean } = {}): Promise<s
     }
   }
 
-  onMessage(messaging, (payload) => {
+  onMessage(messaging, async (payload) => {
     const n = payload.notification;
     const title = n?.title || (payload.data?.title as string) || "Portal VIP";
     const body = n?.body || (payload.data?.body as string) || "";
-    toast(title, { description: body });
+    const url = (payload.data?.url as string) || "/portal/painel";
+    try {
+      await swReg.showNotification(title, {
+        body,
+        icon: "/portal-icon-192.png",
+        badge: "/portal-icon-192.png",
+        requireInteraction: true,
+        tag: "portal-vip-" + Date.now(),
+        renotify: true,
+        data: { url, ...(payload.data || {}) },
+      } as NotificationOptions);
+    } catch {
+      toast(title, { description: body, duration: 600000 });
+    }
   });
 
   return token;
