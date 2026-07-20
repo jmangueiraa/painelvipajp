@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Bell, Send, Clock, CheckCircle2, XCircle, Users, UserCheck, UserX, ListChecks } from "lucide-react";
+import { Bell, Send, Clock, CheckCircle2, XCircle, Users, UserCheck, UserX, ListChecks, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { translateError } from "@/lib/translate-error";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -147,6 +148,19 @@ function NotificacoesPushPage() {
     onError: (e) => toast.error(translateError(e)),
   });
 
+  const clearMut = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("push_notifications_log")
+        .delete()
+        .neq("status", "scheduled");
+      if (error) throw error;
+      return { ok: true };
+    },
+    onSuccess: () => { toast.success("Histórico limpo"); qc.invalidateQueries({ queryKey: ["push-history"] }); },
+    onError: (e) => toast.error(translateError(e)),
+  });
+
   const filteredClients = clients.filter((c: any) =>
     !clientFilter.trim() ||
     `${c.name} ${c.iptv_login ?? ""}`.toLowerCase().includes(clientFilter.toLowerCase()),
@@ -269,9 +283,31 @@ function NotificacoesPushPage() {
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Histórico</CardTitle>
-            <CardDescription>Últimas 50 notificações</CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+            <div>
+              <CardTitle>Histórico</CardTitle>
+              <CardDescription>Últimas 50 notificações</CardDescription>
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" disabled={hist.length === 0 || clearMut.isPending}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Limpar histórico
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Limpar histórico?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Isso remove todas as notificações enviadas, falhas e canceladas. Agendamentos pendentes serão mantidos.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => clearMut.mutate()}>Limpar</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardHeader>
           <CardContent>
             {hist.length === 0 ? (
