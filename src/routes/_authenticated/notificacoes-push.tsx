@@ -15,11 +15,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { translateError } from "@/lib/translate-error";
+import { supabase } from "@/integrations/supabase/client";
 import {
   sendPushNotification,
-  listPushHistory,
-  cancelScheduledPush,
-  listClientsForPush,
 } from "@/lib/push-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/notificacoes-push")({
@@ -38,9 +36,6 @@ function fmt(dt: string | null) {
 function NotificacoesPushPage() {
   const qc = useQueryClient();
   const send = useServerFn(sendPushNotification);
-  const cancel = useServerFn(cancelScheduledPush);
-  const history = useServerFn(listPushHistory);
-  const clientsFn = useServerFn(listClientsForPush);
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -50,21 +45,76 @@ function NotificacoesPushPage() {
   const [scheduledAt, setScheduledAt] = useState("");
   const [clientFilter, setClientFilter] = useState("");
 
-  const { data: hist = [] } = useQuery({ queryKey: ["push-history"], queryFn: () => history() });
-  const { data: clients = [] } = useQuery({ queryKey: ["push-clients"], queryFn: () => clientsFn(), enabled: audience === "specific" });
+  const { data: hist = [] } = useQuery({
+    queryKey: ["push-history"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("push_notifications_log")
+        .select("id, title, body, audience, url, status, success_count, failure_count, sent_at, scheduled_at, created_at, error")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+  const { data: clients = [] } = useQuery({
+    queryKey: ["push-clients"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id, name, iptv_login, due_date")
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: audience === "specific",
+  });
+
+  async function getTargetClientIds(): Promise<string[]> {
+    if (audience === "specific") return selectedIds;
+    const today = new Date().toISOString().slice(0, 10);
+    let query = supabase.from("clients").select("id");
+    if (audience === "active") query = query.gte("due_date", today);
+    if (audience === "expired") query = query.lt("due_date", today);
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []).map((client) => client.id);
+  }
 
   const sendMut = useMutation({
-    mutationFn: async () =>
-      send({
+    mutationFn: async () => {
+      if (scheduledAt && new Date(scheduledAt).getTime() > Date.now() + 30_000) {
+        const clientIds = await getTargetClientIds();
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError || !authData.user) throw authError || new Error("Sessão expirada. Entre novamente.");
+        const { data: row, error } = await supabase
+          .from("push_notifications_log")
+          .insert({
+            user_id: authData.user.id,
+            title: title.trim(),
+            body: body.trim(),
+            url: url.trim() || null,
+            audience,
+            target_client_ids: clientIds,
+            scheduled_at: new Date(scheduledAt).toISOString(),
+            status: "scheduled",
+          })
+          .select("id")
+          .single();
+        if (error) throw error;
+        return { scheduled: true, id: row.id, targets: clientIds.length };
+      }
+      return send({
         data: {
           title: title.trim(),
           body: body.trim(),
           url: url.trim() || null,
           audience,
           clientIds: audience === "specific" ? selectedIds : [],
-          scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+          scheduledAt: null,
         },
-      }),
+      });
+    },
     onSuccess: (res: any) => {
       if (res?.scheduled) toast.success(`Notificação agendada (${res.targets} clientes)`);
       else toast.success(`Enviada: ${res?.success ?? 0} entregues, ${res?.failure ?? 0} falhas (${res?.tokens ?? 0} dispositivos)`);
@@ -75,7 +125,15 @@ function NotificacoesPushPage() {
   });
 
   const cancelMut = useMutation({
-    mutationFn: async (id: string) => cancel({ data: { id } }),
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("push_notifications_log")
+        .update({ status: "cancelled" })
+        .eq("id", id)
+        .eq("status", "scheduled");
+      if (error) throw error;
+      return { ok: true };
+    },
     onSuccess: () => { toast.success("Agendamento cancelado"); qc.invalidateQueries({ queryKey: ["push-history"] }); },
     onError: (e) => toast.error(translateError(e)),
   });
