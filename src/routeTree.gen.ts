@@ -21,11 +21,13 @@ import { Route as AuthenticatedSolicitacoesRouteImport } from './routes/_authent
 import { Route as AuthenticatedServidoresRouteImport } from './routes/_authenticated/servidores'
 import { Route as AuthenticatedRenovacaoRouteImport } from './routes/_authenticated/renovacao'
 import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
+import { Route as AuthenticatedNotificacoesPushRouteImport } from './routes/_authenticated/notificacoes-push'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedCadastrarApiRouteImport } from './routes/_authenticated/cadastrar-api'
+import { Route as ApiPublicPushCronRouteImport } from './routes/api/public/push-cron'
 import { Route as AuthenticatedLojaProdutosRouteImport } from './routes/_authenticated/loja.produtos'
 import { Route as AuthenticatedLojaClientesRouteImport } from './routes/_authenticated/loja.clientes'
 import { Route as AuthenticatedAdminAssinantesRouteImport } from './routes/_authenticated/admin.assinantes'
@@ -109,6 +111,12 @@ const AuthenticatedPlanosRoute = AuthenticatedPlanosRouteImport.update({
   path: '/planos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedNotificacoesPushRoute =
+  AuthenticatedNotificacoesPushRouteImport.update({
+    id: '/notificacoes-push',
+    path: '/notificacoes-push',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
@@ -136,6 +144,11 @@ const AuthenticatedCadastrarApiRoute =
     path: '/cadastrar-api',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicPushCronRoute = ApiPublicPushCronRouteImport.update({
+  id: '/api/public/push-cron',
+  path: '/api/public/push-cron',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedLojaProdutosRoute =
   AuthenticatedLojaProdutosRouteImport.update({
     id: '/loja/produtos',
@@ -272,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/notificacoes-push': typeof AuthenticatedNotificacoesPushRoute
   '/planos': typeof AuthenticatedPlanosRoute
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
@@ -283,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/loja/clientes': typeof AuthenticatedLojaClientesRoute
   '/loja/produtos': typeof AuthenticatedLojaProdutosRoute
+  '/api/public/push-cron': typeof ApiPublicPushCronRoute
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
@@ -312,6 +327,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/notificacoes-push': typeof AuthenticatedNotificacoesPushRoute
   '/planos': typeof AuthenticatedPlanosRoute
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
@@ -323,6 +339,7 @@ export interface FileRoutesByTo {
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/loja/clientes': typeof AuthenticatedLojaClientesRoute
   '/loja/produtos': typeof AuthenticatedLojaProdutosRoute
+  '/api/public/push-cron': typeof ApiPublicPushCronRoute
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
@@ -354,6 +371,7 @@ export interface FileRoutesById {
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/_authenticated/notificacoes-push': typeof AuthenticatedNotificacoesPushRoute
   '/_authenticated/planos': typeof AuthenticatedPlanosRoute
   '/_authenticated/renovacao': typeof AuthenticatedRenovacaoRoute
   '/_authenticated/servidores': typeof AuthenticatedServidoresRoute
@@ -365,6 +383,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/_authenticated/loja/clientes': typeof AuthenticatedLojaClientesRoute
   '/_authenticated/loja/produtos': typeof AuthenticatedLojaProdutosRoute
+  '/api/public/push-cron': typeof ApiPublicPushCronRoute
   '/_authenticated/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
@@ -396,6 +415,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/financeiro'
+    | '/notificacoes-push'
     | '/planos'
     | '/renovacao'
     | '/servidores'
@@ -407,6 +427,7 @@ export interface FileRouteTypes {
     | '/admin/assinantes'
     | '/loja/clientes'
     | '/loja/produtos'
+    | '/api/public/push-cron'
     | '/admin/assinantes/$id'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
@@ -436,6 +457,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/financeiro'
+    | '/notificacoes-push'
     | '/planos'
     | '/renovacao'
     | '/servidores'
@@ -447,6 +469,7 @@ export interface FileRouteTypes {
     | '/admin/assinantes'
     | '/loja/clientes'
     | '/loja/produtos'
+    | '/api/public/push-cron'
     | '/admin/assinantes/$id'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
@@ -477,6 +500,7 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
     | '/_authenticated/financeiro'
+    | '/_authenticated/notificacoes-push'
     | '/_authenticated/planos'
     | '/_authenticated/renovacao'
     | '/_authenticated/servidores'
@@ -488,6 +512,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/assinantes'
     | '/_authenticated/loja/clientes'
     | '/_authenticated/loja/produtos'
+    | '/api/public/push-cron'
     | '/_authenticated/admin/assinantes/$id'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
@@ -518,6 +543,7 @@ export interface RootRouteChildren {
   PortalIndiqueRoute: typeof PortalIndiqueRoute
   PortalPainelRoute: typeof PortalPainelRoute
   PortalIndexRoute: typeof PortalIndexRoute
+  ApiPublicPushCronRoute: typeof ApiPublicPushCronRoute
   ApiPublicAppMpWebhookRoute: typeof ApiPublicAppMpWebhookRoute
   ApiPublicHooksAutoChargesRoute: typeof ApiPublicHooksAutoChargesRoute
   ApiPublicPortalLoginPasswordRoute: typeof ApiPublicPortalLoginPasswordRoute
@@ -624,6 +650,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlanosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/notificacoes-push': {
+      id: '/_authenticated/notificacoes-push'
+      path: '/notificacoes-push'
+      fullPath: '/notificacoes-push'
+      preLoaderRoute: typeof AuthenticatedNotificacoesPushRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/financeiro': {
       id: '/_authenticated/financeiro'
       path: '/financeiro'
@@ -658,6 +691,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/cadastrar-api'
       preLoaderRoute: typeof AuthenticatedCadastrarApiRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/push-cron': {
+      id: '/api/public/push-cron'
+      path: '/api/public/push-cron'
+      fullPath: '/api/public/push-cron'
+      preLoaderRoute: typeof ApiPublicPushCronRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/loja/produtos': {
       id: '/_authenticated/loja/produtos'
@@ -836,6 +876,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
+  AuthenticatedNotificacoesPushRoute: typeof AuthenticatedNotificacoesPushRoute
   AuthenticatedPlanosRoute: typeof AuthenticatedPlanosRoute
   AuthenticatedRenovacaoRoute: typeof AuthenticatedRenovacaoRoute
   AuthenticatedServidoresRoute: typeof AuthenticatedServidoresRoute
@@ -851,6 +892,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
+  AuthenticatedNotificacoesPushRoute: AuthenticatedNotificacoesPushRoute,
   AuthenticatedPlanosRoute: AuthenticatedPlanosRoute,
   AuthenticatedRenovacaoRoute: AuthenticatedRenovacaoRoute,
   AuthenticatedServidoresRoute: AuthenticatedServidoresRoute,
@@ -873,6 +915,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortalIndiqueRoute: PortalIndiqueRoute,
   PortalPainelRoute: PortalPainelRoute,
   PortalIndexRoute: PortalIndexRoute,
+  ApiPublicPushCronRoute: ApiPublicPushCronRoute,
   ApiPublicAppMpWebhookRoute: ApiPublicAppMpWebhookRoute,
   ApiPublicHooksAutoChargesRoute: ApiPublicHooksAutoChargesRoute,
   ApiPublicPortalLoginPasswordRoute: ApiPublicPortalLoginPasswordRoute,

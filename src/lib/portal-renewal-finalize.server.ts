@@ -155,5 +155,22 @@ export async function finalizePaidRenewal(
     console.error("[finalize] notify failed", e);
   }
 
+  // Push FCM: pagamento confirmado
+  if (renewal.client_id) {
+    try {
+      const { data: tokRows } = await supabaseAdmin.from("push_tokens").select("token").eq("client_id", renewal.client_id);
+      const tokens = (tokRows || []).map((r: { token: string }) => r.token);
+      if (tokens.length > 0) {
+        const { sendPushToTokens } = await import("./fcm-send.server");
+        await sendPushToTokens({
+          tokens,
+          title: "✅ Pagamento confirmado!",
+          body: renewal.days > 0 ? `Seu acesso foi renovado por ${renewal.days} dias.` : "Seu pedido foi confirmado.",
+          url: "/portal/painel",
+        });
+      }
+    } catch (e) { console.error("[finalize] push failed", e); }
+  }
+
   return { ok: true, claimed: true };
 }

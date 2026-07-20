@@ -619,6 +619,57 @@ export type Database = {
         }
         Relationships: []
       }
+      push_notifications_log: {
+        Row: {
+          audience: string
+          body: string
+          created_at: string
+          error: string | null
+          failure_count: number
+          id: string
+          scheduled_at: string | null
+          sent_at: string | null
+          status: string
+          success_count: number
+          target_client_ids: string[] | null
+          title: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          audience: string
+          body: string
+          created_at?: string
+          error?: string | null
+          failure_count?: number
+          id?: string
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          success_count?: number
+          target_client_ids?: string[] | null
+          title: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          created_at?: string
+          error?: string | null
+          failure_count?: number
+          id?: string
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          success_count?: number
+          target_client_ids?: string[] | null
+          title?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       push_tokens: {
         Row: {
           client_id: string | null
