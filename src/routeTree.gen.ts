@@ -34,6 +34,7 @@ import { Route as ApiPublicZapiQrRouteImport } from './routes/api/public/zapi/qr
 import { Route as ApiPublicZapiDisconnectRouteImport } from './routes/api/public/zapi/disconnect'
 import { Route as ApiPublicPortalVerifyOtpRouteImport } from './routes/api/public/portal/verify-otp'
 import { Route as ApiPublicPortalStoreProductsRouteImport } from './routes/api/public/portal/store-products'
+import { Route as ApiPublicPortalSavePushTokenRouteImport } from './routes/api/public/portal/save-push-token'
 import { Route as ApiPublicPortalRequestOtpRouteImport } from './routes/api/public/portal/request-otp'
 import { Route as ApiPublicPortalRenewalStatusRouteImport } from './routes/api/public/portal/renewal-status'
 import { Route as ApiPublicPortalRenewRequestRouteImport } from './routes/api/public/portal/renew-request'
@@ -180,6 +181,12 @@ const ApiPublicPortalStoreProductsRoute =
     path: '/api/public/portal/store-products',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPortalSavePushTokenRoute =
+  ApiPublicPortalSavePushTokenRouteImport.update({
+    id: '/api/public/portal/save-push-token',
+    path: '/api/public/portal/save-push-token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPortalRequestOtpRoute =
   ApiPublicPortalRequestOtpRouteImport.update({
     id: '/api/public/portal/request-otp',
@@ -289,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
+  '/api/public/portal/save-push-token': typeof ApiPublicPortalSavePushTokenRoute
   '/api/public/portal/store-products': typeof ApiPublicPortalStoreProductsRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
@@ -328,6 +336,7 @@ export interface FileRoutesByTo {
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
+  '/api/public/portal/save-push-token': typeof ApiPublicPortalSavePushTokenRoute
   '/api/public/portal/store-products': typeof ApiPublicPortalStoreProductsRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
@@ -369,6 +378,7 @@ export interface FileRoutesById {
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
+  '/api/public/portal/save-push-token': typeof ApiPublicPortalSavePushTokenRoute
   '/api/public/portal/store-products': typeof ApiPublicPortalStoreProductsRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
@@ -410,6 +420,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/renew-request'
     | '/api/public/portal/renewal-status'
     | '/api/public/portal/request-otp'
+    | '/api/public/portal/save-push-token'
     | '/api/public/portal/store-products'
     | '/api/public/portal/verify-otp'
     | '/api/public/zapi/disconnect'
@@ -449,6 +460,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/renew-request'
     | '/api/public/portal/renewal-status'
     | '/api/public/portal/request-otp'
+    | '/api/public/portal/save-push-token'
     | '/api/public/portal/store-products'
     | '/api/public/portal/verify-otp'
     | '/api/public/zapi/disconnect'
@@ -489,6 +501,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/renew-request'
     | '/api/public/portal/renewal-status'
     | '/api/public/portal/request-otp'
+    | '/api/public/portal/save-push-token'
     | '/api/public/portal/store-products'
     | '/api/public/portal/verify-otp'
     | '/api/public/zapi/disconnect'
@@ -517,6 +530,7 @@ export interface RootRouteChildren {
   ApiPublicPortalRenewRequestRoute: typeof ApiPublicPortalRenewRequestRoute
   ApiPublicPortalRenewalStatusRoute: typeof ApiPublicPortalRenewalStatusRoute
   ApiPublicPortalRequestOtpRoute: typeof ApiPublicPortalRequestOtpRoute
+  ApiPublicPortalSavePushTokenRoute: typeof ApiPublicPortalSavePushTokenRoute
   ApiPublicPortalStoreProductsRoute: typeof ApiPublicPortalStoreProductsRoute
   ApiPublicPortalVerifyOtpRoute: typeof ApiPublicPortalVerifyOtpRoute
   ApiPublicZapiDisconnectRoute: typeof ApiPublicZapiDisconnectRoute
@@ -701,6 +715,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPortalStoreProductsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/portal/save-push-token': {
+      id: '/api/public/portal/save-push-token'
+      path: '/api/public/portal/save-push-token'
+      fullPath: '/api/public/portal/save-push-token'
+      preLoaderRoute: typeof ApiPublicPortalSavePushTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/portal/request-otp': {
       id: '/api/public/portal/request-otp'
       path: '/api/public/portal/request-otp'
@@ -864,6 +885,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPortalRenewRequestRoute: ApiPublicPortalRenewRequestRoute,
   ApiPublicPortalRenewalStatusRoute: ApiPublicPortalRenewalStatusRoute,
   ApiPublicPortalRequestOtpRoute: ApiPublicPortalRequestOtpRoute,
+  ApiPublicPortalSavePushTokenRoute: ApiPublicPortalSavePushTokenRoute,
   ApiPublicPortalStoreProductsRoute: ApiPublicPortalStoreProductsRoute,
   ApiPublicPortalVerifyOtpRoute: ApiPublicPortalVerifyOtpRoute,
   ApiPublicZapiDisconnectRoute: ApiPublicZapiDisconnectRoute,
