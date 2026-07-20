@@ -122,12 +122,21 @@ export async function sendPushToTokens(input: SendPushInput): Promise<SendPushRe
       const payload = {
         message: {
           token,
-          // Data-only payload: our service worker (firebase-messaging-sw.js)
-          // renders the notification with requireInteraction=true so it stays
-          // visible. Including a top-level `notification` would make the
-          // browser auto-display a transient toast and skip our SW handler.
           webpush: {
             headers: { Urgency: "high", TTL: "86400" },
+            notification: {
+              title: input.title,
+              body: input.body,
+              icon: "/portal-icon-192.png",
+              badge: "/portal-icon-192.png",
+              requireInteraction: true,
+              renotify: true,
+              tag: `portal-vip-${Date.now()}`,
+              data: {
+                url: input.url || "/portal/painel",
+                ...(input.data || {}),
+              },
+            },
             fcm_options: input.url ? { link: input.url } : undefined,
           },
           data: {
