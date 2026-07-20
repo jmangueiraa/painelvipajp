@@ -23,6 +23,9 @@ messaging.onBackgroundMessage((payload) => {
     body: n.body || data.body || "",
     icon: "/portal-icon-192.png",
     badge: "/portal-icon-192.png",
+    requireInteraction: true,
+    tag: "portal-vip-" + Date.now(),
+    renotify: true,
     data: { url: data.url || "/portal/painel", ...data },
   };
   self.registration.showNotification(title, options);
