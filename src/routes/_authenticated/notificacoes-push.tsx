@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Bell, Send, Clock, CheckCircle2, XCircle, Users, UserCheck, UserX, ListChecks } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -16,9 +15,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { translateError } from "@/lib/translate-error";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  sendPushNotification,
-} from "@/lib/push-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/notificacoes-push")({
   head: () => ({ meta: [{ title: "Notificações Push" }] }),
@@ -35,7 +31,6 @@ function fmt(dt: string | null) {
 
 function NotificacoesPushPage() {
   const qc = useQueryClient();
-  const send = useServerFn(sendPushNotification);
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -108,16 +103,26 @@ function NotificacoesPushPage() {
         if (error) throw error;
         return { scheduled: true, id: row.id, targets: clientIds.length };
       }
-      return send({
-        data: {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (sessionError || !accessToken) throw sessionError || new Error("Sessão expirada. Entre novamente.");
+      const response = await fetch("/api/public/push/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
           title: title.trim(),
           body: body.trim(),
           url: url.trim() || null,
           audience,
           clientIds: audience === "specific" ? selectedIds : [],
-          scheduledAt: null,
-        },
+        }),
       });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Não foi possível enviar a notificação.");
+      return result;
     },
     onSuccess: (res: any) => {
       if (res?.scheduled) toast.success(`Notificação agendada (${res.targets} clientes)`);

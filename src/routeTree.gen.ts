@@ -34,6 +34,7 @@ import { Route as AuthenticatedAdminAssinantesRouteImport } from './routes/_auth
 import { Route as ApiPublicZapiStatusRouteImport } from './routes/api/public/zapi/status'
 import { Route as ApiPublicZapiQrRouteImport } from './routes/api/public/zapi/qr'
 import { Route as ApiPublicZapiDisconnectRouteImport } from './routes/api/public/zapi/disconnect'
+import { Route as ApiPublicPushSendRouteImport } from './routes/api/public/push/send'
 import { Route as ApiPublicPortalVerifyOtpRouteImport } from './routes/api/public/portal/verify-otp'
 import { Route as ApiPublicPortalStoreProductsRouteImport } from './routes/api/public/portal/store-products'
 import { Route as ApiPublicPortalSavePushTokenRouteImport } from './routes/api/public/portal/save-push-token'
@@ -182,6 +183,11 @@ const ApiPublicZapiDisconnectRoute = ApiPublicZapiDisconnectRouteImport.update({
   path: '/api/public/zapi/disconnect',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPushSendRoute = ApiPublicPushSendRouteImport.update({
+  id: '/api/public/push/send',
+  path: '/api/public/push/send',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPortalVerifyOtpRoute =
   ApiPublicPortalVerifyOtpRouteImport.update({
     id: '/api/public/portal/verify-otp',
@@ -314,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/api/public/portal/save-push-token': typeof ApiPublicPortalSavePushTokenRoute
   '/api/public/portal/store-products': typeof ApiPublicPortalStoreProductsRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
+  '/api/public/push/send': typeof ApiPublicPushSendRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
   '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
@@ -356,6 +363,7 @@ export interface FileRoutesByTo {
   '/api/public/portal/save-push-token': typeof ApiPublicPortalSavePushTokenRoute
   '/api/public/portal/store-products': typeof ApiPublicPortalStoreProductsRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
+  '/api/public/push/send': typeof ApiPublicPushSendRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
   '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
@@ -400,6 +408,7 @@ export interface FileRoutesById {
   '/api/public/portal/save-push-token': typeof ApiPublicPortalSavePushTokenRoute
   '/api/public/portal/store-products': typeof ApiPublicPortalStoreProductsRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
+  '/api/public/push/send': typeof ApiPublicPushSendRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
   '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
@@ -444,6 +453,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/save-push-token'
     | '/api/public/portal/store-products'
     | '/api/public/portal/verify-otp'
+    | '/api/public/push/send'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
     | '/api/public/zapi/status'
@@ -486,6 +496,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/save-push-token'
     | '/api/public/portal/store-products'
     | '/api/public/portal/verify-otp'
+    | '/api/public/push/send'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
     | '/api/public/zapi/status'
@@ -529,6 +540,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/save-push-token'
     | '/api/public/portal/store-products'
     | '/api/public/portal/verify-otp'
+    | '/api/public/push/send'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
     | '/api/public/zapi/status'
@@ -559,6 +571,7 @@ export interface RootRouteChildren {
   ApiPublicPortalSavePushTokenRoute: typeof ApiPublicPortalSavePushTokenRoute
   ApiPublicPortalStoreProductsRoute: typeof ApiPublicPortalStoreProductsRoute
   ApiPublicPortalVerifyOtpRoute: typeof ApiPublicPortalVerifyOtpRoute
+  ApiPublicPushSendRoute: typeof ApiPublicPushSendRoute
   ApiPublicZapiDisconnectRoute: typeof ApiPublicZapiDisconnectRoute
   ApiPublicZapiQrRoute: typeof ApiPublicZapiQrRoute
   ApiPublicZapiStatusRoute: typeof ApiPublicZapiStatusRoute
@@ -739,6 +752,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/zapi/disconnect'
       fullPath: '/api/public/zapi/disconnect'
       preLoaderRoute: typeof ApiPublicZapiDisconnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/push/send': {
+      id: '/api/public/push/send'
+      path: '/api/public/push/send'
+      fullPath: '/api/public/push/send'
+      preLoaderRoute: typeof ApiPublicPushSendRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/portal/verify-otp': {
@@ -931,6 +951,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPortalSavePushTokenRoute: ApiPublicPortalSavePushTokenRoute,
   ApiPublicPortalStoreProductsRoute: ApiPublicPortalStoreProductsRoute,
   ApiPublicPortalVerifyOtpRoute: ApiPublicPortalVerifyOtpRoute,
+  ApiPublicPushSendRoute: ApiPublicPushSendRoute,
   ApiPublicZapiDisconnectRoute: ApiPublicZapiDisconnectRoute,
   ApiPublicZapiQrRoute: ApiPublicZapiQrRoute,
   ApiPublicZapiStatusRoute: ApiPublicZapiStatusRoute,
@@ -938,13 +959,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
