@@ -148,6 +148,19 @@ function NotificacoesPushPage() {
     onError: (e) => toast.error(translateError(e)),
   });
 
+  const clearMut = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("push_notifications_log")
+        .delete()
+        .neq("status", "scheduled");
+      if (error) throw error;
+      return { ok: true };
+    },
+    onSuccess: () => { toast.success("Histórico limpo"); qc.invalidateQueries({ queryKey: ["push-history"] }); },
+    onError: (e) => toast.error(translateError(e)),
+  });
+
   const filteredClients = clients.filter((c: any) =>
     !clientFilter.trim() ||
     `${c.name} ${c.iptv_login ?? ""}`.toLowerCase().includes(clientFilter.toLowerCase()),
