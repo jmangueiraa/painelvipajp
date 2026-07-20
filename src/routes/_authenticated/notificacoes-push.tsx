@@ -83,10 +83,14 @@ function NotificacoesPushPage() {
 
   const sendMut = useMutation({
     mutationFn: async () => {
-      if (scheduledAt && new Date(scheduledAt).getTime() > Date.now() + 30_000) {
+      // Qualquer data preenchida = agendamento (insert direto, o cron processa).
+      // Sem data = envio imediato via server function.
+      if (scheduledAt) {
         const clientIds = await getTargetClientIds();
         const { data: authData, error: authError } = await supabase.auth.getUser();
         if (authError || !authData.user) throw authError || new Error("Sessão expirada. Entre novamente.");
+        const when = new Date(scheduledAt);
+        const scheduleIso = when.getTime() > Date.now() ? when.toISOString() : new Date().toISOString();
         const { data: row, error } = await supabase
           .from("push_notifications_log")
           .insert({
@@ -96,7 +100,7 @@ function NotificacoesPushPage() {
             url: url.trim() || null,
             audience,
             target_client_ids: clientIds,
-            scheduled_at: new Date(scheduledAt).toISOString(),
+            scheduled_at: scheduleIso,
             status: "scheduled",
           })
           .select("id")
