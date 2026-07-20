@@ -7,6 +7,17 @@ type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
 
+type RuntimeEnv = Record<string, unknown>;
+
+function exposeRuntimeSecrets(env: unknown) {
+  if (!env || typeof env !== "object") return;
+  const runtimeEnv = env as RuntimeEnv;
+  const firebaseCredential = runtimeEnv.FIREBASE_SERVICE_ACCOUNT_JSON;
+  if (typeof firebaseCredential === "string" && firebaseCredential.trim()) {
+    process.env.FIREBASE_SERVICE_ACCOUNT_JSON = firebaseCredential;
+  }
+}
+
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 
 async function getServerEntry(): Promise<ServerEntry> {
@@ -40,6 +51,7 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      exposeRuntimeSecrets(env);
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
