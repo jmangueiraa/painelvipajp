@@ -23,8 +23,10 @@ function response(data: unknown, status = 200, request?: Request) {
 export const Route = createFileRoute("/api/public/push/send")({
   server: {
     handlers: {
+      OPTIONS: ({ request }) => portalOptions(request),
       POST: async ({ request }) => {
         try {
+
           const authorization = request.headers.get("authorization") ?? "";
           if (!authorization.startsWith("Bearer ")) {
             return response({ error: "Sessão inválida. Entre novamente." }, 401);
