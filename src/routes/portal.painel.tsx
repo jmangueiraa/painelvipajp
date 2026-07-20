@@ -149,6 +149,15 @@ function PortalDashboard() {
     if (!getPortalToken()) navigate({ to: "/portal" });
   }, [navigate]);
 
+  // Inicializa notificações push (FCM) após login
+  useEffect(() => {
+    if (!getPortalToken()) return;
+    const t = window.setTimeout(() => {
+      import("@/lib/fcm").then((m) => m.initPortalPush({ silent: true })).catch(() => {});
+    }, 2500);
+    return () => window.clearTimeout(t);
+  }, []);
+
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["portal", "me"],
     queryFn: () => portalFetch<Me>("/api/public/portal/me"),
