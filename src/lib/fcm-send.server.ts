@@ -10,8 +10,8 @@ type ServiceAccount = {
 
 let cachedToken: { token: string; exp: number } | null = null;
 
-function getServiceAccount(): ServiceAccount {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
+function getServiceAccount(serviceAccountJson?: string): ServiceAccount {
+  const raw = serviceAccountJson?.trim() || process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
   if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON não configurada");
   if (!raw.startsWith("{")) {
     throw new Error("Credencial do Firebase inválida. Cadastre o JSON completo da conta de serviço, não a chave VAPID.");
@@ -46,9 +46,9 @@ function pemToArrayBuffer(pem: string): ArrayBuffer {
   return buf.buffer;
 }
 
-async function getAccessToken(): Promise<string> {
+async function getAccessToken(serviceAccountJson?: string): Promise<string> {
   if (cachedToken && cachedToken.exp - 60 > Math.floor(Date.now() / 1000)) return cachedToken.token;
-  const sa = getServiceAccount();
+  const sa = getServiceAccount(serviceAccountJson);
   const iat = Math.floor(Date.now() / 1000);
   const exp = iat + 3600;
   const header = { alg: "RS256", typ: "JWT" };
@@ -87,6 +87,7 @@ export type SendPushInput = {
   body: string;
   url?: string;
   data?: Record<string, string>;
+  serviceAccountJson?: string;
 };
 
 export type SendPushResult = { success: number; failure: number; invalidTokens: string[] };
@@ -94,8 +95,8 @@ export type SendPushResult = { success: number; failure: number; invalidTokens: 
 export async function sendPushToTokens(input: SendPushInput): Promise<SendPushResult> {
   const tokens = Array.from(new Set(input.tokens.filter(Boolean)));
   if (tokens.length === 0) return { success: 0, failure: 0, invalidTokens: [] };
-  const sa = getServiceAccount();
-  const accessToken = await getAccessToken();
+  const sa = getServiceAccount(input.serviceAccountJson);
+  const accessToken = await getAccessToken(input.serviceAccountJson);
   const url = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
 
   let success = 0;

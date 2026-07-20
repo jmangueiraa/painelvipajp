@@ -76,11 +76,13 @@ export const Route = createFileRoute("/api/public/push/send")({
           let result = { success: 0, failure: 0, invalidTokens: [] as string[] };
           let sendError: string | null = null;
           try {
+            const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
             result = await sendPushToTokens({
               tokens,
               title: input.title,
               body: input.body,
               url: input.url || undefined,
+              serviceAccountJson,
             });
           } catch (error) {
             sendError = error instanceof Error ? error.message : "Falha ao enviar notificação";
