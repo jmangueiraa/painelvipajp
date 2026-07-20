@@ -11,11 +11,19 @@ type ServiceAccount = {
 let cachedToken: { token: string; exp: number } | null = null;
 
 function getServiceAccount(): ServiceAccount {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
   if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON não configurada");
-  const parsed = JSON.parse(raw) as ServiceAccount;
+  if (!raw.startsWith("{")) {
+    throw new Error("Credencial do Firebase inválida. Cadastre o JSON completo da conta de serviço, não a chave VAPID.");
+  }
+  let parsed: ServiceAccount;
+  try {
+    parsed = JSON.parse(raw) as ServiceAccount;
+  } catch {
+    throw new Error("Credencial do Firebase inválida. O JSON da conta de serviço está malformado.");
+  }
   if (!parsed.project_id || !parsed.client_email || !parsed.private_key) {
-    throw new Error("Service Account JSON inválida");
+    throw new Error("Credencial do Firebase incompleta. O JSON precisa conter project_id, client_email e private_key.");
   }
   return parsed;
 }
