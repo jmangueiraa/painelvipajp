@@ -279,6 +279,9 @@ export type Database = {
           internal_notes: string | null
           iptv_login: string | null
           iptv_password: string | null
+          last_device: string | null
+          last_login_at: string | null
+          login_count: number
           name: string
           notes: string | null
           phone: string
@@ -287,6 +290,7 @@ export type Database = {
           portal_password_hash: string | null
           portal_username: string | null
           price_cents: number
+          pwa_installed_at: string | null
           referral_code: string | null
           referred_by: string | null
           server_id: string | null
@@ -307,6 +311,9 @@ export type Database = {
           internal_notes?: string | null
           iptv_login?: string | null
           iptv_password?: string | null
+          last_device?: string | null
+          last_login_at?: string | null
+          login_count?: number
           name: string
           notes?: string | null
           phone: string
@@ -315,6 +322,7 @@ export type Database = {
           portal_password_hash?: string | null
           portal_username?: string | null
           price_cents?: number
+          pwa_installed_at?: string | null
           referral_code?: string | null
           referred_by?: string | null
           server_id?: string | null
@@ -335,6 +343,9 @@ export type Database = {
           internal_notes?: string | null
           iptv_login?: string | null
           iptv_password?: string | null
+          last_device?: string | null
+          last_login_at?: string | null
+          login_count?: number
           name?: string
           notes?: string | null
           phone?: string
@@ -343,6 +354,7 @@ export type Database = {
           portal_password_hash?: string | null
           portal_username?: string | null
           price_cents?: number
+          pwa_installed_at?: string | null
           referral_code?: string | null
           referred_by?: string | null
           server_id?: string | null
@@ -524,6 +536,50 @@ export type Database = {
         }
         Relationships: []
       }
+      portal_access_log: {
+        Row: {
+          browser: string | null
+          client_id: string
+          created_at: string
+          event: string
+          id: string
+          ip: string | null
+          os: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          browser?: string | null
+          client_id: string
+          created_at?: string
+          event?: string
+          id?: string
+          ip?: string | null
+          os?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          browser?: string | null
+          client_id?: string
+          created_at?: string
+          event?: string
+          id?: string
+          ip?: string | null
+          os?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_access_log_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portal_otp_codes: {
         Row: {
           attempts: number
@@ -672,25 +728,37 @@ export type Database = {
       }
       push_tokens: {
         Row: {
+          app_version: string | null
+          browser: string | null
           client_id: string | null
           created_at: string
+          installed_at: string | null
           last_seen_at: string
+          os: string | null
           platform: string | null
           token: string
           user_id: string | null
         }
         Insert: {
+          app_version?: string | null
+          browser?: string | null
           client_id?: string | null
           created_at?: string
+          installed_at?: string | null
           last_seen_at?: string
+          os?: string | null
           platform?: string | null
           token: string
           user_id?: string | null
         }
         Update: {
+          app_version?: string | null
+          browser?: string | null
           client_id?: string | null
           created_at?: string
+          installed_at?: string | null
           last_seen_at?: string
+          os?: string | null
           platform?: string | null
           token?: string
           user_id?: string | null
@@ -1105,6 +1173,9 @@ export type Database = {
           internal_notes: string | null
           iptv_login: string | null
           iptv_password: string | null
+          last_device: string | null
+          last_login_at: string | null
+          login_count: number
           name: string
           notes: string | null
           phone: string
@@ -1113,6 +1184,7 @@ export type Database = {
           portal_password_hash: string | null
           portal_username: string | null
           price_cents: number
+          pwa_installed_at: string | null
           referral_code: string | null
           referred_by: string | null
           server_id: string | null
@@ -1142,6 +1214,9 @@ export type Database = {
           internal_notes: string | null
           iptv_login: string | null
           iptv_password: string | null
+          last_device: string | null
+          last_login_at: string | null
+          login_count: number
           name: string
           notes: string | null
           phone: string
@@ -1150,6 +1225,7 @@ export type Database = {
           portal_password_hash: string | null
           portal_username: string | null
           price_cents: number
+          pwa_installed_at: string | null
           referral_code: string | null
           referred_by: string | null
           server_id: string | null
