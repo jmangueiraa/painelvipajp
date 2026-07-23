@@ -9,7 +9,7 @@ function json(data: unknown, request: Request, init?: ResponseInit) {
   });
 }
 
-export const Route = createFileRoute("/api/public/portal/save-push-token")({
+export const Route = createFileRoute("/api/public/portal/register-install")({
   server: {
     handlers: {
       OPTIONS: async ({ request }) => portalOptions(request),
@@ -20,42 +20,43 @@ export const Route = createFileRoute("/api/public/portal/save-push-token")({
           if (!client) return json({ error: "Sessão inválida" }, request, { status: 401 });
 
           const body = (await request.json().catch(() => ({}))) as {
-            token?: string;
-            platform?: string;
-            installed?: boolean;
             appVersion?: string;
+            platform?: string;
           };
-          const token = (body.token || "").trim();
-          if (!token) return json({ error: "token requerido" }, request, { status: 400 });
-
           const ua = (body.platform || request.headers.get("user-agent") || "").slice(0, 500);
           const { os, browser } = parseUA(ua);
           const nowISO = new Date().toISOString();
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          const { error } = await supabaseAdmin.from("push_tokens").upsert(
-            {
-              token,
-              client_id: client.id,
-              user_id: client.user_id,
-              platform: ua,
+          await supabaseAdmin
+            .from("clients")
+            .update({
+              pwa_installed_at: nowISO,
+              last_device: `${os} · ${browser}`,
+            })
+            .eq("id", client.id)
+            .is("pwa_installed_at", null);
+
+          // Marca tokens já existentes deste cliente como instalados
+          await supabaseAdmin
+            .from("push_tokens")
+            .update({
+              installed_at: nowISO,
               os,
               browser,
               app_version: (body.appVersion || "").slice(0, 60) || null,
-              installed_at: body.installed ? nowISO : undefined,
-              last_seen_at: nowISO,
-            },
-            { onConflict: "token" },
-          );
-          if (error) return json({ error: error.message }, request, { status: 500 });
+            })
+            .eq("client_id", client.id)
+            .is("installed_at", null);
 
-          if (body.installed) {
-            await supabaseAdmin
-              .from("clients")
-              .update({ pwa_installed_at: nowISO, last_device: `${os} · ${browser}` })
-              .eq("id", client.id)
-              .is("pwa_installed_at", null);
-          }
+          await supabaseAdmin.from("portal_access_log").insert({
+            client_id: client.id,
+            user_id: client.user_id,
+            os,
+            browser,
+            user_agent: ua,
+            event: "install",
+          });
 
           return json({ ok: true }, request);
         } catch (e) {

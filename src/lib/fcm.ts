@@ -56,11 +56,21 @@ export async function initPortalPush(opts: { silent?: boolean } = {}): Promise<s
   if (!token) return null;
 
   try {
+    const isStandalone =
+      window.matchMedia?.("(display-mode: standalone)").matches ||
+      window.matchMedia?.("(display-mode: fullscreen)").matches ||
+      // @ts-expect-error iOS specific
+      window.navigator.standalone === true;
     // Refresh the server record on every portal session. This repairs tokens
     // that were generated locally but failed to save during an earlier visit.
     await portalFetch("/api/public/portal/save-push-token", {
       method: "POST",
-      body: JSON.stringify({ token, platform: navigator.userAgent }),
+      body: JSON.stringify({
+        token,
+        platform: navigator.userAgent,
+        installed: isStandalone,
+        appVersion: "1.0.0",
+      }),
     });
     window.localStorage.setItem(SAVED_TOKEN_KEY, token);
   } catch (e) {

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Users, UserCheck, AlertTriangle, CalendarClock, CalendarDays, ShoppingBag, TrendingDown, TrendingUp } from "lucide-react";
+import { Users, UserCheck, AlertTriangle, CalendarClock, CalendarDays, ShoppingBag, TrendingDown, TrendingUp, Smartphone } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
-type ClientRow = { id: string; name: string; price_cents: number; due_date: string; status: "ativo" | "vencido" | "suspenso" | "cancelado" };
+type ClientRow = { id: string; name: string; price_cents: number; due_date: string; status: "ativo" | "vencido" | "suspenso" | "cancelado"; pwa_installed_at: string | null };
 type PaymentRow = { amount_cents: number; paid_at: string };
 type Settings = { subscription_expires_at: string | null; subscription_monthly_cents: number };
 
@@ -28,7 +28,7 @@ function DashboardPage() {
   const { data: clients = [] } = useQuery({
     queryKey: ["clients", "dash"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("id,name,price_cents,due_date,status");
+      const { data, error } = await supabase.from("clients").select("id,name,price_cents,due_date,status,pwa_installed_at");
       if (error) throw error;
       return (data as ClientRow[]).map((c) => ({ ...c, status: computeStatus(c.due_date, c.status) }));
     },
@@ -163,6 +163,31 @@ function DashboardPage() {
         <Link to="/loja/clientes" className="block"><KpiCard label="Gasto da loja" value={brl(storeStats?.custo ?? 0)} icon={TrendingDown} color="rose" /></Link>
         <Link to="/loja/clientes" className="block"><KpiCard label="Lucro da loja" value={brl(storeStats?.lucro ?? 0)} icon={TrendingUp} color="emerald" /></Link>
       </div>
+
+      <Link to="/portal-clientes" className="block">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base"><Smartphone className="size-4" />Clientes com App Instalado</CardTitle>
+              <CardDescription>Adoção do aplicativo PWA</CardDescription>
+            </div>
+            <span className="text-2xl font-bold text-[color:var(--kpi-emerald)] tabular-nums">
+              {(() => {
+                const inst = clients.filter((c) => !!c.pwa_installed_at).length;
+                const pct = clients.length ? Math.round((inst * 100) / clients.length) : 0;
+                return `${pct}%`;
+              })()}
+            </span>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-3 text-sm">
+              <div><p className="text-muted-foreground text-xs uppercase tracking-widest">Total</p><p className="font-semibold text-lg">{clients.length}</p></div>
+              <div><p className="text-muted-foreground text-xs uppercase tracking-widest">Instalaram</p><p className="font-semibold text-lg text-[color:var(--kpi-emerald)]">{clients.filter((c) => !!c.pwa_installed_at).length}</p></div>
+              <div><p className="text-muted-foreground text-xs uppercase tracking-widest">Não instalaram</p><p className="font-semibold text-lg text-[color:var(--kpi-rose)]">{clients.filter((c) => !c.pwa_installed_at).length}</p></div>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
