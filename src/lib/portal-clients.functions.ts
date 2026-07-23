@@ -26,9 +26,7 @@ export const listPortalClients = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<PortalClientRow[]> => {
     const { data, error } = await context.supabase
       .from("clients")
-      .select(
-        "id,name,email,phone,due_date,status,created_at,pwa_installed_at,last_login_at,last_device,login_count,plans(name)",
-      )
+      .select("id,name,email,phone,due_date,status,created_at,pwa_installed_at,last_login_at,last_device,login_count,plan_id")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
 
@@ -44,8 +42,15 @@ export const listPortalClients = createServerFn({ method: "GET" })
       last_login_at: string | null;
       last_device: string | null;
       login_count: number | null;
-      plans: { name: string } | null;
+      plan_id: string | null;
     }>;
+
+    const planIds = Array.from(new Set(clients.map((c) => c.plan_id).filter((x): x is string => !!x)));
+    const plansById = new Map<string, string>();
+    if (planIds.length) {
+      const { data: plans } = await context.supabase.from("plans").select("id,name").in("id", planIds);
+      for (const p of (plans || []) as Array<{ id: string; name: string }>) plansById.set(p.id, p.name);
+    }
 
     const ids = clients.map((c) => c.id);
     const tokensByClient = new Map<string, { os: string | null; browser: string | null; app_version: string | null }>();
@@ -81,7 +86,7 @@ export const listPortalClients = createServerFn({ method: "GET" })
         name: c.name,
         email: c.email,
         phone: c.phone,
-        plan_name: c.plans?.name ?? null,
+        plan_name: c.plan_id ? plansById.get(c.plan_id) ?? null : null,
         status,
         due_date: c.due_date,
         created_at: c.created_at,
@@ -103,15 +108,19 @@ export const getPortalClientDetail = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: client, error } = await context.supabase
       .from("clients")
-      .select(
-        "id,name,email,phone,doc,address,due_date,status,created_at,pwa_installed_at,last_login_at,last_device,login_count,portal_username,iptv_login,notes,plans(name),servers(name)",
-      )
+      .select("id,name,email,phone,doc,address,due_date,status,created_at,pwa_installed_at,last_login_at,last_device,login_count,portal_username,iptv_login,notes,plan_id,server_id")
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!client) throw new Error("Cliente não encontrado");
 
-    const [{ data: payments }, { data: accesses }, { data: tokens }] = await Promise.all([
+    const [planRes, serverRes, paymentsRes, accessesRes, tokensRes] = await Promise.all([
+      client.plan_id
+        ? context.supabase.from("plans").select("name").eq("id", client.plan_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      client.server_id
+        ? context.supabase.from("servers").select("name").eq("id", client.server_id).maybeSingle()
+        : Promise.resolve({ data: null }),
       context.supabase
         .from("payments")
         .select("id,amount_cents,paid_at,method,notes")
@@ -133,9 +142,13 @@ export const getPortalClientDetail = createServerFn({ method: "GET" })
     ]);
 
     return {
-      client,
-      payments: payments || [],
-      accesses: accesses || [],
-      tokens: tokens || [],
+      client: {
+        ...client,
+        plans: (planRes as { data: { name: string } | null }).data,
+        servers: (serverRes as { data: { name: string } | null }).data,
+      },
+      payments: paymentsRes.data || [],
+      accesses: accessesRes.data || [],
+      tokens: tokensRes.data || [],
     };
   });
