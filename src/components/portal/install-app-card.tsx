@@ -101,6 +101,13 @@ export function InstallAppCard() {
       markInstalled();
       setInstalled(true);
       setDeferred(null);
+      // Notifica o backend para popular a lista "Portal dos Clientes"
+      import("@/lib/portal-client").then(({ portalFetch }) => {
+        portalFetch("/api/public/portal/register-install", {
+          method: "POST",
+          body: JSON.stringify({ platform: navigator.userAgent }),
+        }).catch(() => undefined);
+      });
     };
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);

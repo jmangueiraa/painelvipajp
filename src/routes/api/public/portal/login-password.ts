@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { portalCorsHeaders, portalOptions } from "@/lib/portal-cors";
+import { parseUA } from "@/lib/ua";
 
 function json(data: unknown, request: Request, init?: ResponseInit) {
   return Response.json(data, { ...init, headers: { "Cache-Control": "no-store", ...portalCorsHeaders(request), ...(init?.headers ?? {}) } });
@@ -26,12 +27,9 @@ export const Route = createFileRoute("/api/public/portal/login-password")({
           const usernameLower = normalize(username);
           const usernameDigits = onlyDigits(username);
 
-          // Aceita usuário do portal, login IPTV ou telefone do cliente.
-          // Muitos cadastros antigos não possuem portal_username/portal_password_hash,
-          // então a validação precisa cair para login/senha IPTV.
           const { data: rows, error } = await supabaseAdmin
             .from("clients")
-            .select("id,phone,portal_username,portal_password_hash,iptv_login,iptv_password")
+            .select("id,user_id,phone,portal_username,portal_password_hash,iptv_login,iptv_password,login_count")
             .limit(1000);
           if (error) return json({ error: "Falha ao consultar." }, request, { status: 500 });
 
@@ -54,6 +52,32 @@ export const Route = createFileRoute("/api/public/portal/login-password")({
             client_id: match.id,
             token_hash: tokenHash,
             expires_at: expires,
+          });
+
+          // Registra acesso
+          const ua = request.headers.get("user-agent") || "";
+          const { os, browser } = parseUA(ua);
+          const ip =
+            request.headers.get("cf-connecting-ip") ||
+            request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+            null;
+          const nowISO = new Date().toISOString();
+          await supabaseAdmin
+            .from("clients")
+            .update({
+              login_count: (match.login_count ?? 0) + 1,
+              last_login_at: nowISO,
+              last_device: `${os} · ${browser}`,
+            })
+            .eq("id", match.id);
+          await supabaseAdmin.from("portal_access_log").insert({
+            client_id: match.id,
+            user_id: match.user_id,
+            ip,
+            os,
+            browser,
+            user_agent: ua.slice(0, 500),
+            event: "login",
           });
 
           return json({ token, expires_at: expires }, request);
