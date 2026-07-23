@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Search, Smartphone, XCircle } from "lucide-react";
+import { Bell, BellOff, Search, Smartphone, XCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Input } from "@/components/ui/input";
@@ -98,50 +98,67 @@ function PortalClientsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
-                  <TableHead className="hidden md:table-cell">E-mail</TableHead>
-                  <TableHead className="hidden md:table-cell">Plano</TableHead>
+                  <TableHead>Plano</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="hidden lg:table-cell">Cadastro</TableHead>
-                  <TableHead className="hidden lg:table-cell">Instalação</TableHead>
-                  <TableHead className="hidden xl:table-cell">Último acesso</TableHead>
-                  <TableHead className="hidden xl:table-cell">Dispositivo</TableHead>
-                  <TableHead>App</TableHead>
+                  <TableHead>Notificações</TableHead>
+                  <TableHead>App PWA</TableHead>
+                  <TableHead>Último acesso</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Carregando…</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Carregando…</TableCell></TableRow>
                 ) : filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado.</TableCell></TableRow>
                 ) : (
-                  filtered.map((c) => (
-                    <TableRow key={c.id} className="cursor-pointer hover:bg-muted/40">
-                      <TableCell>
-                        <Link to="/portal-clientes/$id" params={{ id: c.id }} className="font-medium hover:underline">
-                          {c.name}
-                        </Link>
-                        <div className="text-xs text-muted-foreground md:hidden">{c.email || c.phone}</div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{c.email || "—"}</TableCell>
-                      <TableCell className="hidden md:table-cell text-sm">{c.plan_name || "—"}</TableCell>
-                      <TableCell><Badge variant={statusVariant[c.status]}>{statusLabel[c.status]}</Badge></TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{formatDateBR(c.created_at)}</TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{c.pwa_installed_at ? formatDateTimeBR(c.pwa_installed_at) : "—"}</TableCell>
-                      <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">{c.last_login_at ? formatDateTimeBR(c.last_login_at) : "—"}</TableCell>
-                      <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">{c.last_device || (c.os ? `${c.os} · ${c.browser ?? ""}` : "—")}</TableCell>
-                      <TableCell>
-                        {c.installed ? (
-                          <span className="inline-flex items-center gap-1 text-emerald-500 text-sm"><Smartphone className="size-4" />Instalado</span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-muted-foreground text-sm"><XCircle className="size-4" />Não instalado</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  filtered.map((c) => {
+                    const dot =
+                      c.status === "ativo" ? "bg-emerald-500"
+                      : c.status === "vencido" ? "bg-amber-500"
+                      : c.status === "cancelado" ? "bg-rose-500"
+                      : "bg-muted-foreground";
+                    const statusText =
+                      c.status === "ativo" ? "Ativo"
+                      : c.status === "vencido" ? "Inadimpl."
+                      : c.status === "cancelado" ? "Cancelado"
+                      : "Suspenso";
+                    return (
+                      <TableRow key={c.id} className="cursor-pointer hover:bg-muted/40">
+                        <TableCell>
+                          <Link to="/portal-clientes/$id" params={{ id: c.id }} className="font-medium hover:underline">
+                            {c.name}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-sm">{c.plan_name || "—"}</TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center gap-2 text-sm">
+                            <span className={`inline-block size-2.5 rounded-full ${dot}`} />
+                            {statusText}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {c.notifications_enabled ? (
+                            <span className="inline-flex items-center gap-1.5 text-sm text-emerald-500"><Bell className="size-4" />Ativadas</span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"><BellOff className="size-4" />Desativadas</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {c.installed ? (
+                            <span className="inline-flex items-center gap-1.5 text-sm text-sky-500"><Smartphone className="size-4" />Instalado</span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 text-sm text-rose-500"><XCircle className="size-4" />Não</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{c.last_login_at ? formatDateTimeBR(c.last_login_at) : "—"}</TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
           </div>
+
         </CardContent>
       </Card>
     </div>
