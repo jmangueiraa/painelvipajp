@@ -100,6 +100,7 @@ export const listPortalClients = createServerFn({ method: "GET" })
         browser: t.browser,
         app_version: t.app_version,
         installed: !!c.pwa_installed_at,
+        notifications_enabled: tokensByClient.has(c.id),
       };
     });
   });
