@@ -19,7 +19,9 @@ export type PortalClientRow = {
   browser: string | null;
   app_version: string | null;
   installed: boolean;
+  notifications_enabled: boolean;
 };
+
 
 export const listPortalClients = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
