@@ -20,6 +20,7 @@ import { Route as LojaSlugRouteImport } from './routes/loja.$slug'
 import { Route as AuthenticatedSolicitacoesRouteImport } from './routes/_authenticated/solicitacoes'
 import { Route as AuthenticatedServidoresRouteImport } from './routes/_authenticated/servidores'
 import { Route as AuthenticatedRenovacaoRouteImport } from './routes/_authenticated/renovacao'
+import { Route as AuthenticatedPortalClientesRouteImport } from './routes/_authenticated/portal-clientes'
 import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
 import { Route as AuthenticatedNotificacoesPushRouteImport } from './routes/_authenticated/notificacoes-push'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
@@ -28,6 +29,7 @@ import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authen
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedCadastrarApiRouteImport } from './routes/_authenticated/cadastrar-api'
 import { Route as ApiPublicPushCronRouteImport } from './routes/api/public/push-cron'
+import { Route as AuthenticatedPortalClientesIdRouteImport } from './routes/_authenticated/portal-clientes.$id'
 import { Route as AuthenticatedLojaProdutosRouteImport } from './routes/_authenticated/loja.produtos'
 import { Route as AuthenticatedLojaClientesRouteImport } from './routes/_authenticated/loja.clientes'
 import { Route as AuthenticatedAdminAssinantesRouteImport } from './routes/_authenticated/admin.assinantes'
@@ -41,6 +43,7 @@ import { Route as ApiPublicPortalSavePushTokenRouteImport } from './routes/api/p
 import { Route as ApiPublicPortalRequestOtpRouteImport } from './routes/api/public/portal/request-otp'
 import { Route as ApiPublicPortalRenewalStatusRouteImport } from './routes/api/public/portal/renewal-status'
 import { Route as ApiPublicPortalRenewRequestRouteImport } from './routes/api/public/portal/renew-request'
+import { Route as ApiPublicPortalRegisterInstallRouteImport } from './routes/api/public/portal/register-install'
 import { Route as ApiPublicPortalMpWebhookRouteImport } from './routes/api/public/portal/mp-webhook'
 import { Route as ApiPublicPortalMpCreatePixRouteImport } from './routes/api/public/portal/mp-create-pix'
 import { Route as ApiPublicPortalMpCreateExtraRouteImport } from './routes/api/public/portal/mp-create-extra'
@@ -107,6 +110,12 @@ const AuthenticatedRenovacaoRoute = AuthenticatedRenovacaoRouteImport.update({
   path: '/renovacao',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPortalClientesRoute =
+  AuthenticatedPortalClientesRouteImport.update({
+    id: '/portal-clientes',
+    path: '/portal-clientes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPlanosRoute = AuthenticatedPlanosRouteImport.update({
   id: '/planos',
   path: '/planos',
@@ -150,6 +159,12 @@ const ApiPublicPushCronRoute = ApiPublicPushCronRouteImport.update({
   path: '/api/public/push-cron',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPortalClientesIdRoute =
+  AuthenticatedPortalClientesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedPortalClientesRoute,
+  } as any)
 const AuthenticatedLojaProdutosRoute =
   AuthenticatedLojaProdutosRouteImport.update({
     id: '/loja/produtos',
@@ -224,6 +239,12 @@ const ApiPublicPortalRenewRequestRoute =
     path: '/api/public/portal/renew-request',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPortalRegisterInstallRoute =
+  ApiPublicPortalRegisterInstallRouteImport.update({
+    id: '/api/public/portal/register-install',
+    path: '/api/public/portal/register-install',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPortalMpWebhookRoute =
   ApiPublicPortalMpWebhookRouteImport.update({
     id: '/api/public/portal/mp-webhook',
@@ -293,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/notificacoes-push': typeof AuthenticatedNotificacoesPushRoute
   '/planos': typeof AuthenticatedPlanosRoute
+  '/portal-clientes': typeof AuthenticatedPortalClientesRouteWithChildren
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
@@ -303,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/loja/clientes': typeof AuthenticatedLojaClientesRoute
   '/loja/produtos': typeof AuthenticatedLojaProdutosRoute
+  '/portal-clientes/$id': typeof AuthenticatedPortalClientesIdRoute
   '/api/public/push-cron': typeof ApiPublicPushCronRoute
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
@@ -314,6 +337,7 @@ export interface FileRoutesByFullPath {
   '/api/public/portal/mp-create-extra': typeof ApiPublicPortalMpCreateExtraRoute
   '/api/public/portal/mp-create-pix': typeof ApiPublicPortalMpCreatePixRoute
   '/api/public/portal/mp-webhook': typeof ApiPublicPortalMpWebhookRoute
+  '/api/public/portal/register-install': typeof ApiPublicPortalRegisterInstallRoute
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
@@ -336,6 +360,7 @@ export interface FileRoutesByTo {
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/notificacoes-push': typeof AuthenticatedNotificacoesPushRoute
   '/planos': typeof AuthenticatedPlanosRoute
+  '/portal-clientes': typeof AuthenticatedPortalClientesRouteWithChildren
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
@@ -346,6 +371,7 @@ export interface FileRoutesByTo {
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/loja/clientes': typeof AuthenticatedLojaClientesRoute
   '/loja/produtos': typeof AuthenticatedLojaProdutosRoute
+  '/portal-clientes/$id': typeof AuthenticatedPortalClientesIdRoute
   '/api/public/push-cron': typeof ApiPublicPushCronRoute
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
@@ -357,6 +383,7 @@ export interface FileRoutesByTo {
   '/api/public/portal/mp-create-extra': typeof ApiPublicPortalMpCreateExtraRoute
   '/api/public/portal/mp-create-pix': typeof ApiPublicPortalMpCreatePixRoute
   '/api/public/portal/mp-webhook': typeof ApiPublicPortalMpWebhookRoute
+  '/api/public/portal/register-install': typeof ApiPublicPortalRegisterInstallRoute
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
@@ -381,6 +408,7 @@ export interface FileRoutesById {
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/notificacoes-push': typeof AuthenticatedNotificacoesPushRoute
   '/_authenticated/planos': typeof AuthenticatedPlanosRoute
+  '/_authenticated/portal-clientes': typeof AuthenticatedPortalClientesRouteWithChildren
   '/_authenticated/renovacao': typeof AuthenticatedRenovacaoRoute
   '/_authenticated/servidores': typeof AuthenticatedServidoresRoute
   '/_authenticated/solicitacoes': typeof AuthenticatedSolicitacoesRoute
@@ -391,6 +419,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/_authenticated/loja/clientes': typeof AuthenticatedLojaClientesRoute
   '/_authenticated/loja/produtos': typeof AuthenticatedLojaProdutosRoute
+  '/_authenticated/portal-clientes/$id': typeof AuthenticatedPortalClientesIdRoute
   '/api/public/push-cron': typeof ApiPublicPushCronRoute
   '/_authenticated/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
@@ -402,6 +431,7 @@ export interface FileRoutesById {
   '/api/public/portal/mp-create-extra': typeof ApiPublicPortalMpCreateExtraRoute
   '/api/public/portal/mp-create-pix': typeof ApiPublicPortalMpCreatePixRoute
   '/api/public/portal/mp-webhook': typeof ApiPublicPortalMpWebhookRoute
+  '/api/public/portal/register-install': typeof ApiPublicPortalRegisterInstallRoute
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
@@ -426,6 +456,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/notificacoes-push'
     | '/planos'
+    | '/portal-clientes'
     | '/renovacao'
     | '/servidores'
     | '/solicitacoes'
@@ -436,6 +467,7 @@ export interface FileRouteTypes {
     | '/admin/assinantes'
     | '/loja/clientes'
     | '/loja/produtos'
+    | '/portal-clientes/$id'
     | '/api/public/push-cron'
     | '/admin/assinantes/$id'
     | '/api/public/app/mp-webhook'
@@ -447,6 +479,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/mp-create-extra'
     | '/api/public/portal/mp-create-pix'
     | '/api/public/portal/mp-webhook'
+    | '/api/public/portal/register-install'
     | '/api/public/portal/renew-request'
     | '/api/public/portal/renewal-status'
     | '/api/public/portal/request-otp'
@@ -469,6 +502,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/notificacoes-push'
     | '/planos'
+    | '/portal-clientes'
     | '/renovacao'
     | '/servidores'
     | '/solicitacoes'
@@ -479,6 +513,7 @@ export interface FileRouteTypes {
     | '/admin/assinantes'
     | '/loja/clientes'
     | '/loja/produtos'
+    | '/portal-clientes/$id'
     | '/api/public/push-cron'
     | '/admin/assinantes/$id'
     | '/api/public/app/mp-webhook'
@@ -490,6 +525,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/mp-create-extra'
     | '/api/public/portal/mp-create-pix'
     | '/api/public/portal/mp-webhook'
+    | '/api/public/portal/register-install'
     | '/api/public/portal/renew-request'
     | '/api/public/portal/renewal-status'
     | '/api/public/portal/request-otp'
@@ -513,6 +549,7 @@ export interface FileRouteTypes {
     | '/_authenticated/financeiro'
     | '/_authenticated/notificacoes-push'
     | '/_authenticated/planos'
+    | '/_authenticated/portal-clientes'
     | '/_authenticated/renovacao'
     | '/_authenticated/servidores'
     | '/_authenticated/solicitacoes'
@@ -523,6 +560,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/assinantes'
     | '/_authenticated/loja/clientes'
     | '/_authenticated/loja/produtos'
+    | '/_authenticated/portal-clientes/$id'
     | '/api/public/push-cron'
     | '/_authenticated/admin/assinantes/$id'
     | '/api/public/app/mp-webhook'
@@ -534,6 +572,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/mp-create-extra'
     | '/api/public/portal/mp-create-pix'
     | '/api/public/portal/mp-webhook'
+    | '/api/public/portal/register-install'
     | '/api/public/portal/renew-request'
     | '/api/public/portal/renewal-status'
     | '/api/public/portal/request-otp'
@@ -565,6 +604,7 @@ export interface RootRouteChildren {
   ApiPublicPortalMpCreateExtraRoute: typeof ApiPublicPortalMpCreateExtraRoute
   ApiPublicPortalMpCreatePixRoute: typeof ApiPublicPortalMpCreatePixRoute
   ApiPublicPortalMpWebhookRoute: typeof ApiPublicPortalMpWebhookRoute
+  ApiPublicPortalRegisterInstallRoute: typeof ApiPublicPortalRegisterInstallRoute
   ApiPublicPortalRenewRequestRoute: typeof ApiPublicPortalRenewRequestRoute
   ApiPublicPortalRenewalStatusRoute: typeof ApiPublicPortalRenewalStatusRoute
   ApiPublicPortalRequestOtpRoute: typeof ApiPublicPortalRequestOtpRoute
@@ -656,6 +696,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRenovacaoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/portal-clientes': {
+      id: '/_authenticated/portal-clientes'
+      path: '/portal-clientes'
+      fullPath: '/portal-clientes'
+      preLoaderRoute: typeof AuthenticatedPortalClientesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/planos': {
       id: '/_authenticated/planos'
       path: '/planos'
@@ -711,6 +758,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/push-cron'
       preLoaderRoute: typeof ApiPublicPushCronRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/portal-clientes/$id': {
+      id: '/_authenticated/portal-clientes/$id'
+      path: '/$id'
+      fullPath: '/portal-clientes/$id'
+      preLoaderRoute: typeof AuthenticatedPortalClientesIdRouteImport
+      parentRoute: typeof AuthenticatedPortalClientesRoute
     }
     '/_authenticated/loja/produtos': {
       id: '/_authenticated/loja/produtos'
@@ -803,6 +857,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPortalRenewRequestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/portal/register-install': {
+      id: '/api/public/portal/register-install'
+      path: '/api/public/portal/register-install'
+      fullPath: '/api/public/portal/register-install'
+      preLoaderRoute: typeof ApiPublicPortalRegisterInstallRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/portal/mp-webhook': {
       id: '/api/public/portal/mp-webhook'
       path: '/api/public/portal/mp-webhook'
@@ -876,6 +937,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedPortalClientesRouteChildren {
+  AuthenticatedPortalClientesIdRoute: typeof AuthenticatedPortalClientesIdRoute
+}
+
+const AuthenticatedPortalClientesRouteChildren: AuthenticatedPortalClientesRouteChildren =
+  {
+    AuthenticatedPortalClientesIdRoute: AuthenticatedPortalClientesIdRoute,
+  }
+
+const AuthenticatedPortalClientesRouteWithChildren =
+  AuthenticatedPortalClientesRoute._addFileChildren(
+    AuthenticatedPortalClientesRouteChildren,
+  )
+
 interface AuthenticatedAdminAssinantesRouteChildren {
   AuthenticatedAdminAssinantesIdRoute: typeof AuthenticatedAdminAssinantesIdRoute
 }
@@ -898,6 +973,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedNotificacoesPushRoute: typeof AuthenticatedNotificacoesPushRoute
   AuthenticatedPlanosRoute: typeof AuthenticatedPlanosRoute
+  AuthenticatedPortalClientesRoute: typeof AuthenticatedPortalClientesRouteWithChildren
   AuthenticatedRenovacaoRoute: typeof AuthenticatedRenovacaoRoute
   AuthenticatedServidoresRoute: typeof AuthenticatedServidoresRoute
   AuthenticatedSolicitacoesRoute: typeof AuthenticatedSolicitacoesRoute
@@ -914,6 +990,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedNotificacoesPushRoute: AuthenticatedNotificacoesPushRoute,
   AuthenticatedPlanosRoute: AuthenticatedPlanosRoute,
+  AuthenticatedPortalClientesRoute:
+    AuthenticatedPortalClientesRouteWithChildren,
   AuthenticatedRenovacaoRoute: AuthenticatedRenovacaoRoute,
   AuthenticatedServidoresRoute: AuthenticatedServidoresRoute,
   AuthenticatedSolicitacoesRoute: AuthenticatedSolicitacoesRoute,
@@ -945,6 +1023,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPortalMpCreateExtraRoute: ApiPublicPortalMpCreateExtraRoute,
   ApiPublicPortalMpCreatePixRoute: ApiPublicPortalMpCreatePixRoute,
   ApiPublicPortalMpWebhookRoute: ApiPublicPortalMpWebhookRoute,
+  ApiPublicPortalRegisterInstallRoute: ApiPublicPortalRegisterInstallRoute,
   ApiPublicPortalRenewRequestRoute: ApiPublicPortalRenewRequestRoute,
   ApiPublicPortalRenewalStatusRoute: ApiPublicPortalRenewalStatusRoute,
   ApiPublicPortalRequestOtpRoute: ApiPublicPortalRequestOtpRoute,
