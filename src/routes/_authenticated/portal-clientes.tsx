@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Search, Smartphone, XCircle } from "lucide-react";
+import { Bell, BellOff, Search, Smartphone, XCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Input } from "@/components/ui/input";
