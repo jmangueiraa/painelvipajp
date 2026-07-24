@@ -137,8 +137,8 @@ export async function sendPushToTokens(input: SendPushInput): Promise<SendPushRe
                 ...(input.data || {}),
               },
             },
-            fcm_options: input.url ? { link: input.url } : undefined,
           },
+
           data: {
             title: input.title,
             body: input.body,
