@@ -40,10 +40,19 @@ function PortalClientsPage() {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<FilterKey>("todos");
 
-  const { data = [], isLoading } = useQuery({
+  const { data = [], isLoading, error } = useQuery({
     queryKey: ["portal-clients"],
-    queryFn: () => list(),
+    queryFn: async () => {
+      try {
+        const r = await list();
+        return r as PortalClientRow[];
+      } catch (e) {
+        console.error("[portal-clients] listPortalClients failed", e);
+        throw e;
+      }
+    },
   });
+  if (error) console.error("[portal-clients] query error", error);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
