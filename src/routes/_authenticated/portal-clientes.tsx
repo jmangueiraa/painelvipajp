@@ -114,6 +114,14 @@ function PortalClientsPage() {
     <div className="space-y-6">
       <PageHeader title="Portal dos Clientes" description="Acompanhe quais clientes já instalaram o aplicativo PWA." />
 
+      {error && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          Erro ao carregar clientes: {(error as Error).message}
+        </div>
+      )}
+
+
+
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <KpiTile label="Total de clientes" value={kpi.total} color="var(--kpi-violet)" />
         <KpiTile label="App instalado" value={`${kpi.installed} (${kpi.pct}%)`} color="var(--kpi-emerald)" />
