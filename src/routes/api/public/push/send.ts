@@ -12,13 +12,19 @@ const SendSchema = z.object({
   clientIds: z.array(z.string().uuid()).max(5000).default([]),
 });
 
-function deriveUrl(title: string, provided?: string | null): string | null {
+function deriveUrl(title: string, provided?: string | null): string {
   if (provided) return provided;
   const t = title.toLowerCase().trim();
   if (/\bfilmes?\b/.test(t)) return "/portal/painel?updates=movie";
   if (/\bs[ée]ries?\b/.test(t)) return "/portal/painel?updates=series";
   if (/\bjogos?\b/.test(t)) return "/portal/painel?updates=games";
-  return null;
+  return "/portal/painel";
+}
+
+function toAbsoluteUrl(request: Request, path: string): string {
+  if (/^https?:\/\//i.test(path)) return path;
+  const origin = request.headers.get("x-portal-origin") || new URL(request.url).origin;
+  return `${origin.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 function response(data: unknown, status = 200, request?: Request) {
