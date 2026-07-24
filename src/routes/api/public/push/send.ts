@@ -100,7 +100,7 @@ export const Route = createFileRoute("/api/public/push/send")({
               tokens,
               title: input.title,
               body: input.body,
-              url: deriveUrl(input.title, input.url) || undefined,
+              url: toAbsoluteUrl(request, deriveUrl(input.title, input.url)),
               serviceAccountJson,
             });
           } catch (error) {
