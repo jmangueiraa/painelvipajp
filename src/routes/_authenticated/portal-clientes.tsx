@@ -1,18 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Bell, BellOff, Search, Smartphone, XCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatDateBR, formatDateTimeBR } from "@/lib/format";
-import { statusLabel, statusVariant } from "@/lib/status";
-import { listPortalClients, type PortalClientRow } from "@/lib/portal-clients.functions";
+import { formatDateTimeBR } from "@/lib/format";
+import { supabase } from "@/integrations/supabase/client";
+import type { PortalClientRow } from "@/lib/portal-clients.functions";
 
 type FilterKey = "todos" | "instalados" | "nao_instalados" | "ativo" | "vencido" | "cancelado";
 
@@ -36,13 +34,59 @@ export const Route = createFileRoute("/_authenticated/portal-clientes")({
 });
 
 function PortalClientsPage() {
-  const list = useServerFn(listPortalClients);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<FilterKey>("todos");
 
-  const { data = [], isLoading } = useQuery({
-    queryKey: ["portal-clients"],
-    queryFn: () => list(),
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["portal-clients-list"],
+    queryFn: async (): Promise<PortalClientRow[]> => {
+      const { data: clients, error: err } = await supabase
+        .from("clients")
+        .select("id,name,email,phone,due_date,status,created_at,pwa_installed_at,last_login_at,last_device,login_count,plan_id")
+        .order("created_at", { ascending: false });
+      if (err) throw new Error(err.message);
+      const rows = (clients || []) as Array<{
+        id: string; name: string; email: string | null; phone: string | null;
+        due_date: string; status: PortalClientRow["status"]; created_at: string;
+        pwa_installed_at: string | null; last_login_at: string | null; last_device: string | null;
+        login_count: number | null; plan_id: string | null;
+      }>;
+
+      const planIds = Array.from(new Set(rows.map((c) => c.plan_id).filter((x): x is string => !!x)));
+      const plansById = new Map<string, string>();
+      if (planIds.length) {
+        const { data: plans } = await supabase.from("plans").select("id,name").in("id", planIds);
+        for (const p of (plans || []) as Array<{ id: string; name: string }>) plansById.set(p.id, p.name);
+      }
+
+      const ids = rows.map((c) => c.id);
+      const tokenSet = new Set<string>();
+      if (ids.length) {
+        const { data: toks } = await supabase.from("push_tokens").select("client_id").in("client_id", ids);
+        for (const t of (toks || []) as Array<{ client_id: string | null }>) if (t.client_id) tokenSet.add(t.client_id);
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return rows.map((c) => {
+        const due = new Date(c.due_date + "T00:00:00");
+        let status: PortalClientRow["status"] = c.status;
+        if (status !== "suspenso" && status !== "cancelado") {
+          status = due < today ? "vencido" : "ativo";
+        }
+        return {
+          id: c.id, name: c.name, email: c.email, phone: c.phone,
+          plan_name: c.plan_id ? plansById.get(c.plan_id) ?? null : null,
+          status, due_date: c.due_date, created_at: c.created_at,
+          pwa_installed_at: c.pwa_installed_at,
+          last_login_at: c.last_login_at, last_device: c.last_device,
+          login_count: c.login_count ?? 0,
+          os: null, browser: null, app_version: null,
+          installed: !!c.pwa_installed_at,
+          notifications_enabled: tokenSet.has(c.id),
+        };
+      });
+    },
   });
 
   const filtered = useMemo(() => {
@@ -69,6 +113,14 @@ function PortalClientsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Portal dos Clientes" description="Acompanhe quais clientes já instalaram o aplicativo PWA." />
+
+      {error && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          Erro ao carregar clientes: {(error as Error).message}
+        </div>
+      )}
+
+
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <KpiTile label="Total de clientes" value={kpi.total} color="var(--kpi-violet)" />
