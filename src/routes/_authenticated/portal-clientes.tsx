@@ -93,7 +93,64 @@ function PortalClientsPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-lg border">
+          {/* Mobile: cards */}
+          <div className="md:hidden space-y-2">
+            {isLoading ? (
+              <p className="text-center py-8 text-sm text-muted-foreground">Carregando…</p>
+            ) : filtered.length === 0 ? (
+              <p className="text-center py-8 text-sm text-muted-foreground">Nenhum cliente encontrado.</p>
+            ) : (
+              filtered.map((c) => {
+                const dot =
+                  c.status === "ativo" ? "bg-emerald-500"
+                  : c.status === "vencido" ? "bg-amber-500"
+                  : c.status === "cancelado" ? "bg-rose-500"
+                  : "bg-muted-foreground";
+                const statusText =
+                  c.status === "ativo" ? "Ativo"
+                  : c.status === "vencido" ? "Inadimpl."
+                  : c.status === "cancelado" ? "Cancelado"
+                  : "Suspenso";
+                return (
+                  <Link
+                    key={c.id}
+                    to="/portal-clientes/$id"
+                    params={{ id: c.id }}
+                    className="block rounded-lg border p-3 hover:bg-muted/40"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">{c.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{c.plan_name || "—"}</p>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 text-xs shrink-0">
+                        <span className={`inline-block size-2 rounded-full ${dot}`} />
+                        {statusText}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                      {c.installed ? (
+                        <span className="inline-flex items-center gap-1 text-sky-500"><Smartphone className="size-3.5" />Instalado</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-rose-500"><XCircle className="size-3.5" />Não instalado</span>
+                      )}
+                      {c.notifications_enabled ? (
+                        <span className="inline-flex items-center gap-1 text-emerald-500"><Bell className="size-3.5" />Notif.</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-muted-foreground"><BellOff className="size-3.5" />Sem notif.</span>
+                      )}
+                      <span className="text-muted-foreground ml-auto">
+                        {c.last_login_at ? formatDateTimeBR(c.last_login_at) : "—"}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })
+            )}
+          </div>
+
+          {/* Desktop: table */}
+          <div className="hidden md:block overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
