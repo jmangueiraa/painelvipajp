@@ -39,15 +39,25 @@ messaging.onBackgroundMessage((payload) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = event.notification.data?.url || "/portal/painel";
+  const raw = event.notification.data?.url || "/portal/painel";
+  let path = raw;
+  try {
+    const u = new URL(raw, self.location.origin);
+    path = u.origin === self.location.origin ? `${u.pathname}${u.search}${u.hash}` : raw;
+  } catch {}
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (clients) => {
-      for (const client of clients) {
-        if ("navigate" in client) await client.navigate(target).catch(() => undefined);
-        if ("focus" in client) return client.focus();
+    (async () => {
+      const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      // Prefer a client already inside the portal scope (PWA window)
+      const scoped = all.find((c) => {
+        try { return new URL(c.url).pathname.startsWith("/portal"); } catch { return false; }
+      }) || all[0];
+      if (scoped) {
+        try { await scoped.navigate(path); } catch {}
+        if ("focus" in scoped) return scoped.focus();
       }
-      return self.clients.openWindow ? self.clients.openWindow(target) : undefined;
-    }),
+      if (self.clients.openWindow) return self.clients.openWindow(path);
+    })(),
   );
 });
 
