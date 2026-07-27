@@ -36,16 +36,16 @@ messaging.onBackgroundMessage((payload) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || "/portal/painel";
+  const TARGET = "https://ajpvip.com.br/portal";
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
       for (const c of list) {
         if ("focus" in c) {
-          c.navigate(url).catch(() => {});
+          c.navigate(TARGET).catch(() => {});
           return c.focus();
         }
       }
-      if (self.clients.openWindow) return self.clients.openWindow(url);
+      if (self.clients.openWindow) return self.clients.openWindow(TARGET);
     }),
   );
 });
