@@ -172,6 +172,22 @@ function PortalDashboard() {
     return () => window.clearTimeout(t);
   }, []);
 
+  // Marca cliente como "App instalado" sempre que o portal for aberto em modo standalone (PWA)
+  useEffect(() => {
+    if (!getPortalToken()) return;
+    const standalone =
+      window.matchMedia?.("(display-mode: standalone)").matches ||
+      window.matchMedia?.("(display-mode: fullscreen)").matches ||
+      window.matchMedia?.("(display-mode: minimal-ui)").matches ||
+      // @ts-expect-error iOS specific
+      window.navigator.standalone === true;
+    if (!standalone) return;
+    portalFetch("/api/public/portal/register-install", {
+      method: "POST",
+      body: JSON.stringify({ platform: navigator.userAgent }),
+    }).catch(() => {});
+  }, []);
+
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["portal", "me"],
     queryFn: () => portalFetch<Me>("/api/public/portal/me"),
