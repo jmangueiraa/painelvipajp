@@ -39,24 +39,18 @@ messaging.onBackgroundMessage((payload) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const raw = event.notification.data?.url || "/portal/painel";
-  let path = raw;
-  try {
-    const u = new URL(raw, self.location.origin);
-    path = u.origin === self.location.origin ? `${u.pathname}${u.search}${u.hash}` : raw;
-  } catch {}
+  const TARGET = "https://ajpvip.com.br/portal";
   event.waitUntil(
     (async () => {
       const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-      // Prefer a client already inside the portal scope (PWA window)
       const scoped = all.find((c) => {
         try { return new URL(c.url).pathname.startsWith("/portal"); } catch { return false; }
-      }) || all[0];
+      });
       if (scoped) {
-        try { await scoped.navigate(path); } catch {}
+        try { await scoped.navigate(TARGET); } catch {}
         if ("focus" in scoped) return scoped.focus();
       }
-      if (self.clients.openWindow) return self.clients.openWindow(path);
+      if (self.clients.openWindow) return self.clients.openWindow(TARGET);
     })(),
   );
 });
