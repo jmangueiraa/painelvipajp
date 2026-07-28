@@ -66,27 +66,46 @@ export const Route = createFileRoute("/api/public/push-cron")({
         if (hourUtc === 12) {
           const { data: users } = await supabaseAdmin.from("settings").select("user_id");
           const today = new Date(); today.setUTCHours(0, 0, 0, 0);
+          const in1 = new Date(today); in1.setUTCDate(in1.getUTCDate() + 1);
           const in3 = new Date(today); in3.setUTCDate(in3.getUTCDate() + 3);
+          const back1 = new Date(today); back1.setUTCDate(back1.getUTCDate() - 1);
           const todayStr = today.toISOString().slice(0, 10);
+          const in1Str = in1.toISOString().slice(0, 10);
           const in3Str = in3.toISOString().slice(0, 10);
+          const back1Str = back1.toISOString().slice(0, 10);
 
           for (const u of users || []) {
-            // vence hoje
-            const { data: dueToday } = await supabaseAdmin.from("clients").select("id").eq("user_id", u.user_id).eq("due_date", todayStr);
-            const ids1 = (dueToday || []).map((r: any) => r.id);
-            if (ids1.length) {
-              await sendForUser(supabaseAdmin, u.user_id, ids1, "⏰ Seu acesso vence hoje!", "Renove agora pelo portal para não perder o acesso ao serviço.", "/portal/painel", "auto_due_today");
-              summary.reminders++;
-            }
             // 3 dias antes
             const { data: due3 } = await supabaseAdmin.from("clients").select("id").eq("user_id", u.user_id).eq("due_date", in3Str);
-            const ids2 = (due3 || []).map((r: any) => r.id);
-            if (ids2.length) {
-              await sendForUser(supabaseAdmin, u.user_id, ids2, "📅 Faltam 3 dias para vencer", "Renove com antecedência e continue aproveitando sem interrupções.", "/portal/painel", "auto_due_3d");
+            const ids3 = (due3 || []).map((r: any) => r.id);
+            if (ids3.length) {
+              await sendForUser(supabaseAdmin, u.user_id, ids3, "💰 Lembrete de vencimento", "⏰ Seu plano vence em 3 dias. Renove antecipadamente e evite interrupções no acesso.", "/portal/painel", "auto_due_3d");
+              summary.reminders++;
+            }
+            // 1 dia antes
+            const { data: due1 } = await supabaseAdmin.from("clients").select("id").eq("user_id", u.user_id).eq("due_date", in1Str);
+            const ids1d = (due1 || []).map((r: any) => r.id);
+            if (ids1d.length) {
+              await sendForUser(supabaseAdmin, u.user_id, ids1d, "⚠️ Seu plano vence amanhã", "📅 Faça a renovação agora para continuar aproveitando o serviço sem pausas.", "/portal/painel", "auto_due_1d");
+              summary.reminders++;
+            }
+            // vence hoje
+            const { data: dueToday } = await supabaseAdmin.from("clients").select("id").eq("user_id", u.user_id).eq("due_date", todayStr);
+            const idsToday = (dueToday || []).map((r: any) => r.id);
+            if (idsToday.length) {
+              await sendForUser(supabaseAdmin, u.user_id, idsToday, "🚨 Último dia da sua assinatura", "Hoje é o último dia da sua assinatura. Renove agora e mantenha seu acesso ativo.", "/portal/painel", "auto_due_today");
+              summary.reminders++;
+            }
+            // 1 dia após vencimento
+            const { data: overdue } = await supabaseAdmin.from("clients").select("id").eq("user_id", u.user_id).eq("due_date", back1Str);
+            const idsOver = (overdue || []).map((r: any) => r.id);
+            if (idsOver.length) {
+              await sendForUser(supabaseAdmin, u.user_id, idsOver, "❌ Acesso suspenso", "Seu acesso foi suspenso por falta de pagamento. Regularize agora e a reativação será feita rapidamente.", "/portal/painel", "auto_overdue");
               summary.reminders++;
             }
           }
         }
+
 
         return Response.json({ ok: true, ...summary });
       },
