@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Smartphone, Share, Plus, CheckCircle2, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Smartphone, Share, Plus, CheckCircle2, Loader2, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -9,6 +9,7 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 const INSTALLED_KEY = "portal_app_installed";
+const PROMPT_WAIT_MS = 2500;
 
 function markInstalled() {
   if (typeof window === "undefined") return;
@@ -34,6 +35,16 @@ function isIOS() {
   return /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !/CriOS|FxiOS/.test(window.navigator.userAgent);
 }
 
+function isAndroid() {
+  if (typeof window === "undefined") return false;
+  return /Android/i.test(window.navigator.userAgent);
+}
+
+function isInAppBrowser() {
+  if (typeof window === "undefined") return false;
+  return /FBAN|FBAV|Instagram|Line|MicroMessenger|WhatsApp|wv\)/i.test(window.navigator.userAgent);
+}
+
 function isPreviewOrDev() {
   if (typeof window === "undefined") return true;
   if (!import.meta.env.PROD) return true;
@@ -51,17 +62,29 @@ function isPreviewOrDev() {
 export function useRegisterPortalSW() {
   useEffect(() => {
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
-    if (isPreviewOrDev()) {
+    const isPortalWorker = (registration: ServiceWorkerRegistration) =>
+      [registration.active, registration.installing, registration.waiting].some((worker) => worker?.scriptURL.endsWith("/portal-sw.js"));
+
+    const unregisterPortalWorkers = (keepScope?: string) => {
       navigator.serviceWorker.getRegistrations().then((regs) => {
-        regs.forEach((r) => {
-          if (r.active?.scriptURL.endsWith("/portal-sw.js")) r.unregister();
+        regs.forEach((registration) => {
+          if (!isPortalWorker(registration)) return;
+          if (keepScope && registration.scope === keepScope) return;
+          registration.unregister().catch(() => undefined);
         });
-      });
+      }).catch(() => undefined);
+    };
+
+    if (isPreviewOrDev()) {
+      unregisterPortalWorkers();
       return;
     }
     navigator.serviceWorker
       .register("/portal-sw.js", { scope: "/" })
-      .then((registration) => registration.update())
+      .then(async (registration) => {
+        await registration.update().catch(() => undefined);
+        unregisterPortalWorkers(registration.scope);
+      })
       .catch(() => undefined);
   }, []);
 }
@@ -70,8 +93,7 @@ export function InstallAppCard() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const [waitingPrompt, setWaitingPrompt] = useState(false);
-  const pendingInstallClick = useRef(false);
+  const [checkingPrompt, setCheckingPrompt] = useState(true);
 
   useRegisterPortalSW();
 
@@ -83,18 +105,13 @@ export function InstallAppCard() {
       setInstalled(true);
       return;
     }
+    const timer = window.setTimeout(() => setCheckingPrompt(false), PROMPT_WAIT_MS);
+
     const onPrompt = (e: Event) => {
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
-      setWaitingPrompt(false);
+      setCheckingPrompt(false);
       setShowHelp(false);
-
-      if (pendingInstallClick.current) {
-        pendingInstallClick.current = false;
-        void openNativePrompt(promptEvent);
-        return;
-      }
-
       setDeferred(promptEvent);
     };
     const onInstalled = () => {
@@ -112,6 +129,7 @@ export function InstallAppCard() {
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
+      window.clearTimeout(timer);
       window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
     };
@@ -125,25 +143,13 @@ export function InstallAppCard() {
       return;
     }
 
-    if (isIOS()) {
-      setShowHelp((v) => !v);
-      return;
-    }
-
-    pendingInstallClick.current = true;
-    setShowHelp(false);
-    setWaitingPrompt(true);
-    setTimeout(() => {
-      if (!pendingInstallClick.current) return;
-      pendingInstallClick.current = false;
-      setWaitingPrompt(false);
-      setShowHelp(true);
-    }, 6000);
+    setCheckingPrompt(false);
+    setShowHelp((v) => !v);
   }
 
   async function openNativePrompt(promptEvent: BeforeInstallPromptEvent) {
     try {
-      setWaitingPrompt(false);
+      setCheckingPrompt(false);
       setShowHelp(false);
       await promptEvent.prompt();
       const choice = await promptEvent.userChoice;
@@ -153,12 +159,14 @@ export function InstallAppCard() {
       }
     } finally {
       setDeferred(null);
-      pendingInstallClick.current = false;
     }
   }
 
   const canPrompt = !!deferred;
   const ios = isIOS();
+  const android = isAndroid();
+  const inAppBrowser = isInAppBrowser();
+  const actionLabel = canPrompt ? "📲 Instalar Aplicativo" : checkingPrompt ? "Preparando instalador" : "Ver como instalar";
 
   return (
     <Card className="border-primary/40 bg-gradient-to-br from-primary/10 to-transparent">
@@ -171,13 +179,13 @@ export function InstallAppCard() {
         <p className="text-sm text-muted-foreground">
           Adicione o portal à tela inicial e acesse como um app nativo — abre em tela cheia, sem barra do navegador.
         </p>
-        <Button onClick={handleInstall} size="lg" className="w-full sm:w-auto">
-          {waitingPrompt ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-          📲 Instalar Aplicativo
+        <Button onClick={handleInstall} size="lg" className="w-full sm:w-auto" disabled={checkingPrompt && !canPrompt}>
+          {checkingPrompt && !canPrompt ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+          {actionLabel}
         </Button>
-        {waitingPrompt && (
+        {checkingPrompt && !canPrompt && (
           <p className="text-xs text-muted-foreground">
-            Preparando instalação automática. Se não abrir, acesse o portal publicado direto no Chrome/Edge do celular.
+            Validando o instalador nativo do navegador. Se ele não liberar, mostraremos o caminho manual correto.
           </p>
         )}
         {showHelp && (
@@ -198,15 +206,29 @@ export function InstallAppCard() {
               <>
                 <div className="mb-2 flex items-center gap-2 font-medium">
                   <CheckCircle2 className="h-4 w-4 text-primary" />
-                  Instalação não liberada pelo navegador
+                  Instalação pelo menu do navegador
                 </div>
-                <ol className="list-decimal space-y-1 pl-5">
-                  <li>Abra o portal publicado direto no <strong>Chrome</strong> ou <strong>Edge</strong>, fora do WhatsApp/Facebook.</li>
-                  <li>Toque novamente em <strong>Instalar Aplicativo</strong>.</li>
-                  <li>Se aparecer no menu do navegador, toque em <strong>Instalar app</strong>.</li>
-                </ol>
+                {inAppBrowser ? (
+                  <ol className="list-decimal space-y-1 pl-5">
+                    <li>Toque em <MoreVertical className="inline h-3.5 w-3.5" /> e escolha <strong>Abrir no navegador</strong>.</li>
+                    <li>Abra no <strong>Chrome</strong> ou <strong>Edge</strong>.</li>
+                    <li>No menu do navegador, toque em <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
+                  </ol>
+                ) : android ? (
+                  <ol className="list-decimal space-y-1 pl-5">
+                    <li>Abra o menu <MoreVertical className="inline h-3.5 w-3.5" /> do <strong>Chrome</strong> ou <strong>Edge</strong>.</li>
+                    <li>Toque em <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
+                    <li>Confirme em <strong>Instalar</strong>.</li>
+                  </ol>
+                ) : (
+                  <ol className="list-decimal space-y-1 pl-5">
+                    <li>Abra o menu do navegador.</li>
+                    <li>Escolha <strong>Instalar Portal VIP</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
+                    <li>Confirme a instalação.</li>
+                  </ol>
+                )}
                 <p className="mt-2 text-xs text-muted-foreground">
-                  O botão só consegue abrir a instalação quando o navegador envia a permissão nativa de instalação.
+                  Quando o navegador liberar o instalador automático, este botão muda para instalar direto.
                 </p>
               </>
             )}
