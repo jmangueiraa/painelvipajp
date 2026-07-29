@@ -15,10 +15,8 @@ function markInstalled() {
   window.localStorage.setItem(INSTALLED_KEY, "true");
 }
 
-function wasMarkedInstalled() {
-  if (typeof window === "undefined") return false;
-  return window.localStorage.getItem(INSTALLED_KEY) === "true";
-}
+
+
 
 function isInstalledDisplayMode() {
   if (typeof window === "undefined") return false;
@@ -78,8 +76,10 @@ export function InstallAppCard() {
   useRegisterPortalSW();
 
   useEffect(() => {
-    if (isInstalledDisplayMode() || wasMarkedInstalled()) {
-      if (isInstalledDisplayMode()) markInstalled();
+    // Só esconde o card quando o app está realmente aberto em modo instalado.
+    // (Não usamos mais o flag de localStorage, que escondia o card no navegador.)
+    if (isInstalledDisplayMode()) {
+      markInstalled();
       setInstalled(true);
       return;
     }
