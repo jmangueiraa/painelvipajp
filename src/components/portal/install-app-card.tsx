@@ -78,8 +78,10 @@ export function InstallAppCard() {
   useRegisterPortalSW();
 
   useEffect(() => {
-    if (isInstalledDisplayMode() || wasMarkedInstalled()) {
-      if (isInstalledDisplayMode()) markInstalled();
+    // Só esconde o card quando o app está realmente aberto em modo instalado.
+    // (Não usamos mais o flag de localStorage, que escondia o card no navegador.)
+    if (isInstalledDisplayMode()) {
+      markInstalled();
       setInstalled(true);
       return;
     }
