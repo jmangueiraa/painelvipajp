@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Smartphone, Share, Plus, CheckCircle2, Loader2, MoreVertical } from "lucide-react";
+import { Smartphone, Share, Plus, CheckCircle2, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -9,7 +9,6 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 const INSTALLED_KEY = "portal_app_installed";
-const PROMPT_WAIT_MS = 2500;
 
 function markInstalled() {
   if (typeof window === "undefined") return;
@@ -93,7 +92,6 @@ export function InstallAppCard() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const [checkingPrompt, setCheckingPrompt] = useState(true);
 
   useRegisterPortalSW();
 
@@ -105,12 +103,9 @@ export function InstallAppCard() {
       setInstalled(true);
       return;
     }
-    const timer = window.setTimeout(() => setCheckingPrompt(false), PROMPT_WAIT_MS);
-
     const onPrompt = (e: Event) => {
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
-      setCheckingPrompt(false);
       setShowHelp(false);
       setDeferred(promptEvent);
     };
@@ -129,7 +124,6 @@ export function InstallAppCard() {
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
-      window.clearTimeout(timer);
       window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
     };
@@ -143,13 +137,11 @@ export function InstallAppCard() {
       return;
     }
 
-    setCheckingPrompt(false);
     setShowHelp((v) => !v);
   }
 
   async function openNativePrompt(promptEvent: BeforeInstallPromptEvent) {
     try {
-      setCheckingPrompt(false);
       setShowHelp(false);
       await promptEvent.prompt();
       const choice = await promptEvent.userChoice;
@@ -166,7 +158,7 @@ export function InstallAppCard() {
   const ios = isIOS();
   const android = isAndroid();
   const inAppBrowser = isInAppBrowser();
-  const actionLabel = canPrompt ? "📲 Instalar Aplicativo" : checkingPrompt ? "Preparando instalador" : "Ver como instalar";
+  const actionLabel = canPrompt ? "📲 Instalar Aplicativo" : "Ver como instalar";
 
   return (
     <Card className="border-primary/40 bg-gradient-to-br from-primary/10 to-transparent">
@@ -179,15 +171,10 @@ export function InstallAppCard() {
         <p className="text-sm text-muted-foreground">
           Adicione o portal à tela inicial e acesse como um app nativo — abre em tela cheia, sem barra do navegador.
         </p>
-        <Button onClick={handleInstall} size="lg" className="w-full sm:w-auto" disabled={checkingPrompt && !canPrompt}>
-          {checkingPrompt && !canPrompt ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+        <Button onClick={handleInstall} size="lg" className="w-full sm:w-auto">
+          <Plus className="mr-2 h-4 w-4" />
           {actionLabel}
         </Button>
-        {checkingPrompt && !canPrompt && (
-          <p className="text-xs text-muted-foreground">
-            Validando o instalador nativo do navegador. Se ele não liberar, mostraremos o caminho manual correto.
-          </p>
-        )}
         {showHelp && (
           <div className="rounded-xl border bg-card p-3 text-sm">
             {ios ? (
