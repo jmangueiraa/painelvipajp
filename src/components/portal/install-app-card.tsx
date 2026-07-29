@@ -62,7 +62,7 @@ export function useRegisterPortalSW() {
       return;
     }
     navigator.serviceWorker
-      .register("/portal-sw.js", { scope: "/portal/" })
+      .register("/portal-sw.js", { scope: "/" })
       .then((registration) => registration.update())
       .catch(() => undefined);
   }, []);
