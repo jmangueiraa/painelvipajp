@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPortalToken, portalFetch, setPortalToken } from "@/lib/portal-client";
-import { useRegisterPortalSW } from "@/components/portal/install-app-card";
+import { useRegisterPortalSW, InstallAppCard } from "@/components/portal/install-app-card";
 
 export const Route = createFileRoute("/portal/")({
   ssr: false,
