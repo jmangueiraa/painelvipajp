@@ -117,6 +117,10 @@ function PortalLoginPage() {
           </form>
         </CardContent>
       </Card>
+      <div className="w-full max-w-md">
+        <InstallAppCard />
+      </div>
+
     </div>
   );
 }
