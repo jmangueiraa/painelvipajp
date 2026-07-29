@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPortalToken, portalFetch, setPortalToken } from "@/lib/portal-client";
-import { useRegisterPortalSW } from "@/components/portal/install-app-card";
+import { useRegisterPortalSW, InstallAppCard } from "@/components/portal/install-app-card";
 
 export const Route = createFileRoute("/portal/")({
   ssr: false,
@@ -63,7 +63,7 @@ function PortalLoginPage() {
   }
 
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
+    <div className="min-h-dvh flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-background via-background to-muted/30 p-4">
       <Card className="w-full max-w-md overflow-hidden">
         <img
           src="/portal-icon-192.png"
@@ -117,6 +117,10 @@ function PortalLoginPage() {
           </form>
         </CardContent>
       </Card>
+      <div className="w-full max-w-md">
+        <InstallAppCard />
+      </div>
+
     </div>
   );
 }
