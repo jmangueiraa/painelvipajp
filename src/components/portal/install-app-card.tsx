@@ -15,10 +15,8 @@ function markInstalled() {
   window.localStorage.setItem(INSTALLED_KEY, "true");
 }
 
-function wasMarkedInstalled() {
-  if (typeof window === "undefined") return false;
-  return window.localStorage.getItem(INSTALLED_KEY) === "true";
-}
+
+
 
 function isInstalledDisplayMode() {
   if (typeof window === "undefined") return false;
