@@ -11,7 +11,7 @@ async function registerSw(): Promise<ServiceWorkerRegistration | null> {
     // Use the portal's single service worker for both PWA caching and FCM.
     // Overlapping workers at / and /portal/ are unreliable on installed PWAs,
     // particularly on iOS.
-    const registration = await navigator.serviceWorker.register("/portal-sw.js", { scope: "/portal/" });
+    const registration = await navigator.serviceWorker.register("/portal-sw.js", { scope: "/" });
     await registration.update();
     return registration;
   } catch (e) {
