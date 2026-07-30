@@ -14,6 +14,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+// Captura global e antecipada do prompt de instalação do PWA.
+import "@/lib/pwa-install";
 
 function NotFoundComponent() {
   return (
