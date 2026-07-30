@@ -90,7 +90,9 @@ export function useRegisterPortalSW() {
 }
 
 export function InstallAppCard() {
-  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(() =>
+    getDeferredInstallPrompt(),
+  );
   const [installed, setInstalled] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
 
@@ -98,22 +100,20 @@ export function InstallAppCard() {
 
   useEffect(() => {
     // Só esconde o card quando o app está realmente aberto em modo instalado.
-    // (Não usamos mais o flag de localStorage, que escondia o card no navegador.)
     if (isInstalledDisplayMode()) {
       markInstalled();
       setInstalled(true);
       return;
     }
-    const onPrompt = (e: Event) => {
-      e.preventDefault();
-      const promptEvent = e as BeforeInstallPromptEvent;
-      setShowHelp(false);
-      setDeferred(promptEvent);
-    };
+    // O evento pode ter sido capturado antes do React montar (captador global).
+    const unsubscribe = subscribeInstallPrompt((e) => {
+      if (e) setShowHelp(false);
+      setDeferred(e);
+    });
     const onInstalled = () => {
       markInstalled();
       setInstalled(true);
-      setDeferred(null);
+      setDeferredInstallPrompt(null);
       // Notifica o backend para popular a lista "Portal dos Clientes"
       import("@/lib/portal-client").then(({ portalFetch }) => {
         portalFetch("/api/public/portal/register-install", {
@@ -122,10 +122,9 @@ export function InstallAppCard() {
         }).catch(() => undefined);
       });
     };
-    window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
-      window.removeEventListener("beforeinstallprompt", onPrompt);
+      unsubscribe();
       window.removeEventListener("appinstalled", onInstalled);
     };
   }, []);
@@ -133,8 +132,9 @@ export function InstallAppCard() {
   if (installed) return null;
 
   async function handleInstall() {
-    if (deferred) {
-      await openNativePrompt(deferred);
+    const promptEvent = deferred ?? getDeferredInstallPrompt();
+    if (promptEvent) {
+      await openNativePrompt(promptEvent);
       return;
     }
 
@@ -151,9 +151,10 @@ export function InstallAppCard() {
         setInstalled(true);
       }
     } finally {
-      setDeferred(null);
+      setDeferredInstallPrompt(null);
     }
   }
+
 
   const canPrompt = !!deferred;
   const ios = isIOS();
