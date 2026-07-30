@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { Smartphone, Share, Plus, CheckCircle2, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-};
+import {
+  getDeferredInstallPrompt,
+  setDeferredInstallPrompt,
+  subscribeInstallPrompt,
+  type BeforeInstallPromptEvent,
+} from "@/lib/pwa-install";
 
 const INSTALLED_KEY = "portal_app_installed";
 
