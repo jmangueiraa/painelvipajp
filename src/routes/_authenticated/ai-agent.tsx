@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { 
   MessageSquare, BrainCircuit, Smartphone, Laptop, Tv, 
   Settings, History, Plus, Trash2, Save, ExternalLink, 
-  Search, Info, BookOpen, MessageCircle
+  Search, Info, BookOpen, MessageCircle, Bot
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
