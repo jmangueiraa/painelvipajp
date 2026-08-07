@@ -36,7 +36,9 @@ const items = [
   { title: "Notificações Push", url: "/notificacoes-push", icon: Bell },
   { title: "Portal dos Clientes", url: "/portal-clientes", icon: Smartphone },
   { title: "Leads IA", url: "/leads", icon: Target },
+  { title: "Agente Suporte IA", url: "/ai-agent", icon: BrainCircuit },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
+
 
 
 ];
