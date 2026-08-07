@@ -42,12 +42,21 @@ export const processAgentMessageLogic = async (input: {
     console.error("Database fetch error in processAgentMessage:", { devError, appError, faqError });
   }
 
-  const msg = message.toLowerCase();
+  const msg = message.toLowerCase().trim();
   let response = "";
 
-  // Very basic NLP simulation for the specialized agent
-  if (msg.includes("olá") || msg.includes("bom dia") || msg.includes("boa tarde") || msg.includes("oi") || msg.trim() === "") {
+  // Basic NLP check for device brands even if "TV" is not mentioned
+  const commonBrands = ["samsung", "lg", "tcl", "philips", "sony", "aoc", "hisense", "philco"];
+  const mentionedBrand = commonBrands.find(b => msg.includes(b));
+
+  if (msg === "oi" || msg === "olá" || msg === "ola" || msg === "") {
     response = "Olá! Sou seu assistente de instalação AJP. Como posso ajudar você hoje? Qual seu nome e qual dispositivo você pretende usar?";
+  } else if (mentionedBrand && !response) {
+    const compatibleApps = apps?.filter((a: any) => a.device_category?.toLowerCase().includes('tv'));
+    response = `Entendi, você está usando um aparelho da ${mentionedBrand.toUpperCase()}. Geralmente para essa marca recomendamos:\n\n` +
+      (compatibleApps && compatibleApps.length > 0 ? compatibleApps.map((a: any) => `- ${a.app_name}`).join("\n") : "O aplicativo oficial da AJP.") +
+      "\n\nGostaria do tutorial de algum desses?";
+  } else if (msg.includes("olá") || msg.includes("bom dia") || msg.includes("boa tarde") || msg.includes("oi")) {
   } else if (msg.includes("tv") && (msg.includes("smart") || msg.includes("samsung") || msg.includes("lg") || msg.includes("tcl") || msg.includes("philips") || msg.includes("sony") || msg.includes("aoc") || msg.includes("hisense") || msg.includes("philco"))) {
     const brands = ["samsung", "lg", "tcl", "philips", "sony", "aoc", "hisense", "philco"];
     const brand = brands.find(b => msg.includes(b));
