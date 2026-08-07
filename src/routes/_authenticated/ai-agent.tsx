@@ -178,6 +178,9 @@ function AIAgentPage() {
             <TabsTrigger value="crm" className="flex items-center gap-2">
               <History className="size-4" /> CRM / Logs
             </TabsTrigger>
+            <TabsTrigger value="config" className="flex items-center gap-2">
+              <Settings className="size-4" /> Configurações
+            </TabsTrigger>
           </TabsList>
 
           {/* SIMULADOR TAB */}
