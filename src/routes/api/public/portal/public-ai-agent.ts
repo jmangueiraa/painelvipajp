@@ -15,9 +15,13 @@ export const Route = createFileRoute("/api/public/portal/public-ai-agent")({
           const { processAgentMessage } = await import("@/routes/_authenticated/ai-agent.functions");
           
           console.log("[Public AI Agent] Processing message:", body.message);
-          const result = await (processAgentMessage as any).handler({ data: { ...body, public: true } });
-          console.log("[Public AI Agent] Result:", !!result);
           
+          // Use __executeServer directly as it is the underlying handler for TanStack Start server functions
+          const result = await (processAgentMessage as any).__executeServer({ 
+            data: { ...body, public: true } 
+          });
+          
+          console.log("[Public AI Agent] Result received");
           return json(result, request);
         } catch (e) {
           console.error("[Public AI Agent] Error:", e);
