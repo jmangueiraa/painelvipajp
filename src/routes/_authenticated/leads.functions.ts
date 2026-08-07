@@ -37,8 +37,8 @@ export const getLeadsStats = createServerFn({ method: "GET" })
   });
 
 export const updateLeadStatus = createServerFn({ method: "POST" })
-  .handler(async (ctx) => {
-    const data = z.object({ id: z.string(), status: z.string() }).parse(ctx.data);
+  .validator((data: unknown) => z.object({ id: z.string(), status: z.string() }).parse(data))
+  .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // @ts-ignore
@@ -50,8 +50,9 @@ export const updateLeadStatus = createServerFn({ method: "POST" })
   });
 
 export const askIA = createServerFn({ method: "POST" })
-  .handler(async (ctx) => {
-    const { query } = z.object({ query: z.string() }).parse(ctx.data);
+  .validator((data: unknown) => z.object({ query: z.string() }).parse(data))
+  .handler(async ({ data }) => {
+    const { query } = data;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // @ts-ignore
