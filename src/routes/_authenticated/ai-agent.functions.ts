@@ -5,12 +5,14 @@ export const getAgentKnowledge = createServerFn({ method: "GET" })
   .handler(async () => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
-    // @ts-ignore
-    const { data: devices } = await (supabaseAdmin.from as any)("ai_agent_devices").select("*");
-    // @ts-ignore
-    const { data: apps } = await (supabaseAdmin.from as any)("ai_agent_apps").select("*").eq("is_active", true);
-    // @ts-ignore
-    const { data: faq } = await (supabaseAdmin.from as any)("ai_agent_faq").select("*");
+    const { data: devices, error: devError } = await (supabaseAdmin.from as any)("ai_agent_devices").select("*");
+    if (devError) console.error("Error fetching devices:", devError);
+    
+    const { data: apps, error: appError } = await (supabaseAdmin.from as any)("ai_agent_apps").select("*").eq("is_active", true);
+    if (appError) console.error("Error fetching apps:", appError);
+    
+    const { data: faq, error: faqError } = await (supabaseAdmin.from as any)("ai_agent_faq").select("*");
+    if (faqError) console.error("Error fetching faq:", faqError);
 
     return {
       devices: devices || [],
