@@ -178,7 +178,7 @@ function NotificacoesPushPage() {
   const canSend = title.trim().length > 0 && body.trim().length > 0 && (audience !== "specific" || selectedIds.length > 0) && !sendMut.isPending;
 
   return (
-    <AppShell>
+    <>
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-primary/10"><Bell className="w-6 h-6 text-primary" /></div>
@@ -343,6 +343,6 @@ function NotificacoesPushPage() {
           </CardContent>
         </Card>
       </div>
-    </AppShell>
+    </>
   );
 }
