@@ -4,13 +4,13 @@ import { findBestMatch } from "string-similarity";
 export const getAgentKnowledgeLogic = async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   
-  const { data: devices, error: devError } = await (supabaseAdmin.from as any)("ai_agent_devices").select("*");
+  const { data: devices, error: devError } = await (supabaseAdmin.from as any)("ai_agent_devices").select("*").catch(() => ({ data: [], error: null }));
   if (devError) console.error("Error fetching devices:", devError);
   
-  const { data: apps, error: appError } = await (supabaseAdmin.from as any)("ai_agent_apps").select("*").eq("is_active", true);
+  const { data: apps, error: appError } = await (supabaseAdmin.from as any)("ai_agent_apps").select("*").eq("is_active", true).catch(() => ({ data: [], error: null }));
   if (appError) console.error("Error fetching apps:", appError);
   
-  const { data: faq, error: faqError } = await (supabaseAdmin.from as any)("ai_agent_faq").select("*");
+  const { data: faq, error: faqError } = await (supabaseAdmin.from as any)("ai_agent_faq").select("*").catch(() => ({ data: [], error: null }));
   if (faqError) console.error("Error fetching faq:", faqError);
 
   return {

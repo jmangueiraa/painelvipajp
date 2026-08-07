@@ -308,8 +308,8 @@ function AIAgentPage() {
                 <CardContent>
                   <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
                     {knowledge?.devices?.length === 0 && <p className="text-xs text-center py-4 text-muted-foreground italic">Nenhum dispositivo cadastrado.</p>}
-                    {knowledge?.devices?.map((d: any) => (
-                      <div key={d.id || `device-${d.name}`} className="flex items-center justify-between p-2 rounded border bg-muted/50 text-xs">
+                    {(knowledge?.devices || []).map((d: any, idx: number) => (
+                      <div key={d.id || `device-${idx}-${d.name}`} className="flex items-center justify-between p-2 rounded border bg-muted/50 text-xs">
                         <div className="flex flex-col">
                           <span className="font-bold">{d.name}</span>
                           <span className="text-[10px] text-muted-foreground">{d.category}</span>
@@ -384,8 +384,8 @@ function AIAgentPage() {
                 <CardContent>
                   <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
                     {knowledge?.apps?.length === 0 && <p className="text-xs text-center py-4 text-muted-foreground italic">Nenhum app cadastrado.</p>}
-                    {knowledge?.apps?.map((a: any) => (
-                      <div key={a.id || `app-${a.app_name}`} className="p-2 rounded border bg-muted/50 text-xs flex flex-col gap-1 relative group">
+                    {(knowledge?.apps || []).map((a: any, idx: number) => (
+                      <div key={a.id || `app-${idx}-${a.app_name}`} className="p-2 rounded border bg-muted/50 text-xs flex flex-col gap-1 relative group">
                         <div className="flex justify-between items-center pr-8">
                           <span className="font-bold text-primary">{a.app_name}</span>
                           <Badge variant="outline" className="text-[9px]">{a.device_category}</Badge>
@@ -484,8 +484,8 @@ function AIAgentPage() {
                       ) : knowledge?.faq?.length === 0 ? (
                         <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground italic">Nenhum treinamento customizado encontrado. Comece treinando a IA agora!</TableCell></TableRow>
                       ) : (
-                        knowledge?.faq?.map((f: any) => (
-                          <TableRow key={f.id || `faq-${f.question}`} className="hover:bg-muted/30 transition-colors">
+                        (knowledge?.faq || []).map((f: any, idx: number) => (
+                          <TableRow key={f.id || `faq-${idx}-${f.question}`} className="hover:bg-muted/30 transition-colors">
                             <TableCell className="text-xs font-medium">{f.question}</TableCell>
                             <TableCell>
                               <div className="flex flex-wrap gap-1">
@@ -542,18 +542,20 @@ function AIAgentPage() {
                       ) : conversations?.length === 0 ? (
                         <TableRow><TableCell colSpan={5} className="text-center py-8">Nenhuma conversa registrada ainda.</TableCell></TableRow>
                       ) : (
-                        conversations.map((conv: any) => {
-                          const messages = conv.messages || [];
+                        (conversations || []).map((conv: any, idx: number) => {
+                          const messages = conv?.messages || [];
                           const lastMsg = messages.length > 0 ? messages[messages.length - 1] : null;
+                          const safeId = conv?.id || `conv-${idx}-${conv?.session_id || 'unknown'}`;
+                          
                           return (
-                            <TableRow key={conv.id}>
+                            <TableRow key={safeId}>
                               <TableCell className="text-xs whitespace-nowrap">
-                                {formatDateTimeBR(conv.updated_at)}
+                                {conv?.updated_at ? formatDateTimeBR(conv.updated_at) : '---'}
                               </TableCell>
                               <TableCell>
                                 <div className="flex flex-col">
-                                  <span className="font-medium text-xs">{conv.clients?.name || 'Visitante Público'}</span>
-                                  <span className="text-[9px] text-muted-foreground font-mono">{conv.session_id ? conv.session_id.slice(-6) : '---'}</span>
+                                  <span className="font-medium text-xs">{conv?.clients?.name || 'Visitante Público'}</span>
+                                  <span className="text-[9px] text-muted-foreground font-mono">{conv?.session_id ? conv.session_id.slice(-6) : '---'}</span>
                                 </div>
                               </TableCell>
                               <TableCell className="max-w-[250px]">
@@ -562,13 +564,13 @@ function AIAgentPage() {
                                 </p>
                               </TableCell>
                               <TableCell>
-                                <Badge variant={conv.status === 'concluido' ? 'default' : 'outline'} className="text-[9px] capitalize px-1 h-5">
-                                  {conv.status || 'ativo'}
+                                <Badge variant={conv?.status === 'concluido' ? 'default' : 'outline'} className="text-[9px] capitalize px-1 h-5">
+                                  {conv?.status || 'ativo'}
                                 </Badge>
                               </TableCell>
                               <TableCell className="text-right">
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
-                                  <a href={`/portal?session=${conv.session_id}`} target="_blank" rel="noreferrer">
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild disabled={!conv?.session_id}>
+                                  <a href={`/portal?session=${conv?.session_id || ''}`} target="_blank" rel="noreferrer">
                                     <ExternalLink className="size-4" />
                                   </a>
                                 </Button>
