@@ -44,6 +44,16 @@ export const processAgentMessageLogic = async (input: {
   }
 
   const msg = message.toLowerCase().trim();
+  
+  // Memória e Diretrizes de Vendas (System Context)
+  const salesContext = `
+    - Funil de vendas completo.
+    - Respostas automáticas para mais de 100 objeções.
+    - Qualificação do cliente constante.
+    - Gatilhos psicológicos (escassez, urgência, autoridade).
+    - Técnicas: SPIN Selling, AIDA, PAS e Fechamento Consultivo.
+  `;
+
   let response = "";
 
   const commonBrands = ["samsung", "lg", "tcl", "philips", "sony", "aoc", "hisense", "philco"];
@@ -78,7 +88,7 @@ export const processAgentMessageLogic = async (input: {
   });
 
   if (isGreeting || msg === "") {
-    response = "Olá! Sou seu assistente de instalação AJP. Como posso ajudar você hoje? Qual seu nome e qual dispositivo você pretende usar?";
+    response = "Olá! Sou seu assistente de suporte e vendas AJPVIP. Como posso ajudar você hoje? Qual seu nome e qual dispositivo você pretende usar? \n\nEstou aqui para te guiar no funil de vendas, tirar dúvidas e realizar seu fechamento consultivo!";
   } else if (fuzzyBrand && !response && !msg.includes("tutorial") && !msg.includes("passo")) {
     const compatibleApps = apps?.filter((a: any) => a.device_category?.toLowerCase().includes('tv'));
     response = `Entendi, você está usando um aparelho da ${fuzzyBrand.toUpperCase()}. Geralmente para essa marca recomendamos:\n\n` +
@@ -127,9 +137,13 @@ export const processAgentMessageLogic = async (input: {
     if (bestFaq && highestRating > 0.6) {
       response = bestFaq.answer;
     } else if (msg.includes("não entendeu") || msg.includes("como assim")) {
-      response = "Peço desculpas pela confusão. Às vezes me perco um pouco! Para que eu possa ser mais assertivo, você poderia me confirmar qual a marca e o modelo do seu aparelho? Por exemplo: Smart TV Samsung, TV Box Android ou iPhone.";
+      response = "Peço desculpas. Meu objetivo é qualificar seu atendimento e garantir que você tenha a melhor experiência AJPVIP. Para avançarmos no seu fechamento, poderia me confirmar seu aparelho? (Ex: Smart TV, TV Box ou Celular)";
+    } else if (msg.includes("preço") || msg.includes("valor") || msg.includes("quanto custa") || msg.includes("pagar")) {
+      response = "Excelente pergunta! Temos planos que cabem no seu bolso com o melhor custo-benefício do mercado. Para eu te recomendar o ideal: você busca apenas para você ou para sua família toda? (Qualificação de Vendas)";
+    } else if (msg.includes("caro") || msg.includes("desconto")) {
+      response = "Entendo perfeitamente, o valor é importante. Mas pense no conforto de ter todos os canais, filmes e séries sem travamentos 24h por dia. É um investimento em entretenimento de qualidade. Vamos fechar o plano trimestral com desconto?";
     } else {
-      response = "Desculpe, não entendi perfeitamente. Poderia me dizer de forma simples qual aparelho você quer configurar? (Ex: 'Quero instalar na minha TV LG' ou 'Como coloco no iPhone?')";
+      response = "Para que eu possa te atender com excelência e aplicar nossas técnicas de suporte consultivo, me diga: qual marca de TV ou aparelho você usa? Estou pronto para configurar seu acesso agora mesmo!";
     }
   }
 
