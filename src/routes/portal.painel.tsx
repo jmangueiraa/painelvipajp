@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { CalendarClock, CreditCard, Gift, LogOut, RefreshCw, Server as ServerIcon, Tv, Download, Copy, Check, CheckCircle2, ChevronUp, Smartphone, ExternalLink, Loader2, ShoppingBag } from "lucide-react";
+import { CalendarClock, CreditCard, Gift, LogOut, RefreshCw, Server as ServerIcon, Tv, Download, Copy, Check, CheckCircle2, ChevronUp, Smartphone, ExternalLink, Loader2, ShoppingBag, BrainCircuit } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
