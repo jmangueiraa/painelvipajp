@@ -117,6 +117,11 @@ function PortalDashboard() {
   const [payPage, setPayPage] = useState(1);
   const pollRef = useRef<number | null>(null);
   const [updatesKind, setUpdatesKind] = useState<"movie" | "series" | "games" | null>(null);
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [supportInput, setSupportInput] = useState("");
+  const [supportHistory, setSupportHistory] = useState<any[]>([]);
+  const [supportSession] = useState(() => `portal-session-${Math.random().toString(36).slice(2)}`);
+
 
   // Open updates dialog automatically when navigated with ?updates=movie|series|games
   useEffect(() => {
