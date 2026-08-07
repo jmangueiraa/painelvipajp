@@ -742,7 +742,7 @@ function PortalDashboard() {
               setSupportHistory(prev => [...prev, { role: 'user', content: msg }]);
               try {
                 // @ts-ignore - processAgentMessage is exported from ai-agent.functions
-                const res = await portalFetch("/api/public/portal/ai-agent-chat", {
+                const res = await portalFetch<any>("/api/public/portal/ai-agent-chat", {
                   method: "POST",
                   body: JSON.stringify({ sessionId: supportSession, message: msg, history: supportHistory })
                 });
@@ -750,6 +750,7 @@ function PortalDashboard() {
               } catch (err) {
                 toast.error("Erro na comunicação");
               }
+
             }} className="flex gap-2">
               <Input 
                 placeholder="Diga qual seu aparelho..." 
