@@ -9,13 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Search, Users, PieChart, TrendingUp, Filter, Download, 
-  MessageSquare, BrainCircuit, Calendar, Star, AlertCircle, ChevronRight
+  MessageSquare, BrainCircuit, Star, AlertCircle, ChevronRight
 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getLeadsStats, askIA } from "./leads.functions";
 import { useState } from "react";
 import { KpiCard } from "@/components/kpi-card";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 
 export const Route = createFileRoute("/_authenticated/leads")({
   component: LeadsPage,
@@ -26,13 +27,16 @@ function LeadsPage() {
   const [iaQuery, setIaQuery] = useState("");
   const [iaResponse, setIaResponse] = useState<string | null>(null);
 
-  const { data: stats, isLoading, refetch } = useQuery({
+  const getStatsFn = useServerFn(getLeadsStats);
+  const askIAFn = useServerFn(askIA);
+
+  const { data: stats, isLoading } = useQuery({
     queryKey: ["leads-stats"],
-    queryFn: () => getLeadsStats(),
+    queryFn: () => getStatsFn(),
   });
 
   const iaMutation = useMutation({
-    mutationFn: (query: string) => askIA({ data: { query } }),
+    mutationFn: (query: string) => askIAFn({ data: { query } }),
     onSuccess: (res) => {
       setIaResponse(res.answer);
     },
@@ -173,7 +177,7 @@ function LeadsPage() {
                                 <div className="w-full bg-muted rounded-full h-1">
                                   <div 
                                     className="bg-primary h-1 rounded-full" 
-                                    style={{ width: `${lead.conversion_probability * 100 || 20}%` }}
+                                    style={{ width: `${(lead.conversion_probability || 0.2) * 100}%` }}
                                   />
                                 </div>
                               </div>
