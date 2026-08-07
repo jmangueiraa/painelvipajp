@@ -35,8 +35,16 @@ export const Route = createFileRoute("/_authenticated/ai-agent")({
 function AIAgentPage() {
   const [activeTab, setActiveTab] = useState("chat");
   const [chatInput, setChatInput] = useState("");
-  const [sessionId] = useState(() => `session-${Math.random().toString(36).slice(2)}`);
   const [history, setHistory] = useState<any[]>([]);
+  
+  // Usamos useEffect para definir o sessionId apenas no cliente, evitando hydration mismatch
+  const [sessionId, setSessionId] = useState("");
+  
+  useState(() => {
+    if (typeof window !== 'undefined' && !sessionId) {
+      setSessionId(`session-${Math.random().toString(36).slice(2)}`);
+    }
+  });
 
   // Dialog states
   const [isFaqDialogOpen, setIsFaqDialogOpen] = useState(false);
