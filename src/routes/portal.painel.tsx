@@ -745,11 +745,11 @@ function PortalDashboard() {
               setSupportInput("");
               setSupportHistory(prev => [...prev, { role: 'user', content: msg }]);
               try {
-                // @ts-ignore - processAgentMessage is exported from ai-agent.functions
                 const res = await portalFetch<any>("/api/public/portal/ai-agent-chat", {
                   method: "POST",
-                  body: JSON.stringify({ sessionId: supportSession, message: msg, history: supportHistory })
+                  body: JSON.stringify({ sessionId: supportSession, message: msg, history: supportHistory || [] })
                 });
+                if (res.error) throw new Error(res.error);
                 setSupportHistory(res.history);
               } catch (err) {
                 toast.error("Erro na comunicação");
