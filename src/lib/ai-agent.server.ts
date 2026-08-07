@@ -46,25 +46,48 @@ export const processAgentMessageLogic = async (input: {
   const msg = message.toLowerCase().trim();
   let response = "";
 
-  // Basic NLP check for device brands even if "TV" is not mentioned
   const commonBrands = ["samsung", "lg", "tcl", "philips", "sony", "aoc", "hisense", "philco"];
-  const mentionedBrand = commonBrands.find(b => msg.includes(b));
+  
+  // Fuzzy brand detection
+  let fuzzyBrand = null;
+  if (msg.length > 2) {
+    const brandMatches = findBestMatch(msg, commonBrands);
+    if (brandMatches.bestMatch.rating > 0.6) {
+      fuzzyBrand = brandMatches.bestMatch.target;
+    } else {
+      // Check if any word in the message matches a brand
+      const words = msg.split(/\s+/);
+      for (const word of words) {
+        if (word.length < 3) continue;
+        const wordMatch = findBestMatch(word, commonBrands);
+        if (wordMatch.bestMatch.rating > 0.8) {
+          fuzzyBrand = wordMatch.bestMatch.target;
+          break;
+        }
+      }
+    }
+  }
 
-  if (msg === "oi" || msg === "olá" || msg === "ola" || msg === "") {
+  const greetings = ["oi", "olá", "ola", "bom dia", "boa tarde", "boa noite", "eai", "opa"];
+  const isGreeting = greetings.some(g => {
+    if (msg === g) return true;
+    if (msg.length > 2) {
+      return findBestMatch(msg, [g]).bestMatch.rating > 0.8;
+    }
+    return false;
+  });
+
+  if (isGreeting || msg === "") {
     response = "Olá! Sou seu assistente de instalação AJP. Como posso ajudar você hoje? Qual seu nome e qual dispositivo você pretende usar?";
-  } else if (mentionedBrand && !response && !msg.includes("tutorial") && !msg.includes("passo")) {
+  } else if (fuzzyBrand && !response && !msg.includes("tutorial") && !msg.includes("passo")) {
     const compatibleApps = apps?.filter((a: any) => a.device_category?.toLowerCase().includes('tv'));
-    response = `Entendi, você está usando um aparelho da ${mentionedBrand.toUpperCase()}. Geralmente para essa marca recomendamos:\n\n` +
+    response = `Entendi, você está usando um aparelho da ${fuzzyBrand.toUpperCase()}. Geralmente para essa marca recomendamos:\n\n` +
       (compatibleApps && compatibleApps.length > 0 ? compatibleApps.map((a: any) => `- ${a.app_name}`).join("\n") : "O aplicativo oficial da AJP.") +
       "\n\nGostaria do tutorial de algum desses?";
-  } else if (msg.includes("olá") || msg.includes("bom dia") || msg.includes("boa tarde") || msg.includes("oi")) {
-    // Already handled greetings above, but if it's more complex, we let it flow
-  } else if (msg.includes("tv") && (msg.includes("smart") || msg.includes("samsung") || msg.includes("lg") || msg.includes("tcl") || msg.includes("philips") || msg.includes("sony") || msg.includes("aoc") || msg.includes("hisense") || msg.includes("philco"))) {
-    const brands = ["samsung", "lg", "tcl", "philips", "sony", "aoc", "hisense", "philco"];
-    const brand = brands.find(b => msg.includes(b));
-    if (brand) {
+  } else if (msg.includes("tv") && (fuzzyBrand || msg.includes("smart"))) {
+    if (fuzzyBrand) {
       const compatibleApps = apps?.filter((a: any) => a.device_category?.toLowerCase().includes('tv') && a.device_category?.toLowerCase().includes('smart'));
-      response = `Ótimo, uma Smart TV ${brand.toUpperCase()}. Para este modelo, recomendo os seguintes aplicativos:\n\n` +
+      response = `Ótimo, uma Smart TV ${fuzzyBrand.toUpperCase()}. Para este modelo, recomendo os seguintes aplicativos:\n\n` +
         (compatibleApps && compatibleApps.length > 0 ? compatibleApps.map((a: any) => `- ${a.app_name}: ${a.description}`).join("\n") : "Infelizmente não encontrei apps específicos cadastrados para este modelo no momento.") +
         "\n\nQual destes você prefere instalar? Posso te passar o passo a passo.";
     } else {
@@ -86,10 +109,23 @@ export const processAgentMessageLogic = async (input: {
       response = "Para te passar o tutorial de instalação, primeiro me diga qual dispositivo você está usando.";
     }
   } else {
-    // FAQ search
-    const faqMatch = faq?.find((f: any) => f.keywords?.some((k: string) => msg.includes(k.toLowerCase())));
-    if (faqMatch) {
-      response = faqMatch.answer;
+    // FAQ search with fuzzy matching
+    let bestFaq = null;
+    let highestRating = 0;
+
+    if (faq) {
+      for (const item of faq) {
+        if (!item.keywords) continue;
+        const matches = findBestMatch(msg, item.keywords.map((k: string) => k.toLowerCase()));
+        if (matches.bestMatch.rating > highestRating) {
+          highestRating = matches.bestMatch.rating;
+          bestFaq = item;
+        }
+      }
+    }
+
+    if (bestFaq && highestRating > 0.6) {
+      response = bestFaq.answer;
     } else if (msg.includes("não entendeu") || msg.includes("como assim")) {
       response = "Peço desculpas pela confusão. Às vezes me perco um pouco! Para que eu possa ser mais assertivo, você poderia me confirmar qual a marca e o modelo do seu aparelho? Por exemplo: Smart TV Samsung, TV Box Android ou iPhone.";
     } else {
