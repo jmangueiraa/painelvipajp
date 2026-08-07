@@ -534,36 +534,40 @@ function AIAgentPage() {
                       ) : conversations?.length === 0 ? (
                         <TableRow><TableCell colSpan={5} className="text-center py-8">Nenhuma conversa registrada ainda.</TableCell></TableRow>
                       ) : (
-                        conversations.map((conv: any) => (
-                          <TableRow key={conv.id}>
-                            <TableCell className="text-xs whitespace-nowrap">
-                              {formatDateTimeBR(conv.updated_at)}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-col">
-                                <span className="font-medium text-xs">{conv.clients?.name || 'Visitante Público'}</span>
-                                <span className="text-[9px] text-muted-foreground font-mono">{conv.session_id.slice(-6)}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="max-w-[250px]">
-                              <p className="text-[10px] truncate italic">
-                                "{conv.messages?.[conv.messages.length - 1]?.content}"
-                              </p>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={conv.status === 'concluido' ? 'default' : 'outline'} className="text-[9px] capitalize px-1 h-5">
-                                {conv.status || 'ativo'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
-                                <a href={`/portal?session=${conv.session_id}`} target="_blank" rel="noreferrer">
-                                  <ExternalLink className="size-4" />
-                                </a>
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
+                        conversations.map((conv: any) => {
+                          const messages = conv.messages || [];
+                          const lastMsg = messages.length > 0 ? messages[messages.length - 1] : null;
+                          return (
+                            <TableRow key={conv.id}>
+                              <TableCell className="text-xs whitespace-nowrap">
+                                {formatDateTimeBR(conv.updated_at)}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-col">
+                                  <span className="font-medium text-xs">{conv.clients?.name || 'Visitante Público'}</span>
+                                  <span className="text-[9px] text-muted-foreground font-mono">{conv.session_id ? conv.session_id.slice(-6) : '---'}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="max-w-[250px]">
+                                <p className="text-[10px] truncate italic">
+                                  {lastMsg ? `"${lastMsg.content}"` : "(Sem mensagens)"}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={conv.status === 'concluido' ? 'default' : 'outline'} className="text-[9px] capitalize px-1 h-5">
+                                  {conv.status || 'ativo'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
+                                  <a href={`/portal?session=${conv.session_id}`} target="_blank" rel="noreferrer">
+                                    <ExternalLink className="size-4" />
+                                  </a>
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
                       )}
                     </TableBody>
                   </Table>
