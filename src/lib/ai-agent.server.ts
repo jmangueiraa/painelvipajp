@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { findBestMatch } from "string-similarity";
 
 export const getAgentKnowledgeLogic = async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
