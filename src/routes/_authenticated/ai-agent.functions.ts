@@ -22,13 +22,13 @@ export const getAgentKnowledge = createServerFn({ method: "GET" })
   });
 
 export const processAgentMessage = createServerFn({ method: "POST" })
-  .handler(async (ctx) => {
+  .handler(async ({ data }) => {
     const { sessionId, message, history = [], public: isPublic = false } = z.object({ 
       sessionId: z.string(), 
       message: z.string(),
       history: z.array(z.any()).optional(),
       public: z.boolean().optional()
-    }).parse(ctx.data);
+    }).parse(data);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -46,8 +46,8 @@ export const processAgentMessage = createServerFn({ method: "POST" })
     let detectedBrand = null;
 
     // Very basic NLP simulation for the specialized agent
-    if (msg.includes("olá") || msg.includes("bom dia") || msg.includes("boa tarde") || msg.includes("oi")) {
-      response = "Olá! Sou seu assistente de instalação AJP. Para começarmos, em qual dispositivo você pretende usar nosso serviço? (Ex: Smart TV, TV Box, Celular, iPhone, etc)";
+    if (msg.includes("olá") || msg.includes("bom dia") || msg.includes("boa tarde") || msg.includes("oi") || msg.trim() === "") {
+      response = "Olá! Sou seu assistente de instalação AJP. Como posso ajudar você hoje? Qual seu nome e qual dispositivo você pretende usar?";
     } else if (msg.includes("tv") && (msg.includes("smart") || msg.includes("samsung") || msg.includes("lg") || msg.includes("tcl"))) {
       const brands = ["samsung", "lg", "tcl", "philips", "sony", "aoc", "hisense", "philco"];
       const brand = brands.find(b => msg.includes(b));
