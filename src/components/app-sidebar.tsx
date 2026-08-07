@@ -35,7 +35,9 @@ const items = [
   { title: "Cadastrar API", url: "/cadastrar-api", icon: KeyRound },
   { title: "Notificações Push", url: "/notificacoes-push", icon: Bell },
   { title: "Portal dos Clientes", url: "/portal-clientes", icon: Smartphone },
+  { title: "Leads IA", url: "/leads", icon: Target },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
+
 
 ];
 
