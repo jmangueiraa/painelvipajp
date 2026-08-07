@@ -22,13 +22,13 @@ export const getAgentKnowledge = createServerFn({ method: "GET" })
   });
 
 export const processAgentMessage = createServerFn({ method: "POST" })
-  .handler(async (ctx) => {
+  .handler(async ({ data }) => {
     const { sessionId, message, history = [], public: isPublic = false } = z.object({ 
       sessionId: z.string(), 
       message: z.string(),
       history: z.array(z.any()).optional(),
       public: z.boolean().optional()
-    }).parse(ctx.data);
+    }).parse(data);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
