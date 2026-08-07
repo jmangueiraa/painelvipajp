@@ -75,10 +75,18 @@ function AIAgentPage() {
     queryFn: () => getKnowledgeFn(),
   });
 
-  const { data: conversations, isLoading: loadingConvs } = useQuery({
+  const { data: conversations, isLoading: loadingConvs, error: convsError } = useQuery({
     queryKey: ["agent-conversations"],
     queryFn: () => getConversationsFn(),
+    retry: 1,
   });
+
+  useEffect(() => {
+    if (convsError) {
+      console.error("Error loading conversations:", convsError);
+      toast.error("Erro ao carregar histórico. Verifique o console.");
+    }
+  }, [convsError]);
 
   const chatMutation = useMutation({
     mutationFn: (message: string) => processMessageFn({ data: { sessionId, message, history } as any }),
