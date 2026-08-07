@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
+import { Route as AiAgentIndexRouteImport } from './routes/ai-agent/index'
 import { Route as PortalPainelRouteImport } from './routes/portal.painel'
 import { Route as PortalIndiqueRouteImport } from './routes/portal.indique'
 import { Route as LojaSlugRouteImport } from './routes/loja.$slug'
@@ -81,6 +82,11 @@ const IndexRoute = IndexRouteImport.update({
 const PortalIndexRoute = PortalIndexRouteImport.update({
   id: '/portal/',
   path: '/portal/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiAgentIndexRoute = AiAgentIndexRouteImport.update({
+  id: '/ai-agent/',
+  path: '/ai-agent/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PortalPainelRoute = PortalPainelRouteImport.update({
@@ -349,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/loja/$slug': typeof LojaSlugRoute
   '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
+  '/ai-agent/': typeof AiAgentIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/loja/clientes': typeof AuthenticatedLojaClientesRoute
@@ -383,7 +390,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/ai-agent': typeof AuthenticatedAiAgentRoute
+  '/ai-agent': typeof AiAgentIndexRoute
   '/cadastrar-api': typeof AuthenticatedCadastrarApiRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -451,6 +458,7 @@ export interface FileRoutesById {
   '/loja/$slug': typeof LojaSlugRoute
   '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
+  '/ai-agent/': typeof AiAgentIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/_authenticated/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/_authenticated/loja/clientes': typeof AuthenticatedLojaClientesRoute
@@ -503,6 +511,7 @@ export interface FileRouteTypes {
     | '/loja/$slug'
     | '/portal/indique'
     | '/portal/painel'
+    | '/ai-agent/'
     | '/portal/'
     | '/admin/assinantes'
     | '/loja/clientes'
@@ -604,6 +613,7 @@ export interface FileRouteTypes {
     | '/loja/$slug'
     | '/portal/indique'
     | '/portal/painel'
+    | '/ai-agent/'
     | '/portal/'
     | '/_authenticated/admin/assinantes'
     | '/_authenticated/loja/clientes'
@@ -643,6 +653,7 @@ export interface RootRouteChildren {
   LojaSlugRoute: typeof LojaSlugRoute
   PortalIndiqueRoute: typeof PortalIndiqueRoute
   PortalPainelRoute: typeof PortalPainelRoute
+  AiAgentIndexRoute: typeof AiAgentIndexRoute
   PortalIndexRoute: typeof PortalIndexRoute
   ApiPublicPushCronRoute: typeof ApiPublicPushCronRoute
   ApiPublicAppMpWebhookRoute: typeof ApiPublicAppMpWebhookRoute
@@ -704,6 +715,13 @@ declare module '@tanstack/react-router' {
       path: '/portal'
       fullPath: '/portal/'
       preLoaderRoute: typeof PortalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-agent/': {
+      id: '/ai-agent/'
+      path: '/ai-agent'
+      fullPath: '/ai-agent/'
+      preLoaderRoute: typeof AiAgentIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/portal/painel': {
@@ -1096,6 +1114,7 @@ const rootRouteChildren: RootRouteChildren = {
   LojaSlugRoute: LojaSlugRoute,
   PortalIndiqueRoute: PortalIndiqueRoute,
   PortalPainelRoute: PortalPainelRoute,
+  AiAgentIndexRoute: AiAgentIndexRoute,
   PortalIndexRoute: PortalIndexRoute,
   ApiPublicPushCronRoute: ApiPublicPushCronRoute,
   ApiPublicAppMpWebhookRoute: ApiPublicAppMpWebhookRoute,
