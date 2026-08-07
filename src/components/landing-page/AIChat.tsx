@@ -20,6 +20,16 @@ export const AIChat = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    (window as any).scrollToAIChat = () => {
+      setIsOpen(true);
+      if (scrollRef.current) {
+        scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
+    return () => delete (window as any).scrollToAIChat;
+  }, []);
+
+  useEffect(() => {
     if (isOpen && messages.length === 0) {
       setMessages([{
         role: "assistant",
