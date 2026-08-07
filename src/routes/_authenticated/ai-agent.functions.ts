@@ -32,13 +32,13 @@ export const processAgentMessage = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // 1. Get knowledge base
-    // @ts-ignore
-    const { data: devices } = await (supabaseAdmin.from as any)("ai_agent_devices").select("*");
-    // @ts-ignore
-    const { data: apps } = await (supabaseAdmin.from as any)("ai_agent_apps").select("*").eq("is_active", true);
-    // @ts-ignore
-    const { data: faq } = await (supabaseAdmin.from as any)("ai_agent_faq").select("*");
+    const { data: devices, error: devError } = await (supabaseAdmin.from as any)("ai_agent_devices").select("*");
+    const { data: apps, error: appError } = await (supabaseAdmin.from as any)("ai_agent_apps").select("*").eq("is_active", true);
+    const { data: faq, error: faqError } = await (supabaseAdmin.from as any)("ai_agent_faq").select("*");
+
+    if (devError || appError || faqError) {
+      console.error("Database fetch error in processAgentMessage:", { devError, appError, faqError });
+    }
 
     const msg = message.toLowerCase();
     let response = "";
