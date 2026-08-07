@@ -12,20 +12,16 @@ export const Route = createFileRoute("/api/public/portal/public-ai-agent")({
       POST: async ({ request }) => {
         try {
           const body = await request.json();
-          const { processAgentMessage } = await import("@/routes/_authenticated/ai-agent.functions");
+          const { processAgentMessageLogic } = await import("@/routes/_authenticated/ai-agent.server");
           
           console.log("[Public AI Agent] Body:", JSON.stringify(body));
           
-          // Use the server function directly. Since we are in a server route, 
-          // we can call it. TanStack Start server functions are callable.
-          // Correct way to execute a server function internal logic in TanStack Start
-          const result = await (processAgentMessage as any).__executeServer({ 
-            data: {
-              sessionId: body.sessionId || "public-session",
-              message: body.message || "",
-              history: body.history || [],
-              public: true 
-            }
+          // Call the logic directly to bypass Start context requirements in raw API routes
+          const result = await processAgentMessageLogic({ 
+            sessionId: body.sessionId || "public-session",
+            message: body.message || "",
+            history: body.history || [],
+            public: true 
           });
           
           console.log("[Public AI Agent] Result received:", !!result);
