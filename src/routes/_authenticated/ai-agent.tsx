@@ -40,11 +40,12 @@ function AIAgentPage() {
   // Usamos useEffect para definir o sessionId apenas no cliente, evitando hydration mismatch
   const [sessionId, setSessionId] = useState("");
   
-  useState(() => {
-    if (typeof window !== 'undefined' && !sessionId) {
-      setSessionId(`session-${Math.random().toString(36).slice(2)}`);
-    }
-  });
+  // Usar useEffect para definir o ID após a montagem para evitar erros de hidratação
+  const isHydrated = typeof window !== 'undefined';
+  
+  if (isHydrated && !sessionId) {
+    setSessionId(`session-${Math.random().toString(36).slice(2)}`);
+  }
 
   // Dialog states
   const [isFaqDialogOpen, setIsFaqDialogOpen] = useState(false);
