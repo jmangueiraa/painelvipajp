@@ -35,9 +35,9 @@ export const processAgentMessageLogic = async (input: {
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  const { data: devices, error: devError } = await (supabaseAdmin.from as any)("ai_agent_devices").select("*");
-  const { data: apps, error: appError } = await (supabaseAdmin.from as any)("ai_agent_apps").select("*").eq("is_active", true);
-  const { data: faq, error: faqError } = await (supabaseAdmin.from as any)("ai_agent_faq").select("*");
+  const { data: devices, error: devError } = await (supabaseAdmin.from as any)("ai_agent_devices").select("*").catch(() => ({ data: [], error: null }));
+  const { data: apps, error: appError } = await (supabaseAdmin.from as any)("ai_agent_apps").select("*").eq("is_active", true).catch(() => ({ data: [], error: null }));
+  const { data: faq, error: faqError } = await (supabaseAdmin.from as any)("ai_agent_faq").select("*").catch(() => ({ data: [], error: null }));
 
   if (devError || appError || faqError) {
     console.error("Database fetch error in processAgentMessage:", { devError, appError, faqError });
@@ -113,7 +113,7 @@ export const processAgentMessageLogic = async (input: {
     let bestFaq = null;
     let highestRating = 0;
 
-    if (faq) {
+    if (Array.isArray(faq)) {
       for (const item of faq) {
         if (!item.keywords) continue;
         const matches = findBestMatch(msg, item.keywords.map((k: string) => k.toLowerCase()));
@@ -143,7 +143,7 @@ export const processAgentMessageLogic = async (input: {
         session_id: sessionId,
         messages: newHistory,
         updated_at: new Date().toISOString()
-      }, { onConflict: 'session_id' });
+      }, { onConflict: 'session_id' }).catch((e: any) => console.error("Upsert failed:", e));
   } catch (upsertError) {
     console.error("Error saving conversation history:", upsertError);
   }
