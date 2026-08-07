@@ -29,6 +29,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedCadastrarApiRouteImport } from './routes/_authenticated/cadastrar-api'
+import { Route as AuthenticatedAiAgentRouteImport } from './routes/_authenticated/ai-agent'
 import { Route as ApiPublicPushCronRouteImport } from './routes/api/public/push-cron'
 import { Route as AuthenticatedPortalClientesIdRouteImport } from './routes/_authenticated/portal-clientes.$id'
 import { Route as AuthenticatedLojaProdutosRouteImport } from './routes/_authenticated/loja.produtos'
@@ -160,6 +161,11 @@ const AuthenticatedCadastrarApiRoute =
     path: '/cadastrar-api',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAiAgentRoute = AuthenticatedAiAgentRouteImport.update({
+  id: '/ai-agent',
+  path: '/ai-agent',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicPushCronRoute = ApiPublicPushCronRouteImport.update({
   id: '/api/public/push-cron',
   path: '/api/public/push-cron',
@@ -313,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/ai-agent': typeof AuthenticatedAiAgentRoute
   '/cadastrar-api': typeof AuthenticatedCadastrarApiRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -360,6 +367,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/ai-agent': typeof AuthenticatedAiAgentRoute
   '/cadastrar-api': typeof AuthenticatedCadastrarApiRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -409,6 +417,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/ai-agent': typeof AuthenticatedAiAgentRoute
   '/_authenticated/cadastrar-api': typeof AuthenticatedCadastrarApiRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -458,6 +467,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/ai-agent'
     | '/cadastrar-api'
     | '/clientes'
     | '/configuracoes'
@@ -505,6 +515,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/ai-agent'
     | '/cadastrar-api'
     | '/clientes'
     | '/configuracoes'
@@ -553,6 +564,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/ai-agent'
     | '/_authenticated/cadastrar-api'
     | '/_authenticated/clientes'
     | '/_authenticated/configuracoes'
@@ -771,6 +783,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCadastrarApiRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ai-agent': {
+      id: '/_authenticated/ai-agent'
+      path: '/ai-agent'
+      fullPath: '/ai-agent'
+      preLoaderRoute: typeof AuthenticatedAiAgentRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/push-cron': {
       id: '/api/public/push-cron'
       path: '/api/public/push-cron'
@@ -985,6 +1004,7 @@ const AuthenticatedAdminAssinantesRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAiAgentRoute: typeof AuthenticatedAiAgentRoute
   AuthenticatedCadastrarApiRoute: typeof AuthenticatedCadastrarApiRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
@@ -1003,6 +1023,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAiAgentRoute: AuthenticatedAiAgentRoute,
   AuthenticatedCadastrarApiRoute: AuthenticatedCadastrarApiRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
@@ -1059,13 +1080,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
