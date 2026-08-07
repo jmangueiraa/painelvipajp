@@ -1,13 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const getLeadsStats = createServerFn({ method: "GET" })
   .handler(async () => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    
     // @ts-ignore
-    const { data: leads, error } = await supabaseAdmin
-      .from("leads")
-      .select("*");
+    const { data: leads, error } = await (supabaseAdmin.from as any)("leads").select("*");
 
     if (error) throw error;
 
@@ -28,9 +27,10 @@ export const getLeadsStats = createServerFn({ method: "GET" })
 export const updateLeadStatus = createServerFn({ method: "POST" })
   .handler(async (ctx) => {
     const data = z.object({ id: z.string(), status: z.string() }).parse(ctx.data);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     // @ts-ignore
-    const { error } = await supabaseAdmin
-      .from("leads")
+    const { error } = await (supabaseAdmin.from as any)("leads")
       .update({ status: data.status as any })
       .eq("id", data.id);
     if (error) throw error;
