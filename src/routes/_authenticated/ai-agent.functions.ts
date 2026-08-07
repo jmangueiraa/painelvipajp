@@ -83,13 +83,17 @@ export const processAgentMessage = createServerFn({ method: "POST" })
     // Save to conversation history
     const newHistory = [...(history || []), { role: 'user', content: message }, { role: 'assistant', content: response }];
     
-    // @ts-ignore
-    await (supabaseAdmin.from as any)("ai_agent_conversations")
-      .upsert({ 
-        session_id: sessionId,
-        messages: newHistory,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'session_id' });
+    try {
+      // @ts-ignore
+      await (supabaseAdmin.from as any)("ai_agent_conversations")
+        .upsert({ 
+          session_id: sessionId,
+          messages: newHistory,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'session_id' });
+    } catch (upsertError) {
+      console.error("Error saving conversation history:", upsertError);
+    }
 
     return { response, history: newHistory };
   });
