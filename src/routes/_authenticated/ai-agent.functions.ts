@@ -11,7 +11,7 @@ export const getAgentKnowledge = createServerFn({ method: "GET" })
   });
 
 export const processAgentMessage = createServerFn({ method: "POST" })
-  .handler(async ({ data }) => {
+  .handler(async ({ data }: { data: any }) => {
     return processAgentMessageLogic(data);
   });
 
