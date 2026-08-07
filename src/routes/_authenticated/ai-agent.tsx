@@ -37,15 +37,20 @@ function AIAgentPage() {
   const [chatInput, setChatInput] = useState("");
   const [history, setHistory] = useState<any[]>([]);
   
-  // Usamos useEffect para definir o sessionId apenas no cliente, evitando hydration mismatch
-  const [sessionId, setSessionId] = useState("");
+  // Usamos estado inicial vazio e useEffect para evitar hydration mismatch
+  const [sessionId, setSessionId] = useState<string | null>(null);
   
-  // Usar useMemo para gerar o ID de forma estável ou aguardar a montagem
   useEffect(() => {
-    if (!sessionId) {
-      setSessionId(`session-${Math.random().toString(36).slice(2)}`);
+    // Gerar ou recuperar ID apenas no cliente
+    const existing = sessionStorage.getItem("ai_agent_admin_session");
+    if (existing) {
+      setSessionId(existing);
+    } else {
+      const newId = `admin-session-${Math.random().toString(36).slice(2)}`;
+      sessionStorage.setItem("ai_agent_admin_session", newId);
+      setSessionId(newId);
     }
-  }, [sessionId]);
+  }, []);
 
   // Dialog states
   const [isFaqDialogOpen, setIsFaqDialogOpen] = useState(false);
@@ -89,7 +94,10 @@ function AIAgentPage() {
   }, [convsError]);
 
   const chatMutation = useMutation({
-    mutationFn: (message: string) => processMessageFn({ data: { sessionId, message, history } as any }),
+    mutationFn: (message: string) => {
+      if (!sessionId) throw new Error("Sessão não inicializada");
+      return processMessageFn({ data: { sessionId, message, history } as any });
+    },
     onSuccess: (res: any) => {
       setHistory(res.history);
       setChatInput("");
@@ -123,7 +131,7 @@ function AIAgentPage() {
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!chatInput.trim() || chatMutation.isPending) return;
+    if (!chatInput.trim() || chatMutation.isPending || !sessionId) return;
     chatMutation.mutate(chatInput);
   };
 
@@ -151,7 +159,7 @@ function AIAgentPage() {
   };
 
   return (
-    <AppShell>
+    <>
       <div className="flex flex-col gap-6 p-6 pb-20">
         <PageHeader 
           title="Agente de Suporte IA" 
@@ -498,7 +506,7 @@ function AIAgentPage() {
                             <TableCell className="text-xs font-medium">{f.question}</TableCell>
                             <TableCell>
                               <div className="flex flex-wrap gap-1">
-                                {f.keywords?.map((k: string) => (
+                                {Array.isArray(f.keywords) && f.keywords.map((k: string) => (
                                   <Badge key={k} variant="secondary" className="text-[9px] bg-primary/10 text-primary border-primary/20">{k}</Badge>
                                 ))}
                               </div>
@@ -552,7 +560,7 @@ function AIAgentPage() {
                         <TableRow><TableCell colSpan={5} className="text-center py-8">Nenhuma conversa registrada ainda.</TableCell></TableRow>
                       ) : (
                         (conversations || []).map((conv: any, idx: number) => {
-                          const messages = conv?.messages || [];
+                          const messages = Array.isArray(conv?.messages) ? conv.messages : [];
                           const lastMsg = messages.length > 0 ? messages[messages.length - 1] : null;
                           const safeId = conv?.id || `conv-${idx}-${conv?.session_id || 'unknown'}`;
                           
@@ -596,6 +604,6 @@ function AIAgentPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AppShell>
+    </>
   );
 }

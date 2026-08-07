@@ -122,7 +122,11 @@ function PortalDashboard() {
   const [supportOpen, setSupportOpen] = useState(false);
   const [supportInput, setSupportInput] = useState("");
   const [supportHistory, setSupportHistory] = useState<any[]>([]);
-  const [supportSession] = useState(() => `portal-session-${Math.random().toString(36).slice(2)}`);
+  const [supportSession, setSupportSession] = useState("");
+
+  useEffect(() => {
+    setSupportSession(`portal-session-${Math.random().toString(36).slice(2)}`);
+  }, []);
 
 
   // Open updates dialog automatically when navigated with ?updates=movie|series|games

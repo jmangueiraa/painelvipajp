@@ -58,7 +58,7 @@ function LeadsPage() {
   };
 
   return (
-    <AppShell>
+    <>
       <div className="flex flex-col gap-6 p-6 pb-20">
         <PageHeader 
           title="Leads Intelligence Hub" 
@@ -289,6 +289,6 @@ function LeadsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AppShell>
+    </>
   );
 }

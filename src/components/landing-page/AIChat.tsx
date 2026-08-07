@@ -15,8 +15,12 @@ export const AIChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId] = useState(() => Math.random().toString(36).substring(7));
+  const [sessionId, setSessionId] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    setSessionId(Math.random().toString(36).substring(7));
+  }, []);
 
   useEffect(() => {
     (window as any).scrollToAIChat = () => {
@@ -53,7 +57,7 @@ export const AIChat = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId,
+          sessionId: sessionId || "anonymous",
           message: userMsg,
           history: messages
         })
