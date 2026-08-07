@@ -4,7 +4,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown, Camera, ShieldCheck, Inbox, ShoppingBag, Store, KeyRound, Bell, Smartphone,
+  LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown, Camera, ShieldCheck, Inbox, ShoppingBag, Store, KeyRound, Bell, Smartphone, Target
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import {
@@ -35,7 +35,9 @@ const items = [
   { title: "Cadastrar API", url: "/cadastrar-api", icon: KeyRound },
   { title: "Notificações Push", url: "/notificacoes-push", icon: Bell },
   { title: "Portal dos Clientes", url: "/portal-clientes", icon: Smartphone },
+  { title: "Leads IA", url: "/leads", icon: Target },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
+
 
 ];
 
