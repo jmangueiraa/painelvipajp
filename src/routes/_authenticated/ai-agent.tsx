@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/ai-agent")({
 function AIAgentPage() {
   const [activeTab, setActiveTab] = useState("chat");
   const [chatInput, setChatInput] = useState("");
-  const sessionId = useMemo(() => `session-${Math.random().toString(36).slice(2)}`, []);
+  const [sessionId] = useState(() => `session-${Math.random().toString(36).slice(2)}`);
   const [history, setHistory] = useState<any[]>([]);
 
   // Dialog states
