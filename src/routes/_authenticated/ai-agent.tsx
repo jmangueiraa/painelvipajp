@@ -159,7 +159,7 @@ function AIAgentPage() {
   };
 
   return (
-    <AppShell>
+    <>
       <div className="flex flex-col gap-6 p-6 pb-20">
         <PageHeader 
           title="Agente de Suporte IA" 
@@ -604,6 +604,6 @@ function AIAgentPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AppShell>
+    </>
   );
 }
