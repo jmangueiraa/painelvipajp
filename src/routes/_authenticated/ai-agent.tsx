@@ -56,6 +56,7 @@ function AIAgentPage() {
   const [isFaqDialogOpen, setIsFaqDialogOpen] = useState(false);
   const [isDeviceDialogOpen, setIsDeviceDialogOpen] = useState(false);
   const [isAppDialogOpen, setIsAppDialogOpen] = useState(false);
+  const [systemPrompt, setSystemPrompt] = useState("");
   
   // Form states
   const [faqForm, setFaqForm] = useState({ question: "", answer: "", keywords: "" });
