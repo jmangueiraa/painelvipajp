@@ -23,6 +23,7 @@ import { Route as AuthenticatedRenovacaoRouteImport } from './routes/_authentica
 import { Route as AuthenticatedPortalClientesRouteImport } from './routes/_authenticated/portal-clientes'
 import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
 import { Route as AuthenticatedNotificacoesPushRouteImport } from './routes/_authenticated/notificacoes-push'
+import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
@@ -127,6 +128,11 @@ const AuthenticatedNotificacoesPushRoute =
     path: '/notificacoes-push',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
@@ -312,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/leads': typeof AuthenticatedLeadsRoute
   '/notificacoes-push': typeof AuthenticatedNotificacoesPushRoute
   '/planos': typeof AuthenticatedPlanosRoute
   '/portal-clientes': typeof AuthenticatedPortalClientesRouteWithChildren
@@ -358,6 +365,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/leads': typeof AuthenticatedLeadsRoute
   '/notificacoes-push': typeof AuthenticatedNotificacoesPushRoute
   '/planos': typeof AuthenticatedPlanosRoute
   '/portal-clientes': typeof AuthenticatedPortalClientesRouteWithChildren
@@ -406,6 +414,7 @@ export interface FileRoutesById {
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/notificacoes-push': typeof AuthenticatedNotificacoesPushRoute
   '/_authenticated/planos': typeof AuthenticatedPlanosRoute
   '/_authenticated/portal-clientes': typeof AuthenticatedPortalClientesRouteWithChildren
@@ -454,6 +463,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/financeiro'
+    | '/leads'
     | '/notificacoes-push'
     | '/planos'
     | '/portal-clientes'
@@ -500,6 +510,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/financeiro'
+    | '/leads'
     | '/notificacoes-push'
     | '/planos'
     | '/portal-clientes'
@@ -547,6 +558,7 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
     | '/_authenticated/financeiro'
+    | '/_authenticated/leads'
     | '/_authenticated/notificacoes-push'
     | '/_authenticated/planos'
     | '/_authenticated/portal-clientes'
@@ -715,6 +727,13 @@ declare module '@tanstack/react-router' {
       path: '/notificacoes-push'
       fullPath: '/notificacoes-push'
       preLoaderRoute: typeof AuthenticatedNotificacoesPushRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/leads': {
+      id: '/_authenticated/leads'
+      path: '/leads'
+      fullPath: '/leads'
+      preLoaderRoute: typeof AuthenticatedLeadsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/financeiro': {
@@ -971,6 +990,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
+  AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedNotificacoesPushRoute: typeof AuthenticatedNotificacoesPushRoute
   AuthenticatedPlanosRoute: typeof AuthenticatedPlanosRoute
   AuthenticatedPortalClientesRoute: typeof AuthenticatedPortalClientesRouteWithChildren
@@ -988,6 +1008,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
+  AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedNotificacoesPushRoute: AuthenticatedNotificacoesPushRoute,
   AuthenticatedPlanosRoute: AuthenticatedPlanosRoute,
   AuthenticatedPortalClientesRoute:
