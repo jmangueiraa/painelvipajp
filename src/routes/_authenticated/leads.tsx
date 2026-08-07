@@ -10,7 +10,7 @@ import { Search, Users, PieChart, TrendingUp, Filter, Download } from "lucide-re
 import { useQuery } from "@tanstack/react-query";
 import { getLeadsStats } from "./leads.functions";
 import { useState } from "react";
-import { KPICard } from "@/components/kpi-card";
+import { KpiCard } from "@/components/kpi-card";
 
 export const Route = createFileRoute("/_authenticated/leads")({
   component: LeadsPage,
@@ -38,27 +38,29 @@ function LeadsPage() {
         />
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <KPICard
-            title="Total de Leads"
+          <KpiCard
+            label="Total de Leads"
             value={stats?.total || 0}
             icon={Users}
+            color="violet"
           />
-          <KPICard
-            title="Interesse Alto"
+          <KpiCard
+            label="Interesse Alto"
             value={stats?.leads?.filter((l: any) => l.interest_level === 'Alto').length || 0}
             icon={TrendingUp}
-            variant="success"
+            color="emerald"
           />
-          <KPICard
-            title="Convertidos"
+          <KpiCard
+            label="Convertidos"
             value={stats?.leads?.filter((l: any) => l.status === 'Convertido').length || 0}
             icon={PieChart}
-            variant="info"
+            color="cyan"
           />
-          <KPICard
-            title="Plataformas"
+          <KpiCard
+            label="Plataformas"
             value={Object.keys(stats?.byPlatform || {}).length || 0}
             icon={Filter}
+            color="amber"
           />
         </div>
 
@@ -117,7 +119,7 @@ function LeadsPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                           <Badge variant={lead.status === 'Convertido' ? 'success' : 'info'}>
+                           <Badge variant={lead.status === 'Convertido' ? 'default' : 'outline'}>
                             {lead.status}
                           </Badge>
                         </TableCell>
