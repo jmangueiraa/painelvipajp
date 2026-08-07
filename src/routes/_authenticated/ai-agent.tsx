@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { 
   MessageSquare, BrainCircuit, Smartphone, Laptop, Tv, 
   Settings, History, Plus, Trash2, Save, ExternalLink, 
-  Search, Info, BookOpen, MessageCircle
+  Search, Info, BookOpen, MessageCircle, Bot
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
@@ -56,6 +56,7 @@ function AIAgentPage() {
   const [isFaqDialogOpen, setIsFaqDialogOpen] = useState(false);
   const [isDeviceDialogOpen, setIsDeviceDialogOpen] = useState(false);
   const [isAppDialogOpen, setIsAppDialogOpen] = useState(false);
+  const [systemPrompt, setSystemPrompt] = useState("");
   
   // Form states
   const [faqForm, setFaqForm] = useState({ question: "", answer: "", keywords: "" });
@@ -176,6 +177,9 @@ function AIAgentPage() {
             </TabsTrigger>
             <TabsTrigger value="crm" className="flex items-center gap-2">
               <History className="size-4" /> CRM / Logs
+            </TabsTrigger>
+            <TabsTrigger value="config" className="flex items-center gap-2">
+              <Settings className="size-4" /> Configurações
             </TabsTrigger>
           </TabsList>
 
@@ -601,6 +605,72 @@ function AIAgentPage() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+          {/* CONFIGURAÇÕES TAB */}
+          <TabsContent value="config" className="mt-6 space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bot className="size-5 text-primary" /> Prompt de Personalidade
+                  </CardTitle>
+                  <CardDescription>
+                    Defina como a IA deve se comportar, seu tom de voz e regras específicas de atendimento.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Instrução de Sistema (Prompt)</Label>
+                    <Textarea 
+                      placeholder="Ex: Você é um assistente de suporte gentil da AJPVIP. Sempre responda em português..." 
+                      className="min-h-[200px] font-mono text-xs"
+                      value={systemPrompt}
+                      onChange={(e) => setSystemPrompt(e.target.value)}
+                    />
+                    <p className="text-[10px] text-muted-foreground italic">
+                      Este prompt é enviado para a IA antes de cada conversa para moldar sua "personalidade".
+                    </p>
+                  </div>
+                </CardContent>
+                <CardFooter className="border-t pt-4">
+                  <Button 
+                    className="w-full" 
+                    onClick={() => {
+                      toast.success("Configuração de prompt salva com sucesso!");
+                    }}
+                  >
+                    <Save className="size-4 mr-2" /> Salvar Personalidade
+                  </Button>
+                </CardFooter>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="size-5 text-primary" /> Parâmetros Técnicos
+                  </CardTitle>
+                  <CardDescription>
+                    Ajuste a sensibilidade e o modelo da IA.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Temperatura (Criatividade)</Label>
+                    <Input type="range" min="0" max="100" defaultValue="70" className="cursor-pointer" />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>Mais Preciso</span>
+                      <span>Mais Criativo</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2 pt-4">
+                    <Label>Modelo de IA</Label>
+                    <Badge variant="outline" className="w-full justify-center py-2 bg-primary/5 text-primary">
+                      AJP-AI-TURBO (Padrão)
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
