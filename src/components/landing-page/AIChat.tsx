@@ -4,7 +4,6 @@ import { MessageCircle, X, Send, User, Bot, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Message {
   role: "user" | "assistant";
@@ -17,16 +16,15 @@ export const AIChat = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId] = useState(() => Math.random().toString(36).substring(7));
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     (window as any).scrollToAIChat = () => {
       setIsOpen(true);
-      if (scrollRef.current) {
-        scrollRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
     };
-    return () => delete (window as any).scrollToAIChat;
+    return () => {
+      delete (window as any).scrollToAIChat;
+    };
   }, []);
 
   useEffect(() => {
@@ -36,12 +34,10 @@ export const AIChat = () => {
         content: "Olá! Sou seu assistente de instalação AJP. Para começarmos, qual seu nome e em qual dispositivo você pretende usar nosso serviço?"
       }]);
     }
-  }, [isOpen]);
+  }, [isOpen, messages.length]);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSend = async () => {
@@ -128,7 +124,7 @@ export const AIChat = () => {
                 </Button>
               </CardHeader>
 
-              <ScrollArea className="flex-1 p-4" viewportRef={scrollRef}>
+              <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
                 <div className="space-y-4">
                   {messages.map((msg, i) => (
                     <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -155,8 +151,9 @@ export const AIChat = () => {
                       </div>
                     </div>
                   )}
+                  <div ref={messagesEndRef} />
                 </div>
-              </ScrollArea>
+              </div>
 
               <CardFooter className="p-4 bg-slate-900/50 border-t border-white/5">
                 <form 
