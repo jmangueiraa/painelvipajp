@@ -79,6 +79,8 @@ export const processAgentMessageLogic = async (input: {
     const faqMatch = faq?.find((f: any) => f.keywords?.some((k: string) => msg.includes(k.toLowerCase())));
     if (faqMatch) {
       response = faqMatch.answer;
+    } else if (msg.includes("não entendeu") || msg.includes("como assim")) {
+      response = "Peço desculpas pela confusão. Às vezes me perco um pouco! Para que eu possa ser mais assertivo, você poderia me confirmar qual a marca e o modelo do seu aparelho? Por exemplo: Smart TV Samsung, TV Box Android ou iPhone.";
     } else {
       response = "Desculpe, não entendi perfeitamente. Pode me dizer qual dispositivo você está usando? Assim consigo te indicar o melhor aplicativo e o tutorial correto.";
     }
