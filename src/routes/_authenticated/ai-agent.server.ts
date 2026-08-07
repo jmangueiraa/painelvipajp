@@ -121,3 +121,23 @@ export const getConversationsLogic = async () => {
     .order("updated_at", { ascending: false });
   return data || [];
 };
+
+export const updateKnowledgeItemLogic = async (type: 'device' | 'app' | 'faq', item: any) => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const table = type === 'device' ? 'ai_agent_devices' : type === 'app' ? 'ai_agent_apps' : 'ai_agent_faq';
+  
+  // @ts-ignore
+  const { data, error } = await (supabaseAdmin.from as any)(table).upsert(item).select().single();
+  if (error) throw error;
+  return data;
+};
+
+export const deleteKnowledgeItemLogic = async (type: 'device' | 'app' | 'faq', id: string) => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const table = type === 'device' ? 'ai_agent_devices' : type === 'app' ? 'ai_agent_apps' : 'ai_agent_faq';
+  
+  // @ts-ignore
+  const { error } = await (supabaseAdmin.from as any)(table).delete().eq('id', id);
+  if (error) throw error;
+  return true;
+};
