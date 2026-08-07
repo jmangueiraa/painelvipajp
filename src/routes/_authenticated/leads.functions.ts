@@ -26,10 +26,8 @@ export const getLeadsStats = createServerFn({ method: "GET" })
   });
 
 export const updateLeadStatus = createServerFn({ method: "POST" })
-  .validator((data: any) => {
-    return z.object({ id: z.string(), status: z.string() }).parse(data);
-  })
-  .handler(async ({ data }) => {
+  .handler(async (ctx) => {
+    const data = z.object({ id: z.string(), status: z.string() }).parse(ctx.data);
     // @ts-ignore
     const { error } = await supabaseAdmin
       .from("leads")
