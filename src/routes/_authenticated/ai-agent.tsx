@@ -23,7 +23,7 @@ import {
   updateKnowledgeItem,
   deleteKnowledgeItem
 } from "./ai-agent.functions";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { formatDateTimeBR } from "@/lib/format";
