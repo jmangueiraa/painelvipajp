@@ -41,13 +41,11 @@ function AIAgentPage() {
   const [sessionId, setSessionId] = useState("");
   
   // Usar useMemo para gerar o ID de forma estável ou aguardar a montagem
-  const generatedId = useMemo(() => `session-${Math.random().toString(36).slice(2)}`, []);
-  
-  useState(() => {
-    if (typeof window !== 'undefined') {
-      setSessionId(generatedId);
+  useEffect(() => {
+    if (!sessionId) {
+      setSessionId(`session-${Math.random().toString(36).slice(2)}`);
     }
-  });
+  }, [sessionId]);
 
   // Dialog states
   const [isFaqDialogOpen, setIsFaqDialogOpen] = useState(false);
