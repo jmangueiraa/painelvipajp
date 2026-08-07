@@ -4,13 +4,13 @@ import { findBestMatch } from "string-similarity";
 export const getAgentKnowledgeLogic = async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   
-  const { data: devices, error: devError } = await (supabaseAdmin.from as any)("ai_agent_devices").select("*");
+  const { data: devices, error: devError } = await (supabaseAdmin.from as any)("ai_agent_devices").select("*").catch(() => ({ data: [], error: null }));
   if (devError) console.error("Error fetching devices:", devError);
   
-  const { data: apps, error: appError } = await (supabaseAdmin.from as any)("ai_agent_apps").select("*").eq("is_active", true);
+  const { data: apps, error: appError } = await (supabaseAdmin.from as any)("ai_agent_apps").select("*").eq("is_active", true).catch(() => ({ data: [], error: null }));
   if (appError) console.error("Error fetching apps:", appError);
   
-  const { data: faq, error: faqError } = await (supabaseAdmin.from as any)("ai_agent_faq").select("*");
+  const { data: faq, error: faqError } = await (supabaseAdmin.from as any)("ai_agent_faq").select("*").catch(() => ({ data: [], error: null }));
   if (faqError) console.error("Error fetching faq:", faqError);
 
   return {
@@ -153,11 +153,22 @@ export const processAgentMessageLogic = async (input: {
 
 export const getConversationsLogic = async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  // @ts-ignore
-  const { data } = await (supabaseAdmin.from as any)("ai_agent_conversations")
-    .select("*, clients(name)")
-    .order("updated_at", { ascending: false });
-  return data || [];
+  
+  try {
+    // @ts-ignore
+    const { data, error } = await (supabaseAdmin.from as any)("ai_agent_conversations")
+      .select("*, clients(name)")
+      .order("updated_at", { ascending: false });
+    
+    if (error) {
+      console.error("Error fetching conversations:", error);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.error("Fatal error in getConversationsLogic:", err);
+    return [];
+  }
 };
 
 export const updateKnowledgeItemLogic = async (type: 'device' | 'app' | 'faq', item: any) => {
