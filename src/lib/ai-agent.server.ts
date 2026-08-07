@@ -153,11 +153,22 @@ export const processAgentMessageLogic = async (input: {
 
 export const getConversationsLogic = async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  // @ts-ignore
-  const { data } = await (supabaseAdmin.from as any)("ai_agent_conversations")
-    .select("*, clients(name)")
-    .order("updated_at", { ascending: false });
-  return data || [];
+  
+  try {
+    // @ts-ignore
+    const { data, error } = await (supabaseAdmin.from as any)("ai_agent_conversations")
+      .select("*, clients(name)")
+      .order("updated_at", { ascending: false });
+    
+    if (error) {
+      console.error("Error fetching conversations:", error);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.error("Fatal error in getConversationsLogic:", err);
+    return [];
+  }
 };
 
 export const updateKnowledgeItemLogic = async (type: 'device' | 'app' | 'faq', item: any) => {
