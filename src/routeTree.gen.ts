@@ -46,6 +46,7 @@ import { Route as ApiPublicPortalRequestOtpRouteImport } from './routes/api/publ
 import { Route as ApiPublicPortalRenewalStatusRouteImport } from './routes/api/public/portal/renewal-status'
 import { Route as ApiPublicPortalRenewRequestRouteImport } from './routes/api/public/portal/renew-request'
 import { Route as ApiPublicPortalRegisterInstallRouteImport } from './routes/api/public/portal/register-install'
+import { Route as ApiPublicPortalPublicAiAgentRouteImport } from './routes/api/public/portal/public-ai-agent'
 import { Route as ApiPublicPortalMpWebhookRouteImport } from './routes/api/public/portal/mp-webhook'
 import { Route as ApiPublicPortalMpCreatePixRouteImport } from './routes/api/public/portal/mp-create-pix'
 import { Route as ApiPublicPortalMpCreateExtraRouteImport } from './routes/api/public/portal/mp-create-extra'
@@ -258,6 +259,12 @@ const ApiPublicPortalRegisterInstallRoute =
     path: '/api/public/portal/register-install',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPortalPublicAiAgentRoute =
+  ApiPublicPortalPublicAiAgentRouteImport.update({
+    id: '/api/public/portal/public-ai-agent',
+    path: '/api/public/portal/public-ai-agent',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPortalMpWebhookRoute =
   ApiPublicPortalMpWebhookRouteImport.update({
     id: '/api/public/portal/mp-webhook',
@@ -359,6 +366,7 @@ export interface FileRoutesByFullPath {
   '/api/public/portal/mp-create-extra': typeof ApiPublicPortalMpCreateExtraRoute
   '/api/public/portal/mp-create-pix': typeof ApiPublicPortalMpCreatePixRoute
   '/api/public/portal/mp-webhook': typeof ApiPublicPortalMpWebhookRoute
+  '/api/public/portal/public-ai-agent': typeof ApiPublicPortalPublicAiAgentRoute
   '/api/public/portal/register-install': typeof ApiPublicPortalRegisterInstallRoute
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
@@ -408,6 +416,7 @@ export interface FileRoutesByTo {
   '/api/public/portal/mp-create-extra': typeof ApiPublicPortalMpCreateExtraRoute
   '/api/public/portal/mp-create-pix': typeof ApiPublicPortalMpCreatePixRoute
   '/api/public/portal/mp-webhook': typeof ApiPublicPortalMpWebhookRoute
+  '/api/public/portal/public-ai-agent': typeof ApiPublicPortalPublicAiAgentRoute
   '/api/public/portal/register-install': typeof ApiPublicPortalRegisterInstallRoute
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
@@ -459,6 +468,7 @@ export interface FileRoutesById {
   '/api/public/portal/mp-create-extra': typeof ApiPublicPortalMpCreateExtraRoute
   '/api/public/portal/mp-create-pix': typeof ApiPublicPortalMpCreatePixRoute
   '/api/public/portal/mp-webhook': typeof ApiPublicPortalMpWebhookRoute
+  '/api/public/portal/public-ai-agent': typeof ApiPublicPortalPublicAiAgentRoute
   '/api/public/portal/register-install': typeof ApiPublicPortalRegisterInstallRoute
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
@@ -510,6 +520,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/mp-create-extra'
     | '/api/public/portal/mp-create-pix'
     | '/api/public/portal/mp-webhook'
+    | '/api/public/portal/public-ai-agent'
     | '/api/public/portal/register-install'
     | '/api/public/portal/renew-request'
     | '/api/public/portal/renewal-status'
@@ -559,6 +570,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/mp-create-extra'
     | '/api/public/portal/mp-create-pix'
     | '/api/public/portal/mp-webhook'
+    | '/api/public/portal/public-ai-agent'
     | '/api/public/portal/register-install'
     | '/api/public/portal/renew-request'
     | '/api/public/portal/renewal-status'
@@ -609,6 +621,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/mp-create-extra'
     | '/api/public/portal/mp-create-pix'
     | '/api/public/portal/mp-webhook'
+    | '/api/public/portal/public-ai-agent'
     | '/api/public/portal/register-install'
     | '/api/public/portal/renew-request'
     | '/api/public/portal/renewal-status'
@@ -642,6 +655,7 @@ export interface RootRouteChildren {
   ApiPublicPortalMpCreateExtraRoute: typeof ApiPublicPortalMpCreateExtraRoute
   ApiPublicPortalMpCreatePixRoute: typeof ApiPublicPortalMpCreatePixRoute
   ApiPublicPortalMpWebhookRoute: typeof ApiPublicPortalMpWebhookRoute
+  ApiPublicPortalPublicAiAgentRoute: typeof ApiPublicPortalPublicAiAgentRoute
   ApiPublicPortalRegisterInstallRoute: typeof ApiPublicPortalRegisterInstallRoute
   ApiPublicPortalRenewRequestRoute: typeof ApiPublicPortalRenewRequestRoute
   ApiPublicPortalRenewalStatusRoute: typeof ApiPublicPortalRenewalStatusRoute
@@ -916,6 +930,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPortalRegisterInstallRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/portal/public-ai-agent': {
+      id: '/api/public/portal/public-ai-agent'
+      path: '/api/public/portal/public-ai-agent'
+      fullPath: '/api/public/portal/public-ai-agent'
+      preLoaderRoute: typeof ApiPublicPortalPublicAiAgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/portal/mp-webhook': {
       id: '/api/public/portal/mp-webhook'
       path: '/api/public/portal/mp-webhook'
@@ -1087,6 +1108,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPortalMpCreateExtraRoute: ApiPublicPortalMpCreateExtraRoute,
   ApiPublicPortalMpCreatePixRoute: ApiPublicPortalMpCreatePixRoute,
   ApiPublicPortalMpWebhookRoute: ApiPublicPortalMpWebhookRoute,
+  ApiPublicPortalPublicAiAgentRoute: ApiPublicPortalPublicAiAgentRoute,
   ApiPublicPortalRegisterInstallRoute: ApiPublicPortalRegisterInstallRoute,
   ApiPublicPortalRenewRequestRoute: ApiPublicPortalRenewRequestRoute,
   ApiPublicPortalRenewalStatusRoute: ApiPublicPortalRenewalStatusRoute,
@@ -1102,3 +1124,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
