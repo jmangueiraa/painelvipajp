@@ -37,7 +37,7 @@ function LeadsPage() {
 
   const iaMutation = useMutation({
     mutationFn: (query: string) => askIAFn({ data: { query } }),
-    onSuccess: (res) => {
+    onSuccess: (res: any) => {
       setIaResponse(res.answer);
     },
     onError: () => {
