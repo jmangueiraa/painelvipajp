@@ -14,6 +14,7 @@ export const getAgentKnowledge = createServerFn({ method: "GET" })
   });
 
 export const processAgentMessage = createServerFn({ method: "POST" })
+  .inputValidator((data: any) => data)
   .handler(async ({ data }: { data: any }) => {
     return processAgentMessageLogic(data);
   });
@@ -24,7 +25,7 @@ export const getConversations = createServerFn({ method: "GET" })
   });
 
 export const updateKnowledgeItem = createServerFn({ method: "POST" })
-  .inputValidator((data) => z.object({
+  .inputValidator((data: any) => z.object({
     type: z.enum(['device', 'app', 'faq']),
     item: z.any()
   }).parse(data))
@@ -33,7 +34,7 @@ export const updateKnowledgeItem = createServerFn({ method: "POST" })
   });
 
 export const deleteKnowledgeItem = createServerFn({ method: "POST" })
-  .inputValidator((data) => z.object({
+  .inputValidator((data: any) => z.object({
     type: z.enum(['device', 'app', 'faq']),
     id: z.string()
   }).parse(data))

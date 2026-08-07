@@ -12,7 +12,7 @@ export const Route = createFileRoute("/api/public/portal/public-ai-agent")({
       POST: async ({ request }) => {
         try {
           const body = await request.json();
-          const { processAgentMessageLogic } = await import("../../../../lib/ai-agent.server");
+          const { processAgentMessageLogic } = await import("@/lib/ai-agent.server");
           
           console.log("[Public AI Agent] Body:", JSON.stringify(body));
           

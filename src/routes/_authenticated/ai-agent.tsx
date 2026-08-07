@@ -23,7 +23,7 @@ import {
   updateKnowledgeItem,
   deleteKnowledgeItem
 } from "./ai-agent.functions";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { formatDateTimeBR } from "@/lib/format";
@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/ai-agent")({
 function AIAgentPage() {
   const [activeTab, setActiveTab] = useState("chat");
   const [chatInput, setChatInput] = useState("");
-  const [sessionId] = useState(() => `session-${Math.random().toString(36).slice(2)}`);
+  const sessionId = useMemo(() => `session-${Math.random().toString(36).slice(2)}`, []);
   const [history, setHistory] = useState<any[]>([]);
 
   // Dialog states
