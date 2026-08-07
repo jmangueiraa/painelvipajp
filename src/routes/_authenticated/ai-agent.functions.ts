@@ -5,12 +5,14 @@ export const getAgentKnowledge = createServerFn({ method: "GET" })
   .handler(async () => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
-    // @ts-ignore
-    const { data: devices } = await (supabaseAdmin.from as any)("ai_agent_devices").select("*");
-    // @ts-ignore
-    const { data: apps } = await (supabaseAdmin.from as any)("ai_agent_apps").select("*").eq("is_active", true);
-    // @ts-ignore
-    const { data: faq } = await (supabaseAdmin.from as any)("ai_agent_faq").select("*");
+    const { data: devices, error: devError } = await (supabaseAdmin.from as any)("ai_agent_devices").select("*");
+    if (devError) console.error("Error fetching devices:", devError);
+    
+    const { data: apps, error: appError } = await (supabaseAdmin.from as any)("ai_agent_apps").select("*").eq("is_active", true);
+    if (appError) console.error("Error fetching apps:", appError);
+    
+    const { data: faq, error: faqError } = await (supabaseAdmin.from as any)("ai_agent_faq").select("*");
+    if (faqError) console.error("Error fetching faq:", faqError);
 
     return {
       devices: devices || [],
@@ -30,13 +32,13 @@ export const processAgentMessage = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // 1. Get knowledge base
-    // @ts-ignore
-    const { data: devices } = await (supabaseAdmin.from as any)("ai_agent_devices").select("*");
-    // @ts-ignore
-    const { data: apps } = await (supabaseAdmin.from as any)("ai_agent_apps").select("*").eq("is_active", true);
-    // @ts-ignore
-    const { data: faq } = await (supabaseAdmin.from as any)("ai_agent_faq").select("*");
+    const { data: devices, error: devError } = await (supabaseAdmin.from as any)("ai_agent_devices").select("*");
+    const { data: apps, error: appError } = await (supabaseAdmin.from as any)("ai_agent_apps").select("*").eq("is_active", true);
+    const { data: faq, error: faqError } = await (supabaseAdmin.from as any)("ai_agent_faq").select("*");
+
+    if (devError || appError || faqError) {
+      console.error("Database fetch error in processAgentMessage:", { devError, appError, faqError });
+    }
 
     const msg = message.toLowerCase();
     let response = "";
@@ -81,13 +83,17 @@ export const processAgentMessage = createServerFn({ method: "POST" })
     // Save to conversation history
     const newHistory = [...(history || []), { role: 'user', content: message }, { role: 'assistant', content: response }];
     
-    // @ts-ignore
-    await (supabaseAdmin.from as any)("ai_agent_conversations")
-      .upsert({ 
-        session_id: sessionId,
-        messages: newHistory,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'session_id' });
+    try {
+      // @ts-ignore
+      await (supabaseAdmin.from as any)("ai_agent_conversations")
+        .upsert({ 
+          session_id: sessionId,
+          messages: newHistory,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'session_id' });
+    } catch (upsertError) {
+      console.error("Error saving conversation history:", upsertError);
+    }
 
     return { response, history: newHistory };
   });
