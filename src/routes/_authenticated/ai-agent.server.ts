@@ -48,18 +48,18 @@ export const processAgentMessageLogic = async (input: {
   // Very basic NLP simulation for the specialized agent
   if (msg.includes("olá") || msg.includes("bom dia") || msg.includes("boa tarde") || msg.includes("oi") || msg.trim() === "") {
     response = "Olá! Sou seu assistente de instalação AJP. Como posso ajudar você hoje? Qual seu nome e qual dispositivo você pretende usar?";
-  } else if (msg.includes("tv") && (msg.includes("smart") || msg.includes("samsung") || msg.includes("lg") || msg.includes("tcl"))) {
+  } else if (msg.includes("tv") && (msg.includes("smart") || msg.includes("samsung") || msg.includes("lg") || msg.includes("tcl") || msg.includes("philips") || msg.includes("sony") || msg.includes("aoc") || msg.includes("hisense") || msg.includes("philco"))) {
     const brands = ["samsung", "lg", "tcl", "philips", "sony", "aoc", "hisense", "philco"];
     const brand = brands.find(b => msg.includes(b));
     if (brand) {
-      const compatibleApps = apps?.filter((a: any) => a.device_category === 'Smart TV');
+      const compatibleApps = apps?.filter((a: any) => a.device_category?.toLowerCase().includes('tv') && a.device_category?.toLowerCase().includes('smart'));
       response = `Ótimo, uma Smart TV ${brand.toUpperCase()}. Para este modelo, recomendo os seguintes aplicativos:\n\n` +
-        (compatibleApps?.map((a: any) => `- ${a.app_name}: ${a.description}`).join("\n") || "Infelizmente não encontrei apps cadastrados para este modelo.") +
+        (compatibleApps && compatibleApps.length > 0 ? compatibleApps.map((a: any) => `- ${a.app_name}: ${a.description}`).join("\n") : "Infelizmente não encontrei apps específicos cadastrados para este modelo no momento.") +
         "\n\nQual destes você prefere instalar? Posso te passar o passo a passo.";
     } else {
       response = "Entendi, é uma Smart TV. Qual a marca dela? (Samsung, LG, TCL, Philips, etc)";
     }
-  } else if (msg.includes("box") || msg.includes("tv box") || msg.includes("android tv")) {
+  } else if (msg.includes("box") || msg.includes("tv box") || msg.includes("android tv") || msg.includes("fire stick") || msg.includes("firestick")) {
     const compatibleApps = apps?.filter((a: any) => a.device_category === 'TV Box');
     response = "Para TV Box Android, temos aplicativos excelentes. Recomendo o " + 
       (compatibleApps?.[0]?.app_name || "nosso app oficial") + ". \n\nVocê sabe qual a versão do Android dela? Geralmente fica em Configurações > Sobre.";
