@@ -4,7 +4,7 @@ import { Play, MessageCircle } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/ai-agent")({
+export const Route = createFileRoute("/ai-agent/public")({
   component: AIAgentPublicPage,
 });
 

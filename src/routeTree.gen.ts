@@ -17,6 +17,7 @@ import { Route as PortalIndexRouteImport } from './routes/portal.index'
 import { Route as PortalPainelRouteImport } from './routes/portal.painel'
 import { Route as PortalIndiqueRouteImport } from './routes/portal.indique'
 import { Route as LojaSlugRouteImport } from './routes/loja.$slug'
+import { Route as AiAgentPublicRouteImport } from './routes/ai-agent.public'
 import { Route as AuthenticatedSolicitacoesRouteImport } from './routes/_authenticated/solicitacoes'
 import { Route as AuthenticatedServidoresRouteImport } from './routes/_authenticated/servidores'
 import { Route as AuthenticatedRenovacaoRouteImport } from './routes/_authenticated/renovacao'
@@ -96,6 +97,11 @@ const PortalIndiqueRoute = PortalIndiqueRouteImport.update({
 const LojaSlugRoute = LojaSlugRouteImport.update({
   id: '/loja/$slug',
   path: '/loja/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiAgentPublicRoute = AiAgentPublicRouteImport.update({
+  id: '/ai-agent/public',
+  path: '/ai-agent/public',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedSolicitacoesRoute =
@@ -346,6 +352,7 @@ export interface FileRoutesByFullPath {
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
+  '/ai-agent/public': typeof AiAgentPublicRoute
   '/loja/$slug': typeof LojaSlugRoute
   '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
@@ -396,6 +403,7 @@ export interface FileRoutesByTo {
   '/renovacao': typeof AuthenticatedRenovacaoRoute
   '/servidores': typeof AuthenticatedServidoresRoute
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
+  '/ai-agent/public': typeof AiAgentPublicRoute
   '/loja/$slug': typeof LojaSlugRoute
   '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
@@ -448,6 +456,7 @@ export interface FileRoutesById {
   '/_authenticated/renovacao': typeof AuthenticatedRenovacaoRoute
   '/_authenticated/servidores': typeof AuthenticatedServidoresRoute
   '/_authenticated/solicitacoes': typeof AuthenticatedSolicitacoesRoute
+  '/ai-agent/public': typeof AiAgentPublicRoute
   '/loja/$slug': typeof LojaSlugRoute
   '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
@@ -500,6 +509,7 @@ export interface FileRouteTypes {
     | '/renovacao'
     | '/servidores'
     | '/solicitacoes'
+    | '/ai-agent/public'
     | '/loja/$slug'
     | '/portal/indique'
     | '/portal/painel'
@@ -550,6 +560,7 @@ export interface FileRouteTypes {
     | '/renovacao'
     | '/servidores'
     | '/solicitacoes'
+    | '/ai-agent/public'
     | '/loja/$slug'
     | '/portal/indique'
     | '/portal/painel'
@@ -601,6 +612,7 @@ export interface FileRouteTypes {
     | '/_authenticated/renovacao'
     | '/_authenticated/servidores'
     | '/_authenticated/solicitacoes'
+    | '/ai-agent/public'
     | '/loja/$slug'
     | '/portal/indique'
     | '/portal/painel'
@@ -640,6 +652,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  AiAgentPublicRoute: typeof AiAgentPublicRoute
   LojaSlugRoute: typeof LojaSlugRoute
   PortalIndiqueRoute: typeof PortalIndiqueRoute
   PortalPainelRoute: typeof PortalPainelRoute
@@ -725,6 +738,13 @@ declare module '@tanstack/react-router' {
       path: '/loja/$slug'
       fullPath: '/loja/$slug'
       preLoaderRoute: typeof LojaSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-agent/public': {
+      id: '/ai-agent/public'
+      path: '/ai-agent/public'
+      fullPath: '/ai-agent/public'
+      preLoaderRoute: typeof AiAgentPublicRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/solicitacoes': {
@@ -1093,6 +1113,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  AiAgentPublicRoute: AiAgentPublicRoute,
   LojaSlugRoute: LojaSlugRoute,
   PortalIndiqueRoute: PortalIndiqueRoute,
   PortalPainelRoute: PortalPainelRoute,
