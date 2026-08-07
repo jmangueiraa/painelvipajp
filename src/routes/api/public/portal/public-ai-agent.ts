@@ -18,11 +18,14 @@ export const Route = createFileRoute("/api/public/portal/public-ai-agent")({
           
           // Use the server function directly. Since we are in a server route, 
           // we can call it. TanStack Start server functions are callable.
-          const result = await processAgentMessage({ 
-            sessionId: body.sessionId || "public-session",
-            message: body.message || "",
-            history: body.history || [],
-            public: true 
+          // Correct way to call a server function internally in TanStack Start
+          const result = await (processAgentMessage as any).handler({ 
+            data: {
+              sessionId: body.sessionId || "public-session",
+              message: body.message || "",
+              history: body.history || [],
+              public: true 
+            }
           });
           
           console.log("[Public AI Agent] Result received:", !!result);
