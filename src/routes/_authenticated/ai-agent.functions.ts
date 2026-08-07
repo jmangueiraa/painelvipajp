@@ -6,7 +6,7 @@ import {
   getConversationsLogic,
   updateKnowledgeItemLogic,
   deleteKnowledgeItemLogic
-} from "./ai-agent.server";
+} from "@/lib/ai-agent.server";
 
 export const getAgentKnowledge = createServerFn({ method: "GET" })
   .handler(async () => {
