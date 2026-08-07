@@ -96,7 +96,7 @@ function AIAgentPage() {
   const chatMutation = useMutation({
     mutationFn: (message: string) => {
       if (!sessionId) throw new Error("Sessão não inicializada");
-      return processMessageFn({ data: { sessionId, message, history } as any });
+      return processMessageFn({ data: { sessionId, message, history: history || [] } as any });
     },
     onSuccess: (res: any) => {
       setHistory(res.history);

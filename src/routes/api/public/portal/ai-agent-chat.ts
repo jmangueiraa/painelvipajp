@@ -16,9 +16,9 @@ export const Route = createFileRoute("/api/public/portal/ai-agent-chat")({
           if (!client) return json({ error: "Sessão inválida" }, request, { status: 401 });
 
           const body = await request.json();
-          const { processAgentMessage } = await import("@/routes/_authenticated/ai-agent.functions");
+          const { processAgentMessageLogic } = await import("@/lib/ai-agent.server");
           
-          const result = await processAgentMessage({ data: body });
+          const result = await processAgentMessageLogic(body);
           return json(result, request);
         } catch (e) {
           return json({ error: (e as Error).message }, request, { status: 500 });
