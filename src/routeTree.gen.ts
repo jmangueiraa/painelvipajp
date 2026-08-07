@@ -29,6 +29,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedCadastrarApiRouteImport } from './routes/_authenticated/cadastrar-api'
+import { Route as AuthenticatedAiAgentRouteImport } from './routes/_authenticated/ai-agent'
 import { Route as ApiPublicPushCronRouteImport } from './routes/api/public/push-cron'
 import { Route as AuthenticatedPortalClientesIdRouteImport } from './routes/_authenticated/portal-clientes.$id'
 import { Route as AuthenticatedLojaProdutosRouteImport } from './routes/_authenticated/loja.produtos'
@@ -52,6 +53,7 @@ import { Route as ApiPublicPortalMpCreateCardRouteImport } from './routes/api/pu
 import { Route as ApiPublicPortalMeRouteImport } from './routes/api/public/portal/me'
 import { Route as ApiPublicPortalLogoutRouteImport } from './routes/api/public/portal/logout'
 import { Route as ApiPublicPortalLoginPasswordRouteImport } from './routes/api/public/portal/login-password'
+import { Route as ApiPublicPortalAiAgentChatRouteImport } from './routes/api/public/portal/ai-agent-chat'
 import { Route as ApiPublicHooksAutoChargesRouteImport } from './routes/api/public/hooks/auto-charges'
 import { Route as ApiPublicAppMpWebhookRouteImport } from './routes/api/public/app/mp-webhook'
 import { Route as AuthenticatedAdminAssinantesIdRouteImport } from './routes/_authenticated/admin.assinantes.$id'
@@ -160,6 +162,11 @@ const AuthenticatedCadastrarApiRoute =
     path: '/cadastrar-api',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAiAgentRoute = AuthenticatedAiAgentRouteImport.update({
+  id: '/ai-agent',
+  path: '/ai-agent',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicPushCronRoute = ApiPublicPushCronRouteImport.update({
   id: '/api/public/push-cron',
   path: '/api/public/push-cron',
@@ -291,6 +298,12 @@ const ApiPublicPortalLoginPasswordRoute =
     path: '/api/public/portal/login-password',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPortalAiAgentChatRoute =
+  ApiPublicPortalAiAgentChatRouteImport.update({
+    id: '/api/public/portal/ai-agent-chat',
+    path: '/api/public/portal/ai-agent-chat',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksAutoChargesRoute =
   ApiPublicHooksAutoChargesRouteImport.update({
     id: '/api/public/hooks/auto-charges',
@@ -313,6 +326,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/ai-agent': typeof AuthenticatedAiAgentRoute
   '/cadastrar-api': typeof AuthenticatedCadastrarApiRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -337,6 +351,7 @@ export interface FileRoutesByFullPath {
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
+  '/api/public/portal/ai-agent-chat': typeof ApiPublicPortalAiAgentChatRoute
   '/api/public/portal/login-password': typeof ApiPublicPortalLoginPasswordRoute
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
   '/api/public/portal/me': typeof ApiPublicPortalMeRoute
@@ -360,6 +375,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/ai-agent': typeof AuthenticatedAiAgentRoute
   '/cadastrar-api': typeof AuthenticatedCadastrarApiRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -384,6 +400,7 @@ export interface FileRoutesByTo {
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
+  '/api/public/portal/ai-agent-chat': typeof ApiPublicPortalAiAgentChatRoute
   '/api/public/portal/login-password': typeof ApiPublicPortalLoginPasswordRoute
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
   '/api/public/portal/me': typeof ApiPublicPortalMeRoute
@@ -409,6 +426,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/ai-agent': typeof AuthenticatedAiAgentRoute
   '/_authenticated/cadastrar-api': typeof AuthenticatedCadastrarApiRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -433,6 +451,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
+  '/api/public/portal/ai-agent-chat': typeof ApiPublicPortalAiAgentChatRoute
   '/api/public/portal/login-password': typeof ApiPublicPortalLoginPasswordRoute
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
   '/api/public/portal/me': typeof ApiPublicPortalMeRoute
@@ -458,6 +477,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/ai-agent'
     | '/cadastrar-api'
     | '/clientes'
     | '/configuracoes'
@@ -482,6 +502,7 @@ export interface FileRouteTypes {
     | '/admin/assinantes/$id'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
+    | '/api/public/portal/ai-agent-chat'
     | '/api/public/portal/login-password'
     | '/api/public/portal/logout'
     | '/api/public/portal/me'
@@ -505,6 +526,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/ai-agent'
     | '/cadastrar-api'
     | '/clientes'
     | '/configuracoes'
@@ -529,6 +551,7 @@ export interface FileRouteTypes {
     | '/admin/assinantes/$id'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
+    | '/api/public/portal/ai-agent-chat'
     | '/api/public/portal/login-password'
     | '/api/public/portal/logout'
     | '/api/public/portal/me'
@@ -553,6 +576,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/ai-agent'
     | '/_authenticated/cadastrar-api'
     | '/_authenticated/clientes'
     | '/_authenticated/configuracoes'
@@ -577,6 +601,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/assinantes/$id'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
+    | '/api/public/portal/ai-agent-chat'
     | '/api/public/portal/login-password'
     | '/api/public/portal/logout'
     | '/api/public/portal/me'
@@ -609,6 +634,7 @@ export interface RootRouteChildren {
   ApiPublicPushCronRoute: typeof ApiPublicPushCronRoute
   ApiPublicAppMpWebhookRoute: typeof ApiPublicAppMpWebhookRoute
   ApiPublicHooksAutoChargesRoute: typeof ApiPublicHooksAutoChargesRoute
+  ApiPublicPortalAiAgentChatRoute: typeof ApiPublicPortalAiAgentChatRoute
   ApiPublicPortalLoginPasswordRoute: typeof ApiPublicPortalLoginPasswordRoute
   ApiPublicPortalLogoutRoute: typeof ApiPublicPortalLogoutRoute
   ApiPublicPortalMeRoute: typeof ApiPublicPortalMeRoute
@@ -769,6 +795,13 @@ declare module '@tanstack/react-router' {
       path: '/cadastrar-api'
       fullPath: '/cadastrar-api'
       preLoaderRoute: typeof AuthenticatedCadastrarApiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ai-agent': {
+      id: '/_authenticated/ai-agent'
+      path: '/ai-agent'
+      fullPath: '/ai-agent'
+      preLoaderRoute: typeof AuthenticatedAiAgentRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/push-cron': {
@@ -932,6 +965,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPortalLoginPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/portal/ai-agent-chat': {
+      id: '/api/public/portal/ai-agent-chat'
+      path: '/api/public/portal/ai-agent-chat'
+      fullPath: '/api/public/portal/ai-agent-chat'
+      preLoaderRoute: typeof ApiPublicPortalAiAgentChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/auto-charges': {
       id: '/api/public/hooks/auto-charges'
       path: '/api/public/hooks/auto-charges'
@@ -985,6 +1025,7 @@ const AuthenticatedAdminAssinantesRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAiAgentRoute: typeof AuthenticatedAiAgentRoute
   AuthenticatedCadastrarApiRoute: typeof AuthenticatedCadastrarApiRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
@@ -1003,6 +1044,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAiAgentRoute: AuthenticatedAiAgentRoute,
   AuthenticatedCadastrarApiRoute: AuthenticatedCadastrarApiRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
@@ -1037,6 +1079,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPushCronRoute: ApiPublicPushCronRoute,
   ApiPublicAppMpWebhookRoute: ApiPublicAppMpWebhookRoute,
   ApiPublicHooksAutoChargesRoute: ApiPublicHooksAutoChargesRoute,
+  ApiPublicPortalAiAgentChatRoute: ApiPublicPortalAiAgentChatRoute,
   ApiPublicPortalLoginPasswordRoute: ApiPublicPortalLoginPasswordRoute,
   ApiPublicPortalLogoutRoute: ApiPublicPortalLogoutRoute,
   ApiPublicPortalMeRoute: ApiPublicPortalMeRoute,

@@ -14,6 +14,125 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_agent_apps: {
+        Row: {
+          app_name: string
+          created_at: string | null
+          description: string | null
+          device_category: string
+          id: string
+          installation_steps: Json | null
+          is_active: boolean | null
+          tutorial_url: string | null
+        }
+        Insert: {
+          app_name: string
+          created_at?: string | null
+          description?: string | null
+          device_category: string
+          id?: string
+          installation_steps?: Json | null
+          is_active?: boolean | null
+          tutorial_url?: string | null
+        }
+        Update: {
+          app_name?: string
+          created_at?: string | null
+          description?: string | null
+          device_category?: string
+          id?: string
+          installation_steps?: Json | null
+          is_active?: boolean | null
+          tutorial_url?: string | null
+        }
+        Relationships: []
+      }
+      ai_agent_conversations: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          device_info: Json | null
+          id: string
+          messages: Json | null
+          session_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          device_info?: Json | null
+          id?: string
+          messages?: Json | null
+          session_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          device_info?: Json | null
+          id?: string
+          messages?: Json | null
+          session_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_conversations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_agent_devices: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      ai_agent_faq: {
+        Row: {
+          answer: string
+          created_at: string | null
+          id: string
+          keywords: string[] | null
+          question: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string | null
+          id?: string
+          keywords?: string[] | null
+          question: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string | null
+          id?: string
+          keywords?: string[] | null
+          question?: string
+        }
+        Relationships: []
+      }
       app_plans: {
         Row: {
           active: boolean

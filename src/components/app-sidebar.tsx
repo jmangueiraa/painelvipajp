@@ -4,7 +4,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown, Camera, ShieldCheck, Inbox, ShoppingBag, Store, KeyRound, Bell, Smartphone, Target
+  LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown, Camera, ShieldCheck, Inbox, ShoppingBag, Store, KeyRound, Bell, Smartphone, Target, BrainCircuit
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import {
@@ -36,7 +36,9 @@ const items = [
   { title: "Notificações Push", url: "/notificacoes-push", icon: Bell },
   { title: "Portal dos Clientes", url: "/portal-clientes", icon: Smartphone },
   { title: "Leads IA", url: "/leads", icon: Target },
+  { title: "Agente Suporte IA", url: "/ai-agent", icon: BrainCircuit },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
+
 
 
 ];

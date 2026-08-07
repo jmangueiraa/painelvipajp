@@ -2,9 +2,11 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { CalendarClock, CreditCard, Gift, LogOut, RefreshCw, Server as ServerIcon, Tv, Download, Copy, Check, CheckCircle2, ChevronUp, Smartphone, ExternalLink, Loader2, ShoppingBag } from "lucide-react";
+import { CalendarClock, CreditCard, Gift, LogOut, RefreshCw, Server as ServerIcon, Tv, Download, Copy, Check, CheckCircle2, ChevronUp, Smartphone, ExternalLink, Loader2, ShoppingBag, BrainCircuit } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -117,6 +119,11 @@ function PortalDashboard() {
   const [payPage, setPayPage] = useState(1);
   const pollRef = useRef<number | null>(null);
   const [updatesKind, setUpdatesKind] = useState<"movie" | "series" | "games" | null>(null);
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [supportInput, setSupportInput] = useState("");
+  const [supportHistory, setSupportHistory] = useState<any[]>([]);
+  const [supportSession] = useState(() => `portal-session-${Math.random().toString(36).slice(2)}`);
+
 
   // Open updates dialog automatically when navigated with ?updates=movie|series|games
   useEffect(() => {
@@ -660,7 +667,105 @@ function PortalDashboard() {
             </Card>
           </Link>
         )}
+
+        {/* Agente de Suporte IA */}
+        <Card className="overflow-hidden border-primary/20 bg-primary/5">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <BrainCircuit className="h-4 w-4 text-primary" /> Suporte Inteligente AJP
+              </CardTitle>
+              <Badge variant="outline" className="bg-background text-[9px] uppercase tracking-tighter">Online 24h</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Precisa de ajuda para instalar? Nosso especialista IA pode te guiar passo a passo agora mesmo.
+            </p>
+            <Button className="w-full" variant="outline" onClick={() => setSupportOpen(true)}>
+              Falar com Especialista
+            </Button>
+          </CardContent>
+        </Card>
       </main>
+
+      <Dialog open={supportOpen} onOpenChange={setSupportOpen}>
+        <DialogContent className="max-w-md h-[80vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="p-4 border-b bg-muted/30">
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <BrainCircuit className="size-6 text-primary" />
+              </div>
+              <div className="flex flex-col text-left">
+                <DialogTitle>Especialista de Instalação</DialogTitle>
+                <DialogDescription className="text-[10px] uppercase tracking-widest font-bold">Assistente Virtual 24h</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {supportHistory.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-60">
+                <Tv className="size-12 text-primary" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Como posso te ajudar hoje?</p>
+                  <p className="text-xs">Identifico seu aparelho e te mostro como instalar.</p>
+                </div>
+                <Button variant="secondary" size="sm" onClick={() => {
+                  setSupportInput("Olá, preciso de ajuda com a instalação.");
+                  const mutation = document.getElementById("support-submit-btn");
+                  if (mutation) setTimeout(() => mutation.click(), 50);
+                }}>Iniciar Atendimento</Button>
+              </div>
+            ) : (
+              supportHistory.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${
+                    msg.role === 'user' 
+                      ? 'bg-primary text-primary-foreground rounded-tr-none' 
+                      : 'bg-muted border border-border rounded-tl-none'
+                  }`}>
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                  </div>
+                </div>
+              ))
+            )}
+            {/* O Mutation será chamado via useServerFn similar ao admin */}
+          </div>
+
+          <div className="p-4 border-t bg-background">
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!supportInput.trim()) return;
+              const msg = supportInput;
+              setSupportInput("");
+              setSupportHistory(prev => [...prev, { role: 'user', content: msg }]);
+              try {
+                // @ts-ignore - processAgentMessage is exported from ai-agent.functions
+                const res = await portalFetch<any>("/api/public/portal/ai-agent-chat", {
+                  method: "POST",
+                  body: JSON.stringify({ sessionId: supportSession, message: msg, history: supportHistory })
+                });
+                setSupportHistory(res.history);
+              } catch (err) {
+                toast.error("Erro na comunicação");
+              }
+
+            }} className="flex gap-2">
+              <Input 
+                placeholder="Diga qual seu aparelho..." 
+                value={supportInput}
+                onChange={(e) => setSupportInput(e.target.value)}
+                className="rounded-full bg-muted/50 border-none focus-visible:ring-1"
+              />
+              <Button id="support-submit-btn" type="submit" size="icon" className="rounded-full shrink-0">
+                <ChevronUp className="size-5" />
+              </Button>
+            </form>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       <Dialog open={renewOpen} onOpenChange={(o) => { setRenewOpen(o); if (!o) { setChosenPeriod(null); setMethod(null); setPixPeriod(null); setValCopied(false); setBrCopied(false); setQrBase64(null); setPixPayload(""); setRenewalId(null); setPaymentId(null); setPaymentStatus("pending"); setCardLink(null); } }}>
         <DialogContent className="max-w-sm max-h-[90vh] overflow-y-auto">
