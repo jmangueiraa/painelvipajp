@@ -91,7 +91,7 @@ export const processAgentMessageLogic = async (input: {
     } else if (msg.includes("não entendeu") || msg.includes("como assim")) {
       response = "Peço desculpas pela confusão. Às vezes me perco um pouco! Para que eu possa ser mais assertivo, você poderia me confirmar qual a marca e o modelo do seu aparelho? Por exemplo: Smart TV Samsung, TV Box Android ou iPhone.";
     } else {
-      response = "Desculpe, não entendi perfeitamente. Pode me dizer qual dispositivo você está usando? Assim consigo te indicar o melhor aplicativo e o tutorial correto.";
+      response = "Desculpe, não entendi perfeitamente. Poderia me dizer de forma simples qual aparelho você quer configurar? (Ex: 'Quero instalar na minha TV LG' ou 'Como coloco no iPhone?')";
     }
   }
 
