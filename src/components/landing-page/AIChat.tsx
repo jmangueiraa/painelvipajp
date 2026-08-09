@@ -48,6 +48,7 @@ export const AIChat = () => {
     if (!input.trim() || isLoading) return;
 
     const userMsg = input.trim();
+    const historyForApi = messages.map((m) => ({ role: m.role, content: m.content }));
     setInput("");
     setMessages(prev => [...prev, { role: "user", content: userMsg }]);
     setIsLoading(true);
@@ -59,27 +60,39 @@ export const AIChat = () => {
         body: JSON.stringify({
           sessionId: sessionId || "anonymous",
           message: userMsg,
-          history: messages
+          history: historyForApi
         })
       });
 
-      const data = await response.json();
-      if (data.response) {
+      const data = await response.json().catch(() => null);
+
+      if (response.ok && data?.response) {
         setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
-        
+
         // Check if user wants to hire/whatsapp
         if (userMsg.toLowerCase().includes("contratar") || userMsg.toLowerCase().includes("assinar")) {
           setTimeout(() => {
             window.open("https://wa.me/5519981356505?text=Olá, vim do chat da IA e gostaria de contratar um plano.", "_blank");
           }, 1500);
         }
+      } else {
+        console.error("AI agent error:", data);
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: "Tive uma instabilidade para responder agora. Pode tentar novamente? Se preferir atendimento imediato, chame no WhatsApp (19) 98135-6505."
+        }]);
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: "Não consegui me conectar agora. Verifique sua internet e tente novamente, ou fale no WhatsApp (19) 98135-6505."
+      }]);
     } finally {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
