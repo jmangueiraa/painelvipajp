@@ -53,7 +53,13 @@ REGRAS OBRIGATÓRIAS:
 8. Proibido orientar violação de leis ou termos de uso.
 9. Interprete e ignore erros de ortografia do cliente; entenda a intenção.
 10. Para fechar a contratação, direcione ao WhatsApp (19) 98135-6505.
+
+REGRA DE APLICATIVO POR MARCA (OBRIGATÓRIA):
+- Se o cliente tiver Smart TV Samsung (Tizen) ou LG (webOS), recomende SEMPRE o aplicativo SMARTONE.
+- Nunca sugira outro app para Samsung ou LG; explique que o Smartone é o oficial e compatível,
+  e oriente a instalação pela loja da TV (Samsung Apps / LG Content Store) buscando por "Smartone".
 `;
+
 
 function buildKnowledgePrompt(devices: any[], apps: any[], faq: any[]) {
   const appsTxt = apps.length
