@@ -162,8 +162,24 @@ export const AIChat = () => {
                           <Bot className="w-4 h-4 text-white" />
                         </div>
                         <div className="bg-slate-800 border border-white/5 text-slate-100 rounded-2xl rounded-tl-none px-4 py-2.5 flex items-center gap-2">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span className="text-sm">Pensando...</span>
+                          <div className="flex gap-1 items-center h-4">
+                            <motion.span 
+                              animate={{ opacity: [0.4, 1, 0.4] }} 
+                              transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+                              className="w-1.5 h-1.5 bg-slate-400 rounded-full"
+                            />
+                            <motion.span 
+                              animate={{ opacity: [0.4, 1, 0.4] }} 
+                              transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
+                              className="w-1.5 h-1.5 bg-slate-400 rounded-full"
+                            />
+                            <motion.span 
+                              animate={{ opacity: [0.4, 1, 0.4] }} 
+                              transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
+                              className="w-1.5 h-1.5 bg-slate-400 rounded-full"
+                            />
+                          </div>
+                          <span className="text-xs text-slate-400">Digitando...</span>
                         </div>
                       </div>
                     </div>

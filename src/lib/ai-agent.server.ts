@@ -157,10 +157,12 @@ export const processAgentMessageLogic = async (input: {
 
   let response: string;
   try {
+    console.log(`[AI Agent] Calling AI for session ${sessionId}...`);
     response = await callLovableAI(messages);
+    console.log(`[AI Agent] AI response received (${response.length} chars)`);
   } catch (err) {
     const code = (err as Error).message;
-    console.error("[AI Agent] Falha ao gerar resposta:", code);
+    console.error("[AI Agent] Falha ao gerar resposta:", code, err);
     if (code === "RATE_LIMIT") {
       response =
         "Estamos com muitos atendimentos agora. Pode tentar novamente em alguns segundos? Se preferir, fale direto no WhatsApp (19) 98135-6505.";
@@ -168,6 +170,7 @@ export const processAgentMessageLogic = async (input: {
       response =
         "Nosso assistente está temporariamente indisponível. Um atendente pode te ajudar agora no WhatsApp (19) 98135-6505. Posso te encaminhar?";
     } else {
+      // Return the specific error in dev or fallback in prod
       response =
         "Tive uma instabilidade para responder agora. Pode repetir sua mensagem? Se preferir atendimento imediato, chame no WhatsApp (19) 98135-6505.";
     }
