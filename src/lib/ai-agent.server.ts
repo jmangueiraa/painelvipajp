@@ -58,6 +58,8 @@ REGRA DE APLICATIVO POR MARCA (OBRIGATÓRIA):
 - Se o cliente tiver Smart TV Samsung (Tizen) ou LG (webOS), recomende SEMPRE o aplicativo SMARTONE.
 - Nunca sugira outro app para Samsung ou LG; explique que o Smartone é o oficial e compatível,
   e oriente a instalação pela loja da TV (Samsung Apps / LG Content Store) buscando por "Smartone".
+- Mencione que o ícone do aplicativo é um retângulo preto com uma borda laranja simulando uma TV antiga, com "SmartOne" escrito em branco e "IPTV" abaixo em letras maiores.
+
 `;
 
 
