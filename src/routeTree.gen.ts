@@ -9,59 +9,63 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PortalIndexRouteImport } from './routes/portal.index'
-import { Route as PortalPainelRouteImport } from './routes/portal.painel'
-import { Route as PortalIndiqueRouteImport } from './routes/portal.indique'
-import { Route as LojaSlugRouteImport } from './routes/loja.$slug'
-import { Route as AuthenticatedSolicitacoesRouteImport } from './routes/_authenticated/solicitacoes'
-import { Route as AuthenticatedServidoresRouteImport } from './routes/_authenticated/servidores'
-import { Route as AuthenticatedRenovacaoRouteImport } from './routes/_authenticated/renovacao'
-import { Route as AuthenticatedPortalClientesRouteImport } from './routes/_authenticated/portal-clientes'
-import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
-import { Route as AuthenticatedNotificacoesPushRouteImport } from './routes/_authenticated/notificacoes-push'
-import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
-import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
-import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
-import { Route as AuthenticatedCadastrarApiRouteImport } from './routes/_authenticated/cadastrar-api'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAiAgentRouteImport } from './routes/_authenticated/ai-agent'
-import { Route as ApiPublicPushCronRouteImport } from './routes/api/public/push-cron'
-import { Route as AuthenticatedPortalClientesIdRouteImport } from './routes/_authenticated/portal-clientes.$id'
-import { Route as AuthenticatedLojaProdutosRouteImport } from './routes/_authenticated/loja.produtos'
-import { Route as AuthenticatedLojaClientesRouteImport } from './routes/_authenticated/loja.clientes'
+import { Route as AuthenticatedCadastrarApiRouteImport } from './routes/_authenticated/cadastrar-api'
+import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
+import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
+import { Route as AuthenticatedNotificacoesPushRouteImport } from './routes/_authenticated/notificacoes-push'
+import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
+import { Route as AuthenticatedPortalClientesRouteImport } from './routes/_authenticated/portal-clientes'
+import { Route as AuthenticatedRenovacaoRouteImport } from './routes/_authenticated/renovacao'
+import { Route as AuthenticatedServidoresRouteImport } from './routes/_authenticated/servidores'
+import { Route as AuthenticatedSolicitacoesRouteImport } from './routes/_authenticated/solicitacoes'
+import { Route as LojaSlugRouteImport } from './routes/loja.$slug'
+import { Route as PortalIndexRouteImport } from './routes/portal.index'
+import { Route as PortalIndiqueRouteImport } from './routes/portal.indique'
+import { Route as PortalPainelRouteImport } from './routes/portal.painel'
 import { Route as AuthenticatedAdminAssinantesRouteImport } from './routes/_authenticated/admin.assinantes'
-import { Route as ApiPublicZapiStatusRouteImport } from './routes/api/public/zapi/status'
-import { Route as ApiPublicZapiQrRouteImport } from './routes/api/public/zapi/qr'
-import { Route as ApiPublicZapiDisconnectRouteImport } from './routes/api/public/zapi/disconnect'
-import { Route as ApiPublicPushSendRouteImport } from './routes/api/public/push/send'
-import { Route as ApiPublicPortalVerifyOtpRouteImport } from './routes/api/public/portal/verify-otp'
-import { Route as ApiPublicPortalStoreProductsRouteImport } from './routes/api/public/portal/store-products'
-import { Route as ApiPublicPortalSavePushTokenRouteImport } from './routes/api/public/portal/save-push-token'
-import { Route as ApiPublicPortalRequestOtpRouteImport } from './routes/api/public/portal/request-otp'
-import { Route as ApiPublicPortalRenewalStatusRouteImport } from './routes/api/public/portal/renewal-status'
-import { Route as ApiPublicPortalRenewRequestRouteImport } from './routes/api/public/portal/renew-request'
-import { Route as ApiPublicPortalRegisterInstallRouteImport } from './routes/api/public/portal/register-install'
-import { Route as ApiPublicPortalPublicAiAgentRouteImport } from './routes/api/public/portal/public-ai-agent'
-import { Route as ApiPublicPortalMpWebhookRouteImport } from './routes/api/public/portal/mp-webhook'
-import { Route as ApiPublicPortalMpCreatePixRouteImport } from './routes/api/public/portal/mp-create-pix'
-import { Route as ApiPublicPortalMpCreateExtraRouteImport } from './routes/api/public/portal/mp-create-extra'
-import { Route as ApiPublicPortalMpCreateCardRouteImport } from './routes/api/public/portal/mp-create-card'
-import { Route as ApiPublicPortalMeRouteImport } from './routes/api/public/portal/me'
-import { Route as ApiPublicPortalLogoutRouteImport } from './routes/api/public/portal/logout'
-import { Route as ApiPublicPortalLoginPasswordRouteImport } from './routes/api/public/portal/login-password'
-import { Route as ApiPublicPortalAiAgentChatRouteImport } from './routes/api/public/portal/ai-agent-chat'
-import { Route as ApiPublicHooksAutoChargesRouteImport } from './routes/api/public/hooks/auto-charges'
-import { Route as ApiPublicAppMpWebhookRouteImport } from './routes/api/public/app/mp-webhook'
+import { Route as AuthenticatedLojaClientesRouteImport } from './routes/_authenticated/loja.clientes'
+import { Route as AuthenticatedLojaProdutosRouteImport } from './routes/_authenticated/loja.produtos'
+import { Route as AuthenticatedPortalClientesIdRouteImport } from './routes/_authenticated/portal-clientes.$id'
+import { Route as ApiPublicPushCronRouteImport } from './routes/api/public/push-cron'
 import { Route as AuthenticatedAdminAssinantesIdRouteImport } from './routes/_authenticated/admin.assinantes.$id'
+import { Route as ApiPublicAppMpWebhookRouteImport } from './routes/api/public/app/mp-webhook'
+import { Route as ApiPublicHooksAutoChargesRouteImport } from './routes/api/public/hooks/auto-charges'
+import { Route as ApiPublicPortalAiAgentChatRouteImport } from './routes/api/public/portal/ai-agent-chat'
+import { Route as ApiPublicPortalLoginPasswordRouteImport } from './routes/api/public/portal/login-password'
+import { Route as ApiPublicPortalLogoutRouteImport } from './routes/api/public/portal/logout'
+import { Route as ApiPublicPortalMeRouteImport } from './routes/api/public/portal/me'
+import { Route as ApiPublicPortalMpCreateCardRouteImport } from './routes/api/public/portal/mp-create-card'
+import { Route as ApiPublicPortalMpCreateExtraRouteImport } from './routes/api/public/portal/mp-create-extra'
+import { Route as ApiPublicPortalMpCreatePixRouteImport } from './routes/api/public/portal/mp-create-pix'
+import { Route as ApiPublicPortalMpWebhookRouteImport } from './routes/api/public/portal/mp-webhook'
+import { Route as ApiPublicPortalPublicAiAgentRouteImport } from './routes/api/public/portal/public-ai-agent'
+import { Route as ApiPublicPortalRegisterInstallRouteImport } from './routes/api/public/portal/register-install'
+import { Route as ApiPublicPortalRenewRequestRouteImport } from './routes/api/public/portal/renew-request'
+import { Route as ApiPublicPortalRenewalStatusRouteImport } from './routes/api/public/portal/renewal-status'
+import { Route as ApiPublicPortalRequestOtpRouteImport } from './routes/api/public/portal/request-otp'
+import { Route as ApiPublicPortalSavePushTokenRouteImport } from './routes/api/public/portal/save-push-token'
+import { Route as ApiPublicPortalStoreProductsRouteImport } from './routes/api/public/portal/store-products'
+import { Route as ApiPublicPortalVerifyOtpRouteImport } from './routes/api/public/portal/verify-otp'
+import { Route as ApiPublicPushSendRouteImport } from './routes/api/public/push/send'
+import { Route as ApiPublicZapiDisconnectRouteImport } from './routes/api/public/zapi/disconnect'
+import { Route as ApiPublicZapiQrRouteImport } from './routes/api/public/zapi/qr'
+import { Route as ApiPublicZapiStatusRouteImport } from './routes/api/public/zapi/status'
 
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -69,92 +73,14 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PortalIndexRoute = PortalIndexRouteImport.update({
-  id: '/portal/',
-  path: '/portal/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PortalPainelRoute = PortalPainelRouteImport.update({
-  id: '/portal/painel',
-  path: '/portal/painel',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PortalIndiqueRoute = PortalIndiqueRouteImport.update({
-  id: '/portal/indique',
-  path: '/portal/indique',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LojaSlugRoute = LojaSlugRouteImport.update({
-  id: '/loja/$slug',
-  path: '/loja/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedSolicitacoesRoute =
-  AuthenticatedSolicitacoesRouteImport.update({
-    id: '/solicitacoes',
-    path: '/solicitacoes',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedServidoresRoute = AuthenticatedServidoresRouteImport.update({
-  id: '/servidores',
-  path: '/servidores',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedRenovacaoRoute = AuthenticatedRenovacaoRouteImport.update({
-  id: '/renovacao',
-  path: '/renovacao',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPortalClientesRoute =
-  AuthenticatedPortalClientesRouteImport.update({
-    id: '/portal-clientes',
-    path: '/portal-clientes',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPlanosRoute = AuthenticatedPlanosRouteImport.update({
-  id: '/planos',
-  path: '/planos',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedNotificacoesPushRoute =
-  AuthenticatedNotificacoesPushRouteImport.update({
-    id: '/notificacoes-push',
-    path: '/notificacoes-push',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
-  id: '/leads',
-  path: '/leads',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
-  id: '/financeiro',
-  path: '/financeiro',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedConfiguracoesRoute =
-  AuthenticatedConfiguracoesRouteImport.update({
-    id: '/configuracoes',
-    path: '/configuracoes',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
-  id: '/clientes',
-  path: '/clientes',
+const AuthenticatedAiAgentRoute = AuthenticatedAiAgentRouteImport.update({
+  id: '/ai-agent',
+  path: '/ai-agent',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCadastrarApiRoute =
@@ -163,26 +89,89 @@ const AuthenticatedCadastrarApiRoute =
     path: '/cadastrar-api',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAiAgentRoute = AuthenticatedAiAgentRouteImport.update({
-  id: '/ai-agent',
-  path: '/ai-agent',
+const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ApiPublicPushCronRoute = ApiPublicPushCronRouteImport.update({
-  id: '/api/public/push-cron',
-  path: '/api/public/push-cron',
+const AuthenticatedConfiguracoesRoute =
+  AuthenticatedConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNotificacoesPushRoute =
+  AuthenticatedNotificacoesPushRouteImport.update({
+    id: '/notificacoes-push',
+    path: '/notificacoes-push',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPlanosRoute = AuthenticatedPlanosRouteImport.update({
+  id: '/planos',
+  path: '/planos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPortalClientesRoute =
+  AuthenticatedPortalClientesRouteImport.update({
+    id: '/portal-clientes',
+    path: '/portal-clientes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRenovacaoRoute = AuthenticatedRenovacaoRouteImport.update({
+  id: '/renovacao',
+  path: '/renovacao',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedServidoresRoute = AuthenticatedServidoresRouteImport.update({
+  id: '/servidores',
+  path: '/servidores',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSolicitacoesRoute =
+  AuthenticatedSolicitacoesRouteImport.update({
+    id: '/solicitacoes',
+    path: '/solicitacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const LojaSlugRoute = LojaSlugRouteImport.update({
+  id: '/loja/$slug',
+  path: '/loja/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedPortalClientesIdRoute =
-  AuthenticatedPortalClientesIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedPortalClientesRoute,
-  } as any)
-const AuthenticatedLojaProdutosRoute =
-  AuthenticatedLojaProdutosRouteImport.update({
-    id: '/loja/produtos',
-    path: '/loja/produtos',
+const PortalIndexRoute = PortalIndexRouteImport.update({
+  id: '/portal/',
+  path: '/portal/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalIndiqueRoute = PortalIndiqueRouteImport.update({
+  id: '/portal/indique',
+  path: '/portal/indique',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalPainelRoute = PortalPainelRouteImport.update({
+  id: '/portal/painel',
+  path: '/portal/painel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminAssinantesRoute =
+  AuthenticatedAdminAssinantesRouteImport.update({
+    id: '/admin/assinantes',
+    path: '/admin/assinantes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedLojaClientesRoute =
@@ -191,135 +180,21 @@ const AuthenticatedLojaClientesRoute =
     path: '/loja/clientes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminAssinantesRoute =
-  AuthenticatedAdminAssinantesRouteImport.update({
-    id: '/admin/assinantes',
-    path: '/admin/assinantes',
+const AuthenticatedLojaProdutosRoute =
+  AuthenticatedLojaProdutosRouteImport.update({
+    id: '/loja/produtos',
+    path: '/loja/produtos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiPublicZapiStatusRoute = ApiPublicZapiStatusRouteImport.update({
-  id: '/api/public/zapi/status',
-  path: '/api/public/zapi/status',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicZapiQrRoute = ApiPublicZapiQrRouteImport.update({
-  id: '/api/public/zapi/qr',
-  path: '/api/public/zapi/qr',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicZapiDisconnectRoute = ApiPublicZapiDisconnectRouteImport.update({
-  id: '/api/public/zapi/disconnect',
-  path: '/api/public/zapi/disconnect',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPushSendRoute = ApiPublicPushSendRouteImport.update({
-  id: '/api/public/push/send',
-  path: '/api/public/push/send',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPortalVerifyOtpRoute =
-  ApiPublicPortalVerifyOtpRouteImport.update({
-    id: '/api/public/portal/verify-otp',
-    path: '/api/public/portal/verify-otp',
-    getParentRoute: () => rootRouteImport,
+const AuthenticatedPortalClientesIdRoute =
+  AuthenticatedPortalClientesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedPortalClientesRoute,
   } as any)
-const ApiPublicPortalStoreProductsRoute =
-  ApiPublicPortalStoreProductsRouteImport.update({
-    id: '/api/public/portal/store-products',
-    path: '/api/public/portal/store-products',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPortalSavePushTokenRoute =
-  ApiPublicPortalSavePushTokenRouteImport.update({
-    id: '/api/public/portal/save-push-token',
-    path: '/api/public/portal/save-push-token',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPortalRequestOtpRoute =
-  ApiPublicPortalRequestOtpRouteImport.update({
-    id: '/api/public/portal/request-otp',
-    path: '/api/public/portal/request-otp',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPortalRenewalStatusRoute =
-  ApiPublicPortalRenewalStatusRouteImport.update({
-    id: '/api/public/portal/renewal-status',
-    path: '/api/public/portal/renewal-status',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPortalRenewRequestRoute =
-  ApiPublicPortalRenewRequestRouteImport.update({
-    id: '/api/public/portal/renew-request',
-    path: '/api/public/portal/renew-request',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPortalRegisterInstallRoute =
-  ApiPublicPortalRegisterInstallRouteImport.update({
-    id: '/api/public/portal/register-install',
-    path: '/api/public/portal/register-install',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPortalPublicAiAgentRoute =
-  ApiPublicPortalPublicAiAgentRouteImport.update({
-    id: '/api/public/portal/public-ai-agent',
-    path: '/api/public/portal/public-ai-agent',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPortalMpWebhookRoute =
-  ApiPublicPortalMpWebhookRouteImport.update({
-    id: '/api/public/portal/mp-webhook',
-    path: '/api/public/portal/mp-webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPortalMpCreatePixRoute =
-  ApiPublicPortalMpCreatePixRouteImport.update({
-    id: '/api/public/portal/mp-create-pix',
-    path: '/api/public/portal/mp-create-pix',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPortalMpCreateExtraRoute =
-  ApiPublicPortalMpCreateExtraRouteImport.update({
-    id: '/api/public/portal/mp-create-extra',
-    path: '/api/public/portal/mp-create-extra',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPortalMpCreateCardRoute =
-  ApiPublicPortalMpCreateCardRouteImport.update({
-    id: '/api/public/portal/mp-create-card',
-    path: '/api/public/portal/mp-create-card',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPortalMeRoute = ApiPublicPortalMeRouteImport.update({
-  id: '/api/public/portal/me',
-  path: '/api/public/portal/me',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPortalLogoutRoute = ApiPublicPortalLogoutRouteImport.update({
-  id: '/api/public/portal/logout',
-  path: '/api/public/portal/logout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPortalLoginPasswordRoute =
-  ApiPublicPortalLoginPasswordRouteImport.update({
-    id: '/api/public/portal/login-password',
-    path: '/api/public/portal/login-password',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPortalAiAgentChatRoute =
-  ApiPublicPortalAiAgentChatRouteImport.update({
-    id: '/api/public/portal/ai-agent-chat',
-    path: '/api/public/portal/ai-agent-chat',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksAutoChargesRoute =
-  ApiPublicHooksAutoChargesRouteImport.update({
-    id: '/api/public/hooks/auto-charges',
-    path: '/api/public/hooks/auto-charges',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicAppMpWebhookRoute = ApiPublicAppMpWebhookRouteImport.update({
-  id: '/api/public/app/mp-webhook',
-  path: '/api/public/app/mp-webhook',
+const ApiPublicPushCronRoute = ApiPublicPushCronRouteImport.update({
+  id: '/api/public/push-cron',
+  path: '/api/public/push-cron',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminAssinantesIdRoute =
@@ -328,6 +203,131 @@ const AuthenticatedAdminAssinantesIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminAssinantesRoute,
   } as any)
+const ApiPublicAppMpWebhookRoute = ApiPublicAppMpWebhookRouteImport.update({
+  id: '/api/public/app/mp-webhook',
+  path: '/api/public/app/mp-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksAutoChargesRoute =
+  ApiPublicHooksAutoChargesRouteImport.update({
+    id: '/api/public/hooks/auto-charges',
+    path: '/api/public/hooks/auto-charges',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalAiAgentChatRoute =
+  ApiPublicPortalAiAgentChatRouteImport.update({
+    id: '/api/public/portal/ai-agent-chat',
+    path: '/api/public/portal/ai-agent-chat',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalLoginPasswordRoute =
+  ApiPublicPortalLoginPasswordRouteImport.update({
+    id: '/api/public/portal/login-password',
+    path: '/api/public/portal/login-password',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalLogoutRoute = ApiPublicPortalLogoutRouteImport.update({
+  id: '/api/public/portal/logout',
+  path: '/api/public/portal/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPortalMeRoute = ApiPublicPortalMeRouteImport.update({
+  id: '/api/public/portal/me',
+  path: '/api/public/portal/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPortalMpCreateCardRoute =
+  ApiPublicPortalMpCreateCardRouteImport.update({
+    id: '/api/public/portal/mp-create-card',
+    path: '/api/public/portal/mp-create-card',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalMpCreateExtraRoute =
+  ApiPublicPortalMpCreateExtraRouteImport.update({
+    id: '/api/public/portal/mp-create-extra',
+    path: '/api/public/portal/mp-create-extra',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalMpCreatePixRoute =
+  ApiPublicPortalMpCreatePixRouteImport.update({
+    id: '/api/public/portal/mp-create-pix',
+    path: '/api/public/portal/mp-create-pix',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalMpWebhookRoute =
+  ApiPublicPortalMpWebhookRouteImport.update({
+    id: '/api/public/portal/mp-webhook',
+    path: '/api/public/portal/mp-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalPublicAiAgentRoute =
+  ApiPublicPortalPublicAiAgentRouteImport.update({
+    id: '/api/public/portal/public-ai-agent',
+    path: '/api/public/portal/public-ai-agent',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalRegisterInstallRoute =
+  ApiPublicPortalRegisterInstallRouteImport.update({
+    id: '/api/public/portal/register-install',
+    path: '/api/public/portal/register-install',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalRenewRequestRoute =
+  ApiPublicPortalRenewRequestRouteImport.update({
+    id: '/api/public/portal/renew-request',
+    path: '/api/public/portal/renew-request',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalRenewalStatusRoute =
+  ApiPublicPortalRenewalStatusRouteImport.update({
+    id: '/api/public/portal/renewal-status',
+    path: '/api/public/portal/renewal-status',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalRequestOtpRoute =
+  ApiPublicPortalRequestOtpRouteImport.update({
+    id: '/api/public/portal/request-otp',
+    path: '/api/public/portal/request-otp',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalSavePushTokenRoute =
+  ApiPublicPortalSavePushTokenRouteImport.update({
+    id: '/api/public/portal/save-push-token',
+    path: '/api/public/portal/save-push-token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalStoreProductsRoute =
+  ApiPublicPortalStoreProductsRouteImport.update({
+    id: '/api/public/portal/store-products',
+    path: '/api/public/portal/store-products',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalVerifyOtpRoute =
+  ApiPublicPortalVerifyOtpRouteImport.update({
+    id: '/api/public/portal/verify-otp',
+    path: '/api/public/portal/verify-otp',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPushSendRoute = ApiPublicPushSendRouteImport.update({
+  id: '/api/public/push/send',
+  path: '/api/public/push/send',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicZapiDisconnectRoute = ApiPublicZapiDisconnectRouteImport.update({
+  id: '/api/public/zapi/disconnect',
+  path: '/api/public/zapi/disconnect',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicZapiQrRoute = ApiPublicZapiQrRouteImport.update({
+  id: '/api/public/zapi/qr',
+  path: '/api/public/zapi/qr',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicZapiStatusRoute = ApiPublicZapiStatusRouteImport.update({
+  id: '/api/public/zapi/status',
+  path: '/api/public/zapi/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -671,18 +671,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -692,116 +685,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/portal/': {
-      id: '/portal/'
-      path: '/portal'
-      fullPath: '/portal/'
-      preLoaderRoute: typeof PortalIndexRouteImport
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/portal/painel': {
-      id: '/portal/painel'
-      path: '/portal/painel'
-      fullPath: '/portal/painel'
-      preLoaderRoute: typeof PortalPainelRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/portal/indique': {
-      id: '/portal/indique'
-      path: '/portal/indique'
-      fullPath: '/portal/indique'
-      preLoaderRoute: typeof PortalIndiqueRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/loja/$slug': {
-      id: '/loja/$slug'
-      path: '/loja/$slug'
-      fullPath: '/loja/$slug'
-      preLoaderRoute: typeof LojaSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/solicitacoes': {
-      id: '/_authenticated/solicitacoes'
-      path: '/solicitacoes'
-      fullPath: '/solicitacoes'
-      preLoaderRoute: typeof AuthenticatedSolicitacoesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/servidores': {
-      id: '/_authenticated/servidores'
-      path: '/servidores'
-      fullPath: '/servidores'
-      preLoaderRoute: typeof AuthenticatedServidoresRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/renovacao': {
-      id: '/_authenticated/renovacao'
-      path: '/renovacao'
-      fullPath: '/renovacao'
-      preLoaderRoute: typeof AuthenticatedRenovacaoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/portal-clientes': {
-      id: '/_authenticated/portal-clientes'
-      path: '/portal-clientes'
-      fullPath: '/portal-clientes'
-      preLoaderRoute: typeof AuthenticatedPortalClientesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/planos': {
-      id: '/_authenticated/planos'
-      path: '/planos'
-      fullPath: '/planos'
-      preLoaderRoute: typeof AuthenticatedPlanosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/notificacoes-push': {
-      id: '/_authenticated/notificacoes-push'
-      path: '/notificacoes-push'
-      fullPath: '/notificacoes-push'
-      preLoaderRoute: typeof AuthenticatedNotificacoesPushRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/leads': {
-      id: '/_authenticated/leads'
-      path: '/leads'
-      fullPath: '/leads'
-      preLoaderRoute: typeof AuthenticatedLeadsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/financeiro': {
-      id: '/_authenticated/financeiro'
-      path: '/financeiro'
-      fullPath: '/financeiro'
-      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/configuracoes': {
-      id: '/_authenticated/configuracoes'
-      path: '/configuracoes'
-      fullPath: '/configuracoes'
-      preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/clientes': {
-      id: '/_authenticated/clientes'
-      path: '/clientes'
-      fullPath: '/clientes'
-      preLoaderRoute: typeof AuthenticatedClientesRouteImport
+    '/_authenticated/ai-agent': {
+      id: '/_authenticated/ai-agent'
+      path: '/ai-agent'
+      fullPath: '/ai-agent'
+      preLoaderRoute: typeof AuthenticatedAiAgentRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/cadastrar-api': {
@@ -811,32 +713,116 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCadastrarApiRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/ai-agent': {
-      id: '/_authenticated/ai-agent'
-      path: '/ai-agent'
-      fullPath: '/ai-agent'
-      preLoaderRoute: typeof AuthenticatedAiAgentRouteImport
+    '/_authenticated/clientes': {
+      id: '/_authenticated/clientes'
+      path: '/clientes'
+      fullPath: '/clientes'
+      preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/push-cron': {
-      id: '/api/public/push-cron'
-      path: '/api/public/push-cron'
-      fullPath: '/api/public/push-cron'
-      preLoaderRoute: typeof ApiPublicPushCronRouteImport
+    '/_authenticated/configuracoes': {
+      id: '/_authenticated/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/financeiro': {
+      id: '/_authenticated/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/leads': {
+      id: '/_authenticated/leads'
+      path: '/leads'
+      fullPath: '/leads'
+      preLoaderRoute: typeof AuthenticatedLeadsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notificacoes-push': {
+      id: '/_authenticated/notificacoes-push'
+      path: '/notificacoes-push'
+      fullPath: '/notificacoes-push'
+      preLoaderRoute: typeof AuthenticatedNotificacoesPushRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/planos': {
+      id: '/_authenticated/planos'
+      path: '/planos'
+      fullPath: '/planos'
+      preLoaderRoute: typeof AuthenticatedPlanosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/portal-clientes': {
+      id: '/_authenticated/portal-clientes'
+      path: '/portal-clientes'
+      fullPath: '/portal-clientes'
+      preLoaderRoute: typeof AuthenticatedPortalClientesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/renovacao': {
+      id: '/_authenticated/renovacao'
+      path: '/renovacao'
+      fullPath: '/renovacao'
+      preLoaderRoute: typeof AuthenticatedRenovacaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/servidores': {
+      id: '/_authenticated/servidores'
+      path: '/servidores'
+      fullPath: '/servidores'
+      preLoaderRoute: typeof AuthenticatedServidoresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/solicitacoes': {
+      id: '/_authenticated/solicitacoes'
+      path: '/solicitacoes'
+      fullPath: '/solicitacoes'
+      preLoaderRoute: typeof AuthenticatedSolicitacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/loja/$slug': {
+      id: '/loja/$slug'
+      path: '/loja/$slug'
+      fullPath: '/loja/$slug'
+      preLoaderRoute: typeof LojaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/portal-clientes/$id': {
-      id: '/_authenticated/portal-clientes/$id'
-      path: '/$id'
-      fullPath: '/portal-clientes/$id'
-      preLoaderRoute: typeof AuthenticatedPortalClientesIdRouteImport
-      parentRoute: typeof AuthenticatedPortalClientesRoute
+    '/portal/': {
+      id: '/portal/'
+      path: '/portal'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof PortalIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/loja/produtos': {
-      id: '/_authenticated/loja/produtos'
-      path: '/loja/produtos'
-      fullPath: '/loja/produtos'
-      preLoaderRoute: typeof AuthenticatedLojaProdutosRouteImport
+    '/portal/indique': {
+      id: '/portal/indique'
+      path: '/portal/indique'
+      fullPath: '/portal/indique'
+      preLoaderRoute: typeof PortalIndiqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/painel': {
+      id: '/portal/painel'
+      path: '/portal/painel'
+      fullPath: '/portal/painel'
+      preLoaderRoute: typeof PortalPainelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/assinantes': {
+      id: '/_authenticated/admin/assinantes'
+      path: '/admin/assinantes'
+      fullPath: '/admin/assinantes'
+      preLoaderRoute: typeof AuthenticatedAdminAssinantesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/loja/clientes': {
@@ -846,151 +832,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLojaClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin/assinantes': {
-      id: '/_authenticated/admin/assinantes'
-      path: '/admin/assinantes'
-      fullPath: '/admin/assinantes'
-      preLoaderRoute: typeof AuthenticatedAdminAssinantesRouteImport
+    '/_authenticated/loja/produtos': {
+      id: '/_authenticated/loja/produtos'
+      path: '/loja/produtos'
+      fullPath: '/loja/produtos'
+      preLoaderRoute: typeof AuthenticatedLojaProdutosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/zapi/status': {
-      id: '/api/public/zapi/status'
-      path: '/api/public/zapi/status'
-      fullPath: '/api/public/zapi/status'
-      preLoaderRoute: typeof ApiPublicZapiStatusRouteImport
+    '/_authenticated/portal-clientes/$id': {
+      id: '/_authenticated/portal-clientes/$id'
+      path: '/$id'
+      fullPath: '/portal-clientes/$id'
+      preLoaderRoute: typeof AuthenticatedPortalClientesIdRouteImport
+      parentRoute: typeof AuthenticatedPortalClientesRoute
+    }
+    '/api/public/push-cron': {
+      id: '/api/public/push-cron'
+      path: '/api/public/push-cron'
+      fullPath: '/api/public/push-cron'
+      preLoaderRoute: typeof ApiPublicPushCronRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/zapi/qr': {
-      id: '/api/public/zapi/qr'
-      path: '/api/public/zapi/qr'
-      fullPath: '/api/public/zapi/qr'
-      preLoaderRoute: typeof ApiPublicZapiQrRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/admin/assinantes/$id': {
+      id: '/_authenticated/admin/assinantes/$id'
+      path: '/$id'
+      fullPath: '/admin/assinantes/$id'
+      preLoaderRoute: typeof AuthenticatedAdminAssinantesIdRouteImport
+      parentRoute: typeof AuthenticatedAdminAssinantesRoute
     }
-    '/api/public/zapi/disconnect': {
-      id: '/api/public/zapi/disconnect'
-      path: '/api/public/zapi/disconnect'
-      fullPath: '/api/public/zapi/disconnect'
-      preLoaderRoute: typeof ApiPublicZapiDisconnectRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/push/send': {
-      id: '/api/public/push/send'
-      path: '/api/public/push/send'
-      fullPath: '/api/public/push/send'
-      preLoaderRoute: typeof ApiPublicPushSendRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/verify-otp': {
-      id: '/api/public/portal/verify-otp'
-      path: '/api/public/portal/verify-otp'
-      fullPath: '/api/public/portal/verify-otp'
-      preLoaderRoute: typeof ApiPublicPortalVerifyOtpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/store-products': {
-      id: '/api/public/portal/store-products'
-      path: '/api/public/portal/store-products'
-      fullPath: '/api/public/portal/store-products'
-      preLoaderRoute: typeof ApiPublicPortalStoreProductsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/save-push-token': {
-      id: '/api/public/portal/save-push-token'
-      path: '/api/public/portal/save-push-token'
-      fullPath: '/api/public/portal/save-push-token'
-      preLoaderRoute: typeof ApiPublicPortalSavePushTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/request-otp': {
-      id: '/api/public/portal/request-otp'
-      path: '/api/public/portal/request-otp'
-      fullPath: '/api/public/portal/request-otp'
-      preLoaderRoute: typeof ApiPublicPortalRequestOtpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/renewal-status': {
-      id: '/api/public/portal/renewal-status'
-      path: '/api/public/portal/renewal-status'
-      fullPath: '/api/public/portal/renewal-status'
-      preLoaderRoute: typeof ApiPublicPortalRenewalStatusRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/renew-request': {
-      id: '/api/public/portal/renew-request'
-      path: '/api/public/portal/renew-request'
-      fullPath: '/api/public/portal/renew-request'
-      preLoaderRoute: typeof ApiPublicPortalRenewRequestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/register-install': {
-      id: '/api/public/portal/register-install'
-      path: '/api/public/portal/register-install'
-      fullPath: '/api/public/portal/register-install'
-      preLoaderRoute: typeof ApiPublicPortalRegisterInstallRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/public-ai-agent': {
-      id: '/api/public/portal/public-ai-agent'
-      path: '/api/public/portal/public-ai-agent'
-      fullPath: '/api/public/portal/public-ai-agent'
-      preLoaderRoute: typeof ApiPublicPortalPublicAiAgentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/mp-webhook': {
-      id: '/api/public/portal/mp-webhook'
-      path: '/api/public/portal/mp-webhook'
-      fullPath: '/api/public/portal/mp-webhook'
-      preLoaderRoute: typeof ApiPublicPortalMpWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/mp-create-pix': {
-      id: '/api/public/portal/mp-create-pix'
-      path: '/api/public/portal/mp-create-pix'
-      fullPath: '/api/public/portal/mp-create-pix'
-      preLoaderRoute: typeof ApiPublicPortalMpCreatePixRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/mp-create-extra': {
-      id: '/api/public/portal/mp-create-extra'
-      path: '/api/public/portal/mp-create-extra'
-      fullPath: '/api/public/portal/mp-create-extra'
-      preLoaderRoute: typeof ApiPublicPortalMpCreateExtraRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/mp-create-card': {
-      id: '/api/public/portal/mp-create-card'
-      path: '/api/public/portal/mp-create-card'
-      fullPath: '/api/public/portal/mp-create-card'
-      preLoaderRoute: typeof ApiPublicPortalMpCreateCardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/me': {
-      id: '/api/public/portal/me'
-      path: '/api/public/portal/me'
-      fullPath: '/api/public/portal/me'
-      preLoaderRoute: typeof ApiPublicPortalMeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/logout': {
-      id: '/api/public/portal/logout'
-      path: '/api/public/portal/logout'
-      fullPath: '/api/public/portal/logout'
-      preLoaderRoute: typeof ApiPublicPortalLogoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/login-password': {
-      id: '/api/public/portal/login-password'
-      path: '/api/public/portal/login-password'
-      fullPath: '/api/public/portal/login-password'
-      preLoaderRoute: typeof ApiPublicPortalLoginPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/portal/ai-agent-chat': {
-      id: '/api/public/portal/ai-agent-chat'
-      path: '/api/public/portal/ai-agent-chat'
-      fullPath: '/api/public/portal/ai-agent-chat'
-      preLoaderRoute: typeof ApiPublicPortalAiAgentChatRouteImport
+    '/api/public/app/mp-webhook': {
+      id: '/api/public/app/mp-webhook'
+      path: '/api/public/app/mp-webhook'
+      fullPath: '/api/public/app/mp-webhook'
+      preLoaderRoute: typeof ApiPublicAppMpWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/auto-charges': {
@@ -1000,19 +874,145 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAutoChargesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/app/mp-webhook': {
-      id: '/api/public/app/mp-webhook'
-      path: '/api/public/app/mp-webhook'
-      fullPath: '/api/public/app/mp-webhook'
-      preLoaderRoute: typeof ApiPublicAppMpWebhookRouteImport
+    '/api/public/portal/ai-agent-chat': {
+      id: '/api/public/portal/ai-agent-chat'
+      path: '/api/public/portal/ai-agent-chat'
+      fullPath: '/api/public/portal/ai-agent-chat'
+      preLoaderRoute: typeof ApiPublicPortalAiAgentChatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/admin/assinantes/$id': {
-      id: '/_authenticated/admin/assinantes/$id'
-      path: '/$id'
-      fullPath: '/admin/assinantes/$id'
-      preLoaderRoute: typeof AuthenticatedAdminAssinantesIdRouteImport
-      parentRoute: typeof AuthenticatedAdminAssinantesRoute
+    '/api/public/portal/login-password': {
+      id: '/api/public/portal/login-password'
+      path: '/api/public/portal/login-password'
+      fullPath: '/api/public/portal/login-password'
+      preLoaderRoute: typeof ApiPublicPortalLoginPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/logout': {
+      id: '/api/public/portal/logout'
+      path: '/api/public/portal/logout'
+      fullPath: '/api/public/portal/logout'
+      preLoaderRoute: typeof ApiPublicPortalLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/me': {
+      id: '/api/public/portal/me'
+      path: '/api/public/portal/me'
+      fullPath: '/api/public/portal/me'
+      preLoaderRoute: typeof ApiPublicPortalMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/mp-create-card': {
+      id: '/api/public/portal/mp-create-card'
+      path: '/api/public/portal/mp-create-card'
+      fullPath: '/api/public/portal/mp-create-card'
+      preLoaderRoute: typeof ApiPublicPortalMpCreateCardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/mp-create-extra': {
+      id: '/api/public/portal/mp-create-extra'
+      path: '/api/public/portal/mp-create-extra'
+      fullPath: '/api/public/portal/mp-create-extra'
+      preLoaderRoute: typeof ApiPublicPortalMpCreateExtraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/mp-create-pix': {
+      id: '/api/public/portal/mp-create-pix'
+      path: '/api/public/portal/mp-create-pix'
+      fullPath: '/api/public/portal/mp-create-pix'
+      preLoaderRoute: typeof ApiPublicPortalMpCreatePixRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/mp-webhook': {
+      id: '/api/public/portal/mp-webhook'
+      path: '/api/public/portal/mp-webhook'
+      fullPath: '/api/public/portal/mp-webhook'
+      preLoaderRoute: typeof ApiPublicPortalMpWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/public-ai-agent': {
+      id: '/api/public/portal/public-ai-agent'
+      path: '/api/public/portal/public-ai-agent'
+      fullPath: '/api/public/portal/public-ai-agent'
+      preLoaderRoute: typeof ApiPublicPortalPublicAiAgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/register-install': {
+      id: '/api/public/portal/register-install'
+      path: '/api/public/portal/register-install'
+      fullPath: '/api/public/portal/register-install'
+      preLoaderRoute: typeof ApiPublicPortalRegisterInstallRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/renew-request': {
+      id: '/api/public/portal/renew-request'
+      path: '/api/public/portal/renew-request'
+      fullPath: '/api/public/portal/renew-request'
+      preLoaderRoute: typeof ApiPublicPortalRenewRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/renewal-status': {
+      id: '/api/public/portal/renewal-status'
+      path: '/api/public/portal/renewal-status'
+      fullPath: '/api/public/portal/renewal-status'
+      preLoaderRoute: typeof ApiPublicPortalRenewalStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/request-otp': {
+      id: '/api/public/portal/request-otp'
+      path: '/api/public/portal/request-otp'
+      fullPath: '/api/public/portal/request-otp'
+      preLoaderRoute: typeof ApiPublicPortalRequestOtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/save-push-token': {
+      id: '/api/public/portal/save-push-token'
+      path: '/api/public/portal/save-push-token'
+      fullPath: '/api/public/portal/save-push-token'
+      preLoaderRoute: typeof ApiPublicPortalSavePushTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/store-products': {
+      id: '/api/public/portal/store-products'
+      path: '/api/public/portal/store-products'
+      fullPath: '/api/public/portal/store-products'
+      preLoaderRoute: typeof ApiPublicPortalStoreProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/verify-otp': {
+      id: '/api/public/portal/verify-otp'
+      path: '/api/public/portal/verify-otp'
+      fullPath: '/api/public/portal/verify-otp'
+      preLoaderRoute: typeof ApiPublicPortalVerifyOtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/push/send': {
+      id: '/api/public/push/send'
+      path: '/api/public/push/send'
+      fullPath: '/api/public/push/send'
+      preLoaderRoute: typeof ApiPublicPushSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/zapi/disconnect': {
+      id: '/api/public/zapi/disconnect'
+      path: '/api/public/zapi/disconnect'
+      fullPath: '/api/public/zapi/disconnect'
+      preLoaderRoute: typeof ApiPublicZapiDisconnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/zapi/qr': {
+      id: '/api/public/zapi/qr'
+      path: '/api/public/zapi/qr'
+      fullPath: '/api/public/zapi/qr'
+      preLoaderRoute: typeof ApiPublicZapiQrRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/zapi/status': {
+      id: '/api/public/zapi/status'
+      path: '/api/public/zapi/status'
+      fullPath: '/api/public/zapi/status'
+      preLoaderRoute: typeof ApiPublicZapiStatusRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
