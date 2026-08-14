@@ -22,16 +22,11 @@ export type StorePublic = {
 export const getStorePublic = createServerFn({ method: "GET" })
   .inputValidator((data: { slug: string }) => data)
   .handler(async ({ data }): Promise<StorePublic | null> => {
-    const { createClient } = await import("@supabase/supabase-js");
-    const supa = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
-      { auth: { persistSession: false, autoRefreshToken: false } },
-    );
-    const { data: owners } = await supa.rpc("find_store_owner_by_slug", { _slug: data.slug });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: owners } = await supabaseAdmin.rpc("find_store_owner_by_slug", { _slug: data.slug });
     const owner = (owners as Array<{ user_id: string; store_title: string | null; store_description: string | null }> | null)?.[0];
     if (!owner) return null;
-    const { data: prods } = await supa.rpc("list_store_products", { _owner: owner.user_id });
+    const { data: prods } = await supabaseAdmin.rpc("list_store_products", { _owner: owner.user_id });
     return {
       owner_id: owner.user_id,
       title: owner.store_title ?? "Loja",
