@@ -814,13 +814,13 @@ function PortalDashboard() {
                   return <p className="text-sm text-muted-foreground">Plano mensal não configurado. Fale com seu provedor.</p>;
                 }
                 const periods = [
-                  { label: "Mensal", days: 30, months: 1, discount: 0 },
-                  { label: "Trimestral", days: 90, months: 3, discount: 0.15 },
-                  { label: "Semestral", days: 180, months: 6, discount: 0.20 },
-                  { label: "Anual", days: 365, months: 12, discount: 0.25 },
+                  { label: "Mensal", days: 30, months: 1, discount: 0, override_price: 3000 },
+                  { label: "Trimestral", days: 90, months: 3, discount: 0.15, override_price: 7650 },
+                  { label: "Semestral", days: 180, months: 6, discount: 0.20, override_price: 14400 },
+                  { label: "Anual", days: 365, months: 12, discount: 0.25, override_price: 27000 },
                 ].map((p) => {
                   const full = monthly * p.months;
-                  const price = Math.round(full * (1 - p.discount));
+                  const price = p.override_price ?? Math.round(full * (1 - p.discount));
                   return { ...p, full, price };
                 });
                 return (
