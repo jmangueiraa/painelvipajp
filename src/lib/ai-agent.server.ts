@@ -168,7 +168,7 @@ export const processAgentMessageLogic = async (input: {
     if (code === "RATE_LIMIT") {
       response = "Olá! Nosso sistema está com muitos acessos, mas como sou especialista em instalação, vou te agilizar: Me chama no WhatsApp (19) 98135-6505 que te mando o tutorial agora mesmo! 🚀";
     } else if (code === "NO_CREDITS") {
-      response = "Nosso assistente expert está em manutenção rápida. 🛠️ Para não perder tempo com sua instalação, clique aqui e fale direto no WhatsApp (19) 98135-6505.";
+      response = "Estou realizando uma atualização rápida no meu sistema de IA. 🛠️ Para não atrasar sua instalação, clique aqui e fale direto no WhatsApp (19) 98135-6505 que te atendo agora!";
     } else if (isInstallRequest) {
       if (lowerMsg.includes("samsung") || lowerMsg.includes("lg")) {
         response = "Para sua Smart TV Samsung ou LG, instale o aplicativo SMARTONE IPTV! 📺 É o melhor e mais estável. Busque por ele na loja de apps da sua TV. Se precisar da lista de canais, me chama no WhatsApp (19) 98135-6505!";
@@ -181,7 +181,7 @@ export const processAgentMessageLogic = async (input: {
       } else if (lowerMsg.includes("valor") || lowerMsg.includes("preço") || lowerMsg.includes("plano") || lowerMsg.includes("quanto")) {
         response = "Temos planos a partir de R$ 30,00 com a melhor estabilidade do mercado! 💎 Quer que eu te envie o link dos planos ou prefere tirar dúvidas no WhatsApp (19) 98135-6505?";
       } else {
-        response = "Estou aqui! Tivemos uma pequena oscilação, mas sou especialista em resolver. 😅 O que exatamente você precisa sobre a instalação ou nossos planos? Se preferir, o suporte VIP está no WhatsApp (19) 98135-6505.";
+        response = "Estou aqui e pronto para te ajudar! 🚀 O que exatamente você precisa sobre a instalação ou nossos planos? Se preferir um atendimento mais rápido, o suporte VIP está no WhatsApp (19) 98135-6505.";
       }
     }
   }
