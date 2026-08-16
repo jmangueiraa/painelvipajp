@@ -290,8 +290,8 @@ function LandingPage() {
                 <div className="space-y-4 mb-8">
                   {plan.features.map((feature, idx) => (
                     <div key={idx} className="flex items-center gap-3">
-                      <CheckCircle2 className={`w-5 h-5 ${plan.popular ? 'text-blue-400' : 'text-slate-600'}`} />
-                      <span className="text-slate-300 font-medium text-sm">{feature}</span>
+                      <CheckCircle2 className={`w-5 h-5 ${plan.popular || feature.includes("Economia") ? 'text-blue-400' : 'text-slate-600'}`} />
+                      <span className={`font-medium text-sm ${feature.includes("Economia") ? 'text-blue-400 font-bold' : 'text-slate-300'}`}>{feature}</span>
                     </div>
                   ))}
                 </div>
