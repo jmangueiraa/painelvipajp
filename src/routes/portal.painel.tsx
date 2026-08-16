@@ -814,13 +814,13 @@ function PortalDashboard() {
                   return <p className="text-sm text-muted-foreground">Plano mensal não configurado. Fale com seu provedor.</p>;
                 }
                 const periods = [
-                  { label: "Mensal", days: 30, months: 1, discount: 0 },
-                  { label: "Trimestral", days: 90, months: 3, discount: 0.15 },
-                  { label: "Semestral", days: 180, months: 6, discount: 0.20 },
-                  { label: "Anual", days: 365, months: 12, discount: 0.25 },
+                  { label: "Mensal", days: 30, months: 1, discount: 0, override_price: 3000 },
+                  { label: "Trimestral", days: 90, months: 3, discount: 0.15, override_price: 7650 },
+                  { label: "Semestral", days: 180, months: 6, discount: 0.20, override_price: 14400 },
+                  { label: "Anual", days: 365, months: 12, discount: 0.25, override_price: 27000 },
                 ].map((p) => {
                   const full = monthly * p.months;
-                  const price = Math.round(full * (1 - p.discount));
+                  const price = p.override_price ?? Math.round(full * (1 - p.discount));
                   return { ...p, full, price };
                 });
                 return (
@@ -833,8 +833,8 @@ function PortalDashboard() {
                         onClick={() => selectPeriod({ label: p.label, days: p.days, price_cents: p.price })}
                       >
                         {p.discount > 0 && (
-                          <span className="absolute -top-2 -right-2 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                            -{Math.round(p.discount * 100)}%
+                          <span className="absolute -top-2 -right-2 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-lg">
+                            ECONOMIZE {Math.round(p.discount * 100)}%
                           </span>
                         )}
                         <div className="flex flex-col items-start">

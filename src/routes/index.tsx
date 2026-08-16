@@ -46,9 +46,10 @@ function LandingPage() {
   ];
 
   const plans = [
-    { id: "mensal", name: "Mensal", price: "R$ 35", features: ["1 Tela", "Canais HD/Full HD/4K", "Filmes e Séries", "Suporte VIP"] },
-    { id: "trimestral", name: "Trimestral", price: "R$ 89", features: ["1 Tela", "Canais HD/Full HD/4K", "Filmes e Séries", "Suporte VIP", "Economia de 15%"], popular: true },
-    { id: "anual", name: "Anual", price: "R$ 299", features: ["1 Tela", "Canais HD/Full HD/4K", "Filmes e Séries", "Suporte VIP", "Melhor Valor"] },
+    { id: "mensal", name: "Mensal", duration: "30 dias", price: "R$ 30", features: ["1 Tela", "Canais HD/Full HD/4K", "Filmes e Séries", "Suporte VIP"] },
+    { id: "trimestral", name: "Trimestral", duration: "90 dias", price: "R$ 76,50", features: ["1 Tela", "Canais HD/Full HD/4K", "Filmes e Séries", "Suporte VIP", "Economia de 15%"], popular: true },
+    { id: "semestral", name: "Semestral", duration: "180 dias", price: "R$ 144", features: ["1 Tela", "Canais HD/Full HD/4K", "Filmes e Séries", "Suporte VIP", "Economia de 20%"] },
+    { id: "anual", name: "Anual", duration: "365 dias", price: "R$ 270", features: ["1 Tela", "Canais HD/Full HD/4K", "Filmes e Séries", "Suporte VIP", "Melhor Valor", "Economia de 25%"] },
   ];
 
   const devices = [
@@ -266,7 +267,7 @@ function LandingPage() {
             <p className="text-slate-400 text-lg">Preços justos para uma qualidade inigualável. Sem contratos abusivos ou taxas escondidas.</p>
           </div>
           
-          <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {plans.map((plan, i) => (
               <motion.div
                 key={i}
@@ -283,14 +284,14 @@ function LandingPage() {
                   <h3 className="text-2xl font-black mb-2">{plan.name}</h3>
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-black">{plan.price}</span>
-                    <span className="text-slate-500 font-medium">/período</span>
+                    <span className="text-slate-500 font-medium text-xs">/ {plan.duration}</span>
                   </div>
                 </div>
                 <div className="space-y-4 mb-8">
                   {plan.features.map((feature, idx) => (
                     <div key={idx} className="flex items-center gap-3">
-                      <CheckCircle2 className={`w-5 h-5 ${plan.popular ? 'text-blue-400' : 'text-slate-600'}`} />
-                      <span className="text-slate-300 font-medium text-sm">{feature}</span>
+                      <CheckCircle2 className={`w-5 h-5 ${plan.popular || feature.includes("Economia") ? 'text-blue-400' : 'text-slate-600'}`} />
+                      <span className={`font-medium text-sm ${feature.includes("Economia") ? 'text-blue-400 font-bold' : 'text-slate-300'}`}>{feature}</span>
                     </div>
                   ))}
                 </div>
