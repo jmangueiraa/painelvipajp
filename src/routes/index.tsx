@@ -46,9 +46,10 @@ function LandingPage() {
   ];
 
   const plans = [
-    { id: "mensal", name: "Mensal", price: "R$ 35", features: ["1 Tela", "Canais HD/Full HD/4K", "Filmes e Séries", "Suporte VIP"] },
-    { id: "trimestral", name: "Trimestral", price: "R$ 89", features: ["1 Tela", "Canais HD/Full HD/4K", "Filmes e Séries", "Suporte VIP", "Economia de 15%"], popular: true },
-    { id: "anual", name: "Anual", price: "R$ 299", features: ["1 Tela", "Canais HD/Full HD/4K", "Filmes e Séries", "Suporte VIP", "Melhor Valor"] },
+    { id: "mensal", name: "Mensal", duration: "30 dias", price: "R$ 30", features: ["1 Tela", "Canais HD/Full HD/4K", "Filmes e Séries", "Suporte VIP"] },
+    { id: "trimestral", name: "Trimestral", duration: "90 dias", price: "R$ 76,50", features: ["1 Tela", "Canais HD/Full HD/4K", "Filmes e Séries", "Suporte VIP", "Economia de 15%"], popular: true },
+    { id: "semestral", name: "Semestral", duration: "180 dias", price: "R$ 144", features: ["1 Tela", "Canais HD/Full HD/4K", "Filmes e Séries", "Suporte VIP", "Economia de 20%"] },
+    { id: "anual", name: "Anual", duration: "365 dias", price: "R$ 270", features: ["1 Tela", "Canais HD/Full HD/4K", "Filmes e Séries", "Suporte VIP", "Melhor Valor", "Economia de 25%"] },
   ];
 
   const devices = [
