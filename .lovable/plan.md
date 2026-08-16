@@ -1,32 +1,28 @@
----
-name: AI Agent Stability and Resiliency
-description: Fixes for AI agent responsiveness and database conflicts in the landing page chat.
-type: feature
----
+# Plano de Estabilização do Agente de IA
 
-# AI Agent Stability Plan
+O usuário relatou que, ao solicitar a instalação, o Agente de IA está respondendo com uma mensagem de fallback: *"Puxa, tive um pequeno soluço na conexão! 😅 Mas já estou de volta..."*. Esta mensagem indica que a chamada à API do Google Gemini (via Lovable Gateway) está falhando ou excedendo o tempo limite (45s).
 
-The user reports that the AI agent only works within the Lovable environment and fails (or shows instability) on the production/public landing page. This is often caused by:
-1.  **Framework Context Issues**: Raw API routes in TanStack Start sometimes lose context or fail when calling functions that rely on server-side middleware.
-2.  **Database Conflicts**: `upsert` operations on history without proper ID handling can cause race conditions or primary key violations.
-3.  **API Timeouts**: The AI gateway might take longer than the client-side fetch timeout or browser expectations.
+## Objetivos
+- Identificar e mitigar a causa da instabilidade na conexão com a IA.
+- Melhorar o fallback para que ele forneça informações úteis sobre instalação imediatamente, em vez de apenas pedir para repetir.
+- Garantir que o histórico de conversas não cause bloqueios ou atrasos na resposta.
 
-## Proposed Changes
+## Alterações Propostas
 
-### Backend Logic (`src/lib/ai-agent.server.ts`)
-- Refine the `processAgentMessageLogic` to be more resilient to database errors during history saving.
-- Ensure the background save task doesn't block the response to the user.
-- Add more explicit fallbacks for common user intents (greeting, specific brands).
+### Backend (`src/lib/ai-agent.server.ts`)
+- **Ajuste de Timeout e Resiliência**: Reduzir levemente o timeout de `Promise.race` para 40s para dar margem à resposta de fallback.
+- **Melhoria no Fallback de Instalação**: Se a IA falhar e a mensagem do usuário contiver "instalar", "como", "aparelho" ou nomes de marcas (Samsung, LG, etc.), a resposta de fallback será técnica e útil, orientando sobre o dispositivo em vez de ser genérica.
+- **Otimização do Histórico**: Garantir que a falha na persistência do histórico (Supabase) nunca interrompa a entrega da resposta ao usuário.
+- **Refinamento do Prompt**: Adicionar instruções no `SALES_CONTEXT` para que a IA priorize respostas rápidas em tópicos de instalação.
 
-### API Route (`src/routes/api/public/portal/public-ai-agent.ts`)
-- Ensure CORS headers are correctly applied.
-- Add logging to track the flow of requests from the public landing page.
+### Componente de Chat (`src/components/landing-page/AIChat.tsx`)
+- **Feedback Visual**: Garantir que o estado de "Digitando..." seja encerrado corretamente em caso de erro.
+- **Tratamento de Erros no Frontend**: Melhorar a mensagem exibida quando a API retorna um erro 500, alinhando com a nova estratégia de fallback útil do backend.
 
-### Frontend Component (`src/components/landing-page/AIChat.tsx`)
-- Improve error handling to provide a better user experience even when the API flickers.
-- Ensure `sessionId` is consistently passed.
+## Verificação Técnica
+- Executar scripts de teste (`/tmp/browser/ai-debug/test_ai_install.py`) simulando falhas de rede para validar o novo fallback.
+- Verificar logs do servidor para identificar se o `LOVABLE_API_KEY` está presente ou se há erros específicos de cota.
 
-## Technical Details
-- Using `Promise.race` for timeouts.
-- Non-blocking async IIFE for history persistence.
-- Fuzzy matching for brand detection (Samsung/LG -> Smartone).
+## Detalhes Técnicos
+- O erro ocorre no bloco `catch` da função `processAgentMessageLogic`.
+- A regra de negócio para Samsung/LG (Smartone) será replicada no fallback estático para garantir consistência mesmo offline.
