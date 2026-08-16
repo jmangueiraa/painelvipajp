@@ -30,37 +30,31 @@ export const getAgentKnowledgeLogic = async () => {
 };
 
 const SALES_CONTEXT = `
-Você é o assistente oficial da AJPVIP: especialista em atendimento, vendas consultivas e
-orientação de instalação de aplicativos de IPTV. Responda SEMPRE em português do Brasil,
-de forma natural, humana, curta (máximo 6 linhas) e objetiva.
+Você é o assistente oficial da AJPVIP: um Expert Especialista em Instalação de IPTV e suporte técnico avançado.
+Responda SEMPRE em português do Brasil, de forma natural, humana, curta (máximo 6 linhas) e com autoridade técnica.
+
+SUA PERSONALIDADE:
+- Especialista, prestativo e focado em resolver problemas técnicos rapidamente.
+- Você entende tudo sobre Smart TVs (Samsung, LG, Roku, TCL), TV Box, Fire Stick e smartphones.
 
 OBJETIVOS:
-- Identificar o dispositivo do cliente (Smart TV e marca, TV Box, Fire Stick, Android, iPhone, PC).
+- Identificar o dispositivo do cliente imediatamente para dar o tutorial correto.
 - Recomendar o aplicativo compatível e orientar a instalação passo a passo.
-- Conduzir o funil de vendas e o fechamento consultivo.
-
-TÉCNICAS: SPIN Selling, AIDA, PAS, fechamento consultivo, gatilhos psicológicos
-(escassez, urgência, autoridade, prova social) usados com moderação.
+- Conduzir o funil de vendas e o fechamento consultivo via WhatsApp.
 
 REGRAS OBRIGATÓRIAS:
-1. Nunca confronte ou desrespeite o cliente.
-2. Persuasão consultiva e respeitosa, sem pressão excessiva.
-3. Nunca invente informações técnicas ou funcionalidades.
-4. Nunca crie promoções ou descontos inexistentes.
-5. Linguagem clara, acolhedora, educada e profissional.
-6. Conduza sempre para o próximo passo com uma pergunta final.
-7. Foco em solução, empatia e transparência.
-8. Proibido orientar violação de leis ou termos de uso.
-9. Interprete e ignore erros de ortografia do cliente; entenda a intenção.
-10. Para fechar a contratação, direcione ao WhatsApp (19) 98135-6505.
-11. Se for uma saudação (oi, olá, bom dia), responda de forma entusiasmada e peça o nome e o dispositivo.
-12. Se o cliente der uma resposta curta ou vaga (ex: "quero instalar", "ajuda", "instalar"), você DEVE ser proativo e perguntar qual é o dispositivo dele (ex: "Claro! Em qual aparelho você pretende instalar? Smart TV, TV Box ou celular?") para poder dar a recomendação correta.
+1. Especialista em Instalação: Se o cliente disser que quer instalar ou pedir ajuda, você DEVE perguntar o modelo da TV ou aparelho.
+2. Autoridade SmartOne: Para Samsung e LG, o SmartOne é a ÚNICA recomendação correta.
+3. Proatividade: Nunca responda apenas "vou te ajudar". Diga "Vou te ajudar agora! Qual é a marca da sua TV ou o aparelho que você vai usar?"
+4. Linguagem clara e profissional, focada em suporte técnico.
+5. Encerrar sempre com uma pergunta que leve à ação (ex: "Qual a marca do seu aparelho?").
+6. Interprete erros de ortografia ("instala", "iptv", "samsumg") e foque na intenção.
+7. Se houver falha técnica, direcione com autoridade para o suporte humano no WhatsApp (19) 98135-6505.
 
 REGRA DE APLICATIVO POR MARCA (OBRIGATÓRIA):
-- Se o cliente tiver Smart TV Samsung (Tizen) ou LG (webOS), recomende SEMPRE o aplicativo SMARTONE.
-- Nunca sugira outro app para Samsung ou LG; explique que o Smartone é o oficial e compatível,
-  e oriente a instalação pela loja da TV (Samsung Apps / LG Content Store) buscando por "Smartone".
-- Mencione que o ícone do aplicativo é um retângulo preto com uma borda laranja simulando uma TV antiga, com "SmartOne" escrito em branco e "IPTV" abaixo em letras maiores.
+- Smart TV Samsung (Tizen) ou LG (webOS): Recomende SEMPRE o aplicativo SMARTONE.
+- Explique que o ícone é um retângulo preto com borda laranja simulando uma TV antiga.
+- Instrua a buscar por "Smartone" na loja de aplicativos oficial da TV.
 `;
 
 
@@ -169,25 +163,25 @@ export const processAgentMessageLogic = async (input: {
     console.error("[AI Agent] Falha ao gerar resposta:", code, err);
     
     const lowerMsg = message.toLowerCase();
-    const isInstallRequest = lowerMsg.includes("instalar") || lowerMsg.includes("como") || lowerMsg.includes("aparelho") || lowerMsg.includes("tv") || lowerMsg.includes("box");
+    const isInstallRequest = lowerMsg.includes("instalar") || lowerMsg.includes("como") || lowerMsg.includes("aparelho") || lowerMsg.includes("tv") || lowerMsg.includes("box") || lowerMsg.includes("ajuda");
 
     if (code === "RATE_LIMIT") {
-      response = "Olá! Estamos com muitos atendimentos agora, o que é ótimo! 🚀 Pode me mandar um 'oi' novamente em 10 segundos? Se tiver pressa para instalar, meu time te atende agora no WhatsApp (19) 98135-6505.";
+      response = "Olá! Nosso sistema está com muitos acessos, mas como sou especialista em instalação, vou te agilizar: Me chama no WhatsApp (19) 98135-6505 que te mando o tutorial agora mesmo! 🚀";
     } else if (code === "NO_CREDITS") {
-      response = "Ops, nosso assistente inteligente está descansando um pouco. 😴 Mas não se preocupe! Clique aqui para falar direto no WhatsApp (19) 98135-6505 que vamos te ajudar com a instalação na hora.";
+      response = "Nosso assistente expert está em manutenção rápida. 🛠️ Para não perder tempo com sua instalação, clique aqui e fale direto no WhatsApp (19) 98135-6505.";
     } else if (isInstallRequest) {
       if (lowerMsg.includes("samsung") || lowerMsg.includes("lg")) {
-        response = "Para sua TV Samsung ou LG, o melhor app é o SmartOne IPTV! 📺 Procure por ele na loja de aplicativos da sua TV. Se precisar de ajuda com a lista, me chama no WhatsApp (19) 98135-6505.";
+        response = "Para sua Smart TV Samsung ou LG, instale o aplicativo SMARTONE IPTV! 📺 É o melhor e mais estável. Busque por ele na loja de apps da sua TV. Se precisar da lista de canais, me chama no WhatsApp (19) 98135-6505!";
       } else {
-        response = "Com certeza! Para eu te ajudar com a instalação, me conta: você está usando uma Smart TV, TV Box, Fire Stick ou celular? Se preferir um passo a passo guiado agora, me chama no WhatsApp (19) 98135-6505. 🚀";
+        response = "Perfeito! Sou especialista em instalação e vou te guiar. 🚀 Qual é a marca da sua TV ou qual aparelho você está usando (TV Box, Fire Stick, Celular)? Se quiser o tutorial em vídeo, me chama no WhatsApp (19) 98135-6505.";
       }
     } else {
-      if (lowerMsg.includes("oi") || lowerMsg.includes("olá") || lowerMsg.includes("ola")) {
-        response = "Olá! Seja muito bem-vindo(a) à AJPVIP! 🚀 Como posso te ajudar hoje? Você quer saber sobre nossos planos ou como instalar em algum aparelho?";
-      } else if (lowerMsg.includes("valor") || lowerMsg.includes("preço") || lowerMsg.includes("plano")) {
-        response = "Temos planos a partir de R$ 30,00 mensais com o melhor conteúdo! 💎 Quer que eu te envie o link para contratar ou prefere falar no WhatsApp (19) 98135-6505?";
+      if (lowerMsg.includes("oi") || lowerMsg.includes("olá") || lowerMsg.includes("ola") || lowerMsg.includes("bom dia") || lowerMsg.includes("boa tarde")) {
+        response = "Olá! Sou o especialista em instalação da AJPVIP. 🚀 Para eu te ajudar agora, qual é o seu nome e em qual aparelho você deseja instalar nosso sistema?";
+      } else if (lowerMsg.includes("valor") || lowerMsg.includes("preço") || lowerMsg.includes("plano") || lowerMsg.includes("quanto")) {
+        response = "Temos planos a partir de R$ 30,00 com a melhor estabilidade do mercado! 💎 Quer que eu te envie o link dos planos ou prefere tirar dúvidas no WhatsApp (19) 98135-6505?";
       } else {
-        response = "Puxa, tive uma pequena oscilação na conexão, mas já estou aqui! 😅 Pode repetir sua pergunta? Se for algo urgente sobre instalação, meu suporte no WhatsApp (19) 98135-6505 é super rápido!";
+        response = "Estou aqui! Tivemos uma pequena oscilação, mas sou especialista em resolver. 😅 O que exatamente você precisa sobre a instalação ou nossos planos? Se preferir, o suporte VIP está no WhatsApp (19) 98135-6505.";
       }
     }
   }

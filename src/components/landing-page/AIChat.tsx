@@ -35,7 +35,7 @@ export const AIChat = () => {
     if (isOpen && messages.length === 0) {
       setMessages([{
         role: "assistant",
-        content: "Olá! Sou seu assistente de instalação AJP. Para começarmos, qual seu nome e em qual dispositivo você pretende usar nosso serviço?"
+        content: "Olá! Sou o Expert da AJPVIP, especialista em instalação de IPTV. 🚀 Para eu te guiar agora, qual seu nome e qual aparelho você vai usar (Smart TV, Celular ou TV Box)?"
       }]);
     }
   }, [isOpen, messages.length]);
@@ -80,7 +80,7 @@ export const AIChat = () => {
         
         setMessages(prev => [...prev, {
           role: "assistant",
-          content: "Oi! Tive uma pequena oscilação na conexão, mas já estou pronto para te ajudar. Pode repetir o que você disse? Se preferir, chama a gente no WhatsApp (19) 98135-6505 que o atendimento lá é instantâneo!"
+          content: "Como sou especialista em instalação, não quero te deixar esperando. 🚀 Tivemos uma oscilação na rede, mas me chama agora no WhatsApp (19) 98135-6505 que eu mesmo finalizo sua configuração na hora!"
         }]);
       }
     } catch (error) {
