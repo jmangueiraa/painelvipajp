@@ -224,8 +224,8 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Compatibility */}
-      <section className="py-24">
+      {/* How it Works / Compatibility */}
+      <section id="como-funciona" className="py-24">
         <div className="container mx-auto px-6">
           <div className="p-12 rounded-[40px] bg-gradient-to-br from-slate-900 to-slate-950 border border-white/5 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/5 blur-[100px] rounded-full" />
