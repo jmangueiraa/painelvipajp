@@ -144,6 +144,7 @@ function LandingPage() {
               className="relative lg:block hidden"
             >
               <div className="relative z-10 rounded-3xl overflow-hidden shadow-2xl shadow-blue-500/10 border border-white/10">
+                <img 
                   src="https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&q=75&w=1200" 
                   alt="IPTV Content" 
                   loading="eager"
@@ -244,6 +245,7 @@ function LandingPage() {
                 </Button>
               </div>
               <div className="relative">
+                <img 
                   src="https://images.unsplash.com/photo-1595935736128-db120a273d63?auto=format&fit=crop&q=75&w=1000" 
                   alt="Devices" 
                   loading="lazy"
