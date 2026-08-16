@@ -295,8 +295,10 @@ function LandingPage() {
                     </div>
                   ))}
                 </div>
-                <Button className={`w-full h-14 rounded-full font-bold text-lg ${plan.popular ? 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20' : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'}`}>
-                  Assinar Agora
+                <Button asChild className={`w-full h-14 rounded-full font-bold text-lg ${plan.popular ? 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20' : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'}`}>
+                  <a href={`https://wa.me/5519981356505?text=Olá! Gostaria de assinar o plano ${plan.name}.`} target="_blank" rel="noopener noreferrer">
+                    Assinar Agora
+                  </a>
                 </Button>
               </motion.div>
             ))}
