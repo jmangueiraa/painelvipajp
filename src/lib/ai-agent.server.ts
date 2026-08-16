@@ -161,12 +161,15 @@ export const processAgentMessageLogic = async (input: {
   } catch (err) {
     const code = (err as Error).message;
     console.error("[AI Agent] Falha ao gerar resposta:", code, err);
+    
+    // Fallback amigável em caso de erro na API de IA
     if (code === "RATE_LIMIT") {
-      response = "Estamos com muitos atendimentos agora. Pode tentar novamente em alguns segundos? Se preferir, fale direto no WhatsApp (19) 98135-6505.";
+      response = "Olá! Estamos com muitos atendimentos agora, o que é ótimo, mas gerou uma pequena fila. Pode tentar me mandar um 'oi' novamente em 10 segundos? Se tiver pressa, meu time te atende agora no WhatsApp (19) 98135-6505.";
     } else if (code === "NO_CREDITS") {
-      response = "Nosso assistente está temporariamente indisponível. Um atendente pode te ajudar agora no WhatsApp (19) 98135-6505. Posso te encaminhar?";
+      response = "Ops, parece que nosso assistente inteligente esgotou os créditos de processamento. Mas não se preocupe! Clique aqui para falar direto com um humano no WhatsApp (19) 98135-6505 que vamos te ajudar na hora.";
     } else {
-      response = "Oi! Tive uma pequena instabilidade aqui, mas já estou pronto para te ajudar. Pode repetir sua pergunta? Se preferir, me chama no WhatsApp (19) 98135-6505.";
+      // Mensagem genérica mais calorosa que evita o termo "instabilidade"
+      response = "Puxa, tive um pequeno soluço aqui na conexão! 😅 Pode repetir o que você disse? Se eu demorar a responder de novo, me chama no WhatsApp (19) 98135-6505 que estou lá também!";
     }
   }
 
@@ -179,19 +182,35 @@ export const processAgentMessageLogic = async (input: {
   (async () => {
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: existing } = await (supabaseAdmin.from as any)("ai_agent_conversations")
+      
+      // Busca a conversa existente para obter o ID e evitar duplicidade/conflito
+      const { data: existing, error: fetchError } = await (supabaseAdmin.from as any)("ai_agent_conversations")
         .select("id")
         .eq("session_id", sessionId)
         .maybeSingle();
 
-      await (supabaseAdmin.from as any)("ai_agent_conversations").upsert({
-        id: existing?.id,
+      if (fetchError) {
+        console.warn("[AI Agent] History fetch error (non-fatal):", fetchError.message);
+      }
+
+      // Upsert robusto: se existir um ID, usa ele para garantir o update
+      const payload: any = {
         session_id: sessionId,
         messages: newHistory,
-        updated_at: new Date().toISOString(),
-      });
+        updated_at: new Date().toISOString()
+      };
+
+      if (existing?.id) {
+        payload.id = existing.id;
+      }
+
+      const { error: upsertError } = await (supabaseAdmin.from as any)("ai_agent_conversations").upsert(payload);
+      
+      if (upsertError) {
+        console.error("[AI Agent] History upsert failed:", upsertError.message);
+      }
     } catch (saveErr) {
-      console.error("[AI Agent] Background save failed:", saveErr);
+      console.error("[AI Agent] Background history save failed:", saveErr);
     }
   })();
 
