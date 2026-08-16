@@ -69,17 +69,19 @@ export const AIChat = () => {
       if (response.ok && data?.response) {
         setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
 
-        // Check if user wants to hire/whatsapp
         if (userMsg.toLowerCase().includes("contratar") || userMsg.toLowerCase().includes("assinar")) {
           setTimeout(() => {
             window.open("https://wa.me/5519981356505?text=Olá, vim do chat da IA e gostaria de contratar um plano.", "_blank");
           }, 1500);
         }
       } else {
-        console.error("AI agent error:", data);
+        const errorMsg = data?.error || "Instabilidade detectada";
+        console.error("AI agent error:", errorMsg);
+        
+        // Tenta recuperar se for apenas um erro de parse ou timeout leve
         setMessages(prev => [...prev, {
           role: "assistant",
-          content: "Tive uma instabilidade para responder agora. Pode tentar novamente? Se preferir atendimento imediato, chame no WhatsApp (19) 98135-6505."
+          content: "Oi! Tive um pequeno atraso aqui, mas já voltei. Pode repetir sua mensagem ou me chamar no WhatsApp (19) 98135-6505?"
         }]);
       }
     } catch (error) {
