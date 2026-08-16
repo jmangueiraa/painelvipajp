@@ -120,7 +120,7 @@ async function callLovableAI(messages: Array<{ role: string; content: string }>)
   const data = (await res.json()) as any;
   const content = data?.choices?.[0]?.message?.content;
   if (!content || typeof content !== "string") throw new Error("EMPTY_RESPONSE");
-  return content.trim();
+  return content.trim().replace(/^"|"$/g, '');
 }
 
 export const processAgentMessageLogic = async (input: {
@@ -171,8 +171,9 @@ export const processAgentMessageLogic = async (input: {
         "Nosso assistente está temporariamente indisponível. Um atendente pode te ajudar agora no WhatsApp (19) 98135-6505. Posso te encaminhar?";
     } else {
       // Return the specific error in dev or fallback in prod
+      console.error("[AI Agent] Generic AI Error:", code);
       response =
-        "Tive uma instabilidade para responder agora. Pode repetir sua mensagem? Se preferir atendimento imediato, chame no WhatsApp (19) 98135-6505.";
+        "Oi! Tive uma pequena instabilidade, mas já estou aqui. Pode repetir sua mensagem? Se preferir, me chama no WhatsApp (19) 98135-6505.";
     }
   }
 
