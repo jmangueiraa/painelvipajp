@@ -1,34 +1,13 @@
-# Plano de Otimização da Landing Page e Agente de IA
+---
+name: Landing Page CTA Update
+description: Redirect "Assinar Agora" buttons to the user's WhatsApp number.
+type: feature
+---
 
-O usuário solicitou que a landing page seja "mais leve" (otimizada para performance) e mencionou uma instrução de sistema para agir em pedidos de criação/alteração/correção. Embora a mensagem inclua metadados visuais de substituição de texto ("\u2063"), o pedido central é a otimização de performance ("landpage esta muito pesada deixa mais leve").
+Update the "Assinar Agora" buttons in the pricing section of the landing page to redirect users to the WhatsApp number (19) 9813-6505 with a pre-defined purchase message.
 
-## Alterações Propostas
-
-### 1. Otimização de Imagens e Assets (Frontend)
-- Substituir imagens externas pesadas do Unsplash por versões com dimensões controladas e compressão via parâmetros de URL.
-- Implementar `loading="lazy"` em imagens abaixo da dobra (fold).
-- Garantir que o `favicon` e outros assets locais usem formatos modernos.
-
-### 2. Otimização de Animações (Framer Motion)
-- Configurar `layout="position"` ou `layoutDependency` para evitar re-calculos desnecessários de layout.
-- Garantir que animações complexas (como os "Floating Cards") usem `will-change: transform` ou sejam desabilitadas em dispositivos de baixa performance se necessário.
-
-### 3. Otimização do Agente de IA (Client-side)
-- Reduzir o payload do histórico enviado para a API (limitar a mensagens essenciais).
-- Melhorar o feedback visual de carregamento para parecer mais instantâneo (otimização de percepção).
-
-### 4. Limpeza de Código e Depuração
-- Remover `console.log` de depuração no servidor que podem estar atrasando a resposta (como logs de payloads inteiros).
-
-## Detalhes Técnicos
-
-### Arquivos afetados:
-- `src/routes/index.tsx`: Otimização de imagens e lazy loading.
-- `src/components/landing-page/AIChat.tsx`: Refinamento do envio de histórico e feedback visual.
-- `src/lib/ai-agent.server.ts`: Remoção de logs excessivos (`console.log(JSON.stringify(body))`) para reduzir processamento de string no Worker.
-
-### Exemplo de otimização de imagem:
-Mudar:
-`https://images.unsplash.com/...`
-Para:
-`https://images.unsplash.com/...&w=800&q=75&auto=format` (especificando largura e qualidade).
+Technical Details:
+- Target file: `src/routes/index.tsx`
+- Component: `LandingPage`
+- Modification: Wrap the "Assinar Agora" `Button` component in an `<a>` tag with the WhatsApp API URL or use `asChild` if not already present.
+- URL: `https://wa.me/5519981356505?text=Olá! Gostaria de assinar o plano [NOME_DO_PLANO].`
