@@ -157,9 +157,9 @@ export const processAgentMessageLogic = async (input: {
 
   let response: string;
   try {
-    console.log(`[AI Agent] Calling AI for session ${sessionId}...`);
+    // console.log(`[AI Agent] Calling AI for session ${sessionId}...`);
     response = await callLovableAI(messages);
-    console.log(`[AI Agent] AI response received (${response.length} chars)`);
+    // console.log(`[AI Agent] AI response received (${response.length} chars)`);
   } catch (err) {
     const code = (err as Error).message;
     console.error("[AI Agent] Falha ao gerar resposta:", code, err);

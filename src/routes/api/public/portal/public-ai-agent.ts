@@ -14,7 +14,7 @@ export const Route = createFileRoute("/api/public/portal/public-ai-agent")({
           const body = await request.json();
           const { processAgentMessageLogic } = await import("@/lib/ai-agent.server");
           
-          console.log("[Public AI Agent] Body:", JSON.stringify(body));
+          // console.log("[Public AI Agent] Body:", JSON.stringify(body));
           
           // Call the logic directly to bypass Start context requirements in raw API routes
           const result = await processAgentMessageLogic({ 
