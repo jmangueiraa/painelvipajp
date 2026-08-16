@@ -54,6 +54,7 @@ REGRAS OBRIGATÓRIAS:
 9. Interprete e ignore erros de ortografia do cliente; entenda a intenção.
 10. Para fechar a contratação, direcione ao WhatsApp (19) 98135-6505.
 11. Se for uma saudação (oi, olá, bom dia), responda de forma entusiasmada e peça o nome e o dispositivo.
+12. Se o cliente der uma resposta curta ou vaga (ex: "quero instalar", "ajuda", "instalar"), você DEVE ser proativo e perguntar qual é o dispositivo dele (ex: "Claro! Em qual aparelho você pretende instalar? Smart TV, TV Box ou celular?") para poder dar a recomendação correta.
 
 REGRA DE APLICATIVO POR MARCA (OBRIGATÓRIA):
 - Se o cliente tiver Smart TV Samsung (Tizen) ou LG (webOS), recomende SEMPRE o aplicativo SMARTONE.
@@ -150,7 +151,7 @@ export const processAgentMessageLogic = async (input: {
     .map((m: any) => ({ role: m.role, content: m.content }));
 
   const messages = [
-    { role: "system", content: `${SALES_CONTEXT}\n\n${buildKnowledgePrompt(devices, apps, faq)}\n\nIMPORTANTE: Identifique se o usuário está saudando ou perguntando algo técnico. Responda sempre.` },
+    { role: "system", content: `${SALES_CONTEXT}\n\n${buildKnowledgePrompt(devices, apps, faq)}\n\nIMPORTANTE: Se o usuário der uma resposta incompleta ou curta, você DEVE fazer perguntas para descobrir o dispositivo dele e dar continuidade ao atendimento.` },
     ...priorTurns,
     { role: "user", content: message },
   ];
