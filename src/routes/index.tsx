@@ -267,7 +267,7 @@ function LandingPage() {
             <p className="text-slate-400 text-lg">Preços justos para uma qualidade inigualável. Sem contratos abusivos ou taxas escondidas.</p>
           </div>
           
-          <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {plans.map((plan, i) => (
               <motion.div
                 key={i}
