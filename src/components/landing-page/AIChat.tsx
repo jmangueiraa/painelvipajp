@@ -75,20 +75,19 @@ export const AIChat = () => {
           }, 1500);
         }
       } else {
-        const errorMsg = data?.error || "Instabilidade detectada";
+        const errorMsg = data?.error || "Timeout detectado";
         console.error("AI agent error:", errorMsg);
         
-        // Tenta recuperar se for apenas um erro de parse ou timeout leve
         setMessages(prev => [...prev, {
           role: "assistant",
-          content: "Oi! Tive um pequeno atraso aqui, mas já voltei. Pode repetir sua mensagem ou me chamar no WhatsApp (19) 98135-6505?"
+          content: "Oi! O servidor demorou um pouquinho a me responder, mas já estou aqui. Pode repetir sua última mensagem? Se preferir, me chama no WhatsApp (19) 98135-6505."
         }]);
       }
     } catch (error) {
       console.error("Error sending message:", error);
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: "Não consegui me conectar agora. Verifique sua internet e tente novamente, ou fale no WhatsApp (19) 98135-6505."
+        content: "Hmm, parece que minha conexão falhou por um instante. 🌐 Pode tentar enviar novamente? Se o erro persistir, nosso suporte humano te atende no WhatsApp (19) 98135-6505."
       }]);
     } finally {
       setIsLoading(false);
