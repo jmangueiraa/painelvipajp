@@ -1,25 +1,44 @@
-# Plan - Fix AI Agent Instability (Oscillation)
+# Plano de Melhoria da Resiliência do Agente de IA
 
-The user is still seeing the "oscillation" (fallback) message from the AI agent, indicating that the primary AI response generation (via Google Gemini 1.5/3.6 Flash) is failing or timing out, triggering the catch block in `src/lib/ai-agent.server.ts`.
+O usuário relatou que o agente de IA "ainda está com dificuldade em responder". Embora os testes básicos tenham passado usando o modelo `gemini-2.0-flash-exp` e o sistema de fallback, o problema pode estar relacionado ao tempo de resposta da API (latência), limites de cota no gateway ou falhas silenciosas na persistência do histórico que interrompem o fluxo.
 
-## Proposed Changes
+## Objetivos
+- Reduzir o tempo de resposta percebido pelo usuário.
+- Garantir que a IA sempre responda, mesmo com alta latência.
+- Melhorar a detecção de intenção para respostas rápidas de hardware.
+- Estabilizar a persistência do histórico de conversas no banco de dados.
 
-### AI Agent Logic (`src/lib/ai-agent.server.ts`)
-- **Fix Model Reference**: Update the `MODEL` constant from `google/gemini-3.6-flash` (which is likely a typo or future-dated reference) to the stable `google/gemini-2.0-flash-exp` or `gemini-1.5-flash` to ensure compatibility with the Lovable AI Gateway.
-- **Enhanced Logging**: Add detailed logging before and after the gateway call to pinpoint if the failure is a timeout, a specific error code, or an empty response.
-- **Refined Fallbacks**: Update the fallback messages to be even more seamless, avoiding the word "oscilação" (oscillation) which confuses users, and instead using more natural "tying" phrases while guiding the user towards WhatsApp support.
-- **Context Injection**: Ensure the `SALES_CONTEXT` is strictly followed even in fallback scenarios.
+## Ações Propostas
 
-### Frontend Chat Component (`src/components/landing-page/AIChat.tsx`)
-- **Graceful Error Handling**: Update the frontend to handle partial failures or slow responses without immediately showing the fallback message if a retry is possible.
-- **WhatsApp Link Optimization**: Ensure the WhatsApp link is prominent and consistent across all fallback scenarios.
+### 1. Refinamento do Modelo e Timeout
+- Validar se o modelo `google/gemini-2.0-flash-exp` é o mais estável para o gateway ou se devemos usar `google/gemini-1.5-flash` para menor latência.
+- Ajustar o timeout do `Promise.race` para 35 segundos (atualmente 40s) para acionar o fallback mais rápido antes que o usuário desista.
 
-## Technical Details
-- **Gateway Endpoint**: `https://ai.gateway.lovable.dev/v1/chat/completions`
-- **Stable Model**: `google/gemini-2.0-flash-exp` (or `gemini-1.5-flash`)
-- **Timeout**: Current 40s is generous; will maintain but improve status reporting.
+### 2. Otimização do Sistema de Fallback (Back-end)
+- Expandir o dicionário de palavras-chave no `catch` do `src/lib/ai-agent.server.ts`.
+- Adicionar tratamento específico para "Smartone", "MAC", "Device Key" e "Lista".
+- Garantir que o fallback não pareça um erro, mas sim uma "ajuda rápida de hardware".
 
-## Verification Plan
-- **API Testing**: Run `requests` tests from the sandbox to verify the API returns a 200 OK with a valid AI-generated response (not a fallback string).
-- **Log Inspection**: Check `console.log` output in the sandbox to verify the gateway is responding correctly.
-- **Manual Verification**: Use the preview to send "oi" and "quero instalar" to ensure the bot responds with helpful, non-fallback text.
+### 3. Melhoria na UI de Chat (Front-end)
+- Aumentar o timeout de requisição no `AIChat.tsx` para coincidir com o servidor.
+- Adicionar uma mensagem de "Ainda estou processando sua configuração..." caso a resposta demore mais de 10 segundos.
+
+### 4. Estabilização da Persistência
+- Simplificar o `upsert` no `ai-agent.server.ts` para evitar race conditions.
+- Adicionar logs mais detalhados para capturar erros específicos do gateway Lovable.
+
+## Detalhes Técnicos
+
+### Arquivos afetados:
+- `src/lib/ai-agent.server.ts`: Ajuste de modelo, timeouts e lógica de fallback.
+- `src/components/landing-page/AIChat.tsx`: Sincronização de timeouts e feedbacks visuais.
+
+### Estratégia de Fallback Expandida:
+```typescript
+const hardwareKeywords = {
+  samsung: "Para Samsung, use o SmartOne. Tutorial: ...",
+  lg: "Para LG, use o SmartOne. Tutorial: ...",
+  roku: "Para Roku, recomendo o MetaX ou IBO Player. Tutorial: ...",
+  firestick: "Para Fire Stick, baixe o Downloader primeiro. Tutorial: ..."
+};
+```
