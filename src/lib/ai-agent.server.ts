@@ -150,7 +150,7 @@ export const processAgentMessageLogic = async (input: {
     .map((m: any) => ({ role: m.role, content: m.content }));
 
   const messages = [
-    { role: "system", content: `${SALES_CONTEXT}\n\n${buildKnowledgePrompt(devices, apps, faq)}` },
+    { role: "system", content: `${SALES_CONTEXT}\n\n${buildKnowledgePrompt(devices, apps, faq)}\n\nIMPORTANTE: Se o usuário apenas disser "oi" ou saudações simples, responda de forma acolhedora e pergunte o nome dele e qual dispositivo ele usa.` },
     ...priorTurns,
     { role: "user", content: message },
   ];

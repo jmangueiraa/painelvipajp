@@ -79,7 +79,7 @@ export const AIChat = () => {
         console.error("AI agent error:", data);
         setMessages(prev => [...prev, {
           role: "assistant",
-          content: `Tive uma instabilidade para responder agora (Erro: ${data?.error || 'Unknown'}). Pode tentar novamente? Se preferir atendimento imediato, chame no WhatsApp (19) 98135-6505.`
+          content: "Tive uma instabilidade para responder agora. Pode tentar novamente? Se preferir atendimento imediato, chame no WhatsApp (19) 98135-6505."
         }]);
       }
     } catch (error) {
