@@ -160,7 +160,7 @@ export const processAgentMessageLogic = async (input: {
   try {
     const aiPromise = callLovableAI(messages);
     const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error("AI_TIMEOUT")), 45000)
+      setTimeout(() => reject(new Error("AI_TIMEOUT")), 40000)
     );
     
     response = await Promise.race([aiPromise, timeoutPromise]);
@@ -168,21 +168,26 @@ export const processAgentMessageLogic = async (input: {
     const code = (err as Error).message;
     console.error("[AI Agent] Falha ao gerar resposta:", code, err);
     
+    const lowerMsg = message.toLowerCase();
+    const isInstallRequest = lowerMsg.includes("instalar") || lowerMsg.includes("como") || lowerMsg.includes("aparelho") || lowerMsg.includes("tv") || lowerMsg.includes("box");
+
     if (code === "RATE_LIMIT") {
-      response = "Olá! Estamos com muitos atendimentos agora, o que é ótimo, mas gerou uma pequena fila. Pode tentar me mandar um 'oi' novamente em 10 segundos? Se tiver pressa, meu time te atende agora no WhatsApp (19) 98135-6505.";
+      response = "Olá! Estamos com muitos atendimentos agora, o que é ótimo! 🚀 Pode me mandar um 'oi' novamente em 10 segundos? Se tiver pressa para instalar, meu time te atende agora no WhatsApp (19) 98135-6505.";
     } else if (code === "NO_CREDITS") {
-      response = "Ops, parece que nosso assistente inteligente esgotou os créditos de processamento. Mas não se preocupe! Clique aqui para falar direto com um humano no WhatsApp (19) 98135-6505 que vamos te ajudar na hora.";
+      response = "Ops, nosso assistente inteligente está descansando um pouco. 😴 Mas não se preocupe! Clique aqui para falar direto no WhatsApp (19) 98135-6505 que vamos te ajudar com a instalação na hora.";
+    } else if (isInstallRequest) {
+      if (lowerMsg.includes("samsung") || lowerMsg.includes("lg")) {
+        response = "Para sua TV Samsung ou LG, o melhor app é o SmartOne IPTV! 📺 Procure por ele na loja de aplicativos da sua TV. Se precisar de ajuda com a lista, me chama no WhatsApp (19) 98135-6505.";
+      } else {
+        response = "Com certeza! Para eu te ajudar com a instalação, me conta: você está usando uma Smart TV, TV Box, Fire Stick ou celular? Se preferir um passo a passo guiado agora, me chama no WhatsApp (19) 98135-6505. 🚀";
+      }
     } else {
-      // Tentar uma resposta estática baseada na mensagem se a IA falhar
-      const lowerMsg = message.toLowerCase();
       if (lowerMsg.includes("oi") || lowerMsg.includes("olá") || lowerMsg.includes("ola")) {
         response = "Olá! Seja muito bem-vindo(a) à AJPVIP! 🚀 Como posso te ajudar hoje? Você quer saber sobre nossos planos ou como instalar em algum aparelho?";
-      } else if (lowerMsg.includes("samsung") || lowerMsg.includes("lg")) {
-        response = "Para TVs Samsung e LG, recomendo instalar o aplicativo SmartOne IPTV diretamente da loja de aplicativos da sua TV. Ele é o mais estável para essas marcas!";
       } else if (lowerMsg.includes("valor") || lowerMsg.includes("preço") || lowerMsg.includes("plano")) {
-        response = "Temos planos a partir de R$ 30,00 mensais! Quer que eu te envie o link para contratar ou prefere falar com um atendente no WhatsApp (19) 98135-6505?";
+        response = "Temos planos a partir de R$ 30,00 mensais com o melhor conteúdo! 💎 Quer que eu te envie o link para contratar ou prefere falar no WhatsApp (19) 98135-6505?";
       } else {
-        response = "Puxa, tive um pequeno soluço na conexão! 😅 Mas já estou de volta. Pode repetir sua pergunta? Se preferir, me chama no WhatsApp (19) 98135-6505.";
+        response = "Puxa, tive uma pequena oscilação na conexão, mas já estou aqui! 😅 Pode repetir sua pergunta? Se for algo urgente sobre instalação, meu suporte no WhatsApp (19) 98135-6505 é super rápido!";
       }
     }
   }

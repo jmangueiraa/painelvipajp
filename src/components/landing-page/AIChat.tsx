@@ -80,7 +80,7 @@ export const AIChat = () => {
         
         setMessages(prev => [...prev, {
           role: "assistant",
-          content: "Oi! Tive uma pequena oscilação aqui, mas já estou pronto para te ajudar. Pode repetir o que você disse? Se preferir, chama a gente no WhatsApp (19) 98135-6505!"
+          content: "Oi! Tive uma pequena oscilação na conexão, mas já estou pronto para te ajudar. Pode repetir o que você disse? Se preferir, chama a gente no WhatsApp (19) 98135-6505 que o atendimento lá é instantâneo!"
         }]);
       }
     } catch (error) {
