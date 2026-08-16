@@ -833,8 +833,8 @@ function PortalDashboard() {
                         onClick={() => selectPeriod({ label: p.label, days: p.days, price_cents: p.price })}
                       >
                         {p.discount > 0 && (
-                          <span className="absolute -top-2 -right-2 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                            -{Math.round(p.discount * 100)}%
+                          <span className="absolute -top-2 -right-2 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-lg">
+                            ECONOMIZE {Math.round(p.discount * 100)}%
                           </span>
                         )}
                         <div className="flex flex-col items-start">
