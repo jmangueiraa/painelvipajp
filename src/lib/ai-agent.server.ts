@@ -184,13 +184,18 @@ export const processAgentMessageLogic = async (input: {
 
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await (supabaseAdmin.from as any)("ai_agent_conversations")
+      .select("id")
+      .eq("session_id", sessionId)
+      .single();
+
     const { error } = await (supabaseAdmin.from as any)("ai_agent_conversations").upsert(
       {
+        id: existing?.id,
         session_id: sessionId,
         messages: newHistory,
         updated_at: new Date().toISOString(),
-      },
-      { onConflict: "session_id" },
+      }
     );
     if (error) console.error("[AI Agent] Upsert failed:", error.message);
   } catch (upsertError) {
