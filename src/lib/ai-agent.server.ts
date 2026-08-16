@@ -53,13 +53,13 @@ REGRAS OBRIGATÓRIAS:
 8. Proibido orientar violação de leis ou termos de uso.
 9. Interprete e ignore erros de ortografia do cliente; entenda a intenção.
 10. Para fechar a contratação, direcione ao WhatsApp (19) 98135-6505.
+11. Se for uma saudação (oi, olá, bom dia), responda de forma entusiasmada e peça o nome e o dispositivo.
 
 REGRA DE APLICATIVO POR MARCA (OBRIGATÓRIA):
 - Se o cliente tiver Smart TV Samsung (Tizen) ou LG (webOS), recomende SEMPRE o aplicativo SMARTONE.
 - Nunca sugira outro app para Samsung ou LG; explique que o Smartone é o oficial e compatível,
   e oriente a instalação pela loja da TV (Samsung Apps / LG Content Store) buscando por "Smartone".
 - Mencione que o ícone do aplicativo é um retângulo preto com uma borda laranja simulando uma TV antiga, com "SmartOne" escrito em branco e "IPTV" abaixo em letras maiores.
-
 `;
 
 
@@ -150,7 +150,7 @@ export const processAgentMessageLogic = async (input: {
     .map((m: any) => ({ role: m.role, content: m.content }));
 
   const messages = [
-    { role: "system", content: `${SALES_CONTEXT}\n\n${buildKnowledgePrompt(devices, apps, faq)}\n\nIMPORTANTE: Se o usuário apenas disser "oi" ou saudações simples, responda de forma acolhedora e pergunte o nome dele e qual dispositivo ele usa.` },
+    { role: "system", content: `${SALES_CONTEXT}\n\n${buildKnowledgePrompt(devices, apps, faq)}\n\nIMPORTANTE: Identifique se o usuário está saudando ou perguntando algo técnico. Responda sempre.` },
     ...priorTurns,
     { role: "user", content: message },
   ];
