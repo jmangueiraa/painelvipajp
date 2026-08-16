@@ -80,15 +80,15 @@ export const AIChat = () => {
         
         setMessages(prev => [...prev, {
           role: "assistant",
-          content: "Oi! O servidor demorou um pouquinho a me responder, mas já estou aqui. Pode repetir sua última mensagem? Se preferir, me chama no WhatsApp (19) 98135-6505."
+          content: "Oi! Tive uma pequena oscilação aqui, mas já estou pronto para te ajudar. Pode repetir o que você disse? Se preferir, chama a gente no WhatsApp (19) 98135-6505!"
         }]);
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: "Hmm, parece que minha conexão falhou por um instante. 🌐 Pode tentar enviar novamente? Se o erro persistir, nosso suporte humano te atende no WhatsApp (19) 98135-6505."
-      }]);
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: "Hmm, parece que minha conexão falhou por um instante. 🌐 Pode tentar enviar novamente? Nosso suporte também está no WhatsApp (19) 98135-6505 se precisar de ajuda urgente!"
+        }]);
     } finally {
       setIsLoading(false);
     }

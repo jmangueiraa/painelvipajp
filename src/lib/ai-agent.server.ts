@@ -157,19 +157,32 @@ export const processAgentMessageLogic = async (input: {
 
   let response: string;
   try {
-    response = await callLovableAI(messages);
+    const aiPromise = callLovableAI(messages);
+    const timeoutPromise = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error("AI_TIMEOUT")), 45000)
+    );
+    
+    response = await Promise.race([aiPromise, timeoutPromise]);
   } catch (err) {
     const code = (err as Error).message;
     console.error("[AI Agent] Falha ao gerar resposta:", code, err);
     
-    // Fallback amigável em caso de erro na API de IA
     if (code === "RATE_LIMIT") {
       response = "Olá! Estamos com muitos atendimentos agora, o que é ótimo, mas gerou uma pequena fila. Pode tentar me mandar um 'oi' novamente em 10 segundos? Se tiver pressa, meu time te atende agora no WhatsApp (19) 98135-6505.";
     } else if (code === "NO_CREDITS") {
       response = "Ops, parece que nosso assistente inteligente esgotou os créditos de processamento. Mas não se preocupe! Clique aqui para falar direto com um humano no WhatsApp (19) 98135-6505 que vamos te ajudar na hora.";
     } else {
-      // Mensagem genérica mais calorosa que evita o termo "instabilidade"
-      response = "Puxa, tive um pequeno soluço aqui na conexão! 😅 Pode repetir o que você disse? Se eu demorar a responder de novo, me chama no WhatsApp (19) 98135-6505 que estou lá também!";
+      // Tentar uma resposta estática baseada na mensagem se a IA falhar
+      const lowerMsg = message.toLowerCase();
+      if (lowerMsg.includes("oi") || lowerMsg.includes("olá") || lowerMsg.includes("ola")) {
+        response = "Olá! Seja muito bem-vindo(a) à AJPVIP! 🚀 Como posso te ajudar hoje? Você quer saber sobre nossos planos ou como instalar em algum aparelho?";
+      } else if (lowerMsg.includes("samsung") || lowerMsg.includes("lg")) {
+        response = "Para TVs Samsung e LG, recomendo instalar o aplicativo SmartOne IPTV diretamente da loja de aplicativos da sua TV. Ele é o mais estável para essas marcas!";
+      } else if (lowerMsg.includes("valor") || lowerMsg.includes("preço") || lowerMsg.includes("plano")) {
+        response = "Temos planos a partir de R$ 30,00 mensais! Quer que eu te envie o link para contratar ou prefere falar com um atendente no WhatsApp (19) 98135-6505?";
+      } else {
+        response = "Puxa, tive um pequeno soluço na conexão! 😅 Mas já estou de volta. Pode repetir sua pergunta? Se preferir, me chama no WhatsApp (19) 98135-6505.";
+      }
     }
   }
 
