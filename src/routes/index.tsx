@@ -284,7 +284,7 @@ function LandingPage() {
                   <h3 className="text-2xl font-black mb-2">{plan.name}</h3>
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-black">{plan.price}</span>
-                    <span className="text-slate-500 font-medium">/período</span>
+                    <span className="text-slate-500 font-medium text-xs">/ {plan.duration}</span>
                   </div>
                 </div>
                 <div className="space-y-4 mb-8">
