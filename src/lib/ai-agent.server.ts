@@ -157,23 +157,16 @@ export const processAgentMessageLogic = async (input: {
 
   let response: string;
   try {
-    // console.log(`[AI Agent] Calling AI for session ${sessionId}...`);
     response = await callLovableAI(messages);
-    // console.log(`[AI Agent] AI response received (${response.length} chars)`);
   } catch (err) {
     const code = (err as Error).message;
     console.error("[AI Agent] Falha ao gerar resposta:", code, err);
     if (code === "RATE_LIMIT") {
-      response =
-        "Estamos com muitos atendimentos agora. Pode tentar novamente em alguns segundos? Se preferir, fale direto no WhatsApp (19) 98135-6505.";
+      response = "Estamos com muitos atendimentos agora. Pode tentar novamente em alguns segundos? Se preferir, fale direto no WhatsApp (19) 98135-6505.";
     } else if (code === "NO_CREDITS") {
-      response =
-        "Nosso assistente está temporariamente indisponível. Um atendente pode te ajudar agora no WhatsApp (19) 98135-6505. Posso te encaminhar?";
+      response = "Nosso assistente está temporariamente indisponível. Um atendente pode te ajudar agora no WhatsApp (19) 98135-6505. Posso te encaminhar?";
     } else {
-      // Return the specific error in dev or fallback in prod
-      console.error("[AI Agent] Generic AI Error:", code);
-      response =
-        "Oi! Tive uma pequena instabilidade, mas já estou aqui. Pode repetir sua mensagem? Se preferir, me chama no WhatsApp (19) 98135-6505.";
+      response = "Oi! Tive uma pequena instabilidade aqui, mas já estou pronto para te ajudar. Pode repetir sua pergunta? Se preferir, me chama no WhatsApp (19) 98135-6505.";
     }
   }
 
@@ -183,25 +176,24 @@ export const processAgentMessageLogic = async (input: {
     { role: "assistant", content: response },
   ];
 
-  try {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: existing } = await (supabaseAdmin.from as any)("ai_agent_conversations")
-      .select("id")
-      .eq("session_id", sessionId)
-      .single();
+  (async () => {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: existing } = await (supabaseAdmin.from as any)("ai_agent_conversations")
+        .select("id")
+        .eq("session_id", sessionId)
+        .maybeSingle();
 
-    const { error } = await (supabaseAdmin.from as any)("ai_agent_conversations").upsert(
-      {
+      await (supabaseAdmin.from as any)("ai_agent_conversations").upsert({
         id: existing?.id,
         session_id: sessionId,
         messages: newHistory,
         updated_at: new Date().toISOString(),
-      }
-    );
-    if (error) console.error("[AI Agent] Upsert failed:", error.message);
-  } catch (upsertError) {
-    console.error("[AI Agent] Error saving conversation history:", upsertError);
-  }
+      });
+    } catch (saveErr) {
+      console.error("[AI Agent] Background save failed:", saveErr);
+    }
+  })();
 
   return { response, history: newHistory };
 };
