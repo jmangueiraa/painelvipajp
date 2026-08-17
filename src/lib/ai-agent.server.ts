@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const MODEL = "google/gemini-2.0-flash-exp";
+const MODEL = "google/gemini-1.5-flash";
 
 async function safeSelect(table: string, filter?: { column: string; value: unknown }) {
   try {
