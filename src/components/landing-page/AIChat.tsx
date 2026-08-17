@@ -55,6 +55,7 @@ export const AIChat = () => {
 
     try {
       const response = await fetch("/api/public/portal/public-ai-agent", {
+        signal: AbortSignal.timeout(45000),
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

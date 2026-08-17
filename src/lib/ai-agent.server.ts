@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const MODEL = "google/gemini-2.0-flash-exp";
+const MODEL = "google/gemini-1.5-flash";
 
 async function safeSelect(table: string, filter?: { column: string; value: unknown }) {
   try {
@@ -154,7 +154,7 @@ export const processAgentMessageLogic = async (input: {
   try {
     const aiPromise = callLovableAI(messages);
     const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error("AI_TIMEOUT")), 40000)
+      setTimeout(() => reject(new Error("AI_TIMEOUT")), 35000)
     );
     
     response = await Promise.race([aiPromise, timeoutPromise]);
@@ -163,7 +163,7 @@ export const processAgentMessageLogic = async (input: {
     console.error("[AI Agent] Falha ao gerar resposta:", code, err);
     
     const lowerMsg = message.toLowerCase();
-    const isInstallRequest = lowerMsg.includes("instalar") || lowerMsg.includes("como") || lowerMsg.includes("aparelho") || lowerMsg.includes("tv") || lowerMsg.includes("box") || lowerMsg.includes("ajuda");
+    const isInstallRequest = lowerMsg.includes("instalar") || lowerMsg.includes("como") || lowerMsg.includes("aparelho") || lowerMsg.includes("tv") || lowerMsg.includes("box") || lowerMsg.includes("ajuda") || lowerMsg.includes("configurar");
 
     if (code === "RATE_LIMIT") {
       response = "Olá! Nosso sistema está com muitos acessos, mas como sou especialista em instalação, vou te agilizar: Me chama no WhatsApp (19) 98135-6505 que te mando o tutorial agora mesmo! 🚀";
@@ -171,17 +171,21 @@ export const processAgentMessageLogic = async (input: {
       response = "Estou realizando uma atualização rápida no meu sistema de IA. 🛠️ Para não atrasar sua instalação, clique aqui e fale direto no WhatsApp (19) 98135-6505 que te atendo agora!";
     } else if (isInstallRequest) {
       if (lowerMsg.includes("samsung") || lowerMsg.includes("lg")) {
-        response = "Para sua Smart TV Samsung ou LG, instale o aplicativo SMARTONE IPTV! 📺 É o melhor e mais estável. Busque por ele na loja de apps da sua TV. Se precisar da lista de canais, me chama no WhatsApp (19) 98135-6505!";
+        response = "Para sua Smart TV Samsung ou LG, instale o aplicativo SMARTONE IPTV! 📺 Ele é o melhor e mais estável. Procure por ele na loja de apps da sua TV. Se precisar da lista de canais ou ajuda na ativação, me chama no WhatsApp (19) 98135-6505!";
+      } else if (lowerMsg.includes("fire") || lowerMsg.includes("stick") || lowerMsg.includes("amazon")) {
+        response = "No Fire Stick, recomendo usar o aplicativo 'Downloader' para baixar nosso sistema. 🚀 É super rápido! Quer que eu te envie o código de download pelo WhatsApp (19) 98135-6505?";
+      } else if (lowerMsg.includes("roku")) {
+        response = "Para dispositivos Roku, temos um método especial de instalação. 📺 Me chama no WhatsApp (19) 98135-6505 que te envio o passo a passo detalhado agora!";
       } else {
         response = "Perfeito! Sou especialista em instalação e vou te guiar. 🚀 Qual é a marca da sua TV ou qual aparelho você está usando (TV Box, Fire Stick, Celular)? Se quiser o tutorial em vídeo, me chama no WhatsApp (19) 98135-6505.";
       }
     } else {
-      if (lowerMsg.includes("oi") || lowerMsg.includes("olá") || lowerMsg.includes("ola") || lowerMsg.includes("bom dia") || lowerMsg.includes("boa tarde")) {
+      if (lowerMsg.includes("oi") || lowerMsg.includes("olá") || lowerMsg.includes("ola") || lowerMsg.includes("bom dia") || lowerMsg.includes("boa tarde") || lowerMsg.includes("boa noite")) {
         response = "Olá! Sou o especialista em instalação da AJPVIP. 🚀 Para eu te ajudar agora, qual é o seu nome e em qual aparelho você deseja instalar nosso sistema?";
-      } else if (lowerMsg.includes("valor") || lowerMsg.includes("preço") || lowerMsg.includes("plano") || lowerMsg.includes("quanto")) {
+      } else if (lowerMsg.includes("valor") || lowerMsg.includes("preço") || lowerMsg.includes("plano") || lowerMsg.includes("quanto") || lowerMsg.includes("pagar")) {
         response = "Temos planos a partir de R$ 30,00 com a melhor estabilidade do mercado! 💎 Quer que eu te envie o link dos planos ou prefere tirar dúvidas no WhatsApp (19) 98135-6505?";
       } else {
-        response = "Estou aqui e pronto para te ajudar! 🚀 O que exatamente você precisa sobre a instalação ou nossos planos? Se preferir um atendimento mais rápido, o suporte VIP está no WhatsApp (19) 98135-6505.";
+        response = "Estou aqui e pronto para te ajudar! 🚀 O que exatamente você precisa sobre a instalação ou nossos planos? Se preferir um atendimento VIP, o suporte está no WhatsApp (19) 98135-6505.";
       }
     }
   }
