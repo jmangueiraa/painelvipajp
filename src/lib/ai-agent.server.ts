@@ -154,7 +154,7 @@ export const processAgentMessageLogic = async (input: {
   try {
     const aiPromise = callLovableAI(messages);
     const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error("AI_TIMEOUT")), 40000)
+      setTimeout(() => reject(new Error("AI_TIMEOUT")), 35000)
     );
     
     response = await Promise.race([aiPromise, timeoutPromise]);
