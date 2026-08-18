@@ -813,6 +813,7 @@ function PortalDashboard() {
                 if (!monthly || monthly <= 0) {
                   return <p className="text-sm text-muted-foreground">Plano mensal não configurado. Fale com seu provedor.</p>;
                 }
+                const points = data.client.points ?? 1;
                 const periods = [
                   { label: "Mensal", days: 30, months: 1, discount: 0, override_price: 3000 },
                   { label: "Trimestral", days: 90, months: 3, discount: 0.15, override_price: 7650 },
@@ -820,8 +821,14 @@ function PortalDashboard() {
                   { label: "Anual", days: 365, months: 12, discount: 0.25, override_price: 27000 },
                 ].map((p) => {
                   const full = monthly * p.months;
-                  const price = p.override_price ?? Math.round(full * (1 - p.discount));
-                  return { ...p, full, price };
+                  
+                  // If points > 1, use the monthly value from the client record (already multiplied by points)
+                  // If points = 1, use the hardcoded base prices (or the monthly if it's higher)
+                  const price = points > 1 
+                    ? Math.round(monthly * p.months * (1 - p.discount))
+                    : p.override_price ?? Math.round(Math.max(monthly, 3000) * p.months * (1 - p.discount));
+                    
+                  return { ...p, full: points > 1 ? full : Math.max(monthly, 3000) * p.months, price };
                 });
                 return (
                   <div className="grid grid-cols-2 gap-2">
