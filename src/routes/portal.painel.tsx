@@ -820,16 +820,15 @@ function PortalDashboard() {
                   { label: "Semestral", days: 180, months: 6, discount: 0.20, override_price: 14400 },
                   { label: "Anual", days: 365, months: 12, discount: 0.25, override_price: 27000 },
                 ].map((p) => {
-                  const basePricePerMonth = points > 1 ? monthly : Math.max(monthly, 3000);
-                  const full = basePricePerMonth * p.months;
-                  // If user has more than 1 point, override prices are likely for 1 point.
-                  // We should multiply the base monthly by months and points.
-                  // But the user specifically said: "2 pontos por 50 reais".
-                  // So monthly should be 5000 in that case.
+                  const full = monthly * p.months;
+                  
+                  // If points > 1, use the monthly value from the client record (already multiplied by points)
+                  // If points = 1, use the hardcoded base prices (or the monthly if it's higher)
                   const price = points > 1 
                     ? Math.round(monthly * p.months * (1 - p.discount))
-                    : p.override_price ?? Math.round(full * (1 - p.discount));
-                  return { ...p, full: points > 1 ? monthly * p.months : full, price };
+                    : p.override_price ?? Math.round(Math.max(monthly, 3000) * p.months * (1 - p.discount));
+                    
+                  return { ...p, full: points > 1 ? full : Math.max(monthly, 3000) * p.months, price };
                 });
                 return (
                   <div className="grid grid-cols-2 gap-2">
