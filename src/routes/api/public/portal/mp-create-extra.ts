@@ -108,6 +108,7 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
                   email: payerEmail,
                   first_name: client.name?.split(" ")[0] || "Cliente",
                   last_name: client.name?.split(" ").slice(1).join(" ") || "VIP",
+                  identification: { type: "CPF", number: "00000000000" }
                 },
               }),
             });
@@ -118,6 +119,11 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
               point_of_interaction?: { transaction_data?: { qr_code?: string; qr_code_base64?: string } };
             };
             if (!mpRes.ok) {
+              console.error("[mp-create-extra-pix] MP API Error:", {
+                status: mpRes.status,
+                body: mp,
+                renewal_id: renewal.id
+              });
               return json({ error: "Falha no Mercado Pago", detail: mp.message ?? mpRes.statusText }, request, { status: 502 });
             }
             const qr_code = mp.point_of_interaction?.transaction_data?.qr_code ?? "";
@@ -150,6 +156,9 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
               payment_methods: {
                 excluded_payment_types: [{ id: "ticket" }, { id: "atm" }, { id: "bank_transfer" }],
                 installments: 12,
+              },
+              payer: {
+                email: payerEmail,
               },
               external_reference: renewal.id,
               notification_url: `${origin}/api/public/portal/mp-webhook?external_reference=${renewal.id}`,

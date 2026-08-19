@@ -67,12 +67,20 @@ export const Route = createFileRoute("/api/public/portal/mp-create-pix")({
                 email: payerEmail,
                 first_name: client.name?.split(" ")[0] || "Cliente",
                 last_name: client.name?.split(" ").slice(1).join(" ") || "VIP",
+                identification: { type: "CPF", number: "00000000000" }
               },
+
             }),
           });
 
           const mp = await mpRes.json().catch(() => ({} as Record<string, unknown>));
           if (!mpRes.ok) {
+            console.error("[mp-create-pix] MP API Error:", {
+              status: mpRes.status,
+              body: mp,
+              renewal_id: renewal.id,
+              client_id: client.id
+            });
             return json({ error: "Falha no Mercado Pago", detail: (mp as { message?: string }).message ?? mpRes.statusText }, request, { status: 502 });
           }
 
