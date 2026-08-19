@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { translateError } from "@/lib/translate-error";
 import { notifyEventFn } from "@/lib/notifications.functions";
-import { addDaysISO, brl, formatDateBR, todayISO } from "@/lib/format";
+import { addDaysISO, addMonthsISO, brl, formatDateBR, todayISO } from "@/lib/format";
 import { computeStatus } from "@/lib/status";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
