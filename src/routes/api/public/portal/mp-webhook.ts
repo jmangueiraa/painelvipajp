@@ -19,9 +19,11 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
           const paymentId =
             body.data?.id ??
             url.searchParams.get("data.id") ??
-            url.searchParams.get("id");
+            url.searchParams.get("id") ??
+            (body.type === "payment" ? body.data?.id : undefined);
 
           if (!paymentId) return json({ ok: true, skipped: "no payment id" });
+
 
           const externalRef =
             url.searchParams.get("external_reference") ?? undefined;
