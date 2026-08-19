@@ -36,6 +36,17 @@ export const addDaysISO = (iso: string, days: number) => {
   return d.toISOString().slice(0, 10);
 };
 
+export const addMonthsISO = (iso: string, months: number) => {
+  const d = new Date(iso + "T00:00:00Z");
+  const day = d.getUTCDate();
+  d.setUTCMonth(d.getUTCMonth() + months);
+  // Se o dia mudou (ex: de 31 para 1 do mês seguinte), volta para o último dia do mês anterior
+  if (d.getUTCDate() !== day) {
+    d.setUTCDate(0);
+  }
+  return d.toISOString().slice(0, 10);
+};
+
 export const formatPhone = (raw: string) => {
   const d = raw.replace(/\D/g, "").slice(0, 11);
   if (d.length <= 10) {

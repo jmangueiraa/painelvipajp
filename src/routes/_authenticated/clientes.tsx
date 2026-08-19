@@ -13,7 +13,7 @@ import * as XLSX from "xlsx";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
-import { brl, parseBrlToCents, formatDateBR, todayISO, addDaysISO, formatPhone } from "@/lib/format";
+import { brl, parseBrlToCents, formatDateBR, todayISO, addDaysISO, addMonthsISO, formatPhone } from "@/lib/format";
 import { getStateFromPhone } from "@/lib/br-states";
 import { statusLabel, statusVariant, computeStatus, type ClientStatus } from "@/lib/status";
 import { useAuth } from "@/hooks/use-auth";
@@ -273,11 +273,22 @@ function ClientesPage() {
     mutationFn: async ({ c, days }: { c: Client; days: number }) => {
       // Sempre conta a partir do vencimento atual para manter o dia fixo
       const base = c.due_date || todayISO();
-      let newDue = addDaysISO(base, days);
+      let newDue: string;
+      if (days === 30 || days === 90 || days === 180 || days === 365) {
+        const months = days === 365 ? 12 : days / 30;
+        newDue = addMonthsISO(base, months);
+      } else {
+        newDue = addDaysISO(base, days);
+      }
 
       // Se o novo vencimento ainda for no passado, projeta a partir de hoje
       if (newDue < todayISO()) {
-        newDue = addDaysISO(todayISO(), days);
+        if (days === 30 || days === 90 || days === 180 || days === 365) {
+          const months = days === 365 ? 12 : days / 30;
+          newDue = addMonthsISO(todayISO(), months);
+        } else {
+          newDue = addDaysISO(todayISO(), days);
+        }
       }
 
       const update: { due_date: string; status: ClientStatus; plan_id?: string; price_cents?: number } = { due_date: newDue, status: computeStatus(newDue, "ativo") };

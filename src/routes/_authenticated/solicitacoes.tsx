@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { translateError } from "@/lib/translate-error";
 import { notifyEventFn } from "@/lib/notifications.functions";
-import { addDaysISO, brl, formatDateBR, todayISO } from "@/lib/format";
+import { addDaysISO, addMonthsISO, brl, formatDateBR, todayISO } from "@/lib/format";
 import { computeStatus } from "@/lib/status";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -125,11 +125,22 @@ function SolicitacoesPage() {
         if (plan?.price_cents) amount = plan.price_cents;
 
         const base = req.clients.due_date || todayISO();
-        let newDue = addDaysISO(base, req.days);
+        let newDue: string;
+        if (req.days === 30 || req.days === 90 || req.days === 180 || req.days === 365) {
+          const months = req.days === 365 ? 12 : req.days / 30;
+          newDue = addMonthsISO(base, months);
+        } else {
+          newDue = addDaysISO(base, req.days);
+        }
         
         // Garantia de vencimento futuro caso o cliente estivesse muito atrasado
         if (newDue < todayISO()) {
-          newDue = addDaysISO(todayISO(), req.days);
+          if (req.days === 30 || req.days === 90 || req.days === 180 || req.days === 365) {
+            const months = req.days === 365 ? 12 : req.days / 30;
+            newDue = addMonthsISO(todayISO(), months);
+          } else {
+            newDue = addDaysISO(todayISO(), req.days);
+          }
         }
         const { error: e1 } = await supabase
           .from("clients")
