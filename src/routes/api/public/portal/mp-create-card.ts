@@ -79,7 +79,10 @@ export const Route = createFileRoute("/api/public/portal/mp-create-card")({
               },
               payer: {
                 email: `cliente.${client.id.slice(0, 8)}@painelvip.app`,
+                first_name: client.name?.split(" ")[0] || "Cliente",
+                last_name: client.name?.split(" ").slice(1).join(" ") || "VIP",
               },
+
               external_reference: renewal.id,
               notification_url: `${origin}/api/public/portal/mp-webhook?external_reference=${renewal.id}`,
               back_urls: { success: back, pending: back, failure: back },
