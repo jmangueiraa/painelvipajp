@@ -58,14 +58,30 @@ export async function finalizePaidRenewal(
       .eq("id", renewal.client_id)
       .maybeSingle();
     if (clientRow) {
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
       const current = (clientRow as { due_date: string | null }).due_date;
-      const start = current && new Date(current + "T00:00:00Z").getTime() >= today.getTime()
-        ? new Date(current + "T00:00:00Z")
-        : today;
-      const next = new Date(start);
-      next.setUTCDate(next.getUTCDate() + Number(renewal.days || 0));
+      
+      let next: Date;
+      if (current) {
+        // Se já tem um vencimento, adiciona os dias a partir dessa data (vencimento fixo)
+        next = new Date(current + "T00:00:00Z");
+        next.setUTCDate(next.getUTCDate() + Number(renewal.days || 0));
+        
+        // Se o vencimento resultante ainda for no passado (ex: cliente muito atrasado), 
+        // ajustamos para que o novo vencimento seja no futuro a partir de hoje, 
+        // mas mantendo o ciclo se possível (ou simplesmente garantindo que seja futuro).
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+        if (next.getTime() < today.getTime()) {
+          next = today;
+          next.setUTCDate(next.getUTCDate() + Number(renewal.days || 0));
+        }
+      } else {
+        // Se não tem vencimento prévio, conta a partir de hoje
+        next = new Date();
+        next.setUTCHours(0, 0, 0, 0);
+        next.setUTCDate(next.getUTCDate() + Number(renewal.days || 0));
+      }
+
       const newDueDate = next.toISOString().slice(0, 10);
       await supabaseAdmin.from("clients").update({ due_date: newDueDate }).eq("id", renewal.client_id);
     }
