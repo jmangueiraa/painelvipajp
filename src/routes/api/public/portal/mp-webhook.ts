@@ -9,9 +9,12 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
     handlers: {
       GET: async () => json({ ok: true }),
       POST: async ({ request }) => {
+        const rawBody = await request.text();
+        console.log("[mp-webhook] Received body:", rawBody);
         try {
           const url = new URL(request.url);
-          const body = (await request.json().catch(() => ({}))) as {
+          const body = JSON.parse(rawBody) as {
+
             type?: string;
             action?: string;
             data?: { id?: string | number };
@@ -19,12 +22,16 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
           const paymentId =
             body.data?.id ??
             url.searchParams.get("data.id") ??
-            url.searchParams.get("id");
+            url.searchParams.get("id") ??
+            (body.type === "payment" ? body.data?.id : undefined);
 
           if (!paymentId) return json({ ok: true, skipped: "no payment id" });
 
+
           const externalRef =
             url.searchParams.get("external_reference") ?? undefined;
+
+
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 

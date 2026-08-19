@@ -50,6 +50,9 @@ export const Route = createFileRoute("/api/public/portal/mp-create-pix")({
           const description = `Renovação ${body.label ?? `${days}d`} - ${client.name}`;
           const payerEmail = `cliente.${client.id.slice(0, 8)}@painelvip.app`;
           const idempotencyKey = `${renewal.id}`;
+          const url = new URL(request.url);
+          const origin = `${url.protocol}//${url.host}`;
+
 
           const mpRes = await fetch("https://api.mercadopago.com/v1/payments", {
             method: "POST",
@@ -69,6 +72,8 @@ export const Route = createFileRoute("/api/public/portal/mp-create-pix")({
                 last_name: client.name?.split(" ").slice(1).join(" ") || "VIP",
                 identification: { type: "CPF", number: "00000000000" }
               },
+              notification_url: `${origin}/api/public/portal/mp-webhook?external_reference=${renewal.id}`,
+
 
             }),
           });
