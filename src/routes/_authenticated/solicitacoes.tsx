@@ -124,8 +124,13 @@ function SolicitacoesPage() {
           .maybeSingle();
         if (plan?.price_cents) amount = plan.price_cents;
 
-        const base = req.clients.due_date && req.clients.due_date >= todayISO() ? req.clients.due_date : todayISO();
-        const newDue = addDaysISO(base, req.days);
+        const base = req.clients.due_date || todayISO();
+        let newDue = addDaysISO(base, req.days);
+        
+        // Garantia de vencimento futuro caso o cliente estivesse muito atrasado
+        if (newDue < todayISO()) {
+          newDue = addDaysISO(todayISO(), req.days);
+        }
         const { error: e1 } = await supabase
           .from("clients")
           .update({ due_date: newDue, status: computeStatus(newDue, "ativo") })
