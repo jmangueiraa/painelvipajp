@@ -50,6 +50,9 @@ export const Route = createFileRoute("/api/public/portal/mp-create-pix")({
           const description = `Renovação ${body.label ?? `${days}d`} - ${client.name}`;
           const payerEmail = `cliente.${client.id.slice(0, 8)}@painelvip.app`;
           const idempotencyKey = `${renewal.id}`;
+          const url = new URL(request.url);
+          const origin = `${url.protocol}//${url.host}`;
+
 
           const mpRes = await fetch("https://api.mercadopago.com/v1/payments", {
             method: "POST",
