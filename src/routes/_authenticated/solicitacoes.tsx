@@ -125,11 +125,22 @@ function SolicitacoesPage() {
         if (plan?.price_cents) amount = plan.price_cents;
 
         const base = req.clients.due_date || todayISO();
-        let newDue = addDaysISO(base, req.days);
+        let newDue: string;
+        if (req.days === 30 || req.days === 90 || req.days === 180 || req.days === 365) {
+          const months = req.days === 365 ? 12 : req.days / 30;
+          newDue = addMonthsISO(base, months);
+        } else {
+          newDue = addDaysISO(base, req.days);
+        }
         
         // Garantia de vencimento futuro caso o cliente estivesse muito atrasado
         if (newDue < todayISO()) {
-          newDue = addDaysISO(todayISO(), req.days);
+          if (req.days === 30 || req.days === 90 || req.days === 180 || req.days === 365) {
+            const months = req.days === 365 ? 12 : req.days / 30;
+            newDue = addMonthsISO(todayISO(), months);
+          } else {
+            newDue = addDaysISO(todayISO(), req.days);
+          }
         }
         const { error: e1 } = await supabase
           .from("clients")
