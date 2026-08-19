@@ -157,6 +157,9 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
                 excluded_payment_types: [{ id: "ticket" }, { id: "atm" }, { id: "bank_transfer" }],
                 installments: 12,
               },
+              payer: {
+                email: payerEmail,
+              },
               external_reference: renewal.id,
               notification_url: `${origin}/api/public/portal/mp-webhook?external_reference=${renewal.id}`,
               back_urls: { success: back, pending: back, failure: back },
