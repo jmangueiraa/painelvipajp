@@ -59,27 +59,41 @@ export async function finalizePaidRenewal(
       .maybeSingle();
     if (clientRow) {
       const current = (clientRow as { due_date: string | null }).due_date;
+      const days = Number(renewal.days || 0);
       
       let next: Date;
       if (current) {
-        // Se já tem um vencimento, adiciona os dias a partir dessa data (vencimento fixo)
         next = new Date(current + "T00:00:00Z");
-        next.setUTCDate(next.getUTCDate() + Number(renewal.days || 0));
+        const day = next.getUTCDate();
         
-        // Se o vencimento resultante ainda for no passado (ex: cliente muito atrasado), 
-        // ajustamos para que o novo vencimento seja no futuro a partir de hoje, 
-        // mas mantendo o ciclo se possível (ou simplesmente garantindo que seja futuro).
+        if (days === 30 || days === 90 || days === 180 || days === 365) {
+          const months = days === 365 ? 12 : days / 30;
+          next.setUTCMonth(next.getUTCMonth() + months);
+          if (next.getUTCDate() !== day) next.setUTCDate(0);
+        } else {
+          next.setUTCDate(next.getUTCDate() + days);
+        }
+        
         const today = new Date();
         today.setUTCHours(0, 0, 0, 0);
         if (next.getTime() < today.getTime()) {
           next = today;
-          next.setUTCDate(next.getUTCDate() + Number(renewal.days || 0));
+          if (days === 30 || days === 90 || days === 180 || days === 365) {
+            const months = days === 365 ? 12 : days / 30;
+            next.setUTCMonth(next.getUTCMonth() + months);
+          } else {
+            next.setUTCDate(next.getUTCDate() + days);
+          }
         }
       } else {
-        // Se não tem vencimento prévio, conta a partir de hoje
         next = new Date();
         next.setUTCHours(0, 0, 0, 0);
-        next.setUTCDate(next.getUTCDate() + Number(renewal.days || 0));
+        if (days === 30 || days === 90 || days === 180 || days === 365) {
+          const months = days === 365 ? 12 : days / 30;
+          next.setUTCMonth(next.getUTCMonth() + months);
+        } else {
+          next.setUTCDate(next.getUTCDate() + days);
+        }
       }
 
       const newDueDate = next.toISOString().slice(0, 10);
