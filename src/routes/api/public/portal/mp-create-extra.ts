@@ -108,6 +108,7 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
                   email: payerEmail,
                   first_name: client.name?.split(" ")[0] || "Cliente",
                   last_name: client.name?.split(" ").slice(1).join(" ") || "VIP",
+                  identification: { type: "CPF", number: "00000000000" }
                 },
               }),
             });
