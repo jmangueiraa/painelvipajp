@@ -110,6 +110,8 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
                   last_name: client.name?.split(" ").slice(1).join(" ") || "VIP",
                   identification: { type: "CPF", number: "00000000000" }
                 },
+                notification_url: `${origin}/api/public/portal/mp-webhook?external_reference=${renewal.id}`,
+
               }),
             });
             const mp = (await mpRes.json().catch(() => ({}))) as {
