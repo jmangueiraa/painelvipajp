@@ -9,9 +9,12 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
     handlers: {
       GET: async () => json({ ok: true }),
       POST: async ({ request }) => {
+        const rawBody = await request.text();
+        console.log("[mp-webhook] Received body:", rawBody);
         try {
           const url = new URL(request.url);
-          const body = (await request.json().catch(() => ({}))) as {
+          const body = JSON.parse(rawBody) as {
+
             type?: string;
             action?: string;
             data?: { id?: string | number };
