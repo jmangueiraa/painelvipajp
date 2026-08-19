@@ -1,44 +1,30 @@
-# Plano de Melhoria da Resiliência do Agente de IA
+# Plano de Implementação - Vencimento Fixo
 
-O usuário relatou que o agente de IA "ainda está com dificuldade em responder". Embora os testes básicos tenham passado usando o modelo `gemini-2.0-flash-exp` e o sistema de fallback, o problema pode estar relacionado ao tempo de resposta da API (latência), limites de cota no gateway ou falhas silenciosas na persistência do histórico que interrompem o fluxo.
+O objetivo é garantir que a renovação de um plano mantenha o dia de vencimento original do cliente, em vez de contar a partir da data do pagamento.
 
-## Objetivos
-- Reduzir o tempo de resposta percebido pelo usuário.
-- Garantir que a IA sempre responda, mesmo com alta latência.
-- Melhorar a detecção de intenção para respostas rápidas de hardware.
-- Estabilizar a persistência do histórico de conversas no banco de dados.
+## Alterações
 
-## Ações Propostas
+### 1. Backend: Finalização de Renovação (Mercado Pago)
+- Arquivo: `src/lib/portal-renewal-finalize.server.ts`
+- Modificar a lógica de cálculo de `newDueDate` para lidar com o "dia fixo".
+- Se o cliente já tem um vencimento, o novo vencimento será: `data_vencimento_atual + dias_do_plano`.
+- Isso garante que se o vencimento é dia 20 e ele pagar dia 19 ou 21, o próximo continuará sendo dia 20 do mês seguinte.
 
-### 1. Refinamento do Modelo e Timeout
-- Validar se o modelo `google/gemini-2.0-flash-exp` é o mais estável para o gateway ou se devemos usar `google/gemini-1.5-flash` para menor latência.
-- Ajustar o timeout do `Promise.race` para 35 segundos (atualmente 40s) para acionar o fallback mais rápido antes que o usuário desista.
+### 2. Frontend Admin: Aprovação Manual de Solicitações
+- Arquivo: `src/routes/_authenticated/solicitacoes.tsx`
+- Ajustar a lógica da mutation `approve` para seguir a mesma regra: adicionar os dias ao `due_date` atual do cliente, independentemente da data da aprovação.
 
-### 2. Otimização do Sistema de Fallback (Back-end)
-- Expandir o dicionário de palavras-chave no `catch` do `src/lib/ai-agent.server.ts`.
-- Adicionar tratamento específico para "Smartone", "MAC", "Device Key" e "Lista".
-- Garantir que o fallback não pareça um erro, mas sim uma "ajuda rápida de hardware".
-
-### 3. Melhoria na UI de Chat (Front-end)
-- Aumentar o timeout de requisição no `AIChat.tsx` para coincidir com o servidor.
-- Adicionar uma mensagem de "Ainda estou processando sua configuração..." caso a resposta demore mais de 10 segundos.
-
-### 4. Estabilização da Persistência
-- Simplificar o `upsert` no `ai-agent.server.ts` para evitar race conditions.
-- Adicionar logs mais detalhados para capturar erros específicos do gateway Lovable.
+### 3. Frontend Admin: Renovação Direta na Listagem de Clientes
+- Arquivo: `src/routes/_authenticated/clientes.tsx`
+- Ajustar a mutation `renew` para garantir consistência com a regra de dia fixo.
 
 ## Detalhes Técnicos
+- Utilizaremos a lógica: `novo_vencimento = max(hoje, vencimento_atual) + dias` não é o ideal para "dia fixo".
+- A lógica correta para "dia fixo" solicitada é: `novo_vencimento = vencimento_atual + dias`.
+- Exemplo: Vencimento 20/08. Pagou 19/08 -> 20/09. Pagou 21/08 -> 20/09.
+- Caso o cliente esteja muito atrasado (ex: meses), a lógica de adicionar dias ao vencimento antigo pode gerar uma data no passado. Nesses casos, precisaremos de uma trava para garantir que o novo vencimento seja no futuro, mas tentando preservar o dia (ex: 20 do próximo mês disponível).
 
-### Arquivos afetados:
-- `src/lib/ai-agent.server.ts`: Ajuste de modelo, timeouts e lógica de fallback.
-- `src/components/landing-page/AIChat.tsx`: Sincronização de timeouts e feedbacks visuais.
-
-### Estratégia de Fallback Expandida:
-```typescript
-const hardwareKeywords = {
-  samsung: "Para Samsung, use o SmartOne. Tutorial: ...",
-  lg: "Para LG, use o SmartOne. Tutorial: ...",
-  roku: "Para Roku, recomendo o MetaX ou IBO Player. Tutorial: ...",
-  firestick: "Para Fire Stick, baixe o Downloader primeiro. Tutorial: ..."
-};
-```
+## Validação
+- Testar renovação antecipada (dia 19 para vencimento dia 20).
+- Testar renovação no dia (dia 20 para vencimento dia 20).
+- Testar renovação atrasada (dia 21 para vencimento dia 20).
