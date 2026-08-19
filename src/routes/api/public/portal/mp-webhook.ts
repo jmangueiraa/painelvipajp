@@ -26,7 +26,8 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
 
 
           const externalRef =
-            url.searchParams.get("external_reference") ?? body.action === "payment.created" ? undefined : undefined; // body.data?.external_reference not always present
+            url.searchParams.get("external_reference") ?? undefined;
+
 
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
