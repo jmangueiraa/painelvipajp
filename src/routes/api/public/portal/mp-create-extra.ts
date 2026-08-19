@@ -118,6 +118,11 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
               point_of_interaction?: { transaction_data?: { qr_code?: string; qr_code_base64?: string } };
             };
             if (!mpRes.ok) {
+              console.error("[mp-create-extra-pix] MP API Error:", {
+                status: mpRes.status,
+                body: mp,
+                renewal_id: renewal.id
+              });
               return json({ error: "Falha no Mercado Pago", detail: mp.message ?? mpRes.statusText }, request, { status: 502 });
             }
             const qr_code = mp.point_of_interaction?.transaction_data?.qr_code ?? "";
