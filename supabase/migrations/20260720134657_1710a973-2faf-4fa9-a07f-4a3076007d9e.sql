@@ -17,7 +17,7 @@ SELECT cron.schedule(
     url := 'https://painelvipajp.lovable.app/api/public/push-cron',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'apikey', 'sb_publishable_CPHAd-IwFh9ydxsC5lRHlg_q-iJBGYF'
+      'apikey', 'sb_publishable_gf1PnxpslEUMrDamFmuWhg_2cSl8FEI'
     ),
     body := '{}'::jsonb
   );
