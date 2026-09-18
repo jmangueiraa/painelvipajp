@@ -11,11 +11,25 @@ export const Route = createFileRoute("/api/public/portal/me")({
       OPTIONS: async ({ request }) => portalOptions(request),
       GET: async ({ request }) => {
         try {
+          const auth = request.headers.get("authorization");
+          const token = auth?.startsWith("Bearer ") ? auth.slice(7) : "";
+          if (!token) return json({ error: "Sessão inválida" }, request, { status: 401 });
+
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+          // 1. Tenta buscar direto via RPC SECURITY DEFINER (ignora RLS, 1 round-trip)
+          try {
+            const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc("portal_get_session", { _token: token });
+            if (!rpcError && rpcData && typeof rpcData === "object" && (rpcData as any).client) {
+              return json(rpcData, request);
+            }
+          } catch (rpcEx) {
+            console.warn("[portal me rpc fallback]", rpcEx);
+          }
+
           const portal = await import("@/integrations/portal/session.server");
           const client = await portal.getSessionFromRequest(request);
           if (!client) return json({ error: "Sessão inválida" }, request, { status: 401 });
-
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
           const { data: clientRow } = await supabaseAdmin.from("clients").select("allowed_plan_ids").eq("id", client.id).maybeSingle();
           const allowedIds = (clientRow?.allowed_plan_ids ?? []) as string[];

@@ -43,6 +43,7 @@ import { clearPortalToken, getPortalToken, portalFetch, PortalFetchError } from 
 import { PortalShell, type PortalTab } from "@/components/portal/portal-shell";
 import { InstallAppCard } from "@/components/portal/install-app-card";
 import { PushNotificationCard } from "@/components/portal/push-notification-card";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/portal/painel")({
   ssr: false,
@@ -249,7 +250,24 @@ function PortalDashboard() {
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["portal", "me"],
-    queryFn: () => portalFetch<Me>("/api/public/portal/me"),
+    queryFn: async () => {
+      try {
+        return await portalFetch<Me>("/api/public/portal/me");
+      } catch (err) {
+        const token = getPortalToken();
+        if (token) {
+          try {
+            const { data: rpcData, error: rpcErr } = await supabase.rpc("portal_get_session", { _token: token });
+            if (!rpcErr && rpcData && typeof rpcData === "object" && (rpcData as any).client) {
+              return rpcData as unknown as Me;
+            }
+          } catch (supaErr) {
+            console.warn("[portal direct get_session fallback failed]", supaErr);
+          }
+        }
+        throw err;
+      }
+    },
     retry: false,
   });
 

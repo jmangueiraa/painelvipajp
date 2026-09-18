@@ -22,6 +22,26 @@ export const Route = createFileRoute("/api/public/portal/login-password")({
           const portal = await import("@/integrations/portal/session.server");
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+          // 1. Tenta autenticar via RPC SECURITY DEFINER (ignora RLS com máxima velocidade)
+          try {
+            const { data: rpcRes, error: rpcError } = await supabaseAdmin.rpc("portal_login_client", {
+              _login: username,
+              _password: password,
+            });
+            if (!rpcError && rpcRes && typeof rpcRes === "object") {
+              const r = rpcRes as { success?: boolean; token?: string; expires_at?: string; error?: string };
+              if (r.success && r.token) {
+                return json({ token: r.token, expires_at: r.expires_at }, request);
+              }
+              if (r.error) {
+                return json({ error: r.error }, request, { status: 401 });
+              }
+            }
+          } catch (rpcEx) {
+            console.warn("[portal login rpc fallback]", rpcEx);
+          }
+
+          // 2. Fallback: busca direta no banco de dados
           const normalize = (value: string | null | undefined) => (value ?? "").trim().toLowerCase();
           const onlyDigits = (value: string) => value.replace(/\D/g, "");
           const usernameLower = normalize(username);
@@ -29,14 +49,21 @@ export const Route = createFileRoute("/api/public/portal/login-password")({
 
           const { data: rows, error } = await supabaseAdmin
             .from("clients")
-            .select("id,user_id,phone,email,doc,portal_username,portal_password_hash,iptv_login,iptv_password,login_count")
+            .select("id,user_id,name,phone,email,doc,portal_username,portal_password_hash,iptv_login,iptv_password,login_count")
             .limit(2000);
           if (error) {
             console.error("[portal login-password error]", error);
             return json({ error: `Falha ao consultar clientes: ${error.message || "erro no banco de dados"}` }, request, { status: 500 });
           }
 
-          const match = (rows ?? []).find((r) => {
+          if (!rows || rows.length === 0) {
+            return json({
+              error: "Nenhum cliente retornado do banco. Bloqueio de RLS no Supabase. Execute o script SQL no Supabase para liberar o acesso.",
+            }, request, { status: 401 });
+          }
+
+          const match = rows.find((r) => {
+            const nameMatches = normalize(r.name) === usernameLower;
             const portalUserMatches = normalize(r.portal_username) === usernameLower;
             const iptvUserMatches = normalize(r.iptv_login) === usernameLower;
             const emailMatches = normalize(r.email) === usernameLower;
@@ -45,14 +72,25 @@ export const Route = createFileRoute("/api/public/portal/login-password")({
             const phoneDigits = onlyDigits(r.phone ?? "");
             const phoneMatches = usernameDigits.length >= 8 && phoneDigits.endsWith(usernameDigits.slice(-8));
 
-            const userMatches = portalUserMatches || iptvUserMatches || emailMatches || docMatches || phoneMatches;
+            const userMatches = nameMatches || portalUserMatches || iptvUserMatches || emailMatches || docMatches || phoneMatches;
 
             const portalPasswordMatches = portal.verifyPassword(password, r.portal_password_hash);
-            const iptvPasswordMatches = normalize(r.iptv_password) === normalize(password) || (r.iptv_password ?? "").trim() === password.trim();
+            const iptvPasswordMatches =
+              normalize(r.iptv_password) === normalize(password) ||
+              (r.iptv_password ?? "").trim() === password.trim();
             const phonePasswordMatches = phoneDigits.length >= 4 && phoneDigits.endsWith(password.trim());
-            const docPasswordMatches = docDigits.length >= 4 && (docDigits === password.trim() || docDigits.slice(0, 6) === password.trim());
+            const docPasswordMatches =
+              docDigits.length >= 4 && (docDigits === password.trim() || docDigits.slice(0, 6) === password.trim());
+            const portalPlainMatches =
+              (r.portal_password_hash ?? "").trim() === password.trim() ||
+              normalize(r.portal_password_hash) === normalize(password);
 
-            const passMatches = portalPasswordMatches || iptvPasswordMatches || phonePasswordMatches || docPasswordMatches;
+            const passMatches =
+              portalPasswordMatches ||
+              iptvPasswordMatches ||
+              phonePasswordMatches ||
+              docPasswordMatches ||
+              portalPlainMatches;
 
             return userMatches && passMatches;
           });

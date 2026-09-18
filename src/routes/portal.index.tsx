@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getPortalToken, portalFetch, setPortalToken } from "@/lib/portal-client";
 import { useRegisterPortalSW, InstallAppCard } from "@/components/portal/install-app-card";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/portal/")({
   ssr: false,
@@ -49,11 +50,50 @@ function PortalLoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await portalFetch<{ token: string }>("/api/public/portal/login-password", {
-        method: "POST",
-        body: JSON.stringify({ username: username.trim(), password }),
-      });
-      setPortalToken(res.token);
+      let token: string | null = null;
+      let lastErrorMessage = "";
+
+      // 1. Tenta login via rota de API
+      try {
+        const res = await portalFetch<{ token?: string; error?: string }>("/api/public/portal/login-password", {
+          method: "POST",
+          body: JSON.stringify({ username: username.trim(), password: password.trim() }),
+        });
+        if (res?.token) {
+          token = res.token;
+        }
+      } catch (apiErr: any) {
+        lastErrorMessage = apiErr?.message || "";
+        console.warn("[portal login API error, trying Supabase RPC fallback]", apiErr);
+      }
+
+      // 2. Fallback: chamada direta ao Supabase RPC (funciona mesmo com RLS ou proxy offline)
+      if (!token) {
+        try {
+          const { data: rpcData, error: rpcError } = await supabase.rpc("portal_login_client", {
+            _login: username.trim(),
+            _password: password.trim(),
+          });
+          if (rpcError) {
+            console.warn("[portal Supabase RPC error]", rpcError);
+          } else if (rpcData && typeof rpcData === "object") {
+            const r = rpcData as { success?: boolean; token?: string; error?: string };
+            if (r.success && r.token) {
+              token = r.token;
+            } else if (r.error) {
+              lastErrorMessage = r.error;
+            }
+          }
+        } catch (supaErr: any) {
+          console.warn("[portal Supabase direct RPC error]", supaErr);
+        }
+      }
+
+      if (!token) {
+        throw new Error(lastErrorMessage || "Login ou senha incorretos.");
+      }
+
+      setPortalToken(token);
       toast.success("Login realizado com sucesso!");
       navigate({ to: "/portal/painel" });
     } catch (err) {
