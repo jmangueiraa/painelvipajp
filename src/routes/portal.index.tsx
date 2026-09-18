@@ -53,39 +53,36 @@ function PortalLoginPage() {
       let token: string | null = null;
       let lastErrorMessage = "";
 
-      // 1. Tenta login via rota de API
+      // 1. Tenta direto via Supabase RPC (autenticação ultrarrápida em ~50ms)
       try {
-        const res = await portalFetch<{ token?: string; error?: string }>("/api/public/portal/login-password", {
-          method: "POST",
-          body: JSON.stringify({ username: username.trim(), password: password.trim() }),
+        const { data: rpcData, error: rpcError } = await supabase.rpc("portal_login_client", {
+          _login: username.trim(),
+          _password: password.trim(),
         });
-        if (res?.token) {
-          token = res.token;
+        if (!rpcError && rpcData && typeof rpcData === "object") {
+          const r = rpcData as { success?: boolean; token?: string; error?: string };
+          if (r.success && r.token) {
+            token = r.token;
+          } else if (r.error) {
+            lastErrorMessage = r.error;
+          }
         }
-      } catch (apiErr: any) {
-        lastErrorMessage = apiErr?.message || "";
-        console.warn("[portal login API error, trying Supabase RPC fallback]", apiErr);
+      } catch (supaErr: any) {
+        console.warn("[portal Supabase direct RPC error, trying API fallback]", supaErr);
       }
 
-      // 2. Fallback: chamada direta ao Supabase RPC (funciona mesmo com RLS ou proxy offline)
-      if (!token) {
+      // 2. Fallback via rota de API do servidor
+      if (!token && !lastErrorMessage) {
         try {
-          const { data: rpcData, error: rpcError } = await supabase.rpc("portal_login_client", {
-            _login: username.trim(),
-            _password: password.trim(),
+          const res = await portalFetch<{ token?: string; error?: string }>("/api/public/portal/login-password", {
+            method: "POST",
+            body: JSON.stringify({ username: username.trim(), password: password.trim() }),
           });
-          if (rpcError) {
-            console.warn("[portal Supabase RPC error]", rpcError);
-          } else if (rpcData && typeof rpcData === "object") {
-            const r = rpcData as { success?: boolean; token?: string; error?: string };
-            if (r.success && r.token) {
-              token = r.token;
-            } else if (r.error) {
-              lastErrorMessage = r.error;
-            }
+          if (res?.token) {
+            token = res.token;
           }
-        } catch (supaErr: any) {
-          console.warn("[portal Supabase direct RPC error]", supaErr);
+        } catch (apiErr: any) {
+          lastErrorMessage = apiErr?.message || "";
         }
       }
 

@@ -58,7 +58,7 @@ export const Route = createFileRoute("/api/public/portal/login-password")({
 
           if (!rows || rows.length === 0) {
             return json({
-              error: "Nenhum cliente retornado do banco. Bloqueio de RLS no Supabase. Execute o script SQL no Supabase para liberar o acesso.",
+              error: "Nenhum cliente retornado do banco. Bloqueio de RLS ativo no Supabase. Execute o script SQL no Supabase para liberar o acesso.",
             }, request, { status: 401 });
           }
 

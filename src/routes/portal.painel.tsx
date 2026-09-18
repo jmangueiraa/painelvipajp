@@ -215,9 +215,16 @@ function PortalDashboard() {
   const { data: remoteProducts } = useQuery({
     queryKey: ["portal-store-products"],
     queryFn: async () => {
-      const j = await portalFetch<{ products: StoreItem[] }>("/api/public/portal/store-products");
-      return j.products ?? [];
+      try {
+        const j = await portalFetch<{ products: StoreItem[] }>("/api/public/portal/store-products");
+        return j.products ?? fallbackProducts;
+      } catch {
+        return fallbackProducts;
+      }
     },
+    initialData: fallbackProducts,
+    staleTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
   });
   const storeProducts: StoreItem[] = remoteProducts && remoteProducts.length > 0 ? remoteProducts : fallbackProducts;
 
@@ -229,45 +236,64 @@ function PortalDashboard() {
     if (!getPortalToken()) return;
     const t = window.setTimeout(() => {
       import("@/lib/fcm").then((m) => m.initPortalPush({ silent: true })).catch(() => {});
-    }, 2500);
+    }, 5000);
     return () => window.clearTimeout(t);
   }, []);
 
   useEffect(() => {
     if (!getPortalToken()) return;
-    const standalone =
-      window.matchMedia?.("(display-mode: standalone)").matches ||
-      window.matchMedia?.("(display-mode: fullscreen)").matches ||
-      window.matchMedia?.("(display-mode: minimal-ui)").matches ||
-      // @ts-expect-error iOS specific
-      window.navigator.standalone === true;
-    if (!standalone) return;
-    portalFetch("/api/public/portal/register-install", {
-      method: "POST",
-      body: JSON.stringify({ platform: navigator.userAgent }),
-    }).catch(() => {});
+    const t = window.setTimeout(() => {
+      const standalone =
+        window.matchMedia?.("(display-mode: standalone)").matches ||
+        window.matchMedia?.("(display-mode: fullscreen)").matches ||
+        window.matchMedia?.("(display-mode: minimal-ui)").matches ||
+        // @ts-expect-error iOS specific
+        window.navigator.standalone === true;
+      if (!standalone) return;
+      portalFetch("/api/public/portal/register-install", {
+        method: "POST",
+        body: JSON.stringify({ platform: navigator.userAgent }),
+      }).catch(() => {});
+    }, 4000);
+    return () => window.clearTimeout(t);
   }, []);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["portal", "me"],
     queryFn: async () => {
-      try {
-        return await portalFetch<Me>("/api/public/portal/me");
-      } catch (err) {
-        const token = getPortalToken();
-        if (token) {
-          try {
-            const { data: rpcData, error: rpcErr } = await supabase.rpc("portal_get_session", { _token: token });
-            if (!rpcErr && rpcData && typeof rpcData === "object" && (rpcData as any).client) {
-              return rpcData as unknown as Me;
-            }
-          } catch (supaErr) {
-            console.warn("[portal direct get_session fallback failed]", supaErr);
+      const token = getPortalToken();
+      // 1. Chamada DIRETA ao Supabase RPC (resposta instantânea em ~30ms, sem proxy)
+      if (token) {
+        try {
+          const { data: rpcData, error: rpcErr } = await supabase.rpc("portal_get_session", { _token: token });
+          if (!rpcErr && rpcData && typeof rpcData === "object" && (rpcData as any).client) {
+            try {
+              localStorage.setItem("portal_cached_me", JSON.stringify(rpcData));
+            } catch {}
+            return rpcData as unknown as Me;
           }
+        } catch (supaErr) {
+          console.warn("[portal direct get_session fallback]", supaErr);
         }
-        throw err;
       }
+
+      // 2. Fallback via rota de API do servidor
+      const res = await portalFetch<Me>("/api/public/portal/me");
+      try {
+        localStorage.setItem("portal_cached_me", JSON.stringify(res));
+      } catch {}
+      return res;
     },
+    initialData: () => {
+      if (typeof window === "undefined") return undefined;
+      try {
+        const cached = localStorage.getItem("portal_cached_me");
+        if (cached) return JSON.parse(cached) as Me;
+      } catch {}
+      return undefined;
+    },
+    staleTime: 1000 * 60 * 3, // 3 min de cache ativo (troca de aba instantânea)
+    refetchOnWindowFocus: false, // Evita travamentos ao trocar de aba no celular
     retry: false,
   });
 

@@ -28,6 +28,7 @@ export function setPortalToken(token: string): void {
 export function clearPortalToken(): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(TOKEN_KEY);
+  window.localStorage.removeItem("portal_cached_me");
 }
 
 export class PortalFetchError extends Error {
