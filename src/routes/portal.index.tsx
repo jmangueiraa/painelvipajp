@@ -55,7 +55,7 @@ function PortalLoginPage() {
 
       // 1. Tenta direto via Supabase RPC (autenticação ultrarrápida em ~50ms)
       try {
-        const { data: rpcData, error: rpcError } = await supabase.rpc("portal_login_client", {
+        const { data: rpcData, error: rpcError } = await (supabase.rpc as any)("portal_login_client", {
           _login: username.trim(),
           _password: password.trim(),
         });

@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 
-type KpiColor = "violet" | "emerald" | "rose" | "cyan" | "amber" | "primary";
+type KpiColor = "violet" | "emerald" | "rose" | "cyan" | "amber" | "primary" | "sky" | "neutral";
 
 const iconColorMap: Record<KpiColor, string> = {
   violet: "text-zinc-400",
@@ -9,6 +9,8 @@ const iconColorMap: Record<KpiColor, string> = {
   cyan: "text-sky-400",
   amber: "text-amber-400",
   primary: "text-zinc-300",
+  sky: "text-sky-400",
+  neutral: "text-zinc-400",
 };
 
 export function KpiCard({

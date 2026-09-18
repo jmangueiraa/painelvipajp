@@ -109,9 +109,9 @@ export async function getSessionFromRequest(request: Request, bodyToken?: string
 
   // 1. Tenta buscar direto via RPC SECURITY DEFINER (ignora RLS)
   try {
-    const { data: rpcClient, error: rpcErr } = await supabaseAdmin.rpc("portal_get_client_by_token", { _token: token });
+    const { data: rpcClient, error: rpcErr } = await (supabaseAdmin.rpc as any)("portal_get_client_by_token", { _token: token });
     if (!rpcErr && rpcClient && typeof rpcClient === "object" && (rpcClient as any).id) {
-      const c = rpcClient as PortalClient;
+      const c = rpcClient as unknown as PortalClient;
       if (!c.user_id) {
         const { data: s } = await supabaseAdmin.from("settings").select("user_id").limit(1).maybeSingle();
         if (s?.user_id) c.user_id = s.user_id;
@@ -124,7 +124,7 @@ export async function getSessionFromRequest(request: Request, bodyToken?: string
 
   // 2. Tenta via RPC portal_get_session
   try {
-    const { data: rpcSess, error: rpcSessErr } = await supabaseAdmin.rpc("portal_get_session", { _token: token });
+    const { data: rpcSess, error: rpcSessErr } = await (supabaseAdmin.rpc as any)("portal_get_session", { _token: token });
     if (!rpcSessErr && rpcSess && typeof rpcSess === "object" && (rpcSess as any).client) {
       const c = (rpcSess as any).client as PortalClient;
       if (!c.user_id) {
