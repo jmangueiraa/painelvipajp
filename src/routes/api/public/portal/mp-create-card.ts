@@ -17,17 +17,37 @@ export const Route = createFileRoute("/api/public/portal/mp-create-card")({
       OPTIONS: async ({ request }) => portalOptions(request),
       POST: async ({ request }) => {
         try {
+          const body = (await request.json().catch(() => ({}))) as { days?: number; amount_cents?: number; label?: string; token?: string };
           const portal = await import("@/integrations/portal/session.server");
-          const client = await portal.getSessionFromRequest(request);
+          const client = await portal.getSessionFromRequest(request, body.token);
           if (!client) return json({ error: "Sessão inválida" }, request, { status: 401 });
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          const { data: ownerSettings } = await supabaseAdmin
-            .from("settings")
-            .select("mp_access_token")
-            .eq("user_id", client.user_id)
-            .maybeSingle();
-          const token = (ownerSettings as { mp_access_token?: string | null } | null)?.mp_access_token?.trim();
+
+          // Busca token do Mercado Pago nas configurações
+          let token: string | null = null;
+          if (client.user_id) {
+            const { data: ownerSettings } = await supabaseAdmin
+              .from("settings")
+              .select("mp_access_token")
+              .eq("user_id", client.user_id)
+              .maybeSingle();
+            token = (ownerSettings as { mp_access_token?: string | null } | null)?.mp_access_token?.trim() || null;
+          }
+
+          if (!token) {
+            const { data: anySettings } = await supabaseAdmin
+              .from("settings")
+              .select("mp_access_token, user_id")
+              .not("mp_access_token", "is", null)
+              .limit(1)
+              .maybeSingle();
+            token = anySettings?.mp_access_token?.trim() || null;
+            if (anySettings?.user_id && !client.user_id) {
+              client.user_id = anySettings.user_id;
+            }
+          }
+
           if (!token) return json({ error: "Mercado Pago não configurado pelo administrador" }, request, { status: 500 });
           if (token.startsWith("TEST-")) {
             return json({
@@ -35,7 +55,6 @@ export const Route = createFileRoute("/api/public/portal/mp-create-card")({
             }, request, { status: 500 });
           }
 
-          const body = (await request.json().catch(() => ({}))) as { days?: number; amount_cents?: number; label?: string };
           const days = Number(body.days);
           const base_cents = Number(body.amount_cents);
           if (!Number.isFinite(days) || days < 1 || days > 3650) return json({ error: "Período inválido" }, request, { status: 400 });
@@ -43,12 +62,21 @@ export const Route = createFileRoute("/api/public/portal/mp-create-card")({
 
           const amount_cents = applyCardFee(base_cents);
 
+          // Se client.user_id ainda for null, pega o primeiro user_id de settings para satisfazer a chave
+          if (!client.user_id) {
+            const { data: s } = await supabaseAdmin.from("settings").select("user_id").limit(1).maybeSingle();
+            if (s?.user_id) client.user_id = s.user_id;
+          }
+
           const { data: renewal, error: insErr } = await supabaseAdmin
             .from("renewal_requests")
             .insert({ client_id: client.id, user_id: client.user_id, days, amount_cents, status: "awaiting_payment" })
             .select("id")
             .single();
-          if (insErr || !renewal) return json({ error: "Falha ao registrar solicitação" }, request, { status: 500 });
+          if (insErr || !renewal) {
+            console.error("[mp-create-card renewal_requests insert error]", insErr);
+            return json({ error: "Falha ao registrar solicitação", detail: insErr?.message }, request, { status: 500 });
+          }
 
           const url = new URL(request.url);
           const origin = `${url.protocol}//${url.host}`;

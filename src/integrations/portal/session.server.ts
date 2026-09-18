@@ -90,25 +90,90 @@ export async function getClientByPhone(phoneDigits: string): Promise<PortalClien
   return (match as PortalClient) ?? null;
 }
 
-export async function getSessionFromRequest(request: Request): Promise<PortalClient | null> {
-  const auth = request.headers.get("authorization");
-  const token = auth?.startsWith("Bearer ") ? auth.slice(7) : "";
+export async function getSessionFromRequest(request: Request, bodyToken?: string): Promise<PortalClient | null> {
+  const auth = request.headers.get("authorization") || request.headers.get("Authorization");
+  let token = auth?.startsWith("Bearer ") ? auth.slice(7).trim() : (auth || "").trim();
+  if (!token) {
+    token = (request.headers.get("x-portal-token") || request.headers.get("X-Portal-Token") || "").trim();
+  }
+  if (!token && bodyToken) {
+    token = bodyToken.trim();
+  }
+  if (!token) {
+    try {
+      const url = new URL(request.url);
+      token = (url.searchParams.get("token") || "").trim();
+    } catch {}
+  }
   if (!token) return null;
-  const hash = sha256(token);
-  const { data: sess } = await supabaseAdmin
-    .from("portal_sessions")
-    .select("client_id,expires_at")
-    .eq("token_hash", hash)
-    .maybeSingle();
-  if (!sess) return null;
-  if (new Date(sess.expires_at).getTime() < Date.now()) return null;
-  await supabaseAdmin.from("portal_sessions").update({ last_seen_at: new Date().toISOString() }).eq("token_hash", hash);
-  const { data: c } = await supabaseAdmin
-    .from("clients")
-    .select("id,user_id,name,phone,due_date,status,price_cents,plan_id,server_id,iptv_login,iptv_password,referral_code,referred_by,bonus_days,points")
-    .eq("id", sess.client_id)
-    .maybeSingle();
-  return (c as PortalClient) ?? null;
+
+  // 1. Tenta buscar direto via RPC SECURITY DEFINER (ignora RLS)
+  try {
+    const { data: rpcClient, error: rpcErr } = await supabaseAdmin.rpc("portal_get_client_by_token", { _token: token });
+    if (!rpcErr && rpcClient && typeof rpcClient === "object" && (rpcClient as any).id) {
+      const c = rpcClient as PortalClient;
+      if (!c.user_id) {
+        const { data: s } = await supabaseAdmin.from("settings").select("user_id").limit(1).maybeSingle();
+        if (s?.user_id) c.user_id = s.user_id;
+      }
+      return c;
+    }
+  } catch (ex) {
+    console.warn("[getSessionFromRequest rpc client_by_token fallback]", ex);
+  }
+
+  // 2. Tenta via RPC portal_get_session
+  try {
+    const { data: rpcSess, error: rpcSessErr } = await supabaseAdmin.rpc("portal_get_session", { _token: token });
+    if (!rpcSessErr && rpcSess && typeof rpcSess === "object" && (rpcSess as any).client) {
+      const c = (rpcSess as any).client as PortalClient;
+      if (!c.user_id) {
+        const { data: clientRow } = await supabaseAdmin.from("clients").select("user_id").eq("id", c.id).maybeSingle();
+        c.user_id = clientRow?.user_id ?? "";
+      }
+      if (!c.user_id) {
+        const { data: s } = await supabaseAdmin.from("settings").select("user_id").limit(1).maybeSingle();
+        if (s?.user_id) c.user_id = s.user_id;
+      }
+      return c;
+    }
+  } catch (ex) {
+    console.warn("[getSessionFromRequest rpc get_session fallback]", ex);
+  }
+
+  // 3. Fallback via consulta direta às tabelas
+  try {
+    const hash = sha256(token);
+    const { data: sess, error: sessErr } = await supabaseAdmin
+      .from("portal_sessions")
+      .select("client_id,expires_at")
+      .eq("token_hash", hash)
+      .maybeSingle();
+
+    if (sessErr) console.warn("[portal_sessions query error]", sessErr);
+    if (!sess) return null;
+    if (new Date(sess.expires_at).getTime() < Date.now()) return null;
+
+    await supabaseAdmin.from("portal_sessions").update({ last_seen_at: new Date().toISOString() }).eq("token_hash", hash);
+    const { data: c, error: clientErr } = await supabaseAdmin
+      .from("clients")
+      .select("id,user_id,name,phone,due_date,status,price_cents,plan_id,server_id,iptv_login,iptv_password,referral_code,referred_by,bonus_days,points")
+      .eq("id", sess.client_id)
+      .maybeSingle();
+
+    if (clientErr) console.warn("[clients query error]", clientErr);
+    if (!c) return null;
+
+    const resClient = c as PortalClient;
+    if (!resClient.user_id) {
+      const { data: s } = await supabaseAdmin.from("settings").select("user_id").limit(1).maybeSingle();
+      if (s?.user_id) resClient.user_id = s.user_id;
+    }
+    return resClient;
+  } catch (e) {
+    console.error("[getSessionFromRequest error]", e);
+    return null;
+  }
 }
 
 export async function sendWhatsappOtp(phoneDigits: string, code: string, clientName: string): Promise<void> {

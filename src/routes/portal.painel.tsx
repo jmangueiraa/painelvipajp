@@ -357,7 +357,7 @@ function PortalDashboard() {
     mutationFn: (o: { days: number; amount_cents: number; label: string }) =>
       portalFetch<{ renewal_id: string; payment_id: string; qr_code: string; qr_code_base64: string }>(
         "/api/public/portal/mp-create-pix",
-        { method: "POST", body: JSON.stringify(o) },
+        { method: "POST", body: JSON.stringify({ ...o, token: getPortalToken() }) },
       ),
     onSuccess: (r) => {
       setRenewalId(r.renewal_id);
@@ -379,7 +379,7 @@ function PortalDashboard() {
     mutationFn: (o: { days: number; amount_cents: number; label: string }) =>
       portalFetch<{ renewal_id: string; init_point: string; amount_cents: number; base_cents: number }>(
         "/api/public/portal/mp-create-card",
-        { method: "POST", body: JSON.stringify(o) },
+        { method: "POST", body: JSON.stringify({ ...o, token: getPortalToken() }) },
       ),
     onSuccess: (r) => {
       setRenewalId(r.renewal_id);

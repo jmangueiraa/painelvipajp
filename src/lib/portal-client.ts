@@ -46,7 +46,10 @@ export async function portalFetch<T = unknown>(path: string, init?: RequestInit)
     ...((init?.headers as Record<string, string>) ?? {}),
   };
   if (isCustomPortalDomain()) headers["X-Portal-Origin"] = window.location.origin;
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+    headers["X-Portal-Token"] = token;
+  }
 
   const targetUrl = getPortalApiUrl(path);
   let res: Response;

@@ -334,6 +334,7 @@ BEGIN
   RETURN jsonb_build_object(
     'client', jsonb_build_object(
       'id', v_client.id,
+      'user_id', v_client.user_id,
       'name', v_client.name,
       'phone', v_client.phone,
       'due_date', v_client.due_date,
@@ -358,9 +359,84 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.portal_get_session(TEXT) TO anon, authenticated, service_role;
 
--- 11. Insere o cliente de teste RB0001 caso não exista ainda
-INSERT INTO public.clients (name, phone, due_date, iptv_login, iptv_password, portal_username, portal_password_hash, status, price_cents)
-SELECT 'RB0001', '(19) 98135-6505', CURRENT_DATE + interval '30 days', 'RB0001', '301016', 'RB0001', '301016', 'ativo', 3000
+-- 11. Função de Validação de Sessão para Rotas de Pagamento PIX e Cartão
+CREATE OR REPLACE FUNCTION public.portal_get_client_by_token(_token TEXT)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+DECLARE
+  v_hash TEXT;
+  v_client_id UUID;
+  v_client RECORD;
+BEGIN
+  v_hash := encode(digest(_token, 'sha256'), 'hex');
+
+  SELECT client_id INTO v_client_id
+  FROM public.portal_sessions
+  WHERE token_hash = v_hash AND expires_at > now();
+
+  IF v_client_id IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  UPDATE public.portal_sessions SET last_seen_at = now() WHERE token_hash = v_hash;
+
+  SELECT * INTO v_client FROM public.clients WHERE id = v_client_id;
+  IF v_client.id IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  RETURN jsonb_build_object(
+    'id', v_client.id,
+    'user_id', v_client.user_id,
+    'name', v_client.name,
+    'phone', v_client.phone,
+    'due_date', v_client.due_date,
+    'status', v_client.status,
+    'price_cents', v_client.price_cents,
+    'plan_id', v_client.plan_id,
+    'server_id', v_client.server_id,
+    'iptv_login', v_client.iptv_login,
+    'iptv_password', v_client.iptv_password,
+    'referral_code', v_client.referral_code,
+    'referred_by', v_client.referred_by,
+    'bonus_days', coalesce(v_client.bonus_days, 0),
+    'points', coalesce(v_client.points, 1)
+  );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.portal_get_client_by_token(TEXT) TO anon, authenticated, service_role;
+
+-- 12. Políticas e Permissões para Renewal Requests
+ALTER TABLE public.renewal_requests ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "renewal_requests_allow_all" ON public.renewal_requests;
+CREATE POLICY "renewal_requests_allow_all" ON public.renewal_requests
+  FOR ALL TO anon, authenticated, service_role
+  USING (true)
+  WITH CHECK (true);
+GRANT ALL ON public.renewal_requests TO anon, authenticated, service_role;
+
+-- 13. Garante coluna mp_access_token e políticas em settings
+ALTER TABLE public.settings ADD COLUMN IF NOT EXISTS mp_access_token TEXT;
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "settings_allow_all" ON public.settings;
+CREATE POLICY "settings_allow_all" ON public.settings
+  FOR ALL TO anon, authenticated, service_role
+  USING (true)
+  WITH CHECK (true);
+GRANT ALL ON public.settings TO anon, authenticated, service_role;
+
+-- 14. Insere o cliente de teste RB0001 caso não exista ainda
+INSERT INTO public.clients (name, phone, due_date, iptv_login, iptv_password, portal_username, portal_password_hash, status, price_cents, user_id)
+SELECT 'RB0001', '(19) 98135-6505', CURRENT_DATE + interval '30 days', 'RB0001', '301016', 'RB0001', '301016', 'ativo', 3000, (SELECT user_id FROM public.settings LIMIT 1)
 WHERE NOT EXISTS (
   SELECT 1 FROM public.clients WHERE lower(name) = 'rb0001' OR lower(iptv_login) = 'rb0001'
 );
+
+-- Garante que clientes existentes tenham user_id preenchido
+UPDATE public.clients
+SET user_id = (SELECT user_id FROM public.settings LIMIT 1)
+WHERE user_id IS NULL;
