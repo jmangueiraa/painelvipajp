@@ -81,7 +81,7 @@ function LandingPage() {
             <a href="#faq" className="hover:text-white transition-colors">Dúvidas</a>
           </div>
           <div className="flex items-center gap-4">
-            <Link to="/auth" className="hidden sm:block text-sm font-medium hover:text-blue-500 transition-colors">Portal do Cliente</Link>
+            <Link to="/portal" className="hidden sm:block text-sm font-medium hover:text-blue-500 transition-colors">Portal do Cliente</Link>
             <Button asChild className="bg-blue-600 hover:bg-blue-700 rounded-full px-6 h-11 font-bold">
               <a href="https://wa.me/5519981356505?text=Olá, gostaria de um teste grátis." target="_blank" rel="noopener noreferrer">Teste Grátis</a>
             </Button>

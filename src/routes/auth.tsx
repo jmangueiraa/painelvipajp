@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2, Sparkles } from "lucide-react";
 
@@ -17,7 +16,6 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState("login");
   const [loading, setLoading] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
 
@@ -41,43 +39,6 @@ function AuthPage() {
     navigate({ to: "/dashboard" });
   }
 
-  async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email: String(fd.get("email")),
-      password: String(fd.get("password")),
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-        data: {
-          full_name: String(fd.get("full_name")),
-          company_name: String(fd.get("company_name")),
-        },
-      },
-    });
-    setLoading(false);
-    if (error) return toast.error("Erro ao criar conta", { description: translateError(error) });
-    try {
-      const { notifyEventFn } = await import("@/lib/notifications.functions");
-      await notifyEventFn({ data: {
-        event: "trial",
-        payload: {
-          nome: String(fd.get("full_name") || ""),
-          email: String(fd.get("email") || ""),
-          plano: "Trial 7 dias",
-          extra: `Empresa: ${String(fd.get("company_name") || "—")}`,
-        },
-      } });
-    } catch (err) { console.error(err); }
-    if (data?.session) {
-      toast.success("Conta criada com sucesso! Entrando...");
-      navigate({ to: "/dashboard" });
-    } else {
-      toast.success("Conta criada com sucesso!");
-      setTab("login");
-    }
-  }
 
   async function handleForgot(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -127,59 +88,32 @@ function AuthPage() {
                 </Button>
               </form>
             ) : (
-              <Tabs value={tab} onValueChange={setTab}>
-                <TabsList className="grid grid-cols-2 w-full">
-                  <TabsTrigger value="login">Entrar</TabsTrigger>
-                  <TabsTrigger value="signup">Criar conta</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="login" className="space-y-4 mt-6">
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">E-mail</Label>
-                      <Input id="email" name="email" type="email" required autoComplete="email" />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="password">Senha</Label>
-                        <button type="button" onClick={() => setForgotOpen(true)} className="text-xs text-primary hover:underline">
-                          Esqueci minha senha
-                        </button>
-                      </div>
-                      <Input id="password" name="password" type="password" required autoComplete="current-password" />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading && <Loader2 className="size-4 animate-spin" />}
-                      Entrar
-                    </Button>
-                  </form>
-                </TabsContent>
-
-                <TabsContent value="signup" className="space-y-4 mt-6">
-                  <form onSubmit={handleSignup} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="full_name">Seu nome</Label>
-                      <Input id="full_name" name="full_name" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="company_name">Nome da empresa (opcional)</Label>
-                      <Input id="company_name" name="company_name" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email-s">E-mail</Label>
-                      <Input id="email-s" name="email" type="email" required autoComplete="email" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password-s">Senha</Label>
-                      <Input id="password-s" name="password" type="password" required minLength={6} autoComplete="new-password" />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading && <Loader2 className="size-4 animate-spin" />}
-                      Criar conta
-                    </Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">E-mail</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    defaultValue="entretenimentoajp@gmail.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Senha</Label>
+                    <button type="button" onClick={() => setForgotOpen(true)} className="text-xs text-primary hover:underline">
+                      Esqueci minha senha
+                    </button>
+                  </div>
+                  <Input id="password" name="password" type="password" required autoComplete="current-password" />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading && <Loader2 className="size-4 animate-spin" />}
+                  Entrar no Painel
+                </Button>
+              </form>
             )}
           </CardContent>
         </Card>
