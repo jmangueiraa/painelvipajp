@@ -67,68 +67,68 @@
 }
 
 :root {
-  --radius: 0.85rem;
+  --radius: 0.5rem;
 
-  /* Dark premium base */
-  --background: oklch(0.16 0.025 265);
-  --foreground: oklch(0.97 0.01 260);
-  --card: oklch(0.205 0.03 265);
-  --card-foreground: oklch(0.97 0.01 260);
-  --popover: oklch(0.215 0.03 265);
-  --popover-foreground: oklch(0.97 0.01 260);
+  /* SaaS Dark Minimalist base (Linear / Vercel / Shadcn) */
+  --background: #09090b;
+  --foreground: #f4f4f5;
+  --card: rgba(24, 24, 27, 0.6);
+  --card-foreground: #f4f4f5;
+  --popover: #18181b;
+  --popover-foreground: #f4f4f5;
 
-  --primary: oklch(0.7 0.18 248);
-  --primary-foreground: oklch(0.14 0.025 265);
-  --primary-glow: oklch(0.82 0.15 215);
+  --primary: #ffffff;
+  --primary-foreground: #09090b;
+  --primary-glow: transparent;
 
-  --secondary: oklch(0.27 0.04 265);
-  --secondary-foreground: oklch(0.97 0.01 260);
-  --muted: oklch(0.245 0.025 265);
-  --muted-foreground: oklch(0.7 0.02 260);
-  --accent: oklch(0.32 0.06 268);
-  --accent-foreground: oklch(0.97 0.01 260);
+  --secondary: #27272a;
+  --secondary-foreground: #f4f4f5;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #f4f4f5;
 
-  --destructive: oklch(0.68 0.22 22);
-  --destructive-foreground: oklch(0.99 0.005 250);
-  --success: oklch(0.72 0.18 152);
-  --success-foreground: oklch(0.14 0.025 265);
-  --warning: oklch(0.82 0.16 75);
-  --warning-foreground: oklch(0.22 0.04 75);
-  --info: oklch(0.72 0.14 235);
-  --info-foreground: oklch(0.14 0.025 265);
+  --destructive: #f43f5e;
+  --destructive-foreground: #ffffff;
+  --success: #10b981;
+  --success-foreground: #09090b;
+  --warning: #f59e0b;
+  --warning-foreground: #09090b;
+  --info: #0ea5e9;
+  --info-foreground: #09090b;
 
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.7 0.18 248);
+  --border: rgba(39, 39, 42, 0.8);
+  --input: #27272a;
+  --ring: #52525b;
 
-  /* KPI palette (border/text + glow) */
-  --kpi-violet: oklch(0.7 0.2 295);
-  --kpi-emerald: oklch(0.72 0.18 152);
-  --kpi-rose: oklch(0.7 0.22 22);
-  --kpi-cyan: oklch(0.78 0.14 215);
-  --kpi-amber: oklch(0.82 0.16 75);
+  /* KPI palette - sober & discreet */
+  --kpi-violet: #a1a1aa;
+  --kpi-emerald: #34d399;
+  --kpi-rose: #fb7185;
+  --kpi-cyan: #38bdf8;
+  --kpi-amber: #fbbf24;
 
-  --chart-1: oklch(0.7 0.18 248);
-  --chart-2: oklch(0.72 0.18 152);
-  --chart-3: oklch(0.82 0.16 75);
-  --chart-4: oklch(0.68 0.22 22);
-  --chart-5: oklch(0.7 0.2 295);
+  --chart-1: #ffffff;
+  --chart-2: #34d399;
+  --chart-3: #fbbf24;
+  --chart-4: #fb7185;
+  --chart-5: #a1a1aa;
 
   /* Sidebar */
-  --sidebar: oklch(0.185 0.028 265);
-  --sidebar-foreground: oklch(0.95 0.01 260);
-  --sidebar-primary: oklch(0.7 0.18 248);
-  --sidebar-primary-foreground: oklch(0.14 0.025 265);
-  --sidebar-accent: oklch(0.255 0.04 265);
-  --sidebar-accent-foreground: oklch(0.97 0.01 260);
-  --sidebar-border: oklch(1 0 0 / 7%);
-  --sidebar-ring: oklch(0.7 0.18 248);
+  --sidebar: rgba(9, 9, 11, 0.9);
+  --sidebar-foreground: #a1a1aa;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #09090b;
+  --sidebar-accent: rgba(39, 39, 42, 0.6);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(39, 39, 42, 0.8);
+  --sidebar-ring: #52525b;
 
-  /* Gradients & shadows */
-  --gradient-primary: linear-gradient(135deg, oklch(0.62 0.2 248), oklch(0.8 0.15 215));
-  --gradient-page: radial-gradient(ellipse 1200px 600px at 50% -10%, oklch(0.3 0.12 268 / 0.35), transparent 60%);
-  --shadow-card: 0 1px 0 0 oklch(1 0 0 / 0.04) inset, 0 8px 24px -12px oklch(0 0 0 / 0.5);
-  --shadow-glow: 0 0 32px oklch(0.7 0.18 248 / 0.25);
+  /* Gradients & shadows removed for clean minimalist look */
+  --gradient-primary: none;
+  --gradient-page: none;
+  --shadow-card: none;
+  --shadow-glow: none;
 }
 
 @layer base {
@@ -138,8 +138,7 @@
   html, body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    background-image: var(--gradient-page);
-    background-attachment: fixed;
+    background-image: none;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
     -webkit-text-size-adjust: 100%;
@@ -208,48 +207,52 @@
   transform: translateX(-50%) translateY(2px);
 }
 
-/* KPI card with colored border + soft glow */
+/* KPI card with clean minimalist border */
 @utility kpi-card {
   position: relative;
-  border-radius: var(--radius-xl);
-  background: linear-gradient(180deg, color-mix(in oklab, var(--card) 92%, transparent), var(--card));
-  border: 1px solid color-mix(in oklab, var(--kpi-color, var(--primary)) 50%, transparent);
-  box-shadow:
-    inset 0 1px 0 0 color-mix(in oklab, var(--kpi-color, var(--primary)) 18%, transparent),
-    0 0 24px -6px color-mix(in oklab, var(--kpi-color, var(--primary)) 35%, transparent);
+  border-radius: 0.75rem;
+  background-color: rgba(24, 24, 27, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(39, 39, 42, 0.8);
+  box-shadow: none;
+  transition: border-color 0.2s ease;
+}
+@utility kpi-card:hover {
+  border-color: rgba(63, 63, 70, 0.9);
 }
 
-/* Action pill button with colored border + gradient hover */
+/* Action pill button - sober and minimalist */
 @utility action-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 0.875rem;
   border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  border: 1px solid color-mix(in oklab, var(--pill-color, var(--primary)) 55%, transparent);
-  color: var(--pill-color, var(--primary));
-  background: color-mix(in oklab, var(--pill-color, var(--primary)) 8%, transparent);
-  transition: background 150ms ease, transform 150ms ease;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid rgba(39, 39, 42, 0.9);
+  color: #f4f4f5;
+  background-color: rgba(24, 24, 27, 0.8);
+  transition: background-color 150ms ease, border-color 150ms ease;
   white-space: nowrap;
 }
-@utility action-pill {
-  &:hover {
-    background: color-mix(in oklab, var(--pill-color, var(--primary)) 18%, transparent);
-    transform: translateY(-1px);
-  }
+@utility action-pill:hover {
+  background-color: rgba(39, 39, 42, 0.9);
+  border-color: rgba(82, 82, 91, 0.9);
 }
 
-/* Premium button (azul → ciano) */
+/* SaaS primary button (linear / vercel style) */
 @utility btn-premium {
-  background-image: var(--gradient-primary);
-  color: var(--primary-foreground);
-  border: none;
-  box-shadow: var(--shadow-glow);
+  background-color: #ffffff;
+  color: #09090b;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: background-color 150ms ease;
 }
-@utility btn-premium {
-  &:hover { filter: brightness(1.05); }
+@utility btn-premium:hover {
+  background-color: #e4e4e7;
 }
 
 /* Quantum Lovable - watermark removal */

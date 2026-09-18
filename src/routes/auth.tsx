@@ -54,19 +54,19 @@ function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-[image:var(--gradient-subtle)]">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-zinc-950 text-zinc-100">
       <div className="w-full max-w-md">
-        <div className="flex items-center gap-2 justify-center mb-8">
-          <div className="size-10 rounded-xl bg-[image:var(--gradient-primary)] flex items-center justify-center shadow-[var(--shadow-glow)]">
-            <Sparkles className="size-5 text-primary-foreground" />
+        <div className="flex items-center gap-2.5 justify-center mb-8">
+          <div className="size-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-100 shadow-sm">
+            <Sparkles className="size-5" />
           </div>
-          <span className="text-2xl font-bold tracking-tight">Painel VIP</span>
+          <span className="text-xl font-semibold tracking-tight text-zinc-100">Painel VIP</span>
         </div>
 
-        <Card className="border-border/60 shadow-[var(--shadow-elegant)]">
-          <CardHeader>
-            <CardTitle>{forgotOpen ? "Recuperar senha" : "Acesse sua conta"}</CardTitle>
-            <CardDescription>
+        <Card className="border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md shadow-2xl">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-lg text-zinc-100">{forgotOpen ? "Recuperar senha" : "Acesse sua conta"}</CardTitle>
+            <CardDescription className="text-xs text-zinc-400">
               {forgotOpen
                 ? "Enviaremos um link para você redefinir sua senha."
                 : "Gerencie clientes, planos e cobranças Pix em um só lugar."}
@@ -75,22 +75,22 @@ function AuthPage() {
           <CardContent>
             {forgotOpen ? (
               <form onSubmit={handleForgot} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email-forgot">E-mail</Label>
-                  <Input id="email-forgot" name="email" type="email" required />
+                <div className="space-y-1.5">
+                  <Label htmlFor="email-forgot" className="text-xs text-zinc-300">E-mail</Label>
+                  <Input id="email-forgot" name="email" type="email" required className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm" />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="size-4 animate-spin" />}
+                <Button type="submit" className="w-full bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg text-sm shadow-sm" disabled={loading}>
+                  {loading && <Loader2 className="size-4 animate-spin mr-2" />}
                   Enviar link de recuperação
                 </Button>
-                <Button type="button" variant="ghost" className="w-full" onClick={() => setForgotOpen(false)}>
+                <Button type="button" variant="ghost" className="w-full text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 rounded-lg text-sm" onClick={() => setForgotOpen(false)}>
                   Voltar
                 </Button>
               </form>
             ) : (
               <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="text-xs text-zinc-300">E-mail</Label>
                   <Input
                     id="email"
                     name="email"
@@ -98,19 +98,20 @@ function AuthPage() {
                     required
                     autoComplete="email"
                     defaultValue="entretenimentoajp@gmail.com"
+                    className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm"
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Senha</Label>
-                    <button type="button" onClick={() => setForgotOpen(true)} className="text-xs text-primary hover:underline">
+                    <Label htmlFor="password" className="text-xs text-zinc-300">Senha</Label>
+                    <button type="button" onClick={() => setForgotOpen(true)} className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors">
                       Esqueci minha senha
                     </button>
                   </div>
-                  <Input id="password" name="password" type="password" required autoComplete="current-password" />
+                  <Input id="password" name="password" type="password" required autoComplete="current-password" className="bg-zinc-950/70 border-zinc-800 text-zinc-100 rounded-lg text-sm" />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="size-4 animate-spin" />}
+                <Button type="submit" className="w-full bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg text-sm shadow-sm mt-2" disabled={loading}>
+                  {loading && <Loader2 className="size-4 animate-spin mr-2" />}
                   Entrar no Painel
                 </Button>
               </form>
@@ -118,9 +119,9 @@ function AuthPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
+        <p className="text-center text-xs text-zinc-500 mt-6">
           Ao continuar você concorda com nossos termos de uso.{" "}
-          <Link to="/" className="text-primary hover:underline">Voltar</Link>
+          <Link to="/" className="text-zinc-300 hover:text-white hover:underline transition-colors">Voltar</Link>
         </p>
       </div>
     </div>

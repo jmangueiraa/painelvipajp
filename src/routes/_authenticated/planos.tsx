@@ -137,7 +137,7 @@ function PlanosPage() {
 
       <Card>
         <CardContent className="p-4 md:p-5">
-          <p className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-3">Novo plano</p>
+          <p className="text-[11px] font-semibold tracking-wider uppercase text-zinc-400 mb-3">Novo plano</p>
           <form
             onSubmit={(e) => { e.preventDefault(); quickCreate.mutate(); }}
             className="grid grid-cols-1 md:grid-cols-[1fr_160px_120px_auto] gap-3"
@@ -151,7 +151,7 @@ function PlanosPage() {
             <div><Label htmlFor="pl-dur" className="sr-only">Duração</Label>
               <Input id="pl-dur" type="number" min={1} placeholder="30" value={quickDuration} onChange={(e) => setQuickDuration(e.target.value)} />
             </div>
-            <Button type="submit" className="btn-premium rounded-full" disabled={quickCreate.isPending}>
+            <Button type="submit" className="bg-white text-zinc-950 font-medium hover:bg-zinc-200" disabled={quickCreate.isPending}>
               <Plus className="size-4" /> Adicionar
             </Button>
           </form>
@@ -165,25 +165,30 @@ function PlanosPage() {
           ) : data && data.length > 0 ? (
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {data.map((p) => (
-                <li key={p.id} className="kpi-card p-4" style={{ "--kpi-color": p.active ? "var(--kpi-cyan)" : "var(--muted-foreground)" } as React.CSSProperties}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="size-10 rounded-lg grid place-items-center bg-[color:color-mix(in_oklab,var(--primary)_15%,transparent)] text-primary shrink-0">
-                        <Package className="size-5" />
+                <li key={p.id} className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700/80 transition-all flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="size-9 rounded-lg grid place-items-center bg-zinc-800/60 border border-zinc-700/50 text-zinc-300 shrink-0">
+                          <Package className="size-4.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium text-zinc-100 truncate">{p.name}</p>
+                          <p className="text-xs text-zinc-400">{p.duration_days} dias</p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold truncate">{p.name}</p>
-                        <p className="text-xs text-muted-foreground">{p.duration_days} dias</p>
-                      </div>
+                      <Badge variant={p.active ? "emerald" : "neutral"}>{p.active ? "Ativo" : "Inativo"}</Badge>
                     </div>
-                    <Badge variant={p.active ? "default" : "secondary"}>{p.active ? "Ativo" : "Inativo"}</Badge>
+                    <p className="mt-4 text-2xl font-semibold text-zinc-100 tabular-nums">{brl(p.price_cents)}</p>
+                    {p.description && (
+                      <p className="mt-1 text-xs text-zinc-400 line-clamp-2">{p.description}</p>
+                    )}
                   </div>
-                  <p className="mt-3 text-2xl font-bold text-[color:var(--kpi-cyan)] tabular-nums">{brl(p.price_cents)}</p>
-                  <div className="mt-3 flex justify-end gap-1">
-                    <Button size="icon" variant="ghost" onClick={() => openEdit(p)}><Pencil className="size-4" /></Button>
+                  <div className="mt-4 pt-3 border-t border-zinc-800/60 flex justify-end gap-1">
+                    <Button size="icon" variant="ghost" className="text-zinc-400 hover:text-zinc-100" onClick={() => openEdit(p)}><Pencil className="size-4" /></Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="icon" variant="ghost"><Trash2 className="size-4 text-destructive" /></Button>
+                        <Button size="icon" variant="ghost" className="text-zinc-400 hover:text-rose-400"><Trash2 className="size-4" /></Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
@@ -201,7 +206,7 @@ function PlanosPage() {
               ))}
             </ul>
           ) : (
-            <p className="text-center text-sm text-muted-foreground py-6">Nenhum plano cadastrado ainda.</p>
+            <p className="text-center text-sm text-zinc-500 py-6">Nenhum plano cadastrado ainda.</p>
           )}
         </CardContent>
       </Card>
@@ -226,16 +231,16 @@ function PlanosPage() {
                 <FormItem><FormLabel>Descrição</FormLabel><FormControl><Textarea rows={3} {...field} /></FormControl></FormItem>
               )} />
               <FormField control={form.control} name="active" render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                  <div><FormLabel className="mb-0">Ativo</FormLabel>
-                    <p className="text-xs text-muted-foreground">Planos inativos não aparecem ao cadastrar clientes.</p>
+                <FormItem className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950/40 p-3.5">
+                  <div><FormLabel className="mb-0 text-zinc-200">Ativo</FormLabel>
+                    <p className="text-xs text-zinc-400">Planos inativos não aparecem ao cadastrar clientes.</p>
                   </div>
                   <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 </FormItem>
               )} />
               <DialogFooter>
                 <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button type="submit" className="btn-premium rounded-full" disabled={saveEdit.isPending}>Salvar</Button>
+                <Button type="submit" className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium" disabled={saveEdit.isPending}>Salvar</Button>
               </DialogFooter>
             </form>
           </Form>

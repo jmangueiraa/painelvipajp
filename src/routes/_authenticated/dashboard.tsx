@@ -115,7 +115,10 @@ function DashboardPage() {
     const counts: Record<string, number> = { ativo: 0, vencido: 0, suspenso: 0, cancelado: 0 };
     for (const c of clients) counts[c.status] = (counts[c.status] ?? 0) + 1;
     const colors: Record<string, string> = {
-      ativo: "var(--kpi-emerald)", vencido: "var(--kpi-rose)", suspenso: "var(--kpi-amber)", cancelado: "var(--muted-foreground)",
+      ativo: "#10b981",
+      vencido: "#f43f5e",
+      suspenso: "#f59e0b",
+      cancelado: "#71717a",
     };
     return Object.entries(counts).filter(([, v]) => v > 0).map(([k, v]) => ({ name: statusLabel[k as keyof typeof statusLabel], value: v, fill: colors[k] }));
   }, [clients]);
@@ -138,40 +141,40 @@ function DashboardPage() {
   return (
     <div className="space-y-6">
       {subInfo && (
-        <div className="kpi-card flex items-center justify-between gap-3 px-4 py-3 text-sm" style={{ "--kpi-color": "var(--kpi-amber)" } as React.CSSProperties}>
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg border border-amber-500/20 bg-amber-500/10 text-xs text-zinc-300">
           <div className="flex items-center gap-2 min-w-0">
-            <CalendarClock className="size-4 shrink-0 text-[color:var(--kpi-amber)]" />
-            <span className="uppercase tracking-widest text-[11px] text-muted-foreground">Seu painel</span>
-            <span className="font-semibold truncate">Vence em: {subInfo.dateBR}</span>
+            <CalendarClock className="size-4 shrink-0 text-amber-400" />
+            <span className="uppercase tracking-wider text-[10px] text-amber-400 font-semibold">Assinatura</span>
+            <span className="truncate">Vence em: <strong className="text-zinc-100 font-medium">{subInfo.dateBR}</strong></span>
           </div>
-          <span className="text-[color:var(--kpi-amber)] font-semibold whitespace-nowrap">{subInfo.days} dia(s) restantes</span>
+          <span className="text-amber-400 font-medium whitespace-nowrap">{subInfo.days} dia(s) restantes</span>
         </div>
       )}
 
       <PageHeader title="Dashboard" description="Visão geral em tempo real do seu negócio" />
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
-        <Link to="/clientes" search={{ filter: "todos" }} className="block"><KpiCard label="Total de clientes" value={stats.total} icon={Users} color="violet" /></Link>
+        <Link to="/clientes" search={{ filter: "todos" }} className="block"><KpiCard label="Total de clientes" value={stats.total} icon={Users} color="neutral" /></Link>
         <Link to="/clientes" search={{ filter: "em_dia" }} className="block"><KpiCard label="Clientes ativos" value={stats.ativos} icon={UserCheck} color="emerald" /></Link>
         <Link to="/clientes" search={{ filter: "vencidos" }} className="block"><KpiCard label="Vencidos" value={stats.vencidos} icon={AlertTriangle} color="rose" /></Link>
-        <Link to="/clientes" search={{ filter: "vencem_hoje" }} className="block"><KpiCard label="Vencem hoje" value={stats.hoje} icon={CalendarClock} color="cyan" /></Link>
-        <Link to="/clientes" search={{ filter: "a_vencer" }} className="block"><KpiCard label="A vencer no mês" value={stats.mes} icon={CalendarDays} color="violet" /></Link>
+        <Link to="/clientes" search={{ filter: "vencem_hoje" }} className="block"><KpiCard label="Vencem hoje" value={stats.hoje} icon={CalendarClock} color="amber" /></Link>
+        <Link to="/clientes" search={{ filter: "a_vencer" }} className="block"><KpiCard label="A vencer no mês" value={stats.mes} icon={CalendarDays} color="sky" /></Link>
       </div>
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
-        <Link to="/loja/clientes" className="block"><KpiCard label="Vendas da loja" value={brl(storeStats?.venda ?? 0)} icon={ShoppingBag} color="cyan" /></Link>
+        <Link to="/loja/clientes" className="block"><KpiCard label="Vendas da loja" value={brl(storeStats?.venda ?? 0)} icon={ShoppingBag} color="sky" /></Link>
         <Link to="/loja/clientes" className="block"><KpiCard label="Gasto da loja" value={brl(storeStats?.custo ?? 0)} icon={TrendingDown} color="rose" /></Link>
         <Link to="/loja/clientes" className="block"><KpiCard label="Lucro da loja" value={brl(storeStats?.lucro ?? 0)} icon={TrendingUp} color="emerald" /></Link>
       </div>
 
       <Link to="/portal-clientes" className="block">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-4">
+        <Card className="hover:border-zinc-700/80 transition-colors">
+          <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
             <div>
-              <CardTitle className="flex items-center gap-2 text-base"><Smartphone className="size-4" />Clientes com App Instalado</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base"><Smartphone className="size-4 text-zinc-400" />Clientes com App Instalado</CardTitle>
               <CardDescription>Adoção do aplicativo PWA</CardDescription>
             </div>
-            <span className="text-2xl font-bold text-[color:var(--kpi-emerald)] tabular-nums">
+            <span className="text-2xl font-semibold text-emerald-400 tabular-nums">
               {(() => {
                 const inst = clients.filter((c) => !!c.pwa_installed_at).length;
                 const pct = clients.length ? Math.round((inst * 100) / clients.length) : 0;
@@ -181,9 +184,9 @@ function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-3 text-sm">
-              <div><p className="text-muted-foreground text-xs uppercase tracking-widest">Total</p><p className="font-semibold text-lg">{clients.length}</p></div>
-              <div><p className="text-muted-foreground text-xs uppercase tracking-widest">Instalaram</p><p className="font-semibold text-lg text-[color:var(--kpi-emerald)]">{clients.filter((c) => !!c.pwa_installed_at).length}</p></div>
-              <div><p className="text-muted-foreground text-xs uppercase tracking-widest">Não instalaram</p><p className="font-semibold text-lg text-[color:var(--kpi-rose)]">{clients.filter((c) => !c.pwa_installed_at).length}</p></div>
+              <div className="p-2.5 rounded-lg bg-zinc-950/40 border border-zinc-800/60"><p className="text-zinc-500 text-xs font-medium uppercase tracking-wider">Total</p><p className="font-semibold text-lg text-zinc-100">{clients.length}</p></div>
+              <div className="p-2.5 rounded-lg bg-zinc-950/40 border border-zinc-800/60"><p className="text-zinc-500 text-xs font-medium uppercase tracking-wider">Instalaram</p><p className="font-semibold text-lg text-emerald-400">{clients.filter((c) => !!c.pwa_installed_at).length}</p></div>
+              <div className="p-2.5 rounded-lg bg-zinc-950/40 border border-zinc-800/60"><p className="text-zinc-500 text-xs font-medium uppercase tracking-wider">Não instalaram</p><p className="font-semibold text-lg text-rose-400">{clients.filter((c) => !c.pwa_installed_at).length}</p></div>
             </div>
           </CardContent>
         </Card>
@@ -197,21 +200,21 @@ function DashboardPage() {
               <CardDescription>Últimos 6 meses</CardDescription>
             </div>
             <div className="text-right">
-              <p className="text-xs text-muted-foreground">Mês atual</p>
-              <p className="text-lg font-bold text-[color:var(--kpi-cyan)]">{brl(monthTotal * 100)}</p>
+              <p className="text-xs text-zinc-400">Mês atual</p>
+              <p className="text-lg font-semibold text-zinc-100">{brl(monthTotal * 100)}</p>
             </div>
           </CardHeader>
           <CardContent className="h-[260px]">
-            <ResponsiveContainer>
+            <ResponsiveContainer width="100%" height="100%">
               <LineChart data={revenue} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="label" stroke="var(--muted-foreground)" fontSize={12} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(v) => `R$${v}`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                <XAxis dataKey="label" stroke="#71717a" fontSize={12} tickLine={false} />
+                <YAxis stroke="#71717a" fontSize={12} tickLine={false} tickFormatter={(v) => `R$${v}`} />
                 <Tooltip
-                  contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8 }}
+                  contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", borderRadius: "8px", color: "#f4f4f5" }}
                   formatter={(v: number) => brl(v * 100)}
                 />
-                <Line type="monotone" dataKey="total" stroke="var(--kpi-cyan)" strokeWidth={2.5} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="total" stroke="#38bdf8" strokeWidth={2} dot={{ r: 3, fill: "#38bdf8" }} activeDot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -224,15 +227,15 @@ function DashboardPage() {
           </CardHeader>
           <CardContent className="h-[260px]">
             {statusPie.length === 0 ? (
-              <div className="h-full grid place-items-center text-sm text-muted-foreground">Nenhum cliente cadastrado ainda.</div>
+              <div className="h-full grid place-items-center text-sm text-zinc-500">Nenhum cliente cadastrado ainda.</div>
             ) : (
-              <ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={statusPie} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={3}>
                     {statusPie.map((s, i) => <Cell key={i} fill={s.fill} stroke="transparent" />)}
                   </Pie>
-                  <Legend />
-                  <Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8 }} />
+                  <Legend wrapperStyle={{ fontSize: "12px", color: "#a1a1aa" }} />
+                  <Tooltip contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", borderRadius: "8px", color: "#f4f4f5" }} />
                 </PieChart>
               </ResponsiveContainer>
             )}
@@ -247,17 +250,17 @@ function DashboardPage() {
         </CardHeader>
         <CardContent>
           {upcoming.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground py-6">Nenhum cliente nos próximos 7 dias.</p>
+            <p className="text-center text-sm text-zinc-500 py-6">Nenhum cliente nos próximos 7 dias.</p>
           ) : (
-            <ul className="divide-y divide-border">
+            <ul className="divide-y divide-zinc-800/60">
               {upcoming.map((c) => (
                 <li key={c.id} className="flex items-center justify-between py-3 gap-3">
                   <div className="min-w-0">
-                    <p className="font-medium truncate">{c.name}</p>
-                    <p className="text-xs text-muted-foreground">Vence em {formatDateBR(c.due_date)}</p>
+                    <p className="font-medium text-zinc-100 truncate">{c.name}</p>
+                    <p className="text-xs text-zinc-400">Vence em {formatDateBR(c.due_date)}</p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-sm tabular-nums">{brl(c.price_cents)}</span>
+                    <span className="text-sm font-medium text-zinc-300 tabular-nums">{brl(c.price_cents)}</span>
                     <Badge variant={statusVariant[c.status]}>{statusLabel[c.status]}</Badge>
                   </div>
                 </li>

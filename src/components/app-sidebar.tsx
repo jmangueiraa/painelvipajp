@@ -104,16 +104,15 @@ function SidebarAvatar({ collapsed }: { collapsed: boolean }) {
       type="button"
       onClick={() => fileRef.current?.click()}
       title="Alterar foto de perfil"
-      className="size-9 shrink-0 rounded-xl relative group overflow-hidden flex items-center justify-center shadow-[var(--shadow-glow)]"
-      style={{ backgroundImage: signed ? undefined : "var(--gradient-primary)" }}
+      className="size-9 shrink-0 rounded-lg relative group overflow-hidden flex items-center justify-center border border-zinc-700/60 bg-zinc-900 transition-all hover:border-zinc-500"
       disabled={upload.isPending}
     >
       {signed ? (
         <img src={signed} alt="Foto de perfil" className="size-full object-cover" />
       ) : (
-        <Crown className="size-4 text-primary-foreground" />
+        <Crown className="size-4 text-zinc-300" />
       )}
-      <span className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+      <span className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
         <Camera className="size-4 text-white" />
       </span>
       <input
@@ -127,7 +126,6 @@ function SidebarAvatar({ collapsed }: { collapsed: boolean }) {
           e.target.value = "";
         }}
       />
-      {collapsed ? null : null}
     </button>
   );
 }

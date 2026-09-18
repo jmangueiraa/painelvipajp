@@ -23,29 +23,22 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
 });
 
 function SectionCard({
-  title, description, icon: Icon, color, children, headerSlot,
-}: { title: string; description?: string; icon: React.ElementType; color: string; children: React.ReactNode; headerSlot?: React.ReactNode }) {
+  title, description, icon: Icon, children, headerSlot,
+}: { title: string; description?: string; icon: React.ElementType; color?: string; children: React.ReactNode; headerSlot?: React.ReactNode }) {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start gap-3 space-y-0">
+    <Card className="border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md">
+      <CardHeader className="flex flex-row items-start gap-3.5 space-y-0 pb-4">
         {headerSlot ?? (
-          <div
-            className="size-10 rounded-xl grid place-items-center shrink-0"
-            style={{
-              background: `color-mix(in oklab, ${color} 15%, transparent)`,
-              color,
-              border: `1px solid color-mix(in oklab, ${color} 45%, transparent)`,
-            }}
-          >
+          <div className="size-10 rounded-xl bg-zinc-800/70 border border-zinc-700/60 grid place-items-center shrink-0 text-zinc-200">
             <Icon className="size-5" />
           </div>
         )}
         <div className="min-w-0">
-          <CardTitle>{title}</CardTitle>
-          {description && <CardDescription>{description}</CardDescription>}
+          <CardTitle className="text-base text-zinc-100">{title}</CardTitle>
+          {description && <CardDescription className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{description}</CardDescription>}
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">{children}</CardContent>
+      <CardContent className="space-y-4">{children}</CardContent>
     </Card>
   );
 }
@@ -133,7 +126,6 @@ function ConfiguracoesPage() {
   }, [profile]);
   useEffect(() => {
     if (settings) {
-      
       setSupportMessage(settings.support_message ?? "");
       setAppAndroidUrl(settings.app_android_url ?? "");
       setAppIosUrl(settings.app_ios_url ?? "");
@@ -255,28 +247,26 @@ function ConfiguracoesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Configurações" description="Perfil e integrações" />
+      <PageHeader title="Configurações" description="Perfil, integrações e personalizações do painel" />
 
       <SectionCard
         title="Perfil"
-        description="Dados que aparecem no painel"
+        description="Dados que aparecem no painel e nos comprovantes"
         icon={User}
-        color="var(--kpi-violet)"
         headerSlot={
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
             title="Alterar foto de perfil"
             disabled={uploadAvatar.isPending}
-            className="size-12 shrink-0 rounded-xl relative group overflow-hidden flex items-center justify-center shadow-[var(--shadow-glow)]"
-            style={{ backgroundImage: avatarSigned ? undefined : "var(--gradient-primary)" }}
+            className="size-12 shrink-0 rounded-xl relative group overflow-hidden flex items-center justify-center bg-zinc-800/90 border border-zinc-700/80 hover:border-zinc-500 transition-colors cursor-pointer"
           >
             {avatarSigned ? (
               <img src={avatarSigned} alt="Foto de perfil" className="size-full object-cover" />
             ) : (
-              <User className="size-6 text-primary-foreground" />
+              <User className="size-6 text-zinc-400" />
             )}
-            <span className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <span className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <Camera className="size-5 text-white" />
             </span>
             <input
@@ -293,80 +283,91 @@ function ConfiguracoesPage() {
           </button>
         }
       >
-
-
-        <div className="grid md:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label>Email</Label>
-            <Input value={user?.email ?? ""} readOnly className="opacity-70" />
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-300">Email</Label>
+            <Input value={user?.email ?? ""} readOnly className="opacity-60 bg-zinc-950/70 border-zinc-800 text-zinc-100 rounded-lg text-sm" />
           </div>
-          <div className="space-y-1">
-            <Label>Nome de exibição</Label>
-            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-300">Nome de exibição</Label>
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm" />
           </div>
-          <div className="space-y-1 md:col-span-2">
-            <Label>Empresa</Label>
-            <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+          <div className="space-y-1.5 md:col-span-2">
+            <Label className="text-xs text-zinc-300">Empresa</Label>
+            <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm" />
           </div>
         </div>
-        <Button className="btn-premium rounded-full mt-2" onClick={() => saveProfile.mutate()} disabled={saveProfile.isPending}>Salvar</Button>
-      </SectionCard>
-
-
-
-
-      <SectionCard title="Loja pública (compradores sem IPTV)" description="Define um link público para vender produtos da loja a clientes que não são assinantes do IPTV. Eles se cadastram com e-mail e senha." icon={Smartphone} color="var(--kpi-emerald)">
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <Label>Slug da loja</Label>
-            <Input
-              placeholder="ex: ajp"
-              value={storeSlug}
-              onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-            />
-            <p className="text-xs text-muted-foreground">
-              Link: <span className="font-mono">{typeof window !== "undefined" ? window.location.origin : ""}/loja/{storeSlug || "seu-slug"}</span>
-            </p>
-          </div>
-          <div className="space-y-1">
-            <Label>Título da loja</Label>
-            <Input placeholder="Ex: Loja AJP" value={storeTitle} onChange={(e) => setStoreTitle(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>Descrição curta</Label>
-            <Input placeholder="Ex: Streaming, contas premium, licenças..." value={storeDescription} onChange={(e) => setStoreDescription(e.target.value)} />
-          </div>
-          <Button
-            className="btn-premium rounded-full"
-            onClick={() => saveSettings.mutate({
-              store_slug: storeSlug.trim() || null,
-              store_title: storeTitle.trim() || null,
-              store_description: storeDescription.trim() || null,
-            })}
-            disabled={saveSettings.isPending}
+        <div>
+          <Button 
+            className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg text-xs px-5 shadow-sm" 
+            onClick={() => saveProfile.mutate()} 
+            disabled={saveProfile.isPending}
           >
-            Salvar loja
+            Salvar Perfil
           </Button>
         </div>
       </SectionCard>
 
+      <SectionCard 
+        title="Loja pública (compradores sem IPTV)" 
+        description="Define um link público para vender produtos da loja a clientes que não são assinantes do IPTV. Eles se cadastram com e-mail e senha." 
+        icon={Smartphone}
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-300">Slug da loja</Label>
+            <Input
+              placeholder="ex: ajp"
+              value={storeSlug}
+              onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+              className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm"
+            />
+            <p className="text-xs text-zinc-400">
+              Link: <span className="font-mono text-zinc-300">{typeof window !== "undefined" ? window.location.origin : ""}/loja/{storeSlug || "seu-slug"}</span>
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-300">Título da loja</Label>
+            <Input placeholder="Ex: Loja AJP" value={storeTitle} onChange={(e) => setStoreTitle(e.target.value)} className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-300">Descrição curta</Label>
+            <Input placeholder="Ex: Streaming, contas premium, licenças..." value={storeDescription} onChange={(e) => setStoreDescription(e.target.value)} className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm" />
+          </div>
+          <div>
+            <Button
+              className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg text-xs px-5 shadow-sm"
+              onClick={() => saveSettings.mutate({
+                store_slug: storeSlug.trim() || null,
+                store_title: storeTitle.trim() || null,
+                store_description: storeDescription.trim() || null,
+              })}
+              disabled={saveSettings.isPending}
+            >
+              Salvar loja
+            </Button>
+          </div>
+        </div>
+      </SectionCard>
 
-
-
-      <SectionCard title="Atualizações" description="Cole o texto completo das atualizações. Categorias entre parênteses, ex: *(LANÇAMENTO)*, *(AÇÃO)*, *(DRAMA)*. Os itens listados abaixo aparecem agrupados por categoria no portal." icon={Smartphone} color="var(--kpi-violet)">
+      <SectionCard 
+        title="Atualizações" 
+        description="Cole o texto completo das atualizações. Categorias entre parênteses, ex: *(LANÇAMENTO)*, *(AÇÃO)*, *(DRAMA)*. Os itens listados abaixo aparecem agrupados por categoria no portal." 
+        icon={Smartphone}
+      >
         <div className="grid md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label>🎬 Filmes</Label>
+            <Label className="text-xs text-zinc-300">🎬 Filmes</Label>
             <Textarea
               rows={14}
               placeholder={"*FILMES ADICIONADOS*\n\n*(LANÇAMENTO)*\n1- Título do filme\n2- Outro filme [LEG]\n\n*(AÇÃO)*\n1- Título do filme"}
               value={moviesText}
               onChange={(e) => setMoviesText(e.target.value)}
-              className="font-mono text-xs"
+              className="font-mono text-xs bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg"
             />
             <Button
               size="sm"
-              className="btn-premium rounded-full w-full"
+              className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg text-xs w-full shadow-sm"
               onClick={() => saveSettings.mutate({ updates_movies_text: moviesText, updates_movies_updated_at: new Date().toISOString() })}
               disabled={saveSettings.isPending}
             >
@@ -374,17 +375,17 @@ function ConfiguracoesPage() {
             </Button>
           </div>
           <div className="space-y-2">
-            <Label>📺 Séries</Label>
+            <Label className="text-xs text-zinc-300">📺 Séries</Label>
             <Textarea
               rows={14}
               placeholder={"*SÉRIES ADICIONADAS*\n\n*(LANÇAMENTO)*\n1- Nome da série S01\n\n*(DRAMA)*\n1- Nome da série S02"}
               value={seriesText}
               onChange={(e) => setSeriesText(e.target.value)}
-              className="font-mono text-xs"
+              className="font-mono text-xs bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg"
             />
             <Button
               size="sm"
-              className="btn-premium rounded-full w-full"
+              className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg text-xs w-full shadow-sm"
               onClick={() => saveSettings.mutate({ updates_series_text: seriesText, updates_series_updated_at: new Date().toISOString() })}
               disabled={saveSettings.isPending}
             >
@@ -392,17 +393,17 @@ function ConfiguracoesPage() {
             </Button>
           </div>
           <div className="space-y-2">
-            <Label>⚽ Jogos do Dia</Label>
+            <Label className="text-xs text-zinc-300">⚽ Jogos do Dia</Label>
             <Textarea
               rows={14}
               placeholder={"*JOGOS DO DIA*\n\n*(BRASILEIRÃO)*\n1- Flamengo x Palmeiras — 16h00\n2- Corinthians x São Paulo — 18h30\n\n*(CHAMPIONS)*\n1- Real Madrid x Bayern — 17h00"}
               value={gamesText}
               onChange={(e) => setGamesText(e.target.value)}
-              className="font-mono text-xs"
+              className="font-mono text-xs bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg"
             />
             <Button
               size="sm"
-              className="btn-premium rounded-full w-full"
+              className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg text-xs w-full shadow-sm"
               onClick={() => saveSettings.mutate({ updates_games_text: gamesText, updates_games_updated_at: new Date().toISOString() })}
               disabled={saveSettings.isPending}
             >
@@ -412,23 +413,19 @@ function ConfiguracoesPage() {
         </div>
       </SectionCard>
 
-
-
-
       <SectionCard
         title="Central de Notificações"
         description="Escolha quais eventos você deseja receber no Telegram. Token e Chat ID ficam protegidos no servidor."
         icon={Bell}
-        color="var(--kpi-amber)"
       >
         <div className="space-y-2">
           {NOTIF_EVENTS.map((ev) => {
             const checked = (notifCfg?.[ev.key] as boolean | undefined) ?? true;
             return (
-              <div key={ev.key} className="flex items-start justify-between gap-3 rounded-xl border border-border/60 px-3 py-2.5">
+              <div key={ev.key} className="flex items-start justify-between gap-3 rounded-lg border border-zinc-800/80 bg-zinc-900/40 px-3.5 py-3 hover:border-zinc-700/80 transition-colors">
                 <div className="min-w-0">
-                  <div className="text-sm font-medium">{ev.label}</div>
-                  <div className="text-xs text-muted-foreground">{ev.desc}</div>
+                  <div className="text-sm font-medium text-zinc-200">{ev.label}</div>
+                  <div className="text-xs text-zinc-400">{ev.desc}</div>
                 </div>
                 <Switch
                   checked={checked}
@@ -441,35 +438,39 @@ function ConfiguracoesPage() {
         </div>
         <Button
           variant="outline"
-          className="rounded-full mt-2"
+          className="rounded-lg border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 text-xs mt-2"
           onClick={() => testTelegram.mutate()}
           disabled={testTelegram.isPending}
         >
-          <Send className="size-4 mr-2" />
+          <Send className="size-3.5 mr-2" />
           {testTelegram.isPending ? "Enviando..." : "Enviar mensagem de teste"}
         </Button>
       </SectionCard>
 
-      <SectionCard title="Alterar senha" icon={KeyRound} color="var(--kpi-violet)">
-        <div className="space-y-1">
-          <Label>Senha atual</Label>
-          <Input type="password" value={currentPass} onChange={(e) => setCurrentPass(e.target.value)} />
+      <SectionCard title="Alterar senha" icon={KeyRound}>
+        <div className="space-y-3 max-w-md">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-300">Senha atual</Label>
+            <Input type="password" value={currentPass} onChange={(e) => setCurrentPass(e.target.value)} className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-300">Nova senha</Label>
+            <Input type="password" value={newPass} onChange={(e) => setNewPass(e.target.value)} className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-300">Confirmar nova senha</Label>
+            <Input type="password" value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm" />
+          </div>
+          <div>
+            <Button className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg text-xs px-5 shadow-sm mt-1" onClick={() => changePassword.mutate()} disabled={changePassword.isPending}>
+              Salvar senha
+            </Button>
+          </div>
         </div>
-        <div className="space-y-1">
-          <Label>Nova senha</Label>
-          <Input type="password" value={newPass} onChange={(e) => setNewPass(e.target.value)} />
-        </div>
-        <div className="space-y-1">
-          <Label>Confirmar nova senha</Label>
-          <Input type="password" value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} />
-        </div>
-        <Button className="btn-premium rounded-full" onClick={() => changePassword.mutate()} disabled={changePassword.isPending}>Salvar senha</Button>
       </SectionCard>
     </div>
   );
 }
-
-
 
 function ContentUpdatesManager({ kind, title }: { kind: "movie" | "series"; title: string }) {
   const { user } = useAuth();
@@ -527,32 +528,32 @@ function ContentUpdatesManager({ kind, title }: { kind: "movie" | "series"; titl
   });
 
   return (
-    <div className="rounded-xl border bg-card/50 p-3 space-y-3">
-      <div className="font-medium text-sm">{title}</div>
+    <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-4 space-y-3">
+      <div className="font-medium text-sm text-zinc-200">{title}</div>
       <div className="space-y-2">
-        <Input placeholder="Título (ex: Vingadores Ultimato)" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} />
-        <Input placeholder="URL da imagem (opcional)" value={newImage} onChange={(e) => setNewImage(e.target.value)} />
-        <Textarea placeholder="Descrição (opcional)" rows={2} value={newDesc} onChange={(e) => setNewDesc(e.target.value)} />
-        <Button size="sm" className="btn-premium rounded-full w-full" onClick={() => add.mutate()} disabled={add.isPending}>
+        <Input placeholder="Título (ex: Vingadores Ultimato)" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm" />
+        <Input placeholder="URL da imagem (opcional)" value={newImage} onChange={(e) => setNewImage(e.target.value)} className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm" />
+        <Textarea placeholder="Descrição (opcional)" rows={2} value={newDesc} onChange={(e) => setNewDesc(e.target.value)} className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-xs" />
+        <Button size="sm" className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg text-xs w-full shadow-sm" onClick={() => add.mutate()} disabled={add.isPending}>
           Adicionar
         </Button>
       </div>
       <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
         {(items ?? []).length === 0 && (
-          <div className="text-xs text-muted-foreground text-center py-3">Nenhuma atualização cadastrada</div>
+          <div className="text-xs text-zinc-500 text-center py-3">Nenhuma atualização cadastrada</div>
         )}
         {(items ?? []).map((item) => (
-          <div key={item.id} className="flex items-start gap-2 rounded-lg border bg-background/50 p-2">
+          <div key={item.id} className="flex items-start gap-2.5 rounded-lg border border-zinc-800/80 bg-zinc-950/50 p-2.5">
             {item.image_url && (
-              <img src={item.image_url} alt="" className="size-12 rounded object-cover shrink-0" />
+              <img src={item.image_url} alt="" className="size-12 rounded-lg object-cover shrink-0 border border-zinc-800" />
             )}
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium truncate">{item.title}</div>
+              <div className="text-sm font-medium text-zinc-200 truncate">{item.title}</div>
               {item.description && (
-                <div className="text-xs text-muted-foreground line-clamp-2">{item.description}</div>
+                <div className="text-xs text-zinc-400 line-clamp-2">{item.description}</div>
               )}
             </div>
-            <Button size="sm" variant="ghost" className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 h-7 px-2" onClick={() => remove.mutate(item.id)}>
+            <Button size="sm" variant="ghost" className="text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 h-7 px-2 rounded-md" onClick={() => remove.mutate(item.id)}>
               Remover
             </Button>
           </div>

@@ -107,24 +107,24 @@ function LojaClientesPage() {
       <PageHeader title="Clientes da Loja" description="Compras e vencimentos dos serviços vendidos pela loja." />
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border bg-card p-4">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">Total vendido</p>
-          <p className="mt-1 text-xl font-bold tabular-nums">{brl(totals.venda)}</p>
+        <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-4">
+          <p className="text-xs uppercase tracking-wider font-semibold text-zinc-400">Total vendido</p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-100">{brl(totals.venda)}</p>
         </div>
-        <div className="rounded-xl border bg-card p-4">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">Custo total</p>
-          <p className="mt-1 text-xl font-bold tabular-nums text-rose-600">{brl(totals.custo)}</p>
+        <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-4">
+          <p className="text-xs uppercase tracking-wider font-semibold text-zinc-400">Custo total</p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-rose-400">{brl(totals.custo)}</p>
         </div>
-        <div className="rounded-xl border bg-card p-4">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">Lucro</p>
-          <p className="mt-1 text-xl font-bold tabular-nums text-emerald-600">{brl(totals.lucro)}</p>
+        <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-4">
+          <p className="text-xs uppercase tracking-wider font-semibold text-zinc-400">Lucro</p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-emerald-400">{brl(totals.lucro)}</p>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar cliente ou produto" className="pl-8" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar cliente ou produto" className="pl-9" />
         </div>
         <Select value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
           <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
@@ -139,53 +139,50 @@ function LojaClientesPage() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <p className="p-4 text-sm text-muted-foreground">Carregando…</p>
+            <p className="p-4 text-sm text-zinc-500">Carregando…</p>
           ) : rows.length === 0 ? (
-            <p className="p-4 text-sm text-muted-foreground">Nenhuma compra encontrada.</p>
+            <p className="p-4 text-sm text-zinc-500 text-center py-8">Nenhuma compra encontrada.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <thead className="bg-zinc-900/40 text-left text-xs uppercase tracking-wider text-zinc-400 border-b border-zinc-800/60">
                   <tr>
-                    <th className="p-3">Cliente</th>
-                    <th className="p-3">Produto</th>
-                    <th className="p-3">Compra</th>
-                    <th className="p-3">Vencimento</th>
-                    <th className="p-3">Venda</th>
-                    <th className="p-3">Custo</th>
-                    <th className="p-3">Lucro</th>
-                    <th className="p-3">Status</th>
-                    <th className="p-3 text-right">Ações</th>
+                    <th className="p-3 font-medium">Cliente</th>
+                    <th className="p-3 font-medium">Produto</th>
+                    <th className="p-3 font-medium">Compra</th>
+                    <th className="p-3 font-medium">Vencimento</th>
+                    <th className="p-3 font-medium">Venda</th>
+                    <th className="p-3 font-medium">Custo</th>
+                    <th className="p-3 font-medium">Lucro</th>
+                    <th className="p-3 font-medium">Status</th>
+                    <th className="p-3 font-medium text-right">Ações</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-zinc-800/40">
                   {rows.map((p) => {
                     const s = statusOf(p.due_date);
                     return (
-                      <tr key={p.id} className="border-t">
+                      <tr key={p.id} className="hover:bg-zinc-900/40 transition-colors">
                         <td className="p-3">
-                          <div className="font-medium">{p.clients?.name ?? "—"}</div>
-                          {p.clients?.phone && <div className="text-xs text-muted-foreground">{p.clients.phone}</div>}
+                          <div className="font-medium text-zinc-100">{p.clients?.name ?? "—"}</div>
+                          {p.clients?.phone && <div className="text-xs text-zinc-400">{p.clients.phone}</div>}
                         </td>
-                        <td className="p-3">{p.label}</td>
-                        <td className="p-3 whitespace-nowrap">{formatDateBR(p.purchased_at)}</td>
-                        <td className="p-3 whitespace-nowrap">{formatDateBR(p.due_date)}</td>
-                        <td className="p-3 tabular-nums">{brl(p.sale_cents)}</td>
-                        <td className="p-3 tabular-nums">{brl(p.cost_cents)}</td>
-                        <td className="p-3 tabular-nums font-semibold text-emerald-600">{brl(p.sale_cents - p.cost_cents)}</td>
+                        <td className="p-3 text-zinc-200">{p.label}</td>
+                        <td className="p-3 whitespace-nowrap text-zinc-400">{formatDateBR(p.purchased_at)}</td>
+                        <td className="p-3 whitespace-nowrap text-zinc-400">{formatDateBR(p.due_date)}</td>
+                        <td className="p-3 tabular-nums text-zinc-300">{brl(p.sale_cents)}</td>
+                        <td className="p-3 tabular-nums text-zinc-400">{brl(p.cost_cents)}</td>
+                        <td className="p-3 tabular-nums font-semibold text-emerald-400">{brl(p.sale_cents - p.cost_cents)}</td>
                         <td className="p-3">
-                          <Badge
-                            variant={s === "vencido" ? "destructive" : s === "vence_hoje" ? "outline" : "default"}
-                            className={s === "ativo" ? "bg-emerald-600 hover:bg-emerald-600" : s === "vence_hoje" ? "border-amber-500 text-amber-700" : ""}
-                          >
+                          <Badge variant={s === "vencido" ? "rose" : s === "vence_hoje" ? "amber" : "emerald"}>
                             {s === "vencido" ? "Vencido" : s === "vence_hoje" ? "Vence hoje" : "Ativo"}
                           </Badge>
                         </td>
                         <td className="p-3 text-right whitespace-nowrap">
-                          <Button size="sm" variant="outline" onClick={() => renew.mutate(p)} disabled={renew.isPending}>
-                            <RefreshCw className="mr-1 h-3 w-3" />Renovar
+                          <Button size="sm" variant="outline" className="mr-1" onClick={() => renew.mutate(p)} disabled={renew.isPending}>
+                            <RefreshCw className="mr-1 h-3.5 w-3.5" />Renovar
                           </Button>
-                          <Button size="icon" variant="ghost" onClick={() => { if (confirm("Excluir compra?")) remove.mutate(p.id); }}>
+                          <Button size="icon" variant="ghost" className="text-zinc-400 hover:text-rose-400" onClick={() => { if (confirm("Excluir compra?")) remove.mutate(p.id); }}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </td>

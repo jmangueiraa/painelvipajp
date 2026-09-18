@@ -79,7 +79,7 @@ function ServidoresPage() {
 
       <Card>
         <CardContent className="p-4 md:p-5">
-          <p className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-3">Novo servidor</p>
+          <p className="text-[11px] font-semibold tracking-wider uppercase text-zinc-400 mb-3">Novo servidor</p>
           <form
             onSubmit={(e) => { e.preventDefault(); create.mutate(); }}
             className="grid grid-cols-1 md:grid-cols-[1fr_220px_auto] gap-3"
@@ -92,7 +92,7 @@ function ServidoresPage() {
               <Label htmlFor="srv-cost" className="sr-only">Custo</Label>
               <Input id="srv-cost" inputMode="decimal" placeholder="Custo do crédito (R$)" value={cost} onChange={(e) => setCost(e.target.value)} />
             </div>
-            <Button type="submit" className="btn-premium rounded-full" disabled={create.isPending}>
+            <Button type="submit" className="bg-white text-zinc-950 font-medium hover:bg-zinc-200" disabled={create.isPending}>
               <Plus className="size-4" /> Adicionar
             </Button>
           </form>
@@ -106,19 +106,19 @@ function ServidoresPage() {
           ) : data && data.length > 0 ? (
             <ul className="grid gap-3 sm:grid-cols-2">
               {data.map((s) => (
-                <li key={s.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card/60 px-4 py-3">
+                <li key={s.id} className="flex items-center justify-between gap-3 rounded-xl border border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700/80 transition-colors px-4 py-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="size-10 rounded-lg grid place-items-center bg-[color:color-mix(in_oklab,var(--primary)_15%,transparent)] text-primary shrink-0">
-                      <ServerIcon className="size-5" />
+                    <div className="size-9 rounded-lg grid place-items-center bg-zinc-800/60 border border-zinc-700/50 text-zinc-300 shrink-0">
+                      <ServerIcon className="size-4.5" />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-medium truncate">{s.name}</p>
-                      <p className="text-xs text-muted-foreground">Custo: {brl(s.credit_cost_cents)} / renovação</p>
+                      <p className="font-medium text-zinc-100 truncate">{s.name}</p>
+                      <p className="text-xs text-zinc-400">Custo: {brl(s.credit_cost_cents)} / renovação</p>
                     </div>
                   </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="icon" variant="ghost"><Trash2 className="size-4 text-destructive" /></Button>
+                      <Button size="icon" variant="ghost" className="text-zinc-400 hover:text-rose-400"><Trash2 className="size-4" /></Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
@@ -135,7 +135,7 @@ function ServidoresPage() {
               ))}
             </ul>
           ) : (
-            <p className="text-center text-sm text-muted-foreground py-6">Nenhum servidor cadastrado ainda.</p>
+            <p className="text-center text-sm text-zinc-500 py-6">Nenhum servidor cadastrado ainda.</p>
           )}
         </CardContent>
       </Card>

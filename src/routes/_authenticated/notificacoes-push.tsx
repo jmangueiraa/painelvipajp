@@ -178,171 +178,163 @@ function NotificacoesPushPage() {
   const canSend = title.trim().length > 0 && body.trim().length > 0 && (audience !== "specific" || selectedIds.length > 0) && !sendMut.isPending;
 
   return (
-    <>
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10"><Bell className="w-6 h-6 text-primary" /></div>
-          <div>
-            <h1 className="text-2xl font-bold">Notificações Push</h1>
-            <p className="text-sm text-muted-foreground">Envie avisos para os PWAs dos clientes via Firebase Cloud Messaging</p>
-          </div>
-        </div>
+    <div className="space-y-6">
+      <PageHeader title="Notificações Push" description="Envie avisos para os PWAs dos clientes via Firebase Cloud Messaging" />
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Nova notificação</CardTitle>
-              <CardDescription>A mensagem chega mesmo com o PWA fechado (para quem permitiu notificações)</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="space-y-2">
-                <Label>Título</Label>
-                <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex.: Novidades no sistema" maxLength={120} />
-              </div>
-              <div className="space-y-2">
-                <Label>Mensagem</Label>
-                <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Escreva o texto que o cliente verá..." rows={4} maxLength={500} />
-                <div className="text-xs text-muted-foreground text-right">{body.length}/500</div>
-              </div>
-              <div className="space-y-2">
-                <Label>Link ao tocar (opcional)</Label>
-                <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="/portal/painel" />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Público</Label>
-                <RadioGroup value={audience} onValueChange={(v) => setAudience(v as Audience)} className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {audienceOptions.map((opt) => {
-                    const Icon = opt.icon;
-                    return (
-                      <label key={opt.value} htmlFor={`aud-${opt.value}`} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${audience === opt.value ? "border-primary bg-primary/5" : "border-border"}`}>
-                        <RadioGroupItem value={opt.value} id={`aud-${opt.value}`} className="mt-1" />
-                        <Icon className="w-4 h-4 mt-0.5 text-muted-foreground" />
-                        <div className="flex-1">
-                          <div className="font-medium text-sm">{opt.label}</div>
-                          <div className="text-xs text-muted-foreground">{opt.desc}</div>
-                        </div>
-                      </label>
-                    );
-                  })}
-                </RadioGroup>
-              </div>
-
-              {audience === "specific" && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Selecionar clientes ({selectedIds.length})</Label>
-                    <Input value={clientFilter} onChange={(e) => setClientFilter(e.target.value)} placeholder="Buscar..." className="max-w-[200px] h-8" />
-                  </div>
-                  <ScrollArea className="h-56 rounded-lg border p-2">
-                    <div className="space-y-1">
-                      {filteredClients.map((c: any) => {
-                        const checked = selectedIds.includes(c.id);
-                        return (
-                          <label key={c.id} className="flex items-center gap-2 p-2 rounded hover:bg-muted cursor-pointer">
-                            <Checkbox checked={checked} onCheckedChange={(v) => {
-                              setSelectedIds((prev) => v ? [...prev, c.id] : prev.filter((x) => x !== c.id));
-                            }} />
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm truncate">{c.name}</div>
-                              <div className="text-xs text-muted-foreground truncate">{c.iptv_login || "-"} · vence {c.due_date}</div>
-                            </div>
-                          </label>
-                        );
-                      })}
-                      {filteredClients.length === 0 && <div className="text-sm text-muted-foreground p-3 text-center">Nenhum cliente</div>}
-                    </div>
-                  </ScrollArea>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2"><Clock className="w-4 h-4" /> Agendar (opcional)</Label>
-                <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
-                <div className="text-xs text-muted-foreground">Deixe em branco para enviar agora</div>
-              </div>
-
-              <Button onClick={() => sendMut.mutate()} disabled={!canSend} className="w-full" size="lg">
-                <Send className="w-4 h-4 mr-2" />
-                {sendMut.isPending ? "Enviando..." : scheduledAt ? "Agendar envio" : "Enviar agora"}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Sobre</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground space-y-3">
-              <p>Os clientes precisam ter aberto o portal e <strong>autorizado notificações</strong> para receber. iOS exige o PWA instalado na tela de início.</p>
-              <div className="p-3 bg-muted rounded-lg text-xs space-y-1">
-                <div>📱 Dispositivos registrados: veja abaixo em cada envio</div>
-                <div>🔔 Provider: Firebase Cloud Messaging</div>
-                <div>🎯 Projeto: ajpnot</div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
-            <div>
-              <CardTitle>Histórico</CardTitle>
-              <CardDescription>Últimas 50 notificações</CardDescription>
-            </div>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" disabled={hist.length === 0 || clearMut.isPending}>
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Limpar histórico
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Limpar histórico?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Isso remove todas as notificações enviadas, falhas e canceladas. Agendamentos pendentes serão mantidos.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => clearMut.mutate()}>Limpar</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Nova notificação</CardTitle>
+            <CardDescription>A mensagem chega mesmo com o PWA fechado (para quem permitiu notificações)</CardDescription>
           </CardHeader>
-          <CardContent>
-            {hist.length === 0 ? (
-              <div className="text-sm text-muted-foreground text-center py-8">Nenhum envio ainda</div>
-            ) : (
+          <CardContent className="space-y-5">
+            <div className="space-y-2">
+              <Label>Título</Label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex.: Novidades no sistema" maxLength={120} />
+            </div>
+            <div className="space-y-2">
+              <Label>Mensagem</Label>
+              <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Escreva o texto que o cliente verá..." rows={4} maxLength={500} />
+              <div className="text-xs text-zinc-500 text-right">{body.length}/500</div>
+            </div>
+            <div className="space-y-2">
+              <Label>Link ao tocar (opcional)</Label>
+              <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="/portal/painel" />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Público</Label>
+              <RadioGroup value={audience} onValueChange={(v) => setAudience(v as Audience)} className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {audienceOptions.map((opt) => {
+                  const Icon = opt.icon;
+                  return (
+                    <label key={opt.value} htmlFor={`aud-${opt.value}`} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${audience === opt.value ? "border-zinc-500 bg-zinc-800/50" : "border-zinc-800 hover:border-zinc-700 bg-zinc-900/40"}`}>
+                      <RadioGroupItem value={opt.value} id={`aud-${opt.value}`} className="mt-1" />
+                      <Icon className="w-4 h-4 mt-0.5 text-zinc-400" />
+                      <div className="flex-1">
+                        <div className="font-medium text-sm text-zinc-100">{opt.label}</div>
+                        <div className="text-xs text-zinc-400">{opt.desc}</div>
+                      </div>
+                    </label>
+                  );
+                })}
+              </RadioGroup>
+            </div>
+
+            {audience === "specific" && (
               <div className="space-y-2">
-                {hist.map((h: any) => (
-                  <div key={h.id} className="flex items-start justify-between gap-3 p-3 rounded-lg border">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <div className="font-medium">{h.title}</div>
-                        {h.status === "sent" && <Badge variant="secondary" className="gap-1"><CheckCircle2 className="w-3 h-3" /> Enviada</Badge>}
-                        {h.status === "scheduled" && <Badge className="gap-1 bg-blue-500"><Clock className="w-3 h-3" /> Agendada</Badge>}
-                        {h.status === "failed" && <Badge variant="destructive" className="gap-1"><XCircle className="w-3 h-3" /> Falhou</Badge>}
-                        {h.status === "cancelled" && <Badge variant="outline">Cancelada</Badge>}
-                      </div>
-                      <div className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{h.body}</div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {h.audience} · {h.status === "scheduled" ? `agendada para ${fmt(h.scheduled_at)}` : fmt(h.sent_at || h.created_at)}
-                        {h.status === "sent" && ` · ${h.success_count} entregues / ${h.failure_count} falhas`}
-                        {h.error && ` · erro: ${h.error}`}
-                      </div>
-                    </div>
-                    {h.status === "scheduled" && (
-                      <Button size="sm" variant="ghost" onClick={() => cancelMut.mutate(h.id)}>Cancelar</Button>
-                    )}
+                <div className="flex items-center justify-between">
+                  <Label>Selecionar clientes ({selectedIds.length})</Label>
+                  <Input value={clientFilter} onChange={(e) => setClientFilter(e.target.value)} placeholder="Buscar..." className="max-w-[200px] h-8" />
+                </div>
+                <ScrollArea className="h-56 rounded-lg border border-zinc-800 p-2 bg-zinc-950/40">
+                  <div className="space-y-1">
+                    {filteredClients.map((c: any) => {
+                      const checked = selectedIds.includes(c.id);
+                      return (
+                        <label key={c.id} className="flex items-center gap-2 p-2 rounded hover:bg-zinc-800/50 cursor-pointer">
+                          <Checkbox checked={checked} onCheckedChange={(v) => {
+                            setSelectedIds((prev) => v ? [...prev, c.id] : prev.filter((x) => x !== c.id));
+                          }} />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-zinc-100 truncate">{c.name}</div>
+                            <div className="text-xs text-zinc-400 truncate">{c.iptv_login || "-"} · vence {c.due_date}</div>
+                          </div>
+                        </label>
+                      );
+                    })}
+                    {filteredClients.length === 0 && <div className="text-sm text-zinc-500 p-3 text-center">Nenhum cliente</div>}
                   </div>
-                ))}
+                </ScrollArea>
               </div>
             )}
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2 text-zinc-200"><Clock className="w-4 h-4 text-zinc-400" /> Agendar (opcional)</Label>
+              <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
+              <div className="text-xs text-zinc-500">Deixe em branco para enviar agora</div>
+            </div>
+
+            <Button onClick={() => sendMut.mutate()} disabled={!canSend} className="w-full bg-white text-zinc-950 hover:bg-zinc-200 font-medium" size="lg">
+              <Send className="w-4 h-4 mr-2" />
+              {sendMut.isPending ? "Enviando..." : scheduledAt ? "Agendar envio" : "Enviar agora"}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Sobre</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-zinc-400 space-y-3">
+            <p>Os clientes precisam ter aberto o portal e <strong>autorizado notificações</strong> para receber. iOS exige o PWA instalado na tela de início.</p>
+            <div className="p-3 bg-zinc-950/60 border border-zinc-800/80 rounded-lg text-xs space-y-1 text-zinc-400">
+              <div>📱 Dispositivos registrados: veja abaixo em cada envio</div>
+              <div>🔔 Provider: Firebase Cloud Messaging</div>
+              <div>🎯 Projeto: ajpnot</div>
+            </div>
           </CardContent>
         </Card>
       </div>
-    </>
+
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle>Histórico</CardTitle>
+            <CardDescription>Últimas 50 notificações</CardDescription>
+          </div>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" disabled={hist.length === 0 || clearMut.isPending}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Limpar histórico
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Limpar histórico?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Isso remove todas as notificações enviadas, falhas e canceladas. Agendamentos pendentes serão mantidos.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={() => clearMut.mutate()}>Limpar</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </CardHeader>
+        <CardContent>
+          {hist.length === 0 ? (
+            <div className="text-sm text-zinc-500 text-center py-8">Nenhum envio ainda</div>
+          ) : (
+            <div className="space-y-2">
+              {hist.map((h: any) => (
+                <div key={h.id} className="flex items-start justify-between gap-3 p-3.5 rounded-lg border border-zinc-800/80 bg-zinc-900/40">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="font-medium text-zinc-100">{h.title}</div>
+                      {h.status === "sent" && <Badge variant="emerald" className="gap-1"><CheckCircle2 className="w-3 h-3" /> Enviada</Badge>}
+                      {h.status === "scheduled" && <Badge variant="sky" className="gap-1"><Clock className="w-3 h-3" /> Agendada</Badge>}
+                      {h.status === "failed" && <Badge variant="rose" className="gap-1"><XCircle className="w-3 h-3" /> Falhou</Badge>}
+                      {h.status === "cancelled" && <Badge variant="neutral">Cancelada</Badge>}
+                    </div>
+                    <div className="text-sm text-zinc-300 line-clamp-2 mt-1">{h.body}</div>
+                    <div className="text-xs text-zinc-500 mt-1">
+                      {h.audience} · {h.status === "scheduled" ? `agendada para ${fmt(h.scheduled_at)}` : fmt(h.sent_at || h.created_at)}
+                      {h.status === "sent" && ` · ${h.success_count} entregues / ${h.failure_count} falhas`}
+                      {h.error && ` · erro: ${h.error}`}
+                    </div>
+                  </div>
+                  {h.status === "scheduled" && (
+                    <Button size="sm" variant="ghost" className="text-zinc-400 hover:text-rose-400" onClick={() => cancelMut.mutate(h.id)}>Cancelar</Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

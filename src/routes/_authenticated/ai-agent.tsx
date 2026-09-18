@@ -161,55 +161,59 @@ function AIAgentPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-6 p-6 pb-20">
+      <div className="flex flex-col gap-6">
         <PageHeader 
           title="Agente de Suporte IA" 
           description="Treine e monitore o atendimento inteligente 24/7"
         />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
-            <TabsTrigger value="chat" className="flex items-center gap-2">
-              <MessageSquare className="size-4" /> Simulador
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:w-[620px] bg-zinc-900/90 border border-zinc-800/80 p-1 rounded-xl">
+            <TabsTrigger value="chat" className="flex items-center justify-center gap-2 text-xs data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400 font-medium rounded-lg py-1.5 transition-colors">
+              <MessageSquare className="size-3.5" /> Simulador
             </TabsTrigger>
-            <TabsTrigger value="admin" className="flex items-center gap-2">
-              <BrainCircuit className="size-4" /> Treinamento
+            <TabsTrigger value="admin" className="flex items-center justify-center gap-2 text-xs data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400 font-medium rounded-lg py-1.5 transition-colors">
+              <BrainCircuit className="size-3.5" /> Treinamento
             </TabsTrigger>
-            <TabsTrigger value="crm" className="flex items-center gap-2">
-              <History className="size-4" /> CRM / Logs
+            <TabsTrigger value="crm" className="flex items-center justify-center gap-2 text-xs data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400 font-medium rounded-lg py-1.5 transition-colors">
+              <History className="size-3.5" /> CRM / Logs
             </TabsTrigger>
-            <TabsTrigger value="config" className="flex items-center gap-2">
-              <Settings className="size-4" /> Configurações
+            <TabsTrigger value="config" className="flex items-center justify-center gap-2 text-xs data-[state=active]:bg-zinc-800 data-[state=active]:text-zinc-100 text-zinc-400 font-medium rounded-lg py-1.5 transition-colors">
+              <Settings className="size-3.5" /> Configurações
             </TabsTrigger>
           </TabsList>
 
           {/* SIMULADOR TAB */}
           <TabsContent value="chat" className="mt-6">
             <div className="grid gap-6 lg:grid-cols-3">
-              <Card className="lg:col-span-2 flex flex-col h-[600px]">
+              <Card className="lg:col-span-2 flex flex-col h-[600px] border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BrainCircuit className="size-5 text-primary" /> 
-                    Simular Atendimento
-                  </CardTitle>
-                  <CardDescription>
-                    Teste o comportamento da IA com base nos treinamentos realizados abaixo.
-                  </CardDescription>
+                  <div className="flex items-center gap-3">
+                    <div className="size-9 rounded-lg bg-zinc-800/70 border border-zinc-700/60 flex items-center justify-center text-zinc-200">
+                      <BrainCircuit className="size-4.5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base text-zinc-100">Simular Atendimento</CardTitle>
+                      <CardDescription className="text-xs text-zinc-400">
+                        Teste o comportamento da IA com base nos treinamentos realizados abaixo.
+                      </CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-                  <div className="flex-1 border rounded-lg bg-muted/30 p-4 overflow-y-auto space-y-4">
+                  <div className="flex-1 border border-zinc-800/80 rounded-xl bg-zinc-950/70 p-4 overflow-y-auto space-y-4">
                     {history.length === 0 && (
-                      <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground opacity-50">
-                        <Smartphone className="size-12 mb-4" />
-                        <p>Inicie uma conversa para testar o agente.</p>
+                      <div className="flex flex-col items-center justify-center h-full text-center text-zinc-500">
+                        <Smartphone className="size-10 mb-3 text-zinc-600" />
+                        <p className="text-xs">Inicie uma conversa para testar o agente.</p>
                       </div>
                     )}
                     {history.map((msg, i) => (
                       <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[80%] p-3 rounded-lg text-sm ${
+                        <div className={`max-w-[80%] px-3.5 py-2.5 rounded-xl text-sm leading-relaxed ${
                           msg.role === 'user' 
-                            ? 'bg-primary text-primary-foreground' 
-                            : 'bg-muted border border-border shadow-sm'
+                            ? 'bg-white text-zinc-950 font-medium rounded-tr-xs shadow-sm' 
+                            : 'bg-zinc-900 border border-zinc-800/80 text-zinc-200 rounded-tl-xs shadow-sm'
                         }`}>
                           <p className="whitespace-pre-wrap">{msg.content}</p>
                         </div>
@@ -217,7 +221,7 @@ function AIAgentPage() {
                     ))}
                     {chatMutation.isPending && (
                       <div className="flex justify-start">
-                        <div className="bg-muted border border-border p-3 rounded-lg animate-pulse text-xs italic">
+                        <div className="bg-zinc-900 border border-zinc-800/80 px-3.5 py-2 rounded-xl text-xs text-zinc-400 italic">
                           Pensando...
                         </div>
                       </div>
@@ -230,8 +234,13 @@ function AIAgentPage() {
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       disabled={chatMutation.isPending}
+                      className="bg-zinc-900/80 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm"
                     />
-                    <Button type="submit" disabled={chatMutation.isPending}>
+                    <Button 
+                      type="submit" 
+                      disabled={chatMutation.isPending}
+                      className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg px-4 text-xs shadow-sm shrink-0"
+                    >
                       Enviar
                     </Button>
                   </form>
@@ -239,35 +248,41 @@ function AIAgentPage() {
               </Card>
 
               <div className="space-y-6">
-                <Card className="bg-primary/5 border-primary/20">
-                  <CardHeader>
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Info className="size-4 text-primary" /> Status do Cérebro
-                    </CardTitle>
+                <Card className="border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="size-7 rounded-lg bg-zinc-800/70 border border-zinc-700/60 flex items-center justify-center text-zinc-300">
+                        <Info className="size-3.5" />
+                      </div>
+                      <CardTitle className="text-sm text-zinc-200">Status do Cérebro</CardTitle>
+                    </div>
                   </CardHeader>
-                  <CardContent className="text-xs space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">FAQs Treinados:</span>
-                      <span className="font-bold">{knowledge?.faq?.length || 0}</span>
+                  <CardContent className="text-xs space-y-2.5 divide-y divide-zinc-800/60 pt-0">
+                    <div className="flex justify-between pt-1">
+                      <span className="text-zinc-400">FAQs Treinados:</span>
+                      <span className="font-semibold text-zinc-100 font-mono">{knowledge?.faq?.length || 0}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Dispositivos:</span>
-                      <span className="font-bold">{knowledge?.devices?.length || 0}</span>
+                    <div className="flex justify-between pt-2">
+                      <span className="text-zinc-400">Dispositivos:</span>
+                      <span className="font-semibold text-zinc-100 font-mono">{knowledge?.devices?.length || 0}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Apps Configurados:</span>
-                      <span className="font-bold">{knowledge?.apps?.length || 0}</span>
+                    <div className="flex justify-between pt-2">
+                      <span className="text-zinc-400">Apps Configurados:</span>
+                      <span className="font-semibold text-zinc-100 font-mono">{knowledge?.apps?.length || 0}</span>
                     </div>
                   </CardContent>
                 </Card>
                 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Search className="size-4" /> Monitor de Respostas
-                    </CardTitle>
+                <Card className="border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="size-7 rounded-lg bg-zinc-800/70 border border-zinc-700/60 flex items-center justify-center text-zinc-300">
+                        <Search className="size-3.5" />
+                      </div>
+                      <CardTitle className="text-sm text-zinc-200">Monitor de Respostas</CardTitle>
+                    </div>
                   </CardHeader>
-                  <CardContent className="text-xs text-muted-foreground italic">
+                  <CardContent className="text-xs text-zinc-400 leading-relaxed">
                     Use o simulador ao lado para verificar se a IA está identificando corretamente as marcas e fornecendo os tutoriais certos.
                   </CardContent>
                 </Card>
@@ -279,69 +294,76 @@ function AIAgentPage() {
           <TabsContent value="admin" className="mt-6 space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               {/* DEVICES MANAGEMENT */}
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Tv className="size-5 text-primary" /> Marcas & Aparelhos
-                    </CardTitle>
-                    <CardDescription className="text-xs">Ensine a IA a reconhecer marcas de TV e dispositivos.</CardDescription>
+              <Card className="border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md">
+                <CardHeader className="flex flex-row items-center justify-between pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="size-9 rounded-lg bg-zinc-800/70 border border-zinc-700/60 flex items-center justify-center text-zinc-200 shrink-0">
+                      <Tv className="size-4.5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base text-zinc-100">Marcas & Aparelhos</CardTitle>
+                      <CardDescription className="text-xs text-zinc-400">Ensine a IA a reconhecer marcas de TV e dispositivos.</CardDescription>
+                    </div>
                   </div>
                   <Dialog open={isDeviceDialogOpen} onOpenChange={setIsDeviceDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button size="sm" onClick={() => setDeviceForm({ name: "", category: "" })}>
+                      <Button size="sm" className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg size-8 p-0 shrink-0" onClick={() => setDeviceForm({ name: "", category: "" })}>
                         <Plus className="size-4" />
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="bg-zinc-900 border border-zinc-800 text-zinc-100 sm:max-w-md">
                       <form onSubmit={handleSaveDevice}>
                         <DialogHeader>
-                          <DialogTitle>Novo Dispositivo/Marca</DialogTitle>
-                          <DialogDescription>Ex: Samsung, TV Box, Fire Stick...</DialogDescription>
+                          <DialogTitle className="text-zinc-100">Novo Dispositivo/Marca</DialogTitle>
+                          <DialogDescription className="text-zinc-400 text-xs">Ex: Samsung, TV Box, Fire Stick...</DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
-                          <div className="space-y-2">
-                            <Label>Nome (Marca/Tipo)</Label>
+                          <div className="space-y-1.5">
+                            <Label className="text-xs text-zinc-300">Nome (Marca/Tipo)</Label>
                             <Input 
                               placeholder="Samsung" 
                               required 
                               value={deviceForm.name}
                               onChange={e => setDeviceForm(prev => ({ ...prev, name: e.target.value }))}
+                              className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm"
                             />
                           </div>
-                          <div className="space-y-2">
-                            <Label>Categoria</Label>
+                          <div className="space-y-1.5">
+                            <Label className="text-xs text-zinc-300">Categoria</Label>
                             <Input 
                               placeholder="Smart TV" 
                               required 
                               value={deviceForm.category}
                               onChange={e => setDeviceForm(prev => ({ ...prev, category: e.target.value }))}
+                              className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm"
                             />
                           </div>
                         </div>
                         <DialogFooter>
-                          <Button type="submit" disabled={updateMutation.isPending}>Salvar</Button>
+                          <Button type="submit" disabled={updateMutation.isPending} className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg text-xs">
+                            Salvar
+                          </Button>
                         </DialogFooter>
                       </form>
                     </DialogContent>
                   </Dialog>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
-                    {knowledge?.devices?.length === 0 && <p className="text-xs text-center py-4 text-muted-foreground italic">Nenhum dispositivo cadastrado.</p>}
+                  <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                    {knowledge?.devices?.length === 0 && <p className="text-xs text-center py-6 text-zinc-500 italic">Nenhum dispositivo cadastrado.</p>}
                     {(knowledge?.devices || []).map((d: any, idx: number) => (
-                      <div key={d.id || `device-${idx}-${d.name}`} className="flex items-center justify-between p-2 rounded border bg-muted/50 text-xs">
+                      <div key={d.id || `device-${idx}-${d.name}`} className="flex items-center justify-between p-2.5 rounded-lg border border-zinc-800/80 bg-zinc-900/40 text-xs hover:border-zinc-700 transition-colors">
                         <div className="flex flex-col">
-                          <span className="font-bold">{d.name}</span>
-                          <span className="text-[10px] text-muted-foreground">{d.category}</span>
+                          <span className="font-medium text-zinc-200">{d.name}</span>
+                          <span className="text-[11px] text-zinc-400">{d.category}</span>
                         </div>
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="size-6 text-destructive"
+                          className="size-7 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-md transition-colors"
                           onClick={() => { if(confirm("Remover?")) deleteMutation.mutate({ type: 'device', id: d.id }) }}
                         >
-                          <Trash2 className="size-3" />
+                          <Trash2 className="size-3.5" />
                         </Button>
                       </div>
                     ))}
@@ -350,45 +372,48 @@ function AIAgentPage() {
               </Card>
 
               {/* APPS & TUTORIALS MANAGEMENT */}
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <BookOpen className="size-5 text-primary" /> Tutoriais & Apps
-                    </CardTitle>
-                    <CardDescription className="text-xs">Configure o que a IA deve falar para cada app.</CardDescription>
+              <Card className="border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md">
+                <CardHeader className="flex flex-row items-center justify-between pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="size-9 rounded-lg bg-zinc-800/70 border border-zinc-700/60 flex items-center justify-center text-zinc-200 shrink-0">
+                      <BookOpen className="size-4.5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base text-zinc-100">Tutoriais & Apps</CardTitle>
+                      <CardDescription className="text-xs text-zinc-400">Configure o que a IA deve falar para cada app.</CardDescription>
+                    </div>
                   </div>
                   <Dialog open={isAppDialogOpen} onOpenChange={setIsAppDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button size="sm" onClick={() => setAppForm({ app_name: "", device_category: "", description: "", installation_steps: "", tutorial_url: "" })}>
+                      <Button size="sm" className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg size-8 p-0 shrink-0" onClick={() => setAppForm({ app_name: "", device_category: "", description: "", installation_steps: "", tutorial_url: "" })}>
                         <Plus className="size-4" />
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px]">
+                    <DialogContent className="bg-zinc-900 border border-zinc-800 text-zinc-100 sm:max-w-[500px]">
                       <form onSubmit={handleSaveApp}>
                         <DialogHeader>
-                          <DialogTitle>Novo Tutorial de App</DialogTitle>
-                          <DialogDescription>Defina o passo a passo de instalação.</DialogDescription>
+                          <DialogTitle className="text-zinc-100">Novo Tutorial de App</DialogTitle>
+                          <DialogDescription className="text-zinc-400 text-xs">Defina o passo a passo de instalação.</DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-1">
-                              <Label>Nome do App</Label>
-                              <Input required value={appForm.app_name} onChange={e => setAppForm(p => ({ ...p, app_name: e.target.value }))} />
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs text-zinc-300">Nome do App</Label>
+                              <Input required value={appForm.app_name} onChange={e => setAppForm(p => ({ ...p, app_name: e.target.value }))} className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm" />
                             </div>
-                            <div className="space-y-1">
-                              <Label>Dispositivo Alvo</Label>
-                              <Input placeholder="Ex: Smart TV" required value={appForm.device_category} onChange={e => setAppForm(p => ({ ...p, device_category: e.target.value }))} />
+                            <div className="space-y-1.5">
+                              <Label className="text-xs text-zinc-300">Dispositivo Alvo</Label>
+                              <Input placeholder="Ex: Smart TV" required value={appForm.device_category} onChange={e => setAppForm(p => ({ ...p, device_category: e.target.value }))} className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm" />
                             </div>
                           </div>
-                          <div className="space-y-1">
-                            <Label>Pequena Descrição</Label>
-                            <Input value={appForm.description} onChange={e => setAppForm(p => ({ ...p, description: e.target.value }))} />
+                          <div className="space-y-1.5">
+                            <Label className="text-xs text-zinc-300">Pequena Descrição</Label>
+                            <Input value={appForm.description} onChange={e => setAppForm(p => ({ ...p, description: e.target.value }))} className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm" />
                           </div>
-                          <div className="space-y-1">
-                            <Label>Passos de Instalação (um por linha)</Label>
+                          <div className="space-y-1.5">
+                            <Label className="text-xs text-zinc-300">Passos de Instalação (um por linha)</Label>
                             <Textarea 
-                              className="h-32"
+                              className="h-32 bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-xs font-mono"
                               placeholder="1. Abra a loja...&#10;2. Procure por..." 
                               value={appForm.installation_steps} 
                               onChange={e => setAppForm(p => ({ ...p, installation_steps: e.target.value }))}
@@ -396,29 +421,31 @@ function AIAgentPage() {
                           </div>
                         </div>
                         <DialogFooter>
-                          <Button type="submit" disabled={updateMutation.isPending}>Salvar Tutorial</Button>
+                          <Button type="submit" disabled={updateMutation.isPending} className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg text-xs">
+                            Salvar Tutorial
+                          </Button>
                         </DialogFooter>
                       </form>
                     </DialogContent>
                   </Dialog>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
-                    {knowledge?.apps?.length === 0 && <p className="text-xs text-center py-4 text-muted-foreground italic">Nenhum app cadastrado.</p>}
+                  <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                    {knowledge?.apps?.length === 0 && <p className="text-xs text-center py-6 text-zinc-500 italic">Nenhum app cadastrado.</p>}
                     {(knowledge?.apps || []).map((a: any, idx: number) => (
-                      <div key={a.id || `app-${idx}-${a.app_name}`} className="p-2 rounded border bg-muted/50 text-xs flex flex-col gap-1 relative group">
+                      <div key={a.id || `app-${idx}-${a.app_name}`} className="p-3 rounded-lg border border-zinc-800/80 bg-zinc-900/40 text-xs flex flex-col gap-1.5 relative group hover:border-zinc-700 transition-colors">
                         <div className="flex justify-between items-center pr-8">
-                          <span className="font-bold text-primary">{a.app_name}</span>
-                          <Badge variant="outline" className="text-[9px]">{a.device_category}</Badge>
+                          <span className="font-medium text-zinc-100">{a.app_name}</span>
+                          <Badge variant="outline" className="text-[10px] bg-zinc-800/80 border-zinc-700/60 text-zinc-300 font-normal px-2 py-0.5">{a.device_category}</Badge>
                         </div>
-                        <p className="text-[10px] text-muted-foreground line-clamp-1">{a.description}</p>
+                        <p className="text-xs text-zinc-400 line-clamp-1">{a.description}</p>
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="size-6 text-destructive absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="size-7 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-md"
                           onClick={() => { if(confirm("Remover?")) deleteMutation.mutate({ type: 'app', id: a.id }) }}
                         >
-                          <Trash2 className="size-3" />
+                          <Trash2 className="size-3.5" />
                         </Button>
                       </div>
                     ))}
@@ -428,53 +455,58 @@ function AIAgentPage() {
             </div>
             
             {/* FAQ MANAGEMENT */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageCircle className="size-5 text-primary" /> Perguntas & Respostas (Treinamento Direto)
-                  </CardTitle>
-                  <CardDescription>
-                    Se o cliente disser uma das <b>keywords</b>, a IA responderá com a <b>resposta configurada</b>.
-                  </CardDescription>
+            <Card className="border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md">
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="size-9 rounded-lg bg-zinc-800/70 border border-zinc-700/60 flex items-center justify-center text-zinc-200 shrink-0">
+                    <MessageCircle className="size-4.5" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base text-zinc-100">Perguntas & Respostas (Treinamento Direto)</CardTitle>
+                    <CardDescription className="text-xs text-zinc-400">
+                      Se o cliente disser uma das <span className="text-zinc-200 font-medium">palavras-chave</span>, a IA responderá com o texto cadastrado.
+                    </CardDescription>
+                  </div>
                 </div>
                 <Dialog open={isFaqDialogOpen} onOpenChange={setIsFaqDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={() => setFaqForm({ question: "", answer: "", keywords: "" })}>
-                      <Plus className="size-4 mr-2" /> Novo Treinamento
+                    <Button className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg text-xs px-3 py-1.5 shrink-0" onClick={() => setFaqForm({ question: "", answer: "", keywords: "" })}>
+                      <Plus className="size-3.5 mr-1.5" /> Novo Treinamento
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px]">
+                  <DialogContent className="bg-zinc-900 border border-zinc-800 text-zinc-100 sm:max-w-[500px]">
                     <form onSubmit={handleSaveFaq}>
                       <DialogHeader>
-                        <DialogTitle>Treinar Nova Resposta</DialogTitle>
-                        <DialogDescription>A IA usará esta resposta sempre que identificar as palavras-chave.</DialogDescription>
+                        <DialogTitle className="text-zinc-100">Treinar Nova Resposta</DialogTitle>
+                        <DialogDescription className="text-zinc-400 text-xs">A IA usará esta resposta sempre que identificar as palavras-chave.</DialogDescription>
                       </DialogHeader>
                       <div className="grid gap-4 py-4">
-                        <div className="space-y-2">
-                          <Label>Identificador da Pergunta (Opcional)</Label>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-zinc-300">Identificador da Pergunta (Opcional)</Label>
                           <Input 
                             placeholder="Ex: Como funciona o teste grátis?" 
                             required 
                             value={faqForm.question}
                             onChange={e => setFaqForm(prev => ({ ...prev, question: e.target.value }))}
+                            className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label>Palavras-chave (Separadas por vírgula)</Label>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-zinc-300">Palavras-chave (Separadas por vírgula)</Label>
                           <Input 
                             placeholder="teste, gratuito, 6 horas, periodo" 
                             required
                             value={faqForm.keywords}
                             onChange={e => setFaqForm(prev => ({ ...prev, keywords: e.target.value }))}
+                            className="bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-sm"
                           />
-                          <p className="text-[10px] text-muted-foreground italic">Ex: se o cliente digitar "me dá um <b>teste</b>", a IA aciona esta resposta.</p>
+                          <p className="text-[11px] text-zinc-500 italic">Ex: se o cliente digitar "me dá um <b>teste</b>", a IA aciona esta resposta.</p>
                         </div>
-                        <div className="space-y-2">
-                          <Label>Resposta da IA</Label>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-zinc-300">Resposta da IA</Label>
                           <Textarea 
                             placeholder="Olá! Oferecemos teste de 6 horas..." 
-                            className="h-32" 
+                            className="h-32 bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg text-xs leading-relaxed" 
                             required
                             value={faqForm.answer}
                             onChange={e => setFaqForm(prev => ({ ...prev, answer: e.target.value }))}
@@ -482,50 +514,52 @@ function AIAgentPage() {
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button type="submit" disabled={updateMutation.isPending}>Salvar Treinamento</Button>
+                        <Button type="submit" disabled={updateMutation.isPending} className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg text-xs">
+                          Salvar Treinamento
+                        </Button>
                       </DialogFooter>
                     </form>
                   </DialogContent>
                 </Dialog>
               </CardHeader>
               <CardContent>
-                <div className="rounded-md border">
+                <div className="rounded-xl border border-zinc-800/80 overflow-hidden bg-zinc-900/30">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead className="w-[30%]">Pergunta/Tema</TableHead>
-                        <TableHead className="w-[30%]">Keywords (Gatilhos)</TableHead>
-                        <TableHead className="w-[30%]">Resposta Treinada</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
+                      <TableRow className="bg-zinc-900/80 border-b border-zinc-800 hover:bg-zinc-900/80">
+                        <TableHead className="w-[30%] text-zinc-400 text-xs font-medium">Pergunta/Tema</TableHead>
+                        <TableHead className="w-[30%] text-zinc-400 text-xs font-medium">Keywords (Gatilhos)</TableHead>
+                        <TableHead className="w-[30%] text-zinc-400 text-xs font-medium">Resposta Treinada</TableHead>
+                        <TableHead className="text-right text-zinc-400 text-xs font-medium">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {loadingKnowledge ? (
-                        <TableRow><TableCell colSpan={4} className="text-center py-8">Carregando cérebro...</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={4} className="text-center py-8 text-zinc-500 text-xs">Carregando cérebro...</TableCell></TableRow>
                       ) : knowledge?.faq?.length === 0 ? (
-                        <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground italic">Nenhum treinamento customizado encontrado. Comece treinando a IA agora!</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={4} className="text-center py-8 text-zinc-500 text-xs italic">Nenhum treinamento customizado encontrado. Comece treinando a IA agora!</TableCell></TableRow>
                       ) : (
                         (knowledge?.faq || []).map((f: any, idx: number) => (
-                          <TableRow key={f.id || `faq-${idx}-${f.question}`} className="hover:bg-muted/30 transition-colors">
-                            <TableCell className="text-xs font-medium">{f.question}</TableCell>
+                          <TableRow key={f.id || `faq-${idx}-${f.question}`} className="border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors">
+                            <TableCell className="text-xs font-medium text-zinc-200">{f.question}</TableCell>
                             <TableCell>
                               <div className="flex flex-wrap gap-1">
                                 {Array.isArray(f.keywords) && f.keywords.map((k: string) => (
-                                  <Badge key={k} variant="secondary" className="text-[9px] bg-primary/10 text-primary border-primary/20">{k}</Badge>
+                                  <Badge key={k} variant="outline" className="text-[10px] bg-zinc-800/90 border-zinc-700/60 text-zinc-300 font-mono py-0">{k}</Badge>
                                 ))}
                               </div>
                             </TableCell>
-                            <TableCell className="max-w-[200px]">
-                              <p className="text-[10px] text-muted-foreground truncate">{f.answer}</p>
+                            <TableCell className="max-w-[220px]">
+                              <p className="text-xs text-zinc-400 truncate">{f.answer}</p>
                             </TableCell>
                             <TableCell className="text-right">
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                className="h-8 w-8 p-0 text-destructive"
+                                className="h-7 w-7 p-0 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-md transition-colors"
                                 onClick={() => { if(confirm("Deseja apagar este treinamento?")) deleteMutation.mutate({ type: 'faq', id: f.id }) }}
                               >
-                                <Trash2 className="size-4" />
+                                <Trash2 className="size-3.5" />
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -540,28 +574,35 @@ function AIAgentPage() {
 
           {/* CRM / LOGS TAB */}
           <TabsContent value="crm" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Histórico de Atendimentos Reais</CardTitle>
-                <CardDescription>Veja o que os clientes estão perguntando no site e como a IA respondeu.</CardDescription>
+            <Card className="border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="size-9 rounded-lg bg-zinc-800/70 border border-zinc-700/60 flex items-center justify-center text-zinc-200 shrink-0">
+                    <History className="size-4.5" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base text-zinc-100">Histórico de Atendimentos Reais</CardTitle>
+                    <CardDescription className="text-xs text-zinc-400">Veja o que os clientes estão perguntando no site e como a IA respondeu.</CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="rounded-md border overflow-x-auto">
+                <div className="rounded-xl border border-zinc-800/80 overflow-x-auto bg-zinc-900/30">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead>Data / Hora</TableHead>
-                        <TableHead>Cliente / Dispositivo</TableHead>
-                        <TableHead>Última Interação</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Ver Chat</TableHead>
+                      <TableRow className="bg-zinc-900/80 border-b border-zinc-800 hover:bg-zinc-900/80">
+                        <TableHead className="text-zinc-400 text-xs font-medium">Data / Hora</TableHead>
+                        <TableHead className="text-zinc-400 text-xs font-medium">Cliente / Dispositivo</TableHead>
+                        <TableHead className="text-zinc-400 text-xs font-medium">Última Interação</TableHead>
+                        <TableHead className="text-zinc-400 text-xs font-medium">Status</TableHead>
+                        <TableHead className="text-right text-zinc-400 text-xs font-medium">Ver Chat</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {loadingConvs ? (
-                        <TableRow><TableCell colSpan={5} className="text-center py-8">Carregando histórico...</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={5} className="text-center py-8 text-zinc-500 text-xs">Carregando histórico...</TableCell></TableRow>
                       ) : conversations?.length === 0 ? (
-                        <TableRow><TableCell colSpan={5} className="text-center py-8">Nenhuma conversa registrada ainda.</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={5} className="text-center py-8 text-zinc-500 text-xs italic">Nenhuma conversa registrada ainda.</TableCell></TableRow>
                       ) : (
                         (conversations || []).map((conv: any, idx: number) => {
                           const messages = Array.isArray(conv?.messages) ? conv.messages : [];
@@ -569,30 +610,33 @@ function AIAgentPage() {
                           const safeId = conv?.id || `conv-${idx}-${conv?.session_id || 'unknown'}`;
                           
                           return (
-                            <TableRow key={safeId}>
-                              <TableCell className="text-xs whitespace-nowrap">
+                            <TableRow key={safeId} className="border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors">
+                              <TableCell className="text-xs whitespace-nowrap text-zinc-400 font-mono">
                                 {conv?.updated_at ? formatDateTimeBR(conv.updated_at) : '---'}
                               </TableCell>
                               <TableCell>
                                 <div className="flex flex-col">
-                                  <span className="font-medium text-xs">{conv?.clients?.name || 'Visitante Público'}</span>
-                                  <span className="text-[9px] text-muted-foreground font-mono">{conv?.session_id ? conv.session_id.slice(-6) : '---'}</span>
+                                  <span className="font-medium text-xs text-zinc-200">{conv?.clients?.name || 'Visitante Público'}</span>
+                                  <span className="text-[10px] text-zinc-500 font-mono">{conv?.session_id ? conv.session_id.slice(-6) : '---'}</span>
                                 </div>
                               </TableCell>
                               <TableCell className="max-w-[250px]">
-                                <p className="text-[10px] truncate italic">
+                                <p className="text-xs text-zinc-400 truncate italic">
                                   {lastMsg ? `"${lastMsg.content}"` : "(Sem mensagens)"}
                                 </p>
                               </TableCell>
                               <TableCell>
-                                <Badge variant={conv?.status === 'concluido' ? 'default' : 'outline'} className="text-[9px] capitalize px-1 h-5">
+                                <Badge 
+                                  variant={conv?.status === 'concluido' ? 'emerald' : 'amber'} 
+                                  className="text-[10px] capitalize px-2 py-0.5"
+                                >
                                   {conv?.status || 'ativo'}
                                 </Badge>
                               </TableCell>
                               <TableCell className="text-right">
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild disabled={!conv?.session_id}>
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-md transition-colors" asChild disabled={!conv?.session_id}>
                                   <a href={`/portal?session=${conv?.session_id || ''}`} target="_blank" rel="noreferrer">
-                                    <ExternalLink className="size-4" />
+                                    <ExternalLink className="size-3.5" />
                                   </a>
                                 </Button>
                               </TableCell>
@@ -606,67 +650,78 @@ function AIAgentPage() {
               </CardContent>
             </Card>
           </TabsContent>
+
           {/* CONFIGURAÇÕES TAB */}
           <TabsContent value="config" className="mt-6 space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
-              <Card>
+              <Card className="border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Bot className="size-5 text-primary" /> Prompt de Personalidade
-                  </CardTitle>
-                  <CardDescription>
-                    Defina como a IA deve se comportar, seu tom de voz e regras específicas de atendimento.
-                  </CardDescription>
+                  <div className="flex items-center gap-3">
+                    <div className="size-9 rounded-lg bg-zinc-800/70 border border-zinc-700/60 flex items-center justify-center text-zinc-200 shrink-0">
+                      <Bot className="size-4.5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base text-zinc-100">Prompt de Personalidade</CardTitle>
+                      <CardDescription className="text-xs text-zinc-400">
+                        Defina como a IA deve se comportar, seu tom de voz e regras de atendimento.
+                      </CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Instrução de Sistema (Prompt)</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-zinc-300">Instrução de Sistema (Prompt)</Label>
                     <Textarea 
                       placeholder="Ex: Você é um assistente de suporte gentil da AJPVIP. Sempre responda em português..." 
-                      className="min-h-[200px] font-mono text-xs"
+                      className="min-h-[200px] font-mono text-xs bg-zinc-950/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 rounded-lg focus-visible:ring-zinc-600"
                       value={systemPrompt}
                       onChange={(e) => setSystemPrompt(e.target.value)}
                     />
-                    <p className="text-[10px] text-muted-foreground italic">
+                    <p className="text-[11px] text-zinc-500 italic">
                       Este prompt é enviado para a IA antes de cada conversa para moldar sua "personalidade".
                     </p>
                   </div>
                 </CardContent>
-                <CardFooter className="border-t pt-4">
+                <CardFooter className="border-t border-zinc-800/80 pt-4">
                   <Button 
-                    className="w-full" 
+                    className="w-full bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg text-xs shadow-sm" 
                     onClick={() => {
                       toast.success("Configuração de prompt salva com sucesso!");
                     }}
                   >
-                    <Save className="size-4 mr-2" /> Salvar Personalidade
+                    <Save className="size-3.5 mr-2" /> Salvar Personalidade
                   </Button>
                 </CardFooter>
               </Card>
 
-              <Card>
+              <Card className="border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="size-5 text-primary" /> Parâmetros Técnicos
-                  </CardTitle>
-                  <CardDescription>
-                    Ajuste a sensibilidade e o modelo da IA.
-                  </CardDescription>
+                  <div className="flex items-center gap-3">
+                    <div className="size-9 rounded-lg bg-zinc-800/70 border border-zinc-700/60 flex items-center justify-center text-zinc-200 shrink-0">
+                      <Settings className="size-4.5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base text-zinc-100">Parâmetros Técnicos</CardTitle>
+                      <CardDescription className="text-xs text-zinc-400">
+                        Ajuste a sensibilidade e o modelo da IA.
+                      </CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-5">
                   <div className="space-y-2">
-                    <Label>Temperatura (Criatividade)</Label>
-                    <Input type="range" min="0" max="100" defaultValue="70" className="cursor-pointer" />
-                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                    <Label className="text-xs text-zinc-300">Temperatura (Criatividade)</Label>
+                    <Input type="range" min="0" max="100" defaultValue="70" className="cursor-pointer accent-white" />
+                    <div className="flex justify-between text-[11px] text-zinc-500">
                       <span>Mais Preciso</span>
                       <span>Mais Criativo</span>
                     </div>
                   </div>
-                  <div className="space-y-2 pt-4">
-                    <Label>Modelo de IA</Label>
-                    <Badge variant="outline" className="w-full justify-center py-2 bg-primary/5 text-primary">
+                  <div className="space-y-2 pt-2">
+                    <Label className="text-xs text-zinc-300">Modelo de IA</Label>
+                    <div className="w-full py-2.5 px-3 rounded-lg border border-zinc-800 bg-zinc-950/60 text-zinc-200 font-mono text-xs flex items-center justify-center">
                       AJP-AI-TURBO (Padrão)
-                    </Badge>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

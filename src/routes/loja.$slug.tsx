@@ -211,7 +211,7 @@ function AuthBox({ slug }: { slug: string }) {
           <Label>Senha</Label>
           <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete={mode === "login" ? "current-password" : "new-password"} />
         </div>
-        <Button className="btn-premium w-full rounded-full" onClick={submit} disabled={loading || !email || !password}>
+        <Button className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg w-full shadow-sm" onClick={submit} disabled={loading || !email || !password}>
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : mode === "login" ? "Entrar" : "Criar conta"}
         </Button>
       </div>

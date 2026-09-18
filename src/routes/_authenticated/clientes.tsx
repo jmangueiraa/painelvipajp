@@ -641,22 +641,17 @@ function ClientesPage() {
           <>
             {selectedIds.size > 0 && (
               <>
-                <Button
-                  variant="outline"
-                  className="rounded-full"
-                  onClick={() => sendBulk.mutate(Array.from(selectedIds))}
-                  disabled={sendBulk.isPending}
-                >
+                <Button variant="secondary" onClick={() => sendBulk.mutate(Array.from(selectedIds))}>
                   <Send className="size-4" /> Enviar WhatsApp ({selectedIds.size})
                 </Button>
-                <Button variant="destructive" className="rounded-full" onClick={() => setBulkDeleteOpen(true)}>
+                <Button variant="destructive" onClick={() => setBulkDeleteOpen(true)}>
                   <Trash2 className="size-4" /> Excluir selecionados ({selectedIds.size})
                 </Button>
               </>
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button className="rounded-full" variant="outline">
+                <Button variant="outline">
                   <Send className="size-4" /> <span className="hidden sm:inline">Cobranças</span>
                 </Button>
               </DropdownMenuTrigger>
@@ -670,7 +665,7 @@ function ClientesPage() {
                   <CalendarClock className="size-4 text-amber-400" /> Vence amanhã
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => cobranca("advance_5d")}>
-                  <CalendarClock className="size-4 text-cyan-400" /> Antecipado (5 dias)
+                  <CalendarClock className="size-4 text-sky-400" /> Antecipado (5 dias)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => cobranca("overdue")}>
                   <AlertTriangle className="size-4 text-rose-400" /> Vencidos
@@ -679,7 +674,7 @@ function ClientesPage() {
             </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="rounded-full">
+                <Button variant="outline">
                   <FileSpreadsheet className="size-4" /> <span className="hidden sm:inline">Planilha</span>
                 </Button>
               </DropdownMenuTrigger>
@@ -692,7 +687,7 @@ function ClientesPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button className="btn-premium rounded-full" onClick={openCreate}>
+            <Button onClick={openCreate} className="bg-white text-zinc-950 font-medium hover:bg-zinc-200">
               <Plus className="size-4" /> <span className="hidden sm:inline">Novo cliente</span>
             </Button>
           </>
@@ -703,10 +698,10 @@ function ClientesPage() {
         <CardContent className="p-4 space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto] gap-3 items-center">
             <div className="relative min-w-0">
-              <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input className="pl-9 rounded-full" placeholder="Buscar por nome, WhatsApp, login..." value={q} onChange={(e) => setQ(e.target.value)} />
+              <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+              <Input className="pl-9" placeholder="Buscar por nome, WhatsApp, login..." value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {([
                 ["todos", "Todos"], ["em_dia", "Em dia"], ["a_vencer", "A vencer"],
                 ["vencem_hoje", "Vencem hoje"], ["vencidos", "Vencidos"], ["bloqueados", "Bloqueados"],
@@ -714,10 +709,10 @@ function ClientesPage() {
                 <button
                   key={k}
                   onClick={() => setChip(k)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                     chip === k
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                      ? "bg-zinc-100 text-zinc-950 border-zinc-200 font-semibold"
+                      : "bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60"
                   }`}
                 >{label}</button>
               ))}
@@ -776,10 +771,10 @@ function ClientesPage() {
               ))}
               {!isLoading && filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-10 text-zinc-500">
                     <p>Nenhum cliente encontrado.</p>
                     {clients?.length === 0 && (
-                      <Button className="btn-premium rounded-full mt-3" onClick={openCreate}>
+                      <Button className="mt-3 bg-white text-zinc-950 hover:bg-zinc-200 font-medium" onClick={openCreate}>
                         <Plus className="size-4" /> Cadastrar primeiro cliente
                       </Button>
                     )}
@@ -801,12 +796,10 @@ function ClientesPage() {
                       aria-label={`Selecionar ${c.name}`}
                     />
                   </TableCell>
-                  <TableCell className="font-medium">{c.name}</TableCell>
+                  <TableCell className="font-medium text-zinc-100">{c.name}</TableCell>
 
-
-                  
-                  <TableCell className="tabular-nums">{brl(c.price_cents)}</TableCell>
-                  <TableCell>{formatDateBR(c.due_date)}</TableCell>
+                  <TableCell className="tabular-nums text-zinc-300">{brl(c.price_cents)}</TableCell>
+                  <TableCell className="text-zinc-400">{formatDateBR(c.due_date)}</TableCell>
                   <TableCell><Badge variant={statusVariant[c.status]}>{statusLabel[c.status]}</Badge></TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end">
@@ -816,7 +809,7 @@ function ClientesPage() {
                             type="button"
                             title="Ações"
                             aria-label="Ações"
-                            className="size-8 inline-flex items-center justify-center rounded-full border border-border/60 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            className="size-8 inline-flex items-center justify-center rounded-lg border border-zinc-800 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-100"
                           >
                             <MoreVertical className="size-4" />
                           </button>
@@ -824,31 +817,31 @@ function ClientesPage() {
                         <DropdownMenuContent align="end" className="w-52">
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => setRenewTarget(c)}>
-                            <RefreshCw className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Renovar
+                            <RefreshCw className="size-4 text-emerald-400" /> Renovar
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => sendClientWhatsapp(c)}>
-                            <MessageCircle className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Mensagem (WhatsApp Business)
+                            <MessageCircle className="size-4 text-emerald-400" /> Mensagem (WhatsApp)
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => copyCredentials(c)}>
-                            <Copy className="size-4" style={{ color: "var(--kpi-cyan)" }} /> Copiar credenciais
+                            <Copy className="size-4 text-sky-400" /> Copiar credenciais
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => sendSupportWhatsapp(c)}>
-                            <LifeBuoy className="size-4" style={{ color: "var(--kpi-emerald)" }} /> Suporte
+                            <LifeBuoy className="size-4 text-emerald-400" /> Suporte
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => toggleBlock.mutate(c)}>
                             {c.status === "suspenso" || c.status === "cancelado" ? (
-                              <><Unlock className="size-4" style={{ color: "var(--kpi-amber)" }} /> Desbloquear</>
+                              <><Unlock className="size-4 text-amber-400" /> Desbloquear</>
                             ) : (
-                              <><Lock className="size-4" style={{ color: "var(--kpi-amber)" }} /> Bloquear</>
+                              <><Lock className="size-4 text-amber-400" /> Bloquear</>
                             )}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => openEdit(c)}>
-                            <Pencil className="size-4" style={{ color: "var(--kpi-violet)" }} /> Editar
+                            <Pencil className="size-4 text-zinc-400" /> Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => setDeleteTarget(c)}
-                            className="text-[color:var(--kpi-rose)] focus:text-[color:var(--kpi-rose)]"
+                            className="text-rose-400 focus:text-rose-400"
                           >
                             <Trash2 className="size-4" /> Remover
                           </DropdownMenuItem>
@@ -862,11 +855,11 @@ function ClientesPage() {
             </TableBody>
           </Table>
           </div>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-zinc-800/60">
+            <div className="flex items-center gap-2 text-sm text-zinc-400">
               <span>Resultados por página</span>
               <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
-                <SelectTrigger className="h-8 w-[80px] rounded-full">
+                <SelectTrigger className="h-8 w-[80px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1035,10 +1028,10 @@ function ClientesPage() {
                 )} />
               </div>
               <FormField control={form.control} name="auto_charge" render={({ field }) => (
-                <FormItem className="flex items-start justify-between rounded-xl border border-border p-3 gap-3">
+                <FormItem className="flex items-start justify-between rounded-lg border border-zinc-800 bg-zinc-950/40 p-3.5 gap-3">
                   <div className="min-w-0">
-                    <FormLabel className="mb-0">Cobrança Automática</FormLabel>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <FormLabel className="mb-0 text-zinc-200">Cobrança Automática</FormLabel>
+                    <p className="text-xs text-zinc-400 mt-0.5">
                       Quando desativada, este cliente é ignorado no envio automático de cobranças vencidas.
                     </p>
                   </div>
@@ -1056,7 +1049,7 @@ function ClientesPage() {
                         onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                       />
                     </FormControl>
-                    <p className="text-xs text-muted-foreground">Se o cliente foi indicado, informe o código. O indicador ganha dias bônus ao 1º pagamento.</p>
+                    <p className="text-xs text-zinc-400">Se o cliente foi indicado, informe o código. O indicador ganha dias bônus ao 1º pagamento.</p>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -1064,7 +1057,7 @@ function ClientesPage() {
 
               <DialogFooter>
                 <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button type="submit" className="btn-premium rounded-full" disabled={save.isPending}>
+                <Button type="submit" className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium" disabled={save.isPending}>
                   {save.isPending ? "Salvando..." : "Salvar"}
                 </Button>
               </DialogFooter>
@@ -1097,7 +1090,7 @@ function ClientesPage() {
             <DialogTitle>Renovar {renewTarget?.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">Escolha o período da renovação:</p>
+            <p className="text-sm text-zinc-400">Escolha o período da renovação:</p>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: "Mensal", days: 30 },
@@ -1109,7 +1102,6 @@ function ClientesPage() {
                   key={opt.label}
                   type="button"
                   variant="outline"
-                  className="rounded-full"
                   disabled={renew.isPending}
                   onClick={() => renewTarget && renew.mutate({ c: renewTarget, days: opt.days })}
                 >
@@ -1130,17 +1122,17 @@ function ClientesPage() {
             <DialogTitle>Importar clientes via Excel</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="rounded-xl border border-border p-3 text-sm text-muted-foreground space-y-2">
+            <div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3.5 text-sm text-zinc-400 space-y-2">
               <p>Baixe o modelo, preencha e envie. Colunas aceitas:</p>
-              <p className="text-xs"><strong>nome</strong>, <strong>whatsapp</strong>, <strong>vencimento</strong> (DD/MM/AAAA), login_iptv, senha_iptv, plano, <strong>valor</strong>, servidor, cobranca_automatica (sim/não), observacoes.</p>
-              <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={downloadTemplate}>
+              <p className="text-xs text-zinc-400"><strong>nome</strong>, <strong>whatsapp</strong>, <strong>vencimento</strong> (DD/MM/AAAA), login_iptv, senha_iptv, plano, <strong>valor</strong>, servidor, cobranca_automatica (sim/não), observacoes.</p>
+              <Button type="button" variant="outline" size="sm" onClick={downloadTemplate}>
                 <Download className="size-4" /> Baixar modelo
               </Button>
             </div>
 
-            <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border p-6 cursor-pointer hover:border-primary/50 transition">
-              <Upload className="size-6 text-muted-foreground" />
-              <span className="text-sm font-medium">{importing ? "Importando..." : "Clique para selecionar arquivo .xlsx"}</span>
+            <label className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-zinc-800 bg-zinc-900/30 p-6 cursor-pointer hover:border-zinc-700 transition">
+              <Upload className="size-6 text-zinc-400" />
+              <span className="text-sm font-medium text-zinc-300">{importing ? "Importando..." : "Clique para selecionar arquivo .xlsx"}</span>
               <input
                 type="file"
                 accept=".xlsx,.xls,.csv"
@@ -1155,10 +1147,10 @@ function ClientesPage() {
             </label>
 
             {importResult && (
-              <div className="rounded-xl border border-border p-3 text-sm space-y-2">
-                <p><strong className="text-[color:var(--kpi-emerald)]">{importResult.ok}</strong> importado(s) · <strong className="text-destructive">{importResult.fail}</strong> com erro</p>
+              <div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3.5 text-sm space-y-2">
+                <p><strong className="text-emerald-400">{importResult.ok}</strong> importado(s) · <strong className="text-rose-400">{importResult.fail}</strong> com erro</p>
                 {importResult.errors.length > 0 && (
-                  <ul className="text-xs text-muted-foreground max-h-40 overflow-y-auto list-disc pl-4 space-y-0.5">
+                  <ul className="text-xs text-zinc-400 max-h-40 overflow-y-auto list-disc pl-4 space-y-0.5">
                     {importResult.errors.slice(0, 50).map((er, i) => <li key={i}>{er}</li>)}
                   </ul>
                 )}

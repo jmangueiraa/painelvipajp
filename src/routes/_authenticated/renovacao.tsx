@@ -204,46 +204,46 @@ function RenovacaoPage() {
       {isAdmin && <AdminSubscriptionSection />}
       {isAdmin && <AdminRenewalPlansSection />}
 
-      <Card className="kpi-card" style={{ "--kpi-color": "var(--kpi-emerald)" } as React.CSSProperties}>
+      <Card>
         <CardContent className="p-5 flex items-center gap-4">
-          <div className="size-12 rounded-xl grid place-items-center bg-[color:color-mix(in_oklab,var(--kpi-emerald)_15%,transparent)] text-[color:var(--kpi-emerald)] shrink-0">
-            <CalendarCheck className="size-6" />
+          <div className="size-11 rounded-lg grid place-items-center bg-zinc-800/60 border border-zinc-700/50 text-zinc-300 shrink-0">
+            <CalendarCheck className="size-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] tracking-widest uppercase text-muted-foreground">Status</p>
-            <p className="text-xl md:text-2xl font-bold">
+            <p className="text-[11px] font-semibold tracking-wider uppercase text-zinc-400">Status</p>
+            <p className="text-xl md:text-2xl font-semibold text-zinc-100">
               {days === null ? "Defina sua assinatura em Configurações" : `${days} dia(s) restantes`}
             </p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-zinc-400 mt-1">
               {expires ? `Expira em ${formatDateBR(expires)}` : "Sem vencimento definido"} ·
-              {" "}Valor do plano: <span className="font-medium text-foreground">{brl(currentPlanValue)}</span>
+              {" "}Valor do plano: <span className="font-medium text-zinc-200">{brl(currentPlanValue)}</span>
             </p>
           </div>
         </CardContent>
       </Card>
 
       <div>
-        <p className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-3">
+        <p className="text-[11px] font-semibold tracking-wider uppercase text-zinc-400 mb-3">
           Escolha o período de renovação
         </p>
         {plans.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum plano disponível no momento.</p>
+          <p className="text-sm text-zinc-500">Nenhum plano disponível no momento.</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {plans.map((p) => (
               <button
                 key={p.id}
                 onClick={() => setMethodPlan(p)}
-                className={`flex items-center justify-between rounded-xl border bg-card/60 px-4 py-4 text-left hover:bg-card transition ${p.featured ? "border-primary/60" : "border-border hover:border-primary/60"}`}
+                className={`flex items-center justify-between rounded-xl border bg-zinc-900/50 px-4 py-4 text-left hover:bg-zinc-900/80 transition-all ${p.featured ? "border-zinc-500/60 bg-zinc-900/70" : "border-zinc-800/80 hover:border-zinc-700"}`}
               >
                 <span className="flex flex-col">
-                  <span className="flex items-center gap-2 font-medium">
-                    <RefreshCw className="size-4 text-primary" />
+                  <span className="flex items-center gap-2 font-medium text-zinc-100">
+                    <RefreshCw className="size-4 text-zinc-400" />
                     {p.name}
                   </span>
-                  <span className="text-xs text-muted-foreground mt-0.5">{p.duration_days} dias</span>
+                  <span className="text-xs text-zinc-400 mt-0.5">{p.duration_days} dias</span>
                 </span>
-                <span className="text-[color:var(--kpi-emerald)] font-bold tabular-nums">{brl(p.price_cents)}</span>
+                <span className="text-emerald-400 font-semibold text-lg tabular-nums">{brl(p.price_cents)}</span>
               </button>
             ))}
           </div>
@@ -265,40 +265,40 @@ function RenovacaoPage() {
               <button
                 disabled={loadingMethod !== null}
                 onClick={payPix}
-                className="w-full flex items-center justify-between rounded-xl border border-border hover:border-[color:var(--kpi-emerald)] bg-card/60 hover:bg-card px-4 py-4 text-left transition disabled:opacity-60"
+                className="w-full flex items-center justify-between rounded-xl border border-zinc-800 hover:border-zinc-600 bg-zinc-900/60 hover:bg-zinc-900 px-4 py-4 text-left transition-all disabled:opacity-60"
               >
                 <span className="flex items-center gap-3">
-                  <span className="size-10 rounded-lg grid place-items-center bg-[color:color-mix(in_oklab,var(--kpi-emerald)_15%,transparent)] text-[color:var(--kpi-emerald)]">
+                  <span className="size-10 rounded-lg grid place-items-center bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
                     {loadingMethod === "pix" ? <Loader2 className="size-5 animate-spin" /> : <QrCode className="size-5" />}
                   </span>
                   <span className="flex flex-col">
-                    <span className="font-medium">PIX</span>
-                    <span className="text-xs text-muted-foreground">Aprovação imediata · sem taxa</span>
+                    <span className="font-medium text-zinc-100">PIX</span>
+                    <span className="text-xs text-zinc-400">Aprovação imediata · sem taxa</span>
                   </span>
                 </span>
-                <span className="text-[color:var(--kpi-emerald)] font-bold tabular-nums">{brl(methodPlan.price_cents)}</span>
+                <span className="text-emerald-400 font-semibold tabular-nums">{brl(methodPlan.price_cents)}</span>
               </button>
 
               <button
                 disabled={loadingMethod !== null}
                 onClick={payCard}
-                className="w-full flex items-center justify-between rounded-xl border border-border hover:border-primary bg-card/60 hover:bg-card px-4 py-4 text-left transition disabled:opacity-60"
+                className="w-full flex items-center justify-between rounded-xl border border-zinc-800 hover:border-zinc-600 bg-zinc-900/60 hover:bg-zinc-900 px-4 py-4 text-left transition-all disabled:opacity-60"
               >
                 <span className="flex items-center gap-3">
-                  <span className="size-10 rounded-lg grid place-items-center bg-[color:color-mix(in_oklab,var(--primary)_15%,transparent)] text-primary">
+                  <span className="size-10 rounded-lg grid place-items-center bg-sky-500/10 border border-sky-500/20 text-sky-400">
                     {loadingMethod === "card" ? <Loader2 className="size-5 animate-spin" /> : <CreditCard className="size-5" />}
                   </span>
                   <span className="flex flex-col">
-                    <span className="font-medium">Cartão de crédito</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="font-medium text-zinc-100">Cartão de crédito</span>
+                    <span className="text-xs text-zinc-400">
                       Parcelado em até 12x · taxa de {CARD_FEE_PERCENT.toFixed(2).replace(".", ",")}% inclusa
                     </span>
                   </span>
                 </span>
-                <span className="text-primary font-bold tabular-nums">{brl(cardAmount(methodPlan.price_cents))}</span>
+                <span className="text-zinc-100 font-semibold tabular-nums">{brl(cardAmount(methodPlan.price_cents))}</span>
               </button>
 
-              <p className="text-[11px] text-muted-foreground text-center">
+              <p className="text-[11px] text-zinc-400 text-center">
                 A taxa do cartão é repassada ao assinante. PIX não possui acréscimo.
               </p>
             </div>
@@ -457,15 +457,8 @@ function AdminSubscriptionSection() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-start gap-3 space-y-0">
-        <div
-          className="size-10 rounded-xl grid place-items-center shrink-0"
-          style={{
-            background: "color-mix(in oklab, var(--kpi-violet) 15%, transparent)",
-            color: "var(--kpi-violet)",
-            border: "1px solid color-mix(in oklab, var(--kpi-violet) 45%, transparent)",
-          }}
-        >
-          <KeyRound className="size-5" />
+        <div className="size-9 rounded-lg grid place-items-center bg-zinc-800/60 border border-zinc-700/50 text-zinc-300 shrink-0">
+          <KeyRound className="size-4.5" />
         </div>
         <div className="min-w-0">
           <CardTitle>Assinatura do painel</CardTitle>
@@ -483,7 +476,7 @@ function AdminSubscriptionSection() {
             <Input inputMode="decimal" value={subMonthly} onChange={(e) => setSubMonthly(e.target.value)} />
           </div>
         </div>
-        <Button className="btn-premium rounded-full" onClick={() => save.mutate()} disabled={save.isPending}>
+        <Button className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium" onClick={() => save.mutate()} disabled={save.isPending}>
           Salvar assinatura
         </Button>
       </CardContent>
@@ -569,15 +562,8 @@ function AdminRenewalPlansSection() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-start gap-3 space-y-0">
-        <div
-          className="size-10 rounded-xl grid place-items-center shrink-0"
-          style={{
-            background: "color-mix(in oklab, var(--kpi-emerald) 15%, transparent)",
-            color: "var(--kpi-emerald)",
-            border: "1px solid color-mix(in oklab, var(--kpi-emerald) 45%, transparent)",
-          }}
-        >
-          <CalendarClock className="size-5" />
+        <div className="size-9 rounded-lg grid place-items-center bg-zinc-800/60 border border-zinc-700/50 text-zinc-300 shrink-0">
+          <CalendarClock className="size-4.5" />
         </div>
         <div className="min-w-0">
           <CardTitle>Planos de renovação</CardTitle>
@@ -586,13 +572,13 @@ function AdminRenewalPlansSection() {
       </CardHeader>
       <CardContent className="space-y-3">
         {plans.length === 0 && (
-          <p className="text-sm text-muted-foreground">Nenhum plano cadastrado.</p>
+          <p className="text-sm text-zinc-500">Nenhum plano cadastrado.</p>
         )}
         {plans.map((p) => {
           const d = drafts[p.id];
           if (!d) return null;
           return (
-            <div key={p.id} className="rounded-xl border border-border bg-card/40 p-3 space-y-3">
+            <div key={p.id} className="rounded-xl border border-zinc-800/80 bg-zinc-950/40 p-3.5 space-y-3">
               <div className="grid md:grid-cols-4 gap-3">
                 <div className="space-y-1 md:col-span-2">
                   <Label>Nome do plano</Label>
@@ -613,7 +599,6 @@ function AdminRenewalPlansSection() {
                     type="button"
                     variant={d.active ? "default" : "outline"}
                     size="sm"
-                    className="rounded-full"
                     onClick={() => setDrafts((s) => ({ ...s, [p.id]: { ...s[p.id], active: !s[p.id].active } }))}
                   >
                     {d.active ? "Ativo" : "Inativo"}
@@ -622,17 +607,16 @@ function AdminRenewalPlansSection() {
                     type="button"
                     variant={d.featured ? "default" : "outline"}
                     size="sm"
-                    className="rounded-full"
                     onClick={() => setDrafts((s) => ({ ...s, [p.id]: { ...s[p.id], featured: !s[p.id].featured } }))}
                   >
                     <Star className="size-3.5 mr-1" /> {d.featured ? "Destaque" : "Sem destaque"}
                   </Button>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="rounded-full text-rose-400 border-rose-500/40 hover:bg-rose-500/10" onClick={() => remove.mutate(p.id)} disabled={remove.isPending}>
+                  <Button size="icon" variant="ghost" className="text-zinc-400 hover:text-rose-400" onClick={() => remove.mutate(p.id)} disabled={remove.isPending}>
                     <Trash2 className="size-4" />
                   </Button>
-                  <Button size="sm" className="btn-premium rounded-full" onClick={() => save.mutate(p.id)} disabled={save.isPending}>
+                  <Button size="sm" className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium" onClick={() => save.mutate(p.id)} disabled={save.isPending}>
                     Salvar
                   </Button>
                 </div>
@@ -640,7 +624,7 @@ function AdminRenewalPlansSection() {
             </div>
           );
         })}
-        <Button type="button" variant="outline" className="rounded-full" onClick={() => create.mutate()} disabled={create.isPending}>
+        <Button type="button" variant="outline" onClick={() => create.mutate()} disabled={create.isPending}>
           <Plus className="size-4 mr-1" /> Adicionar plano
         </Button>
       </CardContent>

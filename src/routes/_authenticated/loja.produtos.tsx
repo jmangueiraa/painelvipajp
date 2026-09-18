@@ -172,7 +172,9 @@ function LojaProdutosPage() {
         actions={
           <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setForm(empty); }}>
             <DialogTrigger asChild>
-              <Button onClick={() => { setForm(empty); setOpen(true); }}><Plus className="mr-1 h-4 w-4" />Novo produto</Button>
+              <Button onClick={() => { setForm(empty); setOpen(true); }} className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium">
+                <Plus className="mr-1.5 h-4 w-4" />Novo produto
+              </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>{form.id ? "Editar produto" : "Novo produto"}</DialogTitle></DialogHeader>
@@ -206,18 +208,18 @@ function LojaProdutosPage() {
                   <div className="mt-1 flex items-center gap-3">
                     {form.image_url ? (
                       <div className="relative">
-                        <img src={form.image_url} alt="" className="h-20 w-20 rounded-lg object-cover border" />
+                        <img src={form.image_url} alt="" className="h-20 w-20 rounded-lg object-cover border border-zinc-800" />
                         <button
                           type="button"
                           onClick={() => setForm({ ...form, image_url: "" })}
-                          className="absolute -top-2 -right-2 rounded-full bg-destructive text-destructive-foreground p-0.5"
+                          className="absolute -top-2 -right-2 rounded-full bg-rose-500 text-white p-0.5"
                           aria-label="Remover imagem"
                         >
                           <X className="h-3 w-3" />
                         </button>
                       </div>
                     ) : (
-                      <div className="h-20 w-20 rounded-lg border border-dashed flex items-center justify-center text-2xl bg-muted/30">
+                      <div className="h-20 w-20 rounded-lg border border-dashed border-zinc-800 flex items-center justify-center text-2xl bg-zinc-950/40">
                         {form.emoji || "🛒"}
                       </div>
                     )}
@@ -237,17 +239,17 @@ function LojaProdutosPage() {
                         {uploading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Upload className="mr-1 h-4 w-4" />}
                         {form.image_url ? "Trocar imagem" : "Enviar imagem"}
                       </Button>
-                      <p className="mt-1 text-xs text-muted-foreground">PNG ou JPG, até 5MB. Se vazio, usa o emoji.</p>
+                      <p className="mt-1 text-xs text-zinc-400">PNG ou JPG, até 5MB. Se vazio, usa o emoji.</p>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between rounded-lg border p-3">
-                  <Label htmlFor="active">Ativo (exibir no portal)</Label>
+                <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950/40 p-3.5">
+                  <Label htmlFor="active" className="text-zinc-200">Ativo (exibir no portal)</Label>
                   <Switch id="active" checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={() => save.mutate(form)} disabled={save.isPending}>Salvar</Button>
+                <Button className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium" onClick={() => save.mutate(form)} disabled={save.isPending}>Salvar</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -257,46 +259,46 @@ function LojaProdutosPage() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <p className="p-4 text-sm text-muted-foreground">Carregando…</p>
+            <p className="p-4 text-sm text-zinc-500">Carregando…</p>
           ) : data.length === 0 ? (
-            <p className="p-4 text-sm text-muted-foreground">Nenhum produto cadastrado.</p>
+            <p className="p-4 text-sm text-zinc-500 text-center py-8">Nenhum produto cadastrado.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <thead className="bg-zinc-900/40 text-left text-xs uppercase tracking-wider text-zinc-400 border-b border-zinc-800/60">
                   <tr>
-                    <th className="p-3">Produto</th>
-                    <th className="p-3">Venda</th>
-                    <th className="p-3">Custo</th>
-                    <th className="p-3">Lucro</th>
-                    <th className="p-3">Validade</th>
-                    <th className="p-3">Status</th>
-                    <th className="p-3 text-right">Ações</th>
+                    <th className="p-3 font-medium">Produto</th>
+                    <th className="p-3 font-medium">Venda</th>
+                    <th className="p-3 font-medium">Custo</th>
+                    <th className="p-3 font-medium">Lucro</th>
+                    <th className="p-3 font-medium">Validade</th>
+                    <th className="p-3 font-medium">Status</th>
+                    <th className="p-3 font-medium text-right">Ações</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-zinc-800/40">
                   {data.map((p) => (
-                    <tr key={p.id} className="border-t">
+                    <tr key={p.id} className="hover:bg-zinc-900/40 transition-colors">
                       <td className="p-3">
                         <div className="flex items-center gap-3">
                           {p.image_url ? (
-                            <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover border" />
+                            <img src={p.image_url} alt="" className="h-10 w-10 rounded-lg object-cover border border-zinc-800" />
                           ) : (
                             <span className="text-xl w-10 text-center">{p.emoji ?? "🛒"}</span>
                           )}
-                          <span className="font-medium">{p.label}</span>
+                          <span className="font-medium text-zinc-100">{p.label}</span>
                         </div>
                       </td>
-                      <td className="p-3 tabular-nums">{brl(p.sale_cents)}</td>
-                      <td className="p-3 tabular-nums">{brl(p.cost_cents)}</td>
-                      <td className="p-3 tabular-nums font-semibold text-emerald-600">{brl(p.sale_cents - p.cost_cents)}</td>
-                      <td className="p-3">{p.duration_days} dias</td>
+                      <td className="p-3 tabular-nums text-zinc-300">{brl(p.sale_cents)}</td>
+                      <td className="p-3 tabular-nums text-zinc-400">{brl(p.cost_cents)}</td>
+                      <td className="p-3 tabular-nums font-semibold text-emerald-400">{brl(p.sale_cents - p.cost_cents)}</td>
+                      <td className="p-3 text-zinc-400">{p.duration_days} dias</td>
                       <td className="p-3">
-                        <Badge variant={p.active ? "default" : "secondary"}>{p.active ? "Ativo" : "Inativo"}</Badge>
+                        <Badge variant={p.active ? "emerald" : "neutral"}>{p.active ? "Ativo" : "Inativo"}</Badge>
                       </td>
                       <td className="p-3 text-right">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Excluir ${p.label}?`)) remove.mutate(p.id); }}><Trash2 className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-zinc-100" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-rose-400" onClick={() => { if (confirm(`Excluir ${p.label}?`)) remove.mutate(p.id); }}><Trash2 className="h-4 w-4" /></Button>
                       </td>
                     </tr>
                   ))}

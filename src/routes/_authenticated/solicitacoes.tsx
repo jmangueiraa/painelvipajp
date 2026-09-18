@@ -216,42 +216,42 @@ function SolicitacoesPage() {
         <CardHeader><CardTitle>Pendentes ({pending.length})</CardTitle></CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Carregando…</p>
+            <p className="text-sm text-zinc-500">Carregando…</p>
           ) : pending.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma solicitação pendente.</p>
+            <p className="text-sm text-zinc-500 py-6 text-center">Nenhuma solicitação pendente.</p>
           ) : (
-            <ul className="divide-y">
+            <ul className="divide-y divide-zinc-800/60">
               {pending.map((r) => (
-                <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3.5">
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium">
+                    <div className="font-medium text-zinc-100">
                       {r.clients?.name ?? "Cliente"}
                       {r.clients?.portal_username && (
-                        <span className="ml-2 text-xs font-normal text-muted-foreground">@{r.clients.portal_username}</span>
+                        <span className="ml-2 text-xs font-normal text-zinc-400">@{r.clients.portal_username}</span>
                       )}
                     </div>
-                    <div className="text-xs font-medium text-primary">
+                    <div className="text-xs font-medium text-sky-400 mt-0.5">
                       {r.days === 0 ? "🛒 " : ""}{itemLabel(r)}
                     </div>
                     {r.days !== 0 && (
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-zinc-400 mt-0.5">
                         {r.clients?.phone} · vence {r.clients ? formatDateBR(r.clients.due_date) : "—"} · {brl(r.clients?.price_cents ?? 0)}
                       </div>
                     )}
-                    <div className="text-xs text-muted-foreground">Solicitado em {formatDateBR(r.created_at)}</div>
+                    <div className="text-xs text-zinc-500 mt-0.5">Solicitado em {formatDateBR(r.created_at)}</div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <Badge variant={r.days === 0 ? "default" : "secondary"}>{r.days === 0 ? "Loja" : periodLabel(r.days)}</Badge>
-                    <Badge variant={r.status === "paid" ? "default" : "outline"} className={r.status === "paid" ? "bg-emerald-600 hover:bg-emerald-600" : ""}>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <Badge variant={r.days === 0 ? "sky" : "neutral"}>{r.days === 0 ? "Loja" : periodLabel(r.days)}</Badge>
+                    <Badge variant={r.status === "paid" ? "emerald" : r.status === "pending" ? "amber" : "neutral"}>
                       {statusLabel(r.status)}
                     </Badge>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={() => approve.mutate(r)} disabled={approve.isPending}>
-                      <Check className="mr-1 h-3 w-3" />{r.status === "paid" ? "Entregar" : "Aprovar"}
+                    <Button size="sm" className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium" onClick={() => approve.mutate(r)} disabled={approve.isPending}>
+                      <Check className="mr-1.5 h-3.5 w-3.5" />{r.status === "paid" ? "Entregar" : "Aprovar"}
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => remove.mutate(r.id)} disabled={remove.isPending}>
-                      <Trash2 className="h-3 w-3" />
+                    <Button size="sm" variant="ghost" className="text-zinc-400 hover:text-rose-400" onClick={() => remove.mutate(r.id)} disabled={remove.isPending}>
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </li>
@@ -265,15 +265,15 @@ function SolicitacoesPage() {
         <Card>
           <CardHeader><CardTitle>Histórico</CardTitle></CardHeader>
           <CardContent>
-            <ul className="divide-y">
+            <ul className="divide-y divide-zinc-800/60">
               {done.map((r) => (
-                <li key={r.id} className="flex items-center justify-between py-2 text-sm">
-                  <span>
-                    {r.clients?.name ?? "Cliente"}
-                    {r.clients?.portal_username && <span className="ml-1 text-xs text-muted-foreground">(@{r.clients.portal_username})</span>}
+                <li key={r.id} className="flex items-center justify-between py-2.5 text-sm">
+                  <span className="text-zinc-300">
+                    <strong className="text-zinc-100 font-medium">{r.clients?.name ?? "Cliente"}</strong>
+                    {r.clients?.portal_username && <span className="ml-1 text-xs text-zinc-400">(@{r.clients.portal_username})</span>}
                     {" · "}{itemLabel(r)}
                   </span>
-                  <Badge variant="outline">{statusLabel(r.status)}</Badge>
+                  <Badge variant="neutral">{statusLabel(r.status)}</Badge>
                 </li>
               ))}
             </ul>

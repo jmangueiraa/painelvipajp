@@ -204,9 +204,9 @@ function FinanceiroPage() {
       <PageHeader title="Financeiro" description="Controle de recebimentos e histórico de pagamentos" />
 
       <div className="grid gap-4 md:grid-cols-3">
-        <KpiCard label="Lucro do mês" value={brl(stats.lucroMes)} icon={Wallet} color="violet" />
-        <KpiCard label="Lucro do ano" value={brl(stats.lucroAno)} icon={TrendingUp} color="cyan" />
-        <KpiCard label="Lucro total" value={brl(stats.lucroTotal)} icon={ArrowUpRight} color="emerald" />
+        <KpiCard label="Lucro do mês" value={brl(stats.lucroMes)} icon={Wallet} color="emerald" />
+        <KpiCard label="Lucro do ano" value={brl(stats.lucroAno)} icon={TrendingUp} color="sky" />
+        <KpiCard label="Lucro total" value={brl(stats.lucroTotal)} icon={ArrowUpRight} color="neutral" />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <KpiCard label="Receitas do mês" value={brl(stats.receitaMes)} icon={ArrowUpRight} color="emerald" />
@@ -216,16 +216,16 @@ function FinanceiroPage() {
       <Card>
         <CardHeader><CardTitle>Recebimentos — 12 meses</CardTitle></CardHeader>
         <CardContent className="h-[260px]">
-          <ResponsiveContainer>
+          <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chart} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="label" stroke="var(--muted-foreground)" fontSize={12} />
-              <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(v) => `R$${v}`} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+              <XAxis dataKey="label" stroke="#71717a" fontSize={12} tickLine={false} />
+              <YAxis stroke="#71717a" fontSize={12} tickLine={false} tickFormatter={(v) => `R$${v}`} />
               <Tooltip
-                contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8 }}
+                contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", borderRadius: "8px", color: "#f4f4f5" }}
                 formatter={(v: number) => brl(v * 100)}
               />
-              <Bar dataKey="total" fill="var(--kpi-cyan)" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="total" fill="#38bdf8" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -233,17 +233,15 @@ function FinanceiroPage() {
 
       <HistoryCard entries={historyEntries} />
 
-
-
-      <Card className="kpi-card" style={{ "--kpi-color": "var(--kpi-emerald)" } as React.CSSProperties}>
+      <Card>
         <CardContent className="p-5 flex items-center justify-between gap-3">
           <div>
-            <p className="text-[11px] tracking-widest uppercase text-muted-foreground">Clientes no valor do mês</p>
-            <p className="text-2xl md:text-3xl font-bold text-[color:var(--kpi-emerald)] mt-1 tabular-nums">{brl(totalClientesValor)}</p>
-            <p className="text-xs text-muted-foreground mt-1">{clients.length} cliente(s) cadastrado(s)</p>
+            <p className="text-[11px] font-semibold tracking-wider uppercase text-zinc-400">Clientes no valor do mês</p>
+            <p className="text-2xl md:text-3xl font-semibold text-zinc-100 mt-1 tabular-nums">{brl(totalClientesValor)}</p>
+            <p className="text-xs text-zinc-400 mt-1">{clients.length} cliente(s) cadastrado(s)</p>
           </div>
-          <div className="size-12 rounded-xl grid place-items-center bg-[color:color-mix(in_oklab,var(--kpi-emerald)_15%,transparent)] text-[color:var(--kpi-emerald)]">
-            <Users className="size-6" />
+          <div className="size-11 rounded-lg grid place-items-center bg-zinc-800/60 border border-zinc-700/50 text-zinc-300">
+            <Users className="size-5" />
           </div>
         </CardContent>
       </Card>
@@ -278,27 +276,27 @@ function HistoryCard({ entries }: { entries: HistoryEntry[] }) {
             </TableHeader>
             <TableBody>
               {pageItems.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum pagamento registrado.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-zinc-500">Nenhum pagamento registrado.</TableCell></TableRow>
               ) : pageItems.map((p) => (
                 <TableRow key={p.id}>
-                  <TableCell className="font-medium whitespace-nowrap">{p.name}</TableCell>
-                  <TableCell className="whitespace-nowrap text-xs">{p.kind}</TableCell>
-                  <TableCell className="whitespace-nowrap">{formatDateTimeBR(p.date)}</TableCell>
-                  <TableCell className="capitalize whitespace-nowrap">{p.method}</TableCell>
-                  <TableCell className="text-right tabular-nums whitespace-nowrap">{brl(p.amount)}</TableCell>
+                  <TableCell className="font-medium text-zinc-100 whitespace-nowrap">{p.name}</TableCell>
+                  <TableCell className="whitespace-nowrap text-xs text-zinc-400">{p.kind}</TableCell>
+                  <TableCell className="whitespace-nowrap text-zinc-400">{formatDateTimeBR(p.date)}</TableCell>
+                  <TableCell className="capitalize whitespace-nowrap text-zinc-300">{p.method}</TableCell>
+                  <TableCell className="text-right tabular-nums whitespace-nowrap font-medium text-zinc-200">{brl(p.amount)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
         {entries.length > pageSize && (
-          <div className="flex items-center justify-between gap-2 p-3 border-t">
-            <span className="text-xs text-muted-foreground">
+          <div className="flex items-center justify-between gap-2 p-3 border-t border-zinc-800/60">
+            <span className="text-xs text-zinc-400">
               {start + 1}–{Math.min(start + pageSize, entries.length)} de {entries.length}
             </span>
             <div className="flex items-center gap-2">
               <Button size="sm" variant="outline" disabled={current <= 1} onClick={() => setPage(current - 1)}>Anterior</Button>
-              <span className="text-xs tabular-nums">{current}/{totalPages}</span>
+              <span className="text-xs tabular-nums text-zinc-400">{current}/{totalPages}</span>
               <Button size="sm" variant="outline" disabled={current >= totalPages} onClick={() => setPage(current + 1)}>Próxima</Button>
             </div>
           </div>

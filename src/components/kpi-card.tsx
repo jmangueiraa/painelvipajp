@@ -1,15 +1,14 @@
 import type { LucideIcon } from "lucide-react";
-import type { CSSProperties } from "react";
 
 type KpiColor = "violet" | "emerald" | "rose" | "cyan" | "amber" | "primary";
 
-const colorVar: Record<KpiColor, string> = {
-  violet: "var(--kpi-violet)",
-  emerald: "var(--kpi-emerald)",
-  rose: "var(--kpi-rose)",
-  cyan: "var(--kpi-cyan)",
-  amber: "var(--kpi-amber)",
-  primary: "var(--primary)",
+const iconColorMap: Record<KpiColor, string> = {
+  violet: "text-zinc-400",
+  emerald: "text-emerald-400",
+  rose: "text-rose-400",
+  cyan: "text-sky-400",
+  amber: "text-amber-400",
+  primary: "text-zinc-300",
 };
 
 export function KpiCard({
@@ -25,26 +24,18 @@ export function KpiCard({
   color?: KpiColor;
   hint?: string;
 }) {
-  const style = { "--kpi-color": colorVar[color] } as CSSProperties;
   return (
-    <div className="kpi-card p-4 md:p-5" style={style}>
+    <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/60 p-4 md:p-5 backdrop-blur-md transition-all hover:border-zinc-700/80">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-medium tracking-widest uppercase text-muted-foreground">{label}</p>
-          <p className="mt-2 text-2xl md:text-3xl font-bold tabular-nums" style={{ color: colorVar[color] }}>
+          <p className="text-xs font-medium tracking-wide text-zinc-400">{label}</p>
+          <p className="mt-2 text-2xl md:text-3xl font-semibold tabular-nums text-zinc-100">
             {value}
           </p>
-          {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
+          {hint && <p className="text-xs text-zinc-500 mt-1">{hint}</p>}
         </div>
-        <div
-          className="size-10 shrink-0 rounded-xl grid place-items-center border"
-          style={{
-            borderColor: `color-mix(in oklab, ${colorVar[color]} 50%, transparent)`,
-            background: `color-mix(in oklab, ${colorVar[color]} 12%, transparent)`,
-            color: colorVar[color],
-          }}
-        >
-          <Icon className="size-5" />
+        <div className="size-9 shrink-0 rounded-lg grid place-items-center bg-zinc-800/60 border border-zinc-700/50">
+          <Icon className={`size-4.5 ${iconColorMap[color] || "text-zinc-300"}`} />
         </div>
       </div>
     </div>

@@ -29,20 +29,13 @@ type Settings = {
 };
 
 function SectionCard({
-  title, description, icon: Icon, color, children,
-}: { title: string; description?: string; icon: React.ElementType; color: string; children: React.ReactNode }) {
+  title, description, icon: Icon, children,
+}: { title: string; description?: string; icon: React.ElementType; color?: string; children: React.ReactNode }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-start gap-3 space-y-0">
-        <div
-          className="size-10 rounded-xl grid place-items-center shrink-0"
-          style={{
-            background: `color-mix(in oklab, ${color} 15%, transparent)`,
-            color,
-            border: `1px solid color-mix(in oklab, ${color} 45%, transparent)`,
-          }}
-        >
-          <Icon className="size-5" />
+        <div className="size-9 rounded-lg grid place-items-center bg-zinc-800/60 border border-zinc-700/50 text-zinc-300 shrink-0">
+          <Icon className="size-4.5" />
         </div>
         <div className="min-w-0">
           <CardTitle>{title}</CardTitle>
@@ -125,7 +118,6 @@ function CadastrarApiPage() {
         title="Mercado Pago"
         description="Access Token de PRODUÇÃO (APP_USR-...) para receber pagamentos PIX e Cartão."
         icon={Wallet}
-        color="var(--kpi-cyan)"
       >
         <div className="space-y-1">
           <Label>Access Token</Label>
@@ -137,16 +129,16 @@ function CadastrarApiPage() {
               onChange={(e) => setMp(e.target.value)}
               autoComplete="off"
             />
-            <Button type="button" variant="outline" className="rounded-full" onClick={() => setShowMp((v) => !v)}>
+            <Button type="button" variant="outline" onClick={() => setShowMp((v) => !v)}>
               {showMp ? "Ocultar" : "Mostrar"}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Gere em <a className="underline" target="_blank" rel="noreferrer" href="https://www.mercadopago.com.br/developers/panel/app">Painel do desenvolvedor → Credenciais de produção</a>.
+          <p className="text-xs text-zinc-400">
+            Gere em <a className="underline hover:text-zinc-200" target="_blank" rel="noreferrer" href="https://www.mercadopago.com.br/developers/panel/app">Painel do desenvolvedor → Credenciais de produção</a>.
           </p>
         </div>
         <Button
-          className="btn-premium rounded-full"
+          className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium"
           onClick={() => save.mutate({ mp_access_token: mp.trim() || null })}
           disabled={save.isPending}
         >
@@ -158,11 +150,10 @@ function CadastrarApiPage() {
         title="Telegram"
         description="Receba alertas de vendas, renovações e novos clientes diretamente no Telegram."
         icon={Send}
-        color="var(--kpi-amber)"
       >
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-sm text-amber-100/90">
-          1) Crie um bot em <a className="underline" target="_blank" rel="noreferrer" href="https://t.me/BotFather">@BotFather</a> para obter o <strong>Bot Token</strong>.<br />
-          2) Inicie uma conversa com o seu bot e descubra seu <strong>Chat ID</strong> em <a className="underline" target="_blank" rel="noreferrer" href="https://t.me/userinfobot">@userinfobot</a>.
+        <div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 text-sm text-zinc-300">
+          1) Crie um bot em <a className="underline hover:text-zinc-100" target="_blank" rel="noreferrer" href="https://t.me/BotFather">@BotFather</a> para obter o <strong>Bot Token</strong>.<br />
+          2) Inicie uma conversa com o seu bot e descubra seu <strong>Chat ID</strong> em <a className="underline hover:text-zinc-100" target="_blank" rel="noreferrer" href="https://t.me/userinfobot">@userinfobot</a>.
         </div>
         <div className="space-y-1">
           <Label>Bot Token</Label>
@@ -174,7 +165,7 @@ function CadastrarApiPage() {
               onChange={(e) => setTgToken(e.target.value)}
               autoComplete="off"
             />
-            <Button type="button" variant="outline" className="rounded-full" onClick={() => setShowTg((v) => !v)}>
+            <Button type="button" variant="outline" onClick={() => setShowTg((v) => !v)}>
               {showTg ? "Ocultar" : "Mostrar"}
             </Button>
           </div>
@@ -190,7 +181,7 @@ function CadastrarApiPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button
-            className="btn-premium rounded-full"
+            className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium"
             onClick={() => save.mutate({ telegram_bot_token: tgToken.trim() || null, telegram_chat_id: tgChat.trim() || null })}
             disabled={save.isPending}
           >
@@ -198,7 +189,6 @@ function CadastrarApiPage() {
           </Button>
           <Button
             variant="outline"
-            className="rounded-full"
             onClick={() => testTelegram.mutate()}
             disabled={testTelegram.isPending}
           >
@@ -212,10 +202,9 @@ function CadastrarApiPage() {
         title="WhatsApp (Z-API)"
         description="Conecte seu WhatsApp via Z-API para envio automático de cobranças."
         icon={MessageSquare}
-        color="var(--kpi-emerald)"
       >
-        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-sm text-emerald-100/90">
-          Crie uma instância em <a className="underline" target="_blank" rel="noreferrer" href="https://app.z-api.io/">app.z-api.io</a> e copie os campos abaixo. O <strong>Client-Token</strong> é opcional (Account Security Token).
+        <div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 text-sm text-zinc-300">
+          Crie uma instância em <a className="underline hover:text-zinc-100" target="_blank" rel="noreferrer" href="https://app.z-api.io/">app.z-api.io</a> e copie os campos abaixo. O <strong>Client-Token</strong> é opcional (Account Security Token).
         </div>
         <div className="grid md:grid-cols-2 gap-3">
           <div className="space-y-1">
@@ -226,7 +215,7 @@ function CadastrarApiPage() {
             <Label>Token da instância</Label>
             <div className="flex gap-2">
               <Input type={showZ ? "text" : "password"} value={zTok} onChange={(e) => setZTok(e.target.value)} autoComplete="off" />
-              <Button type="button" variant="outline" className="rounded-full" onClick={() => setShowZ((v) => !v)}>
+              <Button type="button" variant="outline" onClick={() => setShowZ((v) => !v)}>
                 {showZ ? "Ocultar" : "Mostrar"}
               </Button>
             </div>
@@ -237,7 +226,7 @@ function CadastrarApiPage() {
           </div>
         </div>
         <Button
-          className="btn-premium rounded-full"
+          className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium"
           onClick={() => save.mutate({
             zapi_instance_id: zInst.trim() || null,
             zapi_token: zTok.trim() || null,
@@ -292,29 +281,29 @@ function WhatsAppConnectBlock() {
   const connected = status.data?.connected ?? false;
 
   return (
-    <div className="mt-4 rounded-xl border bg-card/40 p-3 space-y-3">
+    <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Conexão WhatsApp</span>
+        <span className="text-sm font-medium text-zinc-200">Conexão WhatsApp</span>
         {connected ? (
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400">
-            <span className="size-2 rounded-full bg-emerald-500" /> Conectado
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="size-1.5 rounded-full bg-emerald-400" /> Conectado
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-400">
-            <span className="size-2 rounded-full bg-rose-500" /> Aguardando leitura
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <span className="size-1.5 rounded-full bg-amber-400" /> Aguardando leitura
           </span>
         )}
       </div>
 
       {!connected && (
         <div className="flex flex-col items-center gap-3">
-          <div className="size-56 rounded-2xl bg-white grid place-items-center p-3">
+          <div className="size-56 rounded-xl bg-white grid place-items-center p-3 border border-zinc-700">
             {qr.isLoading ? (
-              <RefreshCw className="size-6 animate-spin text-muted-foreground" />
+              <RefreshCw className="size-6 animate-spin text-zinc-500" />
             ) : qr.data?.image ? (
               <img src={qr.data.image} alt="QR Code WhatsApp" className="size-full object-contain" />
             ) : (
-              <div className="flex flex-col items-center gap-2 text-muted-foreground text-center px-2">
+              <div className="flex flex-col items-center gap-2 text-zinc-500 text-center px-2">
                 <QrCode className="size-8" />
                 <span className="text-xs">
                   {qr.error ? translateError(qr.error as Error) : status.error ? translateError(status.error as Error) : "Salve as credenciais e clique em atualizar"}
@@ -322,7 +311,7 @@ function WhatsAppConnectBlock() {
               </div>
             )}
           </div>
-          <p className="text-xs text-muted-foreground text-center max-w-xs">
+          <p className="text-xs text-zinc-400 text-center max-w-xs">
             Abra o WhatsApp → <strong>Aparelhos conectados</strong> → <strong>Conectar um aparelho</strong> e escaneie.
           </p>
         </div>
@@ -331,7 +320,7 @@ function WhatsAppConnectBlock() {
       <div className="flex gap-2">
         <Button
           variant="outline"
-          className="flex-1 rounded-xl"
+          className="flex-1"
           onClick={() => qc.invalidateQueries({ queryKey: ["zapi"] })}
           disabled={status.isFetching || qr.isFetching}
         >
@@ -340,7 +329,7 @@ function WhatsAppConnectBlock() {
         {connected && (
           <Button
             variant="outline"
-            className="rounded-xl text-rose-400 border-rose-500/40 hover:bg-rose-500/10"
+            className="text-rose-400 border-rose-500/40 hover:bg-rose-500/10"
             onClick={() => disconnect.mutate()}
             disabled={disconnect.isPending}
           >

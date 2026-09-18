@@ -1,26 +1,20 @@
-import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-type PillColor = "violet" | "emerald" | "rose" | "cyan" | "amber" | "primary";
-
-const colorVar: Record<PillColor, string> = {
-  violet: "var(--kpi-violet)",
-  emerald: "var(--kpi-emerald)",
-  rose: "var(--kpi-rose)",
-  cyan: "var(--kpi-cyan)",
-  amber: "var(--kpi-amber)",
-  primary: "var(--primary)",
-};
-
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
-  color?: PillColor;
+  color?: string;
   icon?: ReactNode;
 }
 
-export function ActionPillButton({ color = "primary", icon, className, children, ...props }: Props) {
-  const style = { "--pill-color": colorVar[color] } as CSSProperties;
+export function ActionPillButton({ icon, className, children, color, ...props }: Props) {
   return (
-    <button {...props} className={cn("action-pill", className)} style={style}>
+    <button
+      {...props}
+      className={cn(
+        "inline-flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/80 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-all hover:bg-zinc-800 hover:text-white active:scale-[0.99] disabled:opacity-50",
+        className,
+      )}
+    >
       {icon}
       <span>{children}</span>
     </button>

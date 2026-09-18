@@ -35,12 +35,12 @@ export function UserMenu() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="gap-2 h-9">
           <Avatar className="size-7">
-            <AvatarFallback className="bg-primary text-primary-foreground text-xs">{initials}</AvatarFallback>
+            <AvatarFallback className="bg-zinc-800 text-zinc-200 border border-zinc-700/50 text-xs font-medium">{initials}</AvatarFallback>
           </Avatar>
-          <span className="hidden sm:inline text-sm">{name}</span>
+          <span className="hidden sm:inline text-sm text-zinc-200">{name}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-56 border border-zinc-800 bg-zinc-900/95 backdrop-blur-md">
         <DropdownMenuLabel>
           <span className="font-medium">{name}</span>
         </DropdownMenuLabel>

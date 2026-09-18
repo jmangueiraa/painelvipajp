@@ -70,7 +70,7 @@ function LeadsPage() {
             label="Total de Leads"
             value={stats?.total || 0}
             icon={Users}
-            color="violet"
+            color="neutral"
           />
           <KpiCard
             label="Lead Score Médio"
@@ -94,7 +94,7 @@ function LeadsPage() {
             label="Estágio: Decisão"
             value={stats?.leads?.filter((l: any) => l.funnel_stage === 'decisao').length || 0}
             icon={ChevronRight}
-            color="cyan"
+            color="sky"
           />
         </div>
 
@@ -131,7 +131,7 @@ function LeadsPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="rounded-md border overflow-x-auto">
+                <div className="rounded-lg border border-zinc-800/80 overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -145,57 +145,57 @@ function LeadsPage() {
                     </TableHeader>
                     <TableBody>
                       {isLoading ? (
-                        <TableRow><TableCell colSpan={6} className="text-center py-8">Analisando leads com IA...</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={6} className="text-center py-8 text-zinc-500">Analisando leads com IA...</TableCell></TableRow>
                       ) : filteredLeads.length === 0 ? (
-                        <TableRow><TableCell colSpan={6} className="text-center py-8">Nenhum lead qualificado encontrado.</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={6} className="text-center py-8 text-zinc-500">Nenhum lead qualificado encontrado.</TableCell></TableRow>
                       ) : (
                         filteredLeads.map((lead: any) => (
                           <TableRow key={lead.id}>
                             <TableCell>
                               <div className="flex items-center gap-3">
-                                <div className={`size-10 rounded-full flex items-center justify-center font-bold text-xs ${
-                                  (lead.lead_score || 0) > 70 ? 'bg-emerald-500/10 text-emerald-500' :
-                                  (lead.lead_score || 0) > 40 ? 'bg-amber-500/10 text-amber-500' :
-                                  'bg-rose-500/10 text-rose-500'
+                                <div className={`size-9 rounded-full flex items-center justify-center font-semibold text-xs border ${
+                                  (lead.lead_score || 0) > 70 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                  (lead.lead_score || 0) > 40 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                  'bg-rose-500/10 text-rose-400 border-rose-500/20'
                                 }`}>
                                   {lead.lead_score || 0}
                                 </div>
                                 <div className="flex flex-col min-w-0">
-                                  <span className="font-medium truncate">{lead.name || 'Público'}</span>
-                                  <a href={lead.profile_link} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline truncate uppercase tracking-tighter">
+                                  <span className="font-medium text-zinc-100 truncate">{lead.name || 'Público'}</span>
+                                  <a href={lead.profile_link} target="_blank" rel="noopener noreferrer" className="text-[10px] text-sky-400 hover:underline truncate uppercase tracking-wider font-medium">
                                     Acessar Perfil
                                   </a>
                                 </div>
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge variant="secondary" className="text-[10px] uppercase tracking-widest">{lead.platform}</Badge>
+                              <Badge variant="neutral" className="text-[10px] uppercase tracking-wider">{lead.platform}</Badge>
                             </TableCell>
                             <TableCell>
-                              <div className="flex flex-col gap-1">
-                                <span className="text-xs font-medium capitalize">{lead.funnel_stage || 'Descoberta'}</span>
-                                <div className="w-full bg-muted rounded-full h-1">
+                              <div className="flex flex-col gap-1.5">
+                                <span className="text-xs font-medium capitalize text-zinc-200">{lead.funnel_stage || 'Descoberta'}</span>
+                                <div className="w-full bg-zinc-800 rounded-full h-1">
                                   <div 
-                                    className="bg-primary h-1 rounded-full" 
+                                    className="bg-zinc-300 h-1 rounded-full" 
                                     style={{ width: `${(lead.conversion_probability || 0.2) * 100}%` }}
                                   />
                                 </div>
                               </div>
                             </TableCell>
                             <TableCell>
-                               <Badge variant={lead.status === 'Convertido' ? 'default' : 'outline'} className="text-[10px]">
+                               <Badge variant={lead.status === 'Convertido' ? 'emerald' : 'neutral'} className="text-[10px]">
                                 {lead.status}
                               </Badge>
                             </TableCell>
                             <TableCell className="max-w-[150px]">
                               <div className="flex flex-wrap gap-1">
                                 {lead.topics?.slice(0, 2).map((t: string, i: number) => (
-                                  <span key={i} className="text-[9px] px-1 bg-muted rounded">{t}</span>
-                                )) || <span className="text-[10px] text-muted-foreground italic">Analisando...</span>}
+                                  <span key={i} className="text-[10px] px-1.5 py-0.5 bg-zinc-800 border border-zinc-700/60 rounded text-zinc-300">{t}</span>
+                                )) || <span className="text-[10px] text-zinc-500 italic">Analisando...</span>}
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-100">
                                 <MessageSquare className="size-4" />
                               </Button>
                             </TableCell>
@@ -214,7 +214,7 @@ function LeadsPage() {
               <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <BrainCircuit className="size-5 text-primary" /> 
+                    <BrainCircuit className="size-5 text-zinc-400" /> 
                     Chat com IA de Vendas
                   </CardTitle>
                   <CardDescription>
@@ -222,23 +222,23 @@ function LeadsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="min-h-[300px] border rounded-lg bg-muted/30 p-4 relative overflow-y-auto">
+                  <div className="min-h-[300px] border border-zinc-800 rounded-lg bg-zinc-950/40 p-4 relative overflow-y-auto">
                     {!iaResponse && !iaMutation.isPending && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 text-muted-foreground">
-                        <MessageSquare className="size-8 mb-2 opacity-20" />
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 text-zinc-500">
+                        <MessageSquare className="size-8 mb-2 opacity-30" />
                         <p className="text-sm">Olá! Pergunte-me sobre os leads mais promissores ou estatísticas de conversão.</p>
                       </div>
                     )}
                     
                     {iaMutation.isPending && (
-                      <div className="flex items-center gap-2 text-sm animate-pulse">
-                        <BrainCircuit className="size-4 animate-spin" /> Processando dados...
+                      <div className="flex items-center gap-2 text-sm text-zinc-400 animate-pulse">
+                        <BrainCircuit className="size-4 animate-spin text-zinc-400" /> Processando dados...
                       </div>
                     )}
 
                     {iaResponse && (
                       <div className="space-y-4">
-                        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-sm whitespace-pre-wrap">
+                        <div className="bg-zinc-900/80 border border-zinc-800 rounded-lg p-4 text-sm text-zinc-200 whitespace-pre-wrap">
                           {iaResponse}
                         </div>
                       </div>
@@ -251,7 +251,7 @@ function LeadsPage() {
                       value={iaQuery}
                       onChange={(e) => setIaQuery(e.target.value)}
                     />
-                    <Button type="submit" disabled={iaMutation.isPending}>
+                    <Button type="submit" disabled={iaMutation.isPending} className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium">
                       Perguntar
                     </Button>
                   </form>
@@ -261,25 +261,25 @@ function LeadsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <TrendingUp className="size-4" /> Insights Sugeridos
+                    <TrendingUp className="size-4 text-zinc-400" /> Insights Sugeridos
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <button 
                     onClick={() => { setIaQuery("Quais são os 20 leads com maior chance de conversão?"); iaMutation.mutate("Quais são os 20 leads com maior chance de conversão?"); }}
-                    className="w-full text-left text-xs p-2 hover:bg-muted rounded border transition-colors"
+                    className="w-full text-left text-xs p-2.5 hover:bg-zinc-800/60 rounded-lg border border-zinc-800 text-zinc-300 transition-colors"
                   >
                     Top 20 leads promissores
                   </button>
                   <button 
                     onClick={() => { setIaQuery("Quais contatos ainda não receberam uma abordagem?"); iaMutation.mutate("Quais contatos ainda não receberam uma abordagem?"); }}
-                    className="w-full text-left text-xs p-2 hover:bg-muted rounded border transition-colors"
+                    className="w-full text-left text-xs p-2.5 hover:bg-zinc-800/60 rounded-lg border border-zinc-800 text-zinc-300 transition-colors"
                   >
                     Leads sem abordagem inicial
                   </button>
                   <button 
                     onClick={() => { setIaQuery("Quantos leads novos esta semana?"); iaMutation.mutate("Quantos leads novos esta semana?"); }}
-                    className="w-full text-left text-xs p-2 hover:bg-muted rounded border transition-colors"
+                    className="w-full text-left text-xs p-2.5 hover:bg-zinc-800/60 rounded-lg border border-zinc-800 text-zinc-300 transition-colors"
                   >
                     Resumo de novos leads da semana
                   </button>
