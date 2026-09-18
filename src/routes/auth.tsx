@@ -45,7 +45,7 @@ function AuthPage() {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: String(fd.get("email")),
       password: String(fd.get("password")),
       options: {
@@ -70,8 +70,13 @@ function AuthPage() {
         },
       } });
     } catch (err) { console.error(err); }
-    toast.success("Conta criada!", { description: "Verifique seu e-mail se a confirmação estiver ativa." });
-    setTab("login");
+    if (data?.session) {
+      toast.success("Conta criada com sucesso! Entrando...");
+      navigate({ to: "/dashboard" });
+    } else {
+      toast.success("Conta criada com sucesso!");
+      setTab("login");
+    }
   }
 
   async function handleForgot(e: React.FormEvent<HTMLFormElement>) {

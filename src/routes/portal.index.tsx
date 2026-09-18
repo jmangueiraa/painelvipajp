@@ -1,13 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, KeyRound, User } from "lucide-react";
+import { Loader2, KeyRound, User, Eye, EyeOff, MessageCircle, HelpCircle } from "lucide-react";
 
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPortalToken, portalFetch, setPortalToken } from "@/lib/portal-client";
 import { useRegisterPortalSW, InstallAppCard } from "@/components/portal/install-app-card";
 
@@ -15,10 +14,10 @@ export const Route = createFileRoute("/portal/")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Portal do Cliente" },
-      { name: "description", content: "Acesse seu plano, renove e veja seus pagamentos." },
+      { title: "Acesse sua conta — Portal do Cliente" },
+      { name: "description", content: "Acesse seu plano, faturas e renovações." },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { name: "theme-color", content: "#0F172A" },
+      { name: "theme-color", content: "#FF5500" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "Portal VIP" },
@@ -39,6 +38,7 @@ function PortalLoginPage() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -54,73 +54,141 @@ function PortalLoginPage() {
         body: JSON.stringify({ username: username.trim(), password }),
       });
       setPortalToken(res.token);
+      toast.success("Login realizado com sucesso!");
       navigate({ to: "/portal/painel" });
     } catch (err) {
-      toast.error((err as Error).message);
+      toast.error((err as Error).message || "Falha ao realizar login. Verifique seus dados.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-background via-background to-muted/30 p-4">
-      <Card className="w-full max-w-md overflow-hidden">
-        <img
-          src="/portal-icon-192.png"
-          alt="Portal do Cliente"
-          className="block w-full h-auto"
-          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-        />
-        <CardHeader className="text-center">
+    <div className="min-h-dvh flex flex-col items-center justify-center bg-[#FF5500] px-4 py-8 text-slate-800 font-sans selection:bg-orange-600 selection:text-white relative overflow-hidden">
+      {/* Background Decorative Rings */}
+      <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/10 pointer-events-none blur-2xl" />
+      <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-orange-700/20 pointer-events-none blur-2xl" />
 
-
-          <CardTitle className="text-2xl">Portal do Cliente</CardTitle>
-          <CardDescription>Entre com o login e senha cadastrados no seu acesso.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={loginPassword} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Usuário</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="username"
-                  autoComplete="username"
-                  className="pl-9"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <div className="relative">
-                <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  className="pl-9"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            <Button type="submit" className="w-full" disabled={loading || username.trim().length < 3 || password.length < 4}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
-            </Button>
-            <p className="text-xs text-muted-foreground text-center">
-              Você também pode usar seu telefone no campo de usuário.
-            </p>
-          </form>
-        </CardContent>
-      </Card>
-      <div className="w-full max-w-md">
-        <InstallAppCard />
+      {/* Brand Header */}
+      <div className="w-full max-w-md flex flex-col items-center justify-center mb-6 text-center z-10">
+        <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white shadow-lg mb-3">
+          <span className="text-3xl font-black tracking-wider">A</span>
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-none drop-shadow-sm">
+          AJP<span className="text-orange-200">VIP</span>
+        </h1>
+        <p className="text-xs sm:text-sm font-medium text-white/80 mt-1 uppercase tracking-wider">
+          Autoatendimento &amp; Central do Assinante
+        </p>
       </div>
 
+      {/* White Card matching Alcans Reference (Image 3) */}
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 sm:p-8 z-10 border border-white/50 animate-in fade-in zoom-in-95 duration-300">
+        <div className="text-center mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            Acesse sua conta
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Digite seu Usuário ou Telefone cadastrado
+          </p>
+        </div>
+
+        <form onSubmit={loginPassword} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="username" className="text-xs font-semibold text-slate-700">
+              Usuário ou Telefone
+            </Label>
+            <div className="relative">
+              <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                id="username"
+                autoComplete="username"
+                placeholder="Ex: seu_usuario ou telefone"
+                className="pl-10 h-12 rounded-xl bg-slate-50 border-slate-200 text-slate-900 text-sm focus-visible:ring-2 focus-visible:ring-[#FF5500] focus-visible:border-transparent"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" className="text-xs font-semibold text-slate-700">
+                Senha
+              </Label>
+            </div>
+            <div className="relative">
+              <KeyRound className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                placeholder="Sua senha de acesso"
+                className="pl-10 pr-10 h-12 rounded-xl bg-slate-50 border-slate-200 text-slate-900 text-sm focus-visible:ring-2 focus-visible:ring-[#FF5500] focus-visible:border-transparent"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full h-12 rounded-xl bg-[#FF5500] hover:bg-[#E04B00] active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-md shadow-orange-500/25 transition-all mt-2 cursor-pointer"
+            disabled={loading || username.trim().length < 3 || password.length < 4}
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Acessando...
+              </span>
+            ) : (
+              "Fazer login"
+            )}
+          </Button>
+
+          {/* Links de Rodapé */}
+          <div className="pt-3 border-t border-slate-100 flex flex-col items-center gap-2">
+            <div className="flex items-center justify-center gap-2 text-xs text-slate-600 font-medium">
+              <a
+                href="https://wa.me/5500000000000?text=Olá,%20esqueci%20minha%20senha%20do%20portal%20do%20cliente"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-[#FF5500] transition-colors"
+              >
+                Esqueci a senha
+              </a>
+              <span className="text-slate-300">|</span>
+              <a
+                href="https://wa.me/5500000000000?text=Olá,%20gostaria%20de%20fazer%20meu%20primeiro%20acesso%20no%20portal"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-[#FF5500] transition-colors"
+              >
+                Primeiro acesso
+              </a>
+            </div>
+
+            <p className="text-[11px] text-slate-600 text-center leading-relaxed mt-1">
+              Dúvidas ou suporte? Entre em contato com seu atendente.
+            </p>
+          </div>
+        </form>
+      </div>
+
+      {/* Optional Install PWA Card */}
+      <div className="w-full max-w-md mt-4 z-10">
+        <InstallAppCard />
+      </div>
     </div>
   );
 }
