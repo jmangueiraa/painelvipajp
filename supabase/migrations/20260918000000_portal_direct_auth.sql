@@ -88,6 +88,18 @@ ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS login_count INT DEFAULT 0;
 ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
 ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS last_device TEXT;
 
+ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "portal_anon_client_read" ON public.clients;
+CREATE POLICY "portal_anon_client_read" ON public.clients
+  FOR SELECT TO anon, authenticated, service_role
+  USING (true);
+
+DROP POLICY IF EXISTS "portal_anon_client_update" ON public.clients;
+CREATE POLICY "portal_anon_client_update" ON public.clients
+  FOR UPDATE TO anon, authenticated, service_role
+  USING (true)
+  WITH CHECK (true);
+
 -- 5. Tabela de Pagamentos
 CREATE TABLE IF NOT EXISTS public.payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -135,6 +147,27 @@ CREATE TABLE IF NOT EXISTS public.content_updates (
   image_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Políticas de leitura para tabelas auxiliares do portal
+ALTER TABLE public.plans ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "plans_anon_read" ON public.plans;
+CREATE POLICY "plans_anon_read" ON public.plans FOR SELECT TO anon, authenticated, service_role USING (true);
+
+ALTER TABLE public.servers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "servers_anon_read" ON public.servers;
+CREATE POLICY "servers_anon_read" ON public.servers FOR SELECT TO anon, authenticated, service_role USING (true);
+
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "settings_anon_read" ON public.settings;
+CREATE POLICY "settings_anon_read" ON public.settings FOR SELECT TO anon, authenticated, service_role USING (true);
+
+ALTER TABLE public.content_updates ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "updates_anon_read" ON public.content_updates;
+CREATE POLICY "updates_anon_read" ON public.content_updates FOR SELECT TO anon, authenticated, service_role USING (true);
+
+ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "payments_anon_read" ON public.payments;
+CREATE POLICY "payments_anon_read" ON public.payments FOR SELECT TO anon, authenticated, service_role USING (true);
 
 -- 8. Tabela de Sessões do Portal
 CREATE TABLE IF NOT EXISTS public.portal_sessions (
