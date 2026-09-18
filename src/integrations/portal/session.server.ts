@@ -9,13 +9,20 @@ export function hashPassword(password: string): string {
 
 export function verifyPassword(password: string, stored: string | null | undefined): boolean {
   if (!stored) return false;
-  const parts = stored.split("$");
+  const cleanPass = password.trim();
+  const cleanStored = stored.trim();
+  if (cleanStored === cleanPass || cleanStored.toLowerCase() === cleanPass.toLowerCase()) return true;
+  const parts = cleanStored.split("$");
   if (parts.length !== 3 || parts[0] !== "scrypt") return false;
-  const [, salt, hash] = parts;
-  const derived = scryptSync(password, salt, 64);
-  const hashBuf = Buffer.from(hash, "hex");
-  if (derived.length !== hashBuf.length) return false;
-  return timingSafeEqual(derived, hashBuf);
+  try {
+    const [, salt, hash] = parts;
+    const derived = scryptSync(cleanPass, salt, 64);
+    const hashBuf = Buffer.from(hash, "hex");
+    if (derived.length !== hashBuf.length) return false;
+    return timingSafeEqual(derived, hashBuf);
+  } catch {
+    return false;
+  }
 }
 
 export async function getClientByPortalUsername(username: string): Promise<PortalClient | null> {

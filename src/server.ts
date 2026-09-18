@@ -13,6 +13,11 @@ type RuntimeEnv = Record<string, unknown>;
 function exposeRuntimeSecrets(env: unknown) {
   if (!env || typeof env !== "object") return;
   const runtimeEnv = env as RuntimeEnv;
+  for (const [key, value] of Object.entries(runtimeEnv)) {
+    if (typeof value === "string" && !process.env[key]) {
+      process.env[key] = value;
+    }
+  }
   const firebaseCredential = runtimeEnv.FIREBASE_SERVICE_ACCOUNT_JSON;
   setRuntimeFirebaseServiceAccount(firebaseCredential);
 }

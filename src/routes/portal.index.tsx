@@ -96,14 +96,14 @@ function PortalLoginPage() {
         <form onSubmit={loginPassword} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="username" className="text-xs font-semibold text-slate-700">
-              Usuário ou Telefone
+              Usuário, CPF, Email ou Telefone
             </Label>
             <div className="relative">
               <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 id="username"
                 autoComplete="username"
-                placeholder="Ex: seu_usuario ou telefone"
+                placeholder="Seu usuário, CPF, email ou telefone"
                 className="pl-10 h-12 rounded-xl bg-slate-50 border-slate-200 text-slate-900 text-sm focus-visible:ring-2 focus-visible:ring-[#FF5500] focus-visible:border-transparent"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -144,7 +144,7 @@ function PortalLoginPage() {
           <Button
             type="submit"
             className="w-full h-12 rounded-xl bg-[#FF5500] hover:bg-[#E04B00] active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-md shadow-orange-500/25 transition-all mt-2 cursor-pointer"
-            disabled={loading || username.trim().length < 3 || password.length < 4}
+            disabled={loading || !username.trim() || !password.trim()}
           >
             {loading ? (
               <span className="flex items-center gap-2">

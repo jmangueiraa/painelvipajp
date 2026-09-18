@@ -23,7 +23,7 @@ export const Route = createFileRoute("/api/public/portal/me")({
           let plansQuery = supabaseAdmin.from("plans").select("id,name,price_cents,duration_days,active").eq("user_id", client.user_id).eq("active", true).order("duration_days", { ascending: true });
           if (allowedIds.length > 0) plansQuery = plansQuery.in("id", allowedIds);
 
-          const [{ data: payments }, { data: plan }, { data: server }, { data: referrals }, { data: settings }, { data: plans }, { data: updates }] = await Promise.all([
+          const [paymentsRes, planRes, serverRes, referralsRes, settingsRes, plansRes, updatesRes] = await Promise.allSettled([
             supabaseAdmin.from("payments").select("id,amount_cents,paid_at,method").eq("client_id", client.id).order("paid_at", { ascending: false }).limit(50),
             client.plan_id ? supabaseAdmin.from("plans").select("id,name,price_cents,duration_days").eq("id", client.plan_id).maybeSingle() : Promise.resolve({ data: null }),
             client.server_id ? supabaseAdmin.from("servers").select("id,name").eq("id", client.server_id).maybeSingle() : Promise.resolve({ data: null }),
@@ -33,6 +33,13 @@ export const Route = createFileRoute("/api/public/portal/me")({
             supabaseAdmin.from("content_updates").select("id,kind,title,description,image_url,created_at").eq("user_id", client.user_id).order("created_at", { ascending: false }).limit(100),
           ]);
 
+          const payments = paymentsRes.status === "fulfilled" ? (paymentsRes.value.data as any[] ?? []) : [];
+          const plan = planRes.status === "fulfilled" ? (planRes.value.data ?? null) : null;
+          const server = serverRes.status === "fulfilled" ? (serverRes.value.data ?? null) : null;
+          const referrals = referralsRes.status === "fulfilled" ? (referralsRes.value.data as any[] ?? []) : [];
+          const settings = settingsRes.status === "fulfilled" ? (settingsRes.value.data ?? null) : null;
+          const plans = plansRes.status === "fulfilled" ? (plansRes.value.data as any[] ?? []) : [];
+          const updates = updatesRes.status === "fulfilled" ? (updatesRes.value.data as any[] ?? []) : [];
 
           const referralsPaidIds = new Set<string>();
           if (referrals && referrals.length > 0) {

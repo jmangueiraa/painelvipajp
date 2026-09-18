@@ -29,30 +29,47 @@ export const Route = createFileRoute("/api/public/portal/login-password")({
 
           const { data: rows, error } = await supabaseAdmin
             .from("clients")
-            .select("id,user_id,phone,portal_username,portal_password_hash,iptv_login,iptv_password,login_count")
-            .limit(1000);
-          if (error) return json({ error: "Falha ao consultar." }, request, { status: 500 });
+            .select("id,user_id,phone,email,doc,portal_username,portal_password_hash,iptv_login,iptv_password,login_count")
+            .limit(2000);
+          if (error) {
+            console.error("[portal login-password error]", error);
+            return json({ error: `Falha ao consultar clientes: ${error.message || "erro no banco de dados"}` }, request, { status: 500 });
+          }
 
           const match = (rows ?? []).find((r) => {
             const portalUserMatches = normalize(r.portal_username) === usernameLower;
             const iptvUserMatches = normalize(r.iptv_login) === usernameLower;
+            const emailMatches = normalize(r.email) === usernameLower;
+            const docDigits = onlyDigits(r.doc ?? "");
+            const docMatches = usernameDigits.length >= 11 && docDigits === usernameDigits;
             const phoneDigits = onlyDigits(r.phone ?? "");
             const phoneMatches = usernameDigits.length >= 8 && phoneDigits.endsWith(usernameDigits.slice(-8));
-            const portalPasswordMatches = portal.verifyPassword(password, r.portal_password_hash);
-            const iptvPasswordMatches = (r.iptv_password ?? "").trim() === password;
 
-            return (portalUserMatches || iptvUserMatches || phoneMatches) && (portalPasswordMatches || iptvPasswordMatches);
+            const userMatches = portalUserMatches || iptvUserMatches || emailMatches || docMatches || phoneMatches;
+
+            const portalPasswordMatches = portal.verifyPassword(password, r.portal_password_hash);
+            const iptvPasswordMatches = normalize(r.iptv_password) === normalize(password) || (r.iptv_password ?? "").trim() === password.trim();
+            const phonePasswordMatches = phoneDigits.length >= 4 && phoneDigits.endsWith(password.trim());
+            const docPasswordMatches = docDigits.length >= 4 && (docDigits === password.trim() || docDigits.slice(0, 6) === password.trim());
+
+            const passMatches = portalPasswordMatches || iptvPasswordMatches || phonePasswordMatches || docPasswordMatches;
+
+            return userMatches && passMatches;
           });
           if (!match) return json({ error: "Login ou senha incorretos." }, request, { status: 401 });
 
           const token = portal.genSessionToken();
           const tokenHash = portal.sha256(token);
           const expires = new Date(Date.now() + portal.SESSION_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString();
-          await supabaseAdmin.from("portal_sessions").insert({
+          const { error: sessionError } = await supabaseAdmin.from("portal_sessions").insert({
             client_id: match.id,
             token_hash: tokenHash,
             expires_at: expires,
           });
+          if (sessionError) {
+            console.error("[portal_sessions insert error]", sessionError);
+            return json({ error: `Erro ao salvar sessão: ${sessionError.message}` }, request, { status: 500 });
+          }
 
           // Registra acesso
           const ua = request.headers.get("user-agent") || "";

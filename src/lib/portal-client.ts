@@ -46,8 +46,35 @@ export async function portalFetch<T = unknown>(path: string, init?: RequestInit)
   };
   if (isCustomPortalDomain()) headers["X-Portal-Origin"] = window.location.origin;
   if (token) headers["Authorization"] = `Bearer ${token}`;
-  const res = await fetch(getPortalApiUrl(path), { ...init, headers });
+
+  const targetUrl = getPortalApiUrl(path);
+  let res: Response;
+  try {
+    res = await fetch(targetUrl, { ...init, headers });
+  } catch (err) {
+    if (targetUrl !== path) {
+      try {
+        res = await fetch(path, { ...init, headers });
+      } catch {
+        throw err;
+      }
+    } else {
+      throw err;
+    }
+  }
+
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new PortalFetchError((body as { error?: string }).error || `HTTP ${res.status}`, res.status);
+  if (!res.ok) {
+    if (targetUrl !== path && res.status >= 500) {
+      try {
+        const localRes = await fetch(path, { ...init, headers });
+        const localBody = await localRes.json().catch(() => ({}));
+        if (localRes.ok) return localBody as T;
+      } catch {
+        // fallback
+      }
+    }
+    throw new PortalFetchError((body as { error?: string }).error || `HTTP ${res.status}`, res.status);
+  }
   return body as T;
 }

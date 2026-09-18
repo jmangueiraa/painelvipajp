@@ -254,9 +254,16 @@ function PortalDashboard() {
   });
 
   useEffect(() => {
-    if (error && error instanceof PortalFetchError && error.status === 401) {
-      clearPortalToken();
-      navigate({ to: "/portal" });
+    if (error) {
+      const is401 =
+        (error instanceof PortalFetchError && error.status === 401) ||
+        error.message?.includes("401") ||
+        error.message?.includes("Sessão inválida") ||
+        error.message?.includes("Unauthorized");
+      if (is401) {
+        clearPortalToken();
+        navigate({ to: "/portal" });
+      }
     }
   }, [error, navigate]);
 
@@ -462,6 +469,39 @@ function PortalDashboard() {
     w.document.open();
     w.document.write(html);
     w.document.close();
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-dvh flex flex-col items-center justify-center bg-[#F4F5F7] px-4 py-8 text-slate-800 font-sans">
+        <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-xl text-center space-y-4 border border-slate-100 animate-in fade-in duration-200">
+          <div className="w-14 h-14 rounded-2xl bg-orange-100 text-[#FF5500] flex items-center justify-center mx-auto shadow-sm">
+            <AlertTriangle className="h-7 w-7" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Não foi possível carregar seu painel</h2>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              {(error as Error).message || "Falha na conexão com o servidor. Verifique sua rede e tente novamente."}
+            </p>
+          </div>
+          <div className="space-y-2 pt-2">
+            <Button
+              className="w-full bg-[#FF5500] hover:bg-[#E04B00] text-white font-bold rounded-xl py-3 cursor-pointer shadow-sm"
+              onClick={() => refetch()}
+            >
+              Tentar novamente
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full rounded-xl text-xs py-2.5 cursor-pointer border-slate-200 text-slate-600 hover:bg-slate-50"
+              onClick={handleLogout}
+            >
+              Voltar ao login
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (isLoading || !data) {
