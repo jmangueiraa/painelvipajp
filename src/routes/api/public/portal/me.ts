@@ -19,7 +19,7 @@ export const Route = createFileRoute("/api/public/portal/me")({
 
           // 1. Tenta buscar direto via RPC SECURITY DEFINER (ignora RLS, 1 round-trip)
           try {
-            const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc("portal_get_session", { _token: token });
+            const { data: rpcData, error: rpcError } = await (supabaseAdmin.rpc as any)("portal_get_session", { _token: token });
             if (!rpcError && rpcData && typeof rpcData === "object" && (rpcData as any).client) {
               return json(rpcData, request);
             }

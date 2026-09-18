@@ -266,7 +266,7 @@ function PortalDashboard() {
       // 1. Chamada DIRETA ao Supabase RPC (resposta instantânea em ~30ms, sem proxy)
       if (token) {
         try {
-          const { data: rpcData, error: rpcErr } = await supabase.rpc("portal_get_session", { _token: token });
+          const { data: rpcData, error: rpcErr } = await (supabase.rpc as any)("portal_get_session", { _token: token });
           if (!rpcErr && rpcData && typeof rpcData === "object" && (rpcData as any).client) {
             try {
               localStorage.setItem("portal_cached_me", JSON.stringify(rpcData));

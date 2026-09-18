@@ -24,7 +24,7 @@ export const Route = createFileRoute("/api/public/portal/login-password")({
 
           // 1. Tenta autenticar via RPC SECURITY DEFINER (ignora RLS com máxima velocidade)
           try {
-            const { data: rpcRes, error: rpcError } = await supabaseAdmin.rpc("portal_login_client", {
+            const { data: rpcRes, error: rpcError } = await (supabaseAdmin.rpc as any)("portal_login_client", {
               _login: username,
               _password: password,
             });
