@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Users, UserCheck, AlertTriangle, CalendarClock, CalendarDays, ShoppingBag, TrendingDown, TrendingUp, Smartphone } from "lucide-react";
+import { useMemo, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Users, UserCheck, AlertTriangle, CalendarClock, CalendarDays, ShoppingBag, TrendingDown, TrendingUp, Smartphone, ShieldCheck } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import { brl, formatDateBR, todayISO, addDaysISO } from "@/lib/format";
 import { PageHeader } from "@/components/page-header";
 import { KpiCard } from "@/components/kpi-card";
@@ -24,6 +25,8 @@ type Settings = { subscription_expires_at: string | null; subscription_monthly_c
 
 function DashboardPage() {
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
+  const qc = useQueryClient();
 
   const { data: clients = [] } = useQuery({
     queryKey: ["clients", "dash"],
@@ -132,15 +135,48 @@ function DashboardPage() {
       .slice(0, 8);
   }, [clients]);
 
+  const isLifetime = useMemo(() => {
+    if (!settings?.subscription_expires_at) return true;
+    const expDate = new Date(settings.subscription_expires_at);
+    if (expDate.getFullYear() >= 2090) return true;
+    if (isAdmin || user?.email === "entretenimentoajp@gmail.com") return true;
+    return false;
+  }, [settings?.subscription_expires_at, isAdmin, user?.email]);
+
   const subInfo = useMemo(() => {
+    if (isLifetime) {
+      return { isLifetime: true, dateBR: "Vitalício", days: null };
+    }
     if (!settings?.subscription_expires_at) return null;
     const diff = Math.ceil((new Date(settings.subscription_expires_at).getTime() - Date.now()) / 86_400_000);
-    return { dateBR: formatDateBR(settings.subscription_expires_at), days: diff };
-  }, [settings]);
+    return { isLifetime: false, dateBR: formatDateBR(settings.subscription_expires_at), days: diff };
+  }, [settings, isLifetime]);
+
+  // Se for o super admin ou administrador, persiste a anulação da expiração no banco
+  useEffect(() => {
+    if (user?.id && (isAdmin || user?.email === "entretenimentoajp@gmail.com") && settings?.subscription_expires_at) {
+      supabase
+        .from("settings")
+        .update({ subscription_expires_at: null })
+        .eq("user_id", user.id)
+        .then(({ error }) => {
+          if (!error) qc.invalidateQueries({ queryKey: ["settings"] });
+        });
+    }
+  }, [user?.id, user?.email, isAdmin, settings?.subscription_expires_at, qc]);
 
   return (
     <div className="space-y-6">
-      {subInfo && (
+      {subInfo?.isLifetime ? (
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-xs text-zinc-300">
+          <div className="flex items-center gap-2 min-w-0">
+            <ShieldCheck className="size-4 shrink-0 text-emerald-400" />
+            <span className="uppercase tracking-wider text-[10px] text-emerald-400 font-semibold">Seu Painel</span>
+            <span className="text-zinc-200 font-medium">Plano Vitalício Ativo</span>
+          </div>
+          <span className="text-emerald-400 font-medium whitespace-nowrap">Acesso Permanente</span>
+        </div>
+      ) : subInfo ? (
         <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg border border-amber-500/20 bg-amber-500/10 text-xs text-zinc-300">
           <div className="flex items-center gap-2 min-w-0">
             <CalendarClock className="size-4 shrink-0 text-amber-400" />
@@ -149,7 +185,7 @@ function DashboardPage() {
           </div>
           <span className="text-amber-400 font-medium whitespace-nowrap">{subInfo.days} dia(s) restantes</span>
         </div>
-      )}
+      ) : null}
 
       <PageHeader title="Dashboard" description="Visão geral em tempo real do seu negócio" />
 

@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useRef, useState } from "react";
-import { RefreshCw, CalendarCheck, Copy, Loader2, CheckCircle2, QrCode, CreditCard, KeyRound, CalendarClock, Plus, Trash2, Star } from "lucide-react";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { RefreshCw, CalendarCheck, Copy, Loader2, CheckCircle2, QrCode, CreditCard, KeyRound, CalendarClock, Plus, Trash2, Star, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -112,6 +112,14 @@ function RenovacaoPage() {
     },
   });
 
+  const isLifetime = useMemo(() => {
+    if (!data?.subscription_expires_at) return true;
+    const expDate = new Date(data.subscription_expires_at);
+    if (expDate.getFullYear() >= 2090) return true;
+    if (isAdmin || user?.email === "entretenimentoajp@gmail.com") return true;
+    return false;
+  }, [data?.subscription_expires_at, isAdmin, user?.email]);
+
   const expires = data?.subscription_expires_at;
   const days = expires ? Math.ceil((new Date(expires).getTime() - Date.now()) / 86_400_000) : null;
   const currentPlanValue = lastPaid?.amount_cents ?? data?.subscription_monthly_cents ?? 0;
@@ -204,18 +212,18 @@ function RenovacaoPage() {
       {isAdmin && <AdminSubscriptionSection />}
       {isAdmin && <AdminRenewalPlansSection />}
 
-      <Card>
+      <Card className="border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md">
         <CardContent className="p-5 flex items-center gap-4">
-          <div className="size-11 rounded-lg grid place-items-center bg-zinc-800/60 border border-zinc-700/50 text-zinc-300 shrink-0">
-            <CalendarCheck className="size-5" />
+          <div className={`size-11 rounded-lg grid place-items-center border shrink-0 ${isLifetime ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-zinc-800/60 border-zinc-700/50 text-zinc-300"}`}>
+            {isLifetime ? <ShieldCheck className="size-5" /> : <CalendarCheck className="size-5" />}
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold tracking-wider uppercase text-zinc-400">Status</p>
+            <p className="text-[11px] font-semibold tracking-wider uppercase text-zinc-400">Status da Assinatura</p>
             <p className="text-xl md:text-2xl font-semibold text-zinc-100">
-              {days === null ? "Defina sua assinatura em Configurações" : `${days} dia(s) restantes`}
+              {isLifetime ? "Plano Vitalício Ativo" : days === null ? "Acesso Permanente" : `${days} dia(s) restantes`}
             </p>
             <p className="text-sm text-zinc-400 mt-1">
-              {expires ? `Expira em ${formatDateBR(expires)}` : "Sem vencimento definido"} ·
+              {isLifetime ? "Seu painel possui acesso ilimitado sem data de expiração" : expires ? `Expira em ${formatDateBR(expires)}` : "Sem vencimento definido"} ·
               {" "}Valor do plano: <span className="font-medium text-zinc-200">{brl(currentPlanValue)}</span>
             </p>
           </div>
@@ -476,9 +484,32 @@ function AdminSubscriptionSection() {
             <Input inputMode="decimal" value={subMonthly} onChange={(e) => setSubMonthly(e.target.value)} />
           </div>
         </div>
-        <Button className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium" onClick={() => save.mutate()} disabled={save.isPending}>
-          Salvar assinatura
-        </Button>
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <Button className="bg-white text-zinc-950 hover:bg-zinc-200 font-medium rounded-lg text-xs" onClick={() => save.mutate()} disabled={save.isPending}>
+            Salvar assinatura
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs rounded-lg font-medium"
+            onClick={() => {
+              setSubExpires("");
+              supabase
+                .from("settings")
+                .update({ subscription_expires_at: null })
+                .eq("user_id", user!.id)
+                .then(({ error }) => {
+                  if (error) toast.error(translateError(error));
+                  else {
+                    toast.success("Assinatura definida como Vitalício permanente!");
+                    qc.invalidateQueries({ queryKey: ["settings"] });
+                  }
+                });
+            }}
+          >
+            <ShieldCheck className="size-3.5 mr-1.5" /> Tornar Vitalício
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

@@ -37,8 +37,13 @@ function AuthenticatedLayout() {
     },
   });
 
+  const isLifetime = !settings?.subscription_expires_at || 
+    (settings?.subscription_expires_at && new Date(settings.subscription_expires_at).getFullYear() >= 2090) ||
+    isAdmin ||
+    user?.email === "entretenimentoajp@gmail.com";
+
   const expiresAt = settings?.subscription_expires_at;
-  const expired = !!expiresAt && new Date(expiresAt).getTime() < Date.now();
+  const expired = !isLifetime && !!expiresAt && new Date(expiresAt).getTime() < Date.now();
   const onRenovacao = location.pathname.startsWith("/renovacao");
 
   useEffect(() => {
