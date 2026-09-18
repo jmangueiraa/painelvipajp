@@ -680,7 +680,7 @@ function PortalDashboard() {
 
               {/* 2. Suporte WhatsApp */}
               <a
-                href="https://wa.me/5500000000000?text=Olá,%20preciso%20de%20suporte%20no%20meu%20plano"
+                href="https://wa.me/5519981356505?text=Olá,%20preciso%20de%20suporte%20no%20meu%20plano"
                 target="_blank"
                 rel="noreferrer"
                 className="flex flex-col items-center gap-1.5 p-2 rounded-2xl bg-white border border-slate-100 hover:border-emerald-300 shadow-sm transition-all hover:shadow cursor-pointer active:scale-95"
@@ -735,7 +735,7 @@ function PortalDashboard() {
             </div>
 
             <a
-              href="https://wa.me/5500000000000?text=Olá,%20gostaria%20de%20falar%20com%20o%20atendimento"
+              href="https://wa.me/5519981356505?text=Olá,%20gostaria%20de%20falar%20com%20o%20atendimento"
               target="_blank"
               rel="noreferrer"
               className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-[#FF5500] text-xs font-bold shadow-sm border border-orange-200 transition cursor-pointer shrink-0"
@@ -986,6 +986,32 @@ function PortalDashboard() {
 
           {/* Cards de Recursos */}
           <div className="space-y-3">
+            {/* Suporte WhatsApp Direto */}
+            <a
+              href="https://wa.me/5519981356505?text=Olá,%20gostaria%20de%20atendimento%20no%20meu%20plano"
+              target="_blank"
+              rel="noreferrer"
+              className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between cursor-pointer hover:border-emerald-400 transition-all active:scale-[0.99]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+                  <Headphones className="h-6 w-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-slate-800">Atendimento WhatsApp</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                      Online
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    (19) 98135-6505 · Fale com nossa equipe agora
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-slate-300" />
+            </a>
+
             {/* 1. Suporte Inteligente IA */}
             <div
               onClick={() => setSupportOpen(true)}
@@ -1670,6 +1696,15 @@ function PortalDashboard() {
                 >
                   Iniciar com Smart TV
                 </button>
+                <a
+                  href="https://wa.me/5519981356505?text=Olá,%20gostaria%20de%20atendimento%20humano%20para%20configuração"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3.5 py-1.5 rounded-full border border-emerald-200 transition mt-2"
+                >
+                  <Headphones className="h-3.5 w-3.5" />
+                  Falar com Atendente Humano (WhatsApp)
+                </a>
               </div>
             ) : (
               supportHistory.map((msg, i) => (

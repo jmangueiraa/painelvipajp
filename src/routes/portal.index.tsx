@@ -197,7 +197,7 @@ function PortalLoginPage() {
           <div className="pt-3 border-t border-slate-100 flex flex-col items-center gap-2">
             <div className="flex items-center justify-center gap-2 text-xs text-slate-600 font-medium">
               <a
-                href="https://wa.me/5500000000000?text=Olá,%20esqueci%20minha%20senha%20do%20portal%20do%20cliente"
+                href="https://wa.me/5519981356505?text=Olá,%20esqueci%20minha%20senha%20do%20portal%20do%20cliente"
                 target="_blank"
                 rel="noreferrer"
                 className="hover:text-[#FF5500] transition-colors"
@@ -206,7 +206,7 @@ function PortalLoginPage() {
               </a>
               <span className="text-slate-300">|</span>
               <a
-                href="https://wa.me/5500000000000?text=Olá,%20gostaria%20de%20fazer%20meu%20primeiro%20acesso%20no%20portal"
+                href="https://wa.me/5519981356505?text=Olá,%20gostaria%20de%20fazer%20meu%20primeiro%20acesso%20no%20portal"
                 target="_blank"
                 rel="noreferrer"
                 className="hover:text-[#FF5500] transition-colors"
@@ -216,7 +216,15 @@ function PortalLoginPage() {
             </div>
 
             <p className="text-[11px] text-slate-600 text-center leading-relaxed mt-1">
-              Dúvidas ou suporte? Entre em contato com seu atendente.
+              Dúvidas ou suporte?{" "}
+              <a
+                href="https://wa.me/5519981356505?text=Olá,%20preciso%20de%20ajuda%20com%20o%20portal"
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#FF5500] font-semibold hover:underline"
+              >
+                Fale pelo WhatsApp
+              </a>
             </p>
           </div>
         </form>
