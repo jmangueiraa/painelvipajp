@@ -161,7 +161,7 @@ function PortalDashboard() {
   const [renewOpen, setRenewOpen] = useState(false);
   const [showCreds, setShowCreds] = useState(false);
   const [showCredsPassword, setShowCredsPassword] = useState(false);
-  const [showPeriodChange, setShowPeriodChange] = useState(false);
+  const [showPeriodChange, setShowPeriodChange] = useState(true);
   const [chosenPeriod, setChosenPeriod] = useState<{ label: string; days: number; price_cents: number } | null>(null);
   const [method, setMethod] = useState<"pix" | "card" | null>(null);
   const [pixPeriod, setPixPeriod] = useState<{ label: string; days: number; price_cents: number } | null>(null);
@@ -434,7 +434,7 @@ function PortalDashboard() {
     setPixPayload("");
     setCardLink(null);
     setShowCreds(false);
-    setShowPeriodChange(false);
+    setShowPeriodChange(true);
     setRenewOpen(true);
   }
 
@@ -1212,13 +1212,13 @@ function PortalDashboard() {
                   {showPeriodChange && (
                     <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 animate-in fade-in duration-200">
                       {[
-                        { label: "Mensal", days: 30, discount: 0, override_price: 3000 },
-                        { label: "Trimestral", days: 90, discount: 0.15, override_price: 7650 },
-                        { label: "Semestral", days: 180, discount: 0.2, override_price: 14400 },
-                        { label: "Anual", days: 365, discount: 0.25, override_price: 27000 },
+                        { label: "Mensal", months: 1, days: 30, discount: 0 },
+                        { label: "Trimestral", months: 3, days: 90, discount: 0.15 },
+                        { label: "Semestral", months: 6, days: 180, discount: 0.2 },
+                        { label: "Anual", months: 12, days: 365, discount: 0.25 },
                       ].map((p) => {
                         const monthly = data.plan?.price_cents ?? data.client.price_cents ?? 3000;
-                        const price = p.override_price ?? Math.round(monthly * (p.days / 30) * (1 - p.discount));
+                        const price = Math.round(monthly * p.months * (1 - p.discount));
                         const isSelected = chosenPeriod?.days === p.days;
                         return (
                           <button
@@ -1226,7 +1226,6 @@ function PortalDashboard() {
                             type="button"
                             onClick={() => {
                               setChosenPeriod({ label: p.label, days: p.days, price_cents: price });
-                              setShowPeriodChange(false);
                             }}
                             className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
                               isSelected
