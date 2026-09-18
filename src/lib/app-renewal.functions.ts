@@ -233,6 +233,147 @@ export const createAppRenewalCardCheckout = createServerFn({ method: "POST" })
     };
   });
 
+export const createAppRenewalCardDirect = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        plan_id: z.string().uuid(),
+        card_data: z.object({
+          card_number: z.string(),
+          cardholder_name: z.string(),
+          expiration_month: z.number(),
+          expiration_year: z.number(),
+          security_code: z.string(),
+          cpf: z.string(),
+          installments: z.number().optional(),
+        }),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const token = getToken();
+
+    const { data: plan, error: planErr } = await supabase
+      .from("app_plans")
+      .select("id,name,price_cents,duration_days,active")
+      .eq("id", data.plan_id)
+      .maybeSingle();
+    if (planErr || !plan || !plan.active) throw new Error("Plano indisponível");
+
+    const amount_with_fee = applyCardFee(plan.price_cents);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: req, error: reqErr } = await supabaseAdmin
+      .from("app_renewal_requests")
+      .insert({
+        user_id: userId,
+        plan_id: plan.id,
+        days: plan.duration_days,
+        amount_cents: amount_with_fee,
+        status: "awaiting_payment",
+      })
+      .select("id")
+      .single();
+    if (reqErr || !req) throw new Error("Falha ao registrar solicitação");
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("full_name")
+      .eq("id", userId)
+      .maybeSingle();
+    const fullName = (profile as { full_name?: string } | null)?.full_name ?? "Assinante";
+    const clientNameParts = fullName.trim().split(" ");
+    const firstName = clientNameParts[0] || "Assinante";
+    const lastName = clientNameParts.slice(1).join(" ") || "VIP";
+
+    const { detectCardBrand, createMpCardToken, createMpDirectCardPayment } = await import(
+      "@/lib/mercadopago-card.server"
+    );
+
+    const tokenRes = await createMpCardToken(token, data.card_data);
+    if (!tokenRes.token) {
+      await supabaseAdmin.from("app_renewal_requests").update({ mp_status: "token_failed" }).eq("id", req.id);
+      throw new Error(tokenRes.error || "Dados do cartão inválidos");
+    }
+
+    const origin = await getOrigin();
+    const brand = detectCardBrand(data.card_data.card_number);
+
+    const payRes = await createMpDirectCardPayment(token, {
+      cardToken: tokenRes.token,
+      amountCents: amount_with_fee,
+      description: `Renovação Painel - ${plan.name}`,
+      externalReference: req.id,
+      installments: data.card_data.installments || 1,
+      paymentMethodId: brand,
+      payer: {
+        email: `assinante.${userId.slice(0, 8)}@painelvip.app`,
+        cpf: data.card_data.cpf,
+        firstName,
+        lastName,
+      },
+      notificationUrl: `${origin}/api/public/app/mp-webhook`,
+    });
+
+    if (payRes.status === "approved") {
+      await supabaseAdmin
+        .from("app_renewal_requests")
+        .update({
+          mp_payment_id: payRes.payment_id ? String(payRes.payment_id) : undefined,
+          mp_status: "approved",
+        })
+        .eq("id", req.id);
+      await applyApprovedRenewal(req.id);
+
+      return {
+        ok: true,
+        status: "approved" as const,
+        renewal_id: req.id,
+        payment_id: payRes.payment_id,
+        amount_cents: amount_with_fee,
+        base_cents: plan.price_cents,
+        days: plan.duration_days,
+        plan_name: plan.name,
+        message: "Pagamento aprovado com sucesso!",
+      };
+    }
+
+    if (payRes.status === "in_process") {
+      await supabaseAdmin
+        .from("app_renewal_requests")
+        .update({
+          mp_payment_id: payRes.payment_id ? String(payRes.payment_id) : undefined,
+          mp_status: "in_process",
+        })
+        .eq("id", req.id);
+
+      return {
+        ok: true,
+        status: "in_process" as const,
+        renewal_id: req.id,
+        payment_id: payRes.payment_id,
+        amount_cents: amount_with_fee,
+        base_cents: plan.price_cents,
+        days: plan.duration_days,
+        plan_name: plan.name,
+        message: payRes.message,
+      };
+    }
+
+    await supabaseAdmin
+      .from("app_renewal_requests")
+      .update({
+        mp_payment_id: payRes.payment_id ? String(payRes.payment_id) : undefined,
+        mp_status: payRes.status_detail || "rejected",
+      })
+      .eq("id", req.id);
+
+    throw new Error(payRes.message || "Pagamento recusado pelo emissor do cartão.");
+  });
+
 export const checkAppRenewalStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ renewal_id: z.string().uuid() }).parse(d))

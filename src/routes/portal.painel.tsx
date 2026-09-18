@@ -43,6 +43,7 @@ import { clearPortalToken, getPortalToken, portalFetch, PortalFetchError } from 
 import { PortalShell, type PortalTab } from "@/components/portal/portal-shell";
 import { InstallAppCard } from "@/components/portal/install-app-card";
 import { PushNotificationCard } from "@/components/portal/push-notification-card";
+import { ModernCardCheckout, type CardFormData } from "@/components/modern-card-checkout";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/portal/painel")({
@@ -450,8 +451,10 @@ function PortalDashboard() {
   function chooseStoreMethod(m: "pix" | "card") {
     if (!storeItem) return;
     setStoreMethod(m);
-    setStoreCreating(true);
-    buyExtra.mutate({ method: m, product_key: storeItem.id, label: storeItem.label, amount_cents: storeItem.price_cents });
+    if (m === "pix") {
+      setStoreCreating(true);
+      buyExtra.mutate({ method: "pix", product_key: storeItem.id, label: storeItem.label, amount_cents: storeItem.price_cents });
+    }
   }
 
   function choosePix() {
@@ -465,8 +468,87 @@ function PortalDashboard() {
   function chooseCard() {
     if (!chosenPeriod) return;
     setMethod("card");
-    setCreating(true);
-    renewCard.mutate({ days: chosenPeriod.days, amount_cents: chosenPeriod.price_cents, label: chosenPeriod.label });
+    setCreating(false);
+  }
+
+  async function handleCardSubmit(cardData: CardFormData) {
+    if (!chosenPeriod) return { ok: false, error: "Nenhum plano selecionado" };
+    try {
+      const res = await portalFetch<{
+        ok: boolean;
+        status: string;
+        renewal_id?: string;
+        payment_id?: string | number;
+        message?: string;
+        error?: string;
+        detail?: string;
+      }>("/api/public/portal/mp-create-card", {
+        method: "POST",
+        body: JSON.stringify({
+          days: chosenPeriod.days,
+          amount_cents: chosenPeriod.price_cents,
+          label: chosenPeriod.label,
+          token: getPortalToken(),
+          card_data: cardData,
+        }),
+      });
+
+      if (res.ok && res.status === "approved") {
+        setPaymentStatus("approved");
+        toast.success("Pagamento confirmado com sucesso!");
+        void refetch();
+        return { ok: true, message: res.message };
+      } else if (res.ok && res.status === "in_process") {
+        if (res.renewal_id) setRenewalId(res.renewal_id);
+        setPaymentStatus("in_process");
+        toast.info("Pagamento em análise pelo Mercado Pago.");
+        return { ok: true, message: res.message };
+      } else {
+        return { ok: false, message: res.error || res.message || "Pagamento recusado" };
+      }
+    } catch (err) {
+      return { ok: false, message: (err as Error).message || "Falha ao se comunicar com o Mercado Pago" };
+    }
+  }
+
+  async function handleStoreCardSubmit(cardData: CardFormData) {
+    if (!storeItem) return { ok: false, error: "Produto não encontrado" };
+    try {
+      const res = await portalFetch<{
+        ok: boolean;
+        status: string;
+        renewal_id?: string;
+        payment_id?: string | number;
+        message?: string;
+        error?: string;
+        detail?: string;
+      }>("/api/public/portal/mp-create-extra", {
+        method: "POST",
+        body: JSON.stringify({
+          method: "card",
+          product_key: storeItem.id,
+          label: storeItem.label,
+          amount_cents: storeItem.price_cents,
+          card_data: cardData,
+        }),
+      });
+
+      if (res.ok && res.status === "approved") {
+        setPaymentStatus("approved");
+        toast.success("Compra confirmada com sucesso!");
+        void refetch();
+        return { ok: true, message: res.message };
+      } else if (res.ok && res.status === "in_process") {
+        if (res.renewal_id) setRenewalId(res.renewal_id);
+        setPaymentStatus("in_process");
+        toast.info("Pagamento em análise pelo Mercado Pago.");
+        return { ok: true, message: res.message };
+      } else {
+        return { ok: false, message: res.error || res.message || "Pagamento recusado" };
+      }
+    } catch (err) {
+      return { ok: false, message: (err as Error).message || "Falha ao se comunicar com o Mercado Pago" };
+    }
   }
 
   async function copy(text: string) {
@@ -1400,7 +1482,7 @@ function PortalDashboard() {
                   </div>
                 ) : (
                   /* ========================================================================= */
-                  /* ETAPA 3: CARTÃO DE CRÉDITO                                                */
+                  /* ETAPA 3: CARTÃO DE CRÉDITO (CHECKOUT MODERNO MERCADO PAGO)                */
                   /* ========================================================================= */
                   <div className="space-y-4 animate-in fade-in duration-200">
                     <button
@@ -1412,29 +1494,19 @@ function PortalDashboard() {
                       <span>Outras opções de pagamento</span>
                     </button>
 
-                    {creating && (
-                      <div className="bg-white rounded-2xl p-8 text-center space-y-3 shadow-sm border border-slate-100">
-                        <Loader2 className="h-8 w-8 animate-spin text-[#FF5500] mx-auto" />
-                        <span className="text-xs font-bold text-slate-600 block">Abrindo checkout seguro...</span>
-                      </div>
-                    )}
-
-                    {cardLink && !creating && (
-                      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-3 text-center">
-                        <p className="text-xs text-slate-600">
-                          Toque no botão abaixo para concluir com cartão de crédito:
-                        </p>
-                        <a href={cardLink} className="block">
-                          <Button className="w-full bg-[#FF5500] hover:bg-[#E04B00] text-white font-bold py-3.5 rounded-xl">
-                            <ExternalLink className="mr-2 h-4 w-4" />
-                            Abrir checkout do cartão
-                          </Button>
-                        </a>
-                        <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400">
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          <span>Aguardando retorno do pagamento...</span>
-                        </div>
-                      </div>
+                    {chosenPeriod && (
+                      <ModernCardCheckout
+                        amountCents={Math.ceil(chosenPeriod.price_cents / (1 - 4.99 / 100))}
+                        baseCents={chosenPeriod.price_cents}
+                        itemTitle={`Renovação ${chosenPeriod.label}`}
+                        onSubmit={handleCardSubmit}
+                        onSuccess={() => {
+                          setPaymentStatus("approved");
+                          void refetch();
+                        }}
+                        onCancel={() => setRenewOpen(false)}
+                        accentColor="#FF5500"
+                      />
                     )}
                   </div>
                 )}
@@ -1632,13 +1704,19 @@ function PortalDashboard() {
                   <ArrowLeft className="h-4 w-4" />
                   <span>Voltar</span>
                 </button>
-                {storeCardLink && (
-                  <a href={storeCardLink} className="block">
-                    <Button className="w-full bg-[#FF5500] hover:bg-[#E04B00] text-white font-bold py-3.5 rounded-xl">
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      Ir para pagamento seguro
-                    </Button>
-                  </a>
+                {storeItem && (
+                  <ModernCardCheckout
+                    amountCents={Math.ceil(storeItem.price_cents / (1 - 4.99 / 100))}
+                    baseCents={storeItem.price_cents}
+                    itemTitle={storeItem.label}
+                    onSubmit={handleStoreCardSubmit}
+                    onSuccess={() => {
+                      setPaymentStatus("approved");
+                      void refetch();
+                    }}
+                    onCancel={() => setStoreOpen(false)}
+                    accentColor="#FF5500"
+                  />
                 )}
               </div>
             )}

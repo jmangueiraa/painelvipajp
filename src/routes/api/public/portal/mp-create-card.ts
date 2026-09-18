@@ -17,7 +17,13 @@ export const Route = createFileRoute("/api/public/portal/mp-create-card")({
       OPTIONS: async ({ request }) => portalOptions(request),
       POST: async ({ request }) => {
         try {
-          const body = (await request.json().catch(() => ({}))) as { days?: number; amount_cents?: number; label?: string; token?: string };
+          const body = (await request.json().catch(() => ({}))) as {
+            days?: number;
+            amount_cents?: number;
+            label?: string;
+            token?: string;
+            card_data?: import("@/lib/mercadopago-card.server").CardInput;
+          };
           const portal = await import("@/integrations/portal/session.server");
           const client = await portal.getSessionFromRequest(request, body.token);
           if (!client) return json({ error: "Sessão inválida" }, request, { status: 401 });
@@ -82,7 +88,119 @@ export const Route = createFileRoute("/api/public/portal/mp-create-card")({
           const origin = `${url.protocol}//${url.host}`;
           const portalOrigin = request.headers.get("x-portal-origin") || origin;
           const back = `${portalOrigin}/portal/painel`;
+          const notificationUrl = `${origin}/api/public/portal/mp-webhook?external_reference=${renewal.id}`;
 
+          // =========================================================================
+          // NOVO FLUXO: CHECKOUT DIRETO E TRANSPARENTE VIA API MERCADO PAGO
+          // =========================================================================
+          if (body.card_data) {
+            const { detectCardBrand, createMpCardToken, createMpDirectCardPayment } = await import(
+              "@/lib/mercadopago-card.server"
+            );
+
+            // 1. Gera token seguro no Mercado Pago
+            const tokenRes = await createMpCardToken(token, body.card_data);
+            if (!tokenRes.token) {
+              await supabaseAdmin
+                .from("renewal_requests")
+                .update({ mp_status: "token_failed" })
+                .eq("id", renewal.id);
+              return json({ ok: false, error: tokenRes.error || "Dados do cartão inválidos" }, request, { status: 400 });
+            }
+
+            // 2. Cobra via POST /v1/payments
+            const brand = detectCardBrand(body.card_data.card_number);
+            const clientNameParts = (client.name || "Cliente VIP").trim().split(" ");
+            const firstName = clientNameParts[0] || "Cliente";
+            const lastName = clientNameParts.slice(1).join(" ") || "VIP";
+
+            const paymentRes = await createMpDirectCardPayment(token, {
+              cardToken: tokenRes.token,
+              amountCents: amount_cents,
+              description: `Renovação ${body.label ?? `${days}d`} - ${client.name}`,
+              externalReference: renewal.id,
+              installments: body.card_data.installments || 1,
+              paymentMethodId: brand,
+              payer: {
+                email: `cliente.${client.id.slice(0, 8)}@painelvip.app`,
+                cpf: body.card_data.cpf,
+                firstName,
+                lastName,
+              },
+              notificationUrl,
+            });
+
+            // Se aprovado na hora
+            if (paymentRes.status === "approved") {
+              const { finalizePaidRenewal } = await import("@/lib/portal-renewal-finalize.server");
+              await finalizePaidRenewal(renewal.id, {
+                id: paymentRes.payment_id,
+                status: "approved",
+                date_approved: paymentRes.date_approved,
+                transaction_amount: paymentRes.transaction_amount,
+              });
+
+              return json(
+                {
+                  ok: true,
+                  status: "approved",
+                  renewal_id: renewal.id,
+                  payment_id: paymentRes.payment_id,
+                  amount_cents,
+                  base_cents,
+                  message: "Pagamento aprovado com sucesso!",
+                },
+                request,
+              );
+            }
+
+            // Se em análise
+            if (paymentRes.status === "in_process") {
+              await supabaseAdmin
+                .from("renewal_requests")
+                .update({
+                  mp_status: "in_process",
+                  mp_payment_id: paymentRes.payment_id ? String(paymentRes.payment_id) : undefined,
+                })
+                .eq("id", renewal.id);
+
+              return json(
+                {
+                  ok: true,
+                  status: "in_process",
+                  renewal_id: renewal.id,
+                  payment_id: paymentRes.payment_id,
+                  amount_cents,
+                  base_cents,
+                  message: paymentRes.message,
+                },
+                request,
+              );
+            }
+
+            // Se recusado
+            await supabaseAdmin
+              .from("renewal_requests")
+              .update({
+                mp_status: paymentRes.status_detail || "rejected",
+                mp_payment_id: paymentRes.payment_id ? String(paymentRes.payment_id) : undefined,
+              })
+              .eq("id", renewal.id);
+
+            return json(
+              {
+                ok: false,
+                status: "rejected",
+                renewal_id: renewal.id,
+                error: paymentRes.message || "Pagamento não autorizado pela operadora do cartão.",
+                detail: paymentRes.status_detail,
+              },
+              request,
+              { status: 400 },
+            );
+          }
+
+          // Fallback para checkout externo se chamado sem card_data
           const mpRes = await fetch("https://api.mercadopago.com/checkout/preferences", {
             method: "POST",
             headers: {
@@ -112,7 +230,7 @@ export const Route = createFileRoute("/api/public/portal/mp-create-card")({
               },
 
               external_reference: renewal.id,
-              notification_url: `${origin}/api/public/portal/mp-webhook?external_reference=${renewal.id}`,
+              notification_url: notificationUrl,
               back_urls: { success: back, pending: back, failure: back },
               statement_descriptor: "PAINELVIP",
             }),

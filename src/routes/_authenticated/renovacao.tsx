@@ -13,10 +13,12 @@ import { translateError } from "@/lib/translate-error";
 import {
   createAppRenewalPix,
   createAppRenewalCardCheckout,
+  createAppRenewalCardDirect,
   checkAppRenewalStatus,
   CARD_FEE_PERCENT,
 } from "@/lib/app-renewal.functions";
 
+import { ModernCardCheckout } from "@/components/modern-card-checkout";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,9 +63,11 @@ function RenovacaoPage() {
   const { isAdmin } = useIsAdmin();
   const createPix = useServerFn(createAppRenewalPix);
   const createCard = useServerFn(createAppRenewalCardCheckout);
+  const createCardDirect = useServerFn(createAppRenewalCardDirect);
   const checkStatus = useServerFn(checkAppRenewalStatus);
 
   const [methodPlan, setMethodPlan] = useState<RenewalPlan | null>(null);
+  const [cardPlan, setCardPlan] = useState<RenewalPlan | null>(null);
   const [loadingMethod, setLoadingMethod] = useState<"pix" | "card" | null>(null);
   const [pix, setPix] = useState<PixData | null>(null);
   const [card, setCard] = useState<CardData | null>(null);
@@ -289,7 +293,10 @@ function RenovacaoPage() {
 
               <button
                 disabled={loadingMethod !== null}
-                onClick={payCard}
+                onClick={() => {
+                  setCardPlan(methodPlan);
+                  setMethodPlan(null);
+                }}
                 className="w-full flex items-center justify-between rounded-xl border border-zinc-800 hover:border-zinc-600 bg-zinc-900/60 hover:bg-zinc-900 px-4 py-4 text-left transition-all disabled:opacity-60"
               >
                 <span className="flex items-center gap-3">
@@ -366,50 +373,85 @@ function RenovacaoPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Cartão */}
-      <Dialog open={!!card} onOpenChange={closeCard}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Pagamento via Cartão</DialogTitle>
-            <DialogDescription>
-              {card ? `${card.plan_name} — ${brl(card.amount_cents)} · ${card.days} dias` : ""}
-            </DialogDescription>
-          </DialogHeader>
+      {/* Dialog Cartão de Crédito Moderno (Mercado Pago Direto) */}
+      <Dialog
+        open={!!cardPlan}
+        onOpenChange={(o) => {
+          if (!o) {
+            setCardPlan(null);
+            setPaid(false);
+          }
+        }}
+      >
+        <DialogContent className="max-w-md p-0 overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950 text-zinc-100 shadow-2xl [&>button:last-child]:hidden">
+          <div className="bg-zinc-900/90 border-b border-zinc-800/80 px-5 py-4 flex items-center justify-between">
+            <span className="font-bold text-sm text-zinc-100">
+              Checkout Seguro · {cardPlan?.name}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setCardPlan(null);
+                setPaid(false);
+              }}
+              className="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center font-bold transition cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
 
-          {card && !paid && (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Abra o checkout seguro do Mercado Pago e conclua o pagamento. Ao retornar, esta tela será atualizada
-                automaticamente quando aprovarmos.
-              </p>
-              <div className="rounded-lg border bg-muted/40 p-3 text-xs">
-                Valor do plano: <span className="font-medium text-foreground">{brl(card.base_cents)}</span>
-                <br />
-                Taxa do cartão ({CARD_FEE_PERCENT.toFixed(2).replace(".", ",")}%):{" "}
-                <span className="font-medium text-foreground">{brl(card.amount_cents - card.base_cents)}</span>
-                <br />
-                Total a pagar: <span className="font-semibold text-foreground">{brl(card.amount_cents)}</span>
+          <div className="p-4 sm:p-5 max-h-[85vh] overflow-y-auto">
+            {paid ? (
+              <div className="text-center space-y-3 py-6 bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800">
+                <CheckCircle2 className="size-14 mx-auto text-emerald-500" />
+                <p className="text-lg font-bold text-emerald-400">Pagamento aprovado!</p>
+                <p className="text-xs text-zinc-400">Sua assinatura foi renovada com sucesso.</p>
+                <Button
+                  className="w-full bg-white text-zinc-950 hover:bg-zinc-200 font-bold py-3 mt-4 rounded-xl cursor-pointer"
+                  onClick={() => {
+                    setCardPlan(null);
+                    setPaid(false);
+                  }}
+                >
+                  Concluir
+                </Button>
               </div>
-              <Button
-                onClick={() => window.location.assign(card.init_point)}
-                className="w-full"
-              >
-                <CreditCard className="size-4 mr-2" /> Abrir checkout novamente
-              </Button>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
-                <Loader2 className="size-3 animate-spin" /> Aguardando confirmação do pagamento...
-              </div>
-            </div>
-          )}
-
-          {paid && card && (
-            <div className="text-center space-y-3 py-4">
-              <CheckCircle2 className="size-12 mx-auto text-[color:var(--kpi-emerald)]" />
-              <p className="font-semibold">Pagamento aprovado!</p>
-              <p className="text-sm text-muted-foreground">Sua assinatura foi renovada.</p>
-              <Button className="w-full" onClick={() => closeCard(false)}>Fechar</Button>
-            </div>
-          )}
+            ) : cardPlan ? (
+              <ModernCardCheckout
+                amountCents={cardAmount(cardPlan.price_cents)}
+                baseCents={cardPlan.price_cents}
+                itemTitle={cardPlan.name}
+                onSubmit={async (cardData) => {
+                  try {
+                    const res = await createCardDirect({
+                      data: {
+                        plan_id: cardPlan.id,
+                        card_data: cardData,
+                      },
+                    });
+                    if (res.status === "approved") {
+                      setPaid(true);
+                      toast.success("Pagamento aprovado com sucesso!");
+                      refetch();
+                      return { ok: true, message: res.message };
+                    } else if (res.status === "in_process") {
+                      toast.info("Pagamento em análise pelo Mercado Pago.");
+                      return { ok: true, message: res.message };
+                    }
+                    return { ok: false, error: "Pagamento não aprovado." };
+                  } catch (err) {
+                    return { ok: false, error: (err as Error).message || "Falha ao processar cartão." };
+                  }
+                }}
+                onSuccess={() => {
+                  setPaid(true);
+                  refetch();
+                }}
+                onCancel={() => setCardPlan(null)}
+                accentColor="#3b82f6"
+              />
+            ) : null}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
