@@ -12,6 +12,7 @@ import type { ComponentType, CSSProperties, SVGProps } from "react";
 import * as XLSX from "xlsx";
 
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { brl, parseBrlToCents, formatDateBR, todayISO, addDaysISO, addMonthsISO, calculateRenewalDueDate, formatPhone } from "@/lib/format";
 import { getStateFromPhone } from "@/lib/br-states";
 import { statusLabel, statusVariant, computeStatus, type ClientStatus } from "@/lib/status";
