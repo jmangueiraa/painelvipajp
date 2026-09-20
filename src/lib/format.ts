@@ -31,13 +31,15 @@ export const formatDateTimeBR = (iso: string) => {
 export const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export const addDaysISO = (iso: string, days: number) => {
-  const d = new Date(iso + "T00:00:00");
+  const clean = (iso || "").split(/[\sT]/)[0] || todayISO();
+  const d = new Date(clean + "T00:00:00");
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 };
 
 export const addMonthsISO = (iso: string, months: number) => {
-  const d = new Date(iso + "T00:00:00Z");
+  const clean = (iso || "").split(/[\sT]/)[0] || todayISO();
+  const d = new Date(clean + "T00:00:00Z");
   const day = d.getUTCDate();
   d.setUTCMonth(d.getUTCMonth() + months);
   // Se o dia mudou (ex: de 31 para 1 do mês seguinte), volta para o último dia do mês anterior
@@ -47,8 +49,43 @@ export const addMonthsISO = (iso: string, months: number) => {
   return d.toISOString().slice(0, 10);
 };
 
-export const formatPhone = (raw: string) => {
-  const d = raw.replace(/\D/g, "").slice(0, 11);
+export const calculateRenewalDueDate = (currentDueDate: string | null | undefined, days: number): string => {
+  const today = todayISO();
+  const cleanCurrent = (currentDueDate || "").split(/[\sT]/)[0];
+
+  // Se o cliente não tem vencimento ou já está vencido (cleanCurrent < today),
+  // a renovação deve começar a contar a partir de HOJE.
+  // Se o vencimento for futuro (cleanCurrent >= today), soma ao vencimento atual para não perder dias.
+  const base = (!cleanCurrent || cleanCurrent < today) ? today : cleanCurrent;
+
+  let newDue: string;
+  if (days === 30 || days === 90 || days === 180 || days === 365) {
+    const months = days === 365 ? 12 : Math.max(1, Math.round(days / 30));
+    newDue = addMonthsISO(base, months);
+  } else {
+    newDue = addDaysISO(base, days);
+  }
+
+  // Garantia: se por qualquer razão newDue for menor ou igual a hoje, projeta a partir de hoje
+  if (newDue <= today) {
+    if (days === 30 || days === 90 || days === 180 || days === 365) {
+      const months = days === 365 ? 12 : Math.max(1, Math.round(days / 30));
+      newDue = addMonthsISO(today, months);
+    } else {
+      newDue = addDaysISO(today, days);
+    }
+  }
+
+  return newDue;
+};
+
+export const formatPhone = (raw?: string | null): string => {
+  if (!raw) return "";
+  let d = raw.replace(/\D/g, "");
+  if (d.startsWith("55") && (d.length === 12 || d.length === 13)) {
+    d = d.slice(2);
+  }
+  d = d.slice(0, 11);
   if (d.length <= 10) {
     return d.replace(/(\d{0,2})(\d{0,4})(\d{0,4}).*/, (_, a, b, c) =>
       [a && `(${a}`, a && a.length === 2 ? ") " : "", b, c && `-${c}`].filter(Boolean).join(""),

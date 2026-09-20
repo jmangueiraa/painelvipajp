@@ -12,8 +12,7 @@ import type { ComponentType, CSSProperties, SVGProps } from "react";
 import * as XLSX from "xlsx";
 
 import { supabase } from "@/integrations/supabase/client";
-import type { TablesInsert } from "@/integrations/supabase/types";
-import { brl, parseBrlToCents, formatDateBR, todayISO, addDaysISO, addMonthsISO, formatPhone } from "@/lib/format";
+import { brl, parseBrlToCents, formatDateBR, todayISO, addDaysISO, addMonthsISO, calculateRenewalDueDate, formatPhone } from "@/lib/format";
 import { getStateFromPhone } from "@/lib/br-states";
 import { statusLabel, statusVariant, computeStatus, type ClientStatus } from "@/lib/status";
 import { useAuth } from "@/hooks/use-auth";
@@ -271,26 +270,7 @@ function ClientesPage() {
   const [renewTarget, setRenewTarget] = useState<Client | null>(null);
   const renew = useMutation({
     mutationFn: async ({ c, days }: { c: Client; days: number }) => {
-      // Sempre conta a partir do vencimento atual para manter o dia fixo
-      const base = c.due_date || todayISO();
-      let newDue: string;
-      if (days === 30 || days === 90 || days === 180 || days === 365) {
-        const months = days === 365 ? 12 : days / 30;
-        newDue = addMonthsISO(base, months);
-      } else {
-        newDue = addDaysISO(base, days);
-      }
-
-      // Se o novo vencimento ainda for no passado, projeta a partir de hoje
-      if (newDue < todayISO()) {
-        if (days === 30 || days === 90 || days === 180 || days === 365) {
-          const months = days === 365 ? 12 : days / 30;
-          newDue = addMonthsISO(todayISO(), months);
-        } else {
-          newDue = addDaysISO(todayISO(), days);
-        }
-      }
-
+      const newDue = calculateRenewalDueDate(c.due_date, days);
       const update: { due_date: string; status: ClientStatus; plan_id?: string; price_cents?: number } = { due_date: newDue, status: computeStatus(newDue, "ativo") };
       // Se o período escolhido for diferente do plano atual, troca para um plano com essa duração
       const currentPlan = (plans ?? []).find((p) => p.id === c.plan_id);

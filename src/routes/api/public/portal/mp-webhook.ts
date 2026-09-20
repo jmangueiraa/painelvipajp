@@ -46,12 +46,24 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
           if (!renewalRaw) return json({ ok: true, skipped: "not found" });
 
           // Token do assinante dono da renovação
-          const { data: ownerSettings } = await supabaseAdmin
-            .from("settings")
-            .select("mp_access_token")
-            .eq("user_id", (renewalRaw as { user_id: string }).user_id)
-            .maybeSingle();
-          const token = (ownerSettings as { mp_access_token?: string | null } | null)?.mp_access_token?.trim();
+          let token: string | null = null;
+          if ((renewalRaw as { user_id?: string }).user_id) {
+            const { data: ownerSettings } = await supabaseAdmin
+              .from("settings")
+              .select("mp_access_token")
+              .eq("user_id", (renewalRaw as { user_id: string }).user_id)
+              .maybeSingle();
+            token = (ownerSettings as { mp_access_token?: string | null } | null)?.mp_access_token?.trim() || null;
+          }
+          if (!token) {
+            const { data: anySettings } = await supabaseAdmin
+              .from("settings")
+              .select("mp_access_token")
+              .not("mp_access_token", "is", null)
+              .limit(1)
+              .maybeSingle();
+            token = anySettings?.mp_access_token?.trim() || null;
+          }
           if (!token) return json({ error: "not configured" }, { status: 500 });
 
           // Busca status real do pagamento no MP (não confie no payload)

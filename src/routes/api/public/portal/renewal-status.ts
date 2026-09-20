@@ -33,12 +33,24 @@ export const Route = createFileRoute("/api/public/portal/renewal-status")({
           // Fallback: se ainda não confirmado e existe mp_payment_id, consulta o MP diretamente
           // (caso o webhook não tenha chegado) e atualiza o registro.
           if (row.status !== "paid" && row.mp_status !== "approved") {
-            const { data: ownerSettings } = await supabaseAdmin
-              .from("settings")
-              .select("mp_access_token")
-              .eq("user_id", client.user_id)
-              .maybeSingle();
-            const token = (ownerSettings as { mp_access_token?: string | null } | null)?.mp_access_token?.trim();
+            let token: string | null = null;
+            if (client.user_id) {
+              const { data: ownerSettings } = await supabaseAdmin
+                .from("settings")
+                .select("mp_access_token")
+                .eq("user_id", client.user_id)
+                .maybeSingle();
+              token = (ownerSettings as { mp_access_token?: string | null } | null)?.mp_access_token?.trim() || null;
+            }
+            if (!token) {
+              const { data: anySettings } = await supabaseAdmin
+                .from("settings")
+                .select("mp_access_token")
+                .not("mp_access_token", "is", null)
+                .limit(1)
+                .maybeSingle();
+              token = anySettings?.mp_access_token?.trim() || null;
+            }
             if (token) {
               let paymentId = row.mp_payment_id;
               let payment: { status?: string; date_approved?: string | null; id?: number | string } | null = null;

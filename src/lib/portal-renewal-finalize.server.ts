@@ -52,52 +52,44 @@ export async function finalizePaidRenewal(
 
   // Estende vencimento do cliente IPTV
   if (renewal.days > 0 && renewal.client_id) {
-    const { data: clientRow } = await supabaseAdmin
-      .from("clients")
-      .select("id, due_date")
-      .eq("id", renewal.client_id)
-      .maybeSingle();
-    if (clientRow) {
-      const current = (clientRow as { due_date: string | null }).due_date;
-      const days = Number(renewal.days || 0);
-      
-      let next: Date;
-      if (current) {
-        next = new Date(current + "T00:00:00Z");
-        const day = next.getUTCDate();
-        
-        if (days === 30 || days === 90 || days === 180 || days === 365) {
-          const months = days === 365 ? 12 : days / 30;
-          next.setUTCMonth(next.getUTCMonth() + months);
-          if (next.getUTCDate() !== day) next.setUTCDate(0);
-        } else {
-          next.setUTCDate(next.getUTCDate() + days);
-        }
-        
-        const today = new Date();
-        today.setUTCHours(0, 0, 0, 0);
-        if (next.getTime() < today.getTime()) {
-          next = today;
-          if (days === 30 || days === 90 || days === 180 || days === 365) {
-            const months = days === 365 ? 12 : days / 30;
-            next.setUTCMonth(next.getUTCMonth() + months);
-          } else {
-            next.setUTCDate(next.getUTCDate() + days);
-          }
-        }
-      } else {
-        next = new Date();
-        next.setUTCHours(0, 0, 0, 0);
-        if (days === 30 || days === 90 || days === 180 || days === 365) {
-          const months = days === 365 ? 12 : days / 30;
-          next.setUTCMonth(next.getUTCMonth() + months);
-        } else {
-          next.setUTCDate(next.getUTCDate() + days);
-        }
+    try {
+      const { data: clientRow, error: clientFetchErr } = await supabaseAdmin
+        .from("clients")
+        .select("id, due_date, status")
+        .eq("id", renewal.client_id)
+        .maybeSingle();
+
+      if (clientFetchErr) {
+        console.error("[finalizePaidRenewal] fetch client error", clientFetchErr);
       }
 
-      const newDueDate = next.toISOString().slice(0, 10);
-      await supabaseAdmin.from("clients").update({ due_date: newDueDate }).eq("id", renewal.client_id);
+      if (clientRow) {
+        const current = (clientRow as { due_date: string | null }).due_date;
+        const days = Number(renewal.days || 30);
+        const { calculateRenewalDueDate } = await import("./format");
+        const { computeStatus } = await import("./status");
+
+        const newDueDate = calculateRenewalDueDate(current, days);
+        const newStatus = computeStatus(newDueDate, "ativo");
+
+        const { error: clientUpdateErr } = await supabaseAdmin
+          .from("clients")
+          .update({
+            due_date: newDueDate,
+            status: newStatus,
+          })
+          .eq("id", renewal.client_id);
+
+        if (clientUpdateErr) {
+          console.error("[finalizePaidRenewal] update client failed", clientUpdateErr);
+        } else {
+          console.log(`[finalizePaidRenewal] Client ${renewal.client_id} successfully renewed: ${current} -> ${newDueDate} (+${days} days)`);
+        }
+      } else {
+        console.warn("[finalizePaidRenewal] clientRow not found for id", renewal.client_id);
+      }
+    } catch (e) {
+      console.error("[finalizePaidRenewal] error updating client due_date", e);
     }
   }
 
