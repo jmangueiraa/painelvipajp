@@ -20,7 +20,7 @@ const EVENT_TO_FLAG: Record<NotifyEvent, string> = {
 const EVENT_TITLE: Record<NotifyEvent, string> = {
   new_sale: "💰 NOVA VENDA",
   payment_approved: "✅ PAGAMENTO APROVADO",
-  renewal: "🔁 RENOVAÇÃO REALIZADA",
+  renewal: "🔄 RENOVAÇÃO REALIZADA",
   new_client: "🆕 NOVO CLIENTE CADASTRADO",
   trial: "🎁 TESTE GRATUITO CRIADO",
   payment_rejected: "❌ PAGAMENTO RECUSADO",
@@ -44,8 +44,11 @@ function fmtDateBR(d: Date) {
 export function buildMessage(event: NotifyEvent, p: NotifyPayload): string {
   const lines: string[] = [EVENT_TITLE[event], ""];
   if (p.nome) lines.push(`👤 Cliente: ${p.nome}`);
-  if (p.telefone) lines.push(`📱 Telefone: ${p.telefone}`);
-  if (p.email) lines.push(`📧 Email: ${p.email}`);
+  if (p.telefone) {
+    lines.push(`📱 Telefone: ${p.telefone}`);
+  } else if (p.email) {
+    lines.push(`📧 Email: ${p.email}`);
+  }
   if (p.plano) lines.push(`📦 Plano: ${p.plano}`);
   if (p.valor) lines.push(`💵 Valor: R$ ${p.valor}`);
   if (p.metodo) lines.push(`💳 Pagamento: ${p.metodo}`);

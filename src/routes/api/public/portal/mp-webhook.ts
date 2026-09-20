@@ -110,12 +110,31 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
                 nome = (c as { name?: string | null } | null)?.name ?? null;
                 telefone = (c as { phone?: string | null } | null)?.phone ?? null;
               } else if (renewal.buyer_id) {
-                const { data: b } = await supabaseAdmin.from("store_buyers").select("name,email").eq("id", renewal.buyer_id).maybeSingle();
+                const { data: b } = await supabaseAdmin.from("store_buyers").select("name,email,phone").eq("id", renewal.buyer_id).maybeSingle();
                 nome = (b as { name?: string | null } | null)?.name ?? null;
                 email = (b as { email?: string | null } | null)?.email ?? null;
+                telefone = (b as { phone?: string | null } | null)?.phone ?? null;
               }
+
+              if (!nome) {
+                nome =
+                  (payment as any).metadata?.client_name ||
+                  ((payment as any).payer?.first_name ? `${(payment as any).payer.first_name} ${(payment as any).payer.last_name || ""}`.trim() : null) ||
+                  (payment.description?.includes(" - ") ? payment.description.split(" - ").pop()?.trim() : null) ||
+                  (renewal.label?.includes(" - ") ? renewal.label.split(" - ").pop()?.trim() : null) ||
+                  "Cliente";
+              }
+              if (!telefone) {
+                telefone =
+                  (payment as any).metadata?.client_phone ||
+                  (typeof (payment as any).payer?.phone === "string" ? (payment as any).payer.phone : null);
+              }
+
+              const { formatPhone } = await import("@/lib/format");
               await notify("payment_rejected", {
-                nome, telefone, email,
+                nome,
+                telefone: telefone ? formatPhone(telefone) : null,
+                email,
                 plano: renewal.days > 0 ? `Renovação ${renewal.days} dias` : (renewal.label ?? "Produto avulso"),
                 valor: (amt / 100).toFixed(2).replace(".", ","),
                 metodo: "Mercado Pago",
@@ -131,6 +150,11 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
             status: payment.status,
             date_approved: payment.date_approved,
             transaction_amount: payment.transaction_amount,
+            payment_method_id: (payment as any).payment_method_id,
+            payment_type_id: (payment as any).payment_type_id,
+            description: payment.description,
+            payer: (payment as any).payer,
+            metadata: (payment as any).metadata,
           });
           if (!result.claimed) return json({ ok: true, skipped: result.reason });
 

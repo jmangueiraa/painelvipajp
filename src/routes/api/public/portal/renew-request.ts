@@ -24,6 +24,7 @@ export const Route = createFileRoute("/api/public/portal/renew-request")({
             client_id: client.id,
             user_id: client.user_id,
             days,
+            label: `Renovação ${days} dias - ${client.name}`,
           });
           if (error) return json({ error: "Falha ao registrar solicitação" }, request, { status: 500 });
 

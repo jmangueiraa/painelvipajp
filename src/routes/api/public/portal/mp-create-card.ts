@@ -74,9 +74,17 @@ export const Route = createFileRoute("/api/public/portal/mp-create-card")({
             if (s?.user_id) client.user_id = s.user_id;
           }
 
+          const renewalLabel = body.label ? `${body.label} - ${client.name}` : `Renovação ${days} dias - ${client.name}`;
           const { data: renewal, error: insErr } = await supabaseAdmin
             .from("renewal_requests")
-            .insert({ client_id: client.id, user_id: client.user_id, days, amount_cents, status: "awaiting_payment" })
+            .insert({
+              client_id: client.id,
+              user_id: client.user_id,
+              days,
+              amount_cents,
+              status: "awaiting_payment",
+              label: renewalLabel,
+            })
             .select("id")
             .single();
           if (insErr || !renewal) {
@@ -133,12 +141,32 @@ export const Route = createFileRoute("/api/public/portal/mp-create-card")({
             // Se aprovado na hora
             if (paymentRes.status === "approved") {
               const { finalizePaidRenewal } = await import("@/lib/portal-renewal-finalize.server");
-              await finalizePaidRenewal(renewal.id, {
-                id: paymentRes.payment_id,
-                status: "approved",
-                date_approved: paymentRes.date_approved,
-                transaction_amount: paymentRes.transaction_amount,
-              });
+              await finalizePaidRenewal(
+                renewal.id,
+                {
+                  id: paymentRes.payment_id,
+                  status: "approved",
+                  date_approved: paymentRes.date_approved,
+                  transaction_amount: paymentRes.transaction_amount,
+                  payment_method_id: brand,
+                  payment_type_id: "credit_card",
+                  description: `Renovação ${body.label ?? `${days}d`} - ${client.name}`,
+                  metadata: {
+                    client_id: client.id,
+                    client_name: client.name,
+                    client_phone: client.phone,
+                    current_due_date: client.due_date,
+                    days,
+                  },
+                },
+                {
+                  id: client.id,
+                  name: client.name,
+                  phone: client.phone,
+                  due_date: client.due_date,
+                  user_id: client.user_id,
+                },
+              );
 
               return json(
                 {

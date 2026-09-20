@@ -109,7 +109,18 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
                   email: payerEmail,
                   first_name: client.name?.split(" ")[0] || "Cliente",
                   last_name: client.name?.split(" ").slice(1).join(" ") || "VIP",
+                  phone: {
+                    area_code: (client.phone || "").replace(/\D/g, "").slice(0, 2) || "11",
+                    number: (client.phone || "").replace(/\D/g, "").slice(2) || "999999999",
+                  },
                   identification: { type: "CPF", number: "00000000000" }
+                },
+                metadata: {
+                  client_id: client.id,
+                  client_name: client.name,
+                  client_phone: client.phone,
+                  current_due_date: client.due_date,
+                  label,
                 },
                 notification_url: `${origin}/api/public/portal/mp-webhook?external_reference=${renewal.id}`,
 
@@ -134,9 +145,22 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
             const mp_payment_id = mp.id ? String(mp.id) : null;
             await supabaseAdmin
               .from("renewal_requests")
-              .update({ mp_payment_id, mp_status: mp.status ?? "pending", pix_qr_code: qr_code, pix_qr_base64: qr_code_base64 })
+              .update({
+                mp_payment_id,
+                mp_status: mp.status ?? "pending",
+                pix_qr_code: qr_code,
+                pix_qr_base64: qr_code_base64,
+              })
               .eq("id", renewal.id);
-            return json({ ok: true, renewal_id: renewal.id, payment_id: mp_payment_id, qr_code, qr_code_base64, amount_cents }, request);
+
+            return json({
+              ok: true,
+              renewal_id: renewal.id,
+              payment_id: mp_payment_id,
+              qr_code,
+              qr_code_base64,
+              amount_cents,
+            }, request);
           }
 
           // =========================================================================
@@ -178,12 +202,32 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
 
             if (paymentRes.status === "approved") {
               const { finalizePaidRenewal } = await import("@/lib/portal-renewal-finalize.server");
-              await finalizePaidRenewal(renewal.id, {
-                id: paymentRes.payment_id,
-                status: "approved",
-                date_approved: paymentRes.date_approved,
-                transaction_amount: paymentRes.transaction_amount,
-              });
+              await finalizePaidRenewal(
+                renewal.id,
+                {
+                  id: paymentRes.payment_id,
+                  status: "approved",
+                  date_approved: paymentRes.date_approved,
+                  transaction_amount: paymentRes.transaction_amount,
+                  payment_method_id: brand,
+                  payment_type_id: "credit_card",
+                  description,
+                  metadata: {
+                    client_id: client.id,
+                    client_name: client.name,
+                    client_phone: client.phone,
+                    current_due_date: client.due_date,
+                    label,
+                  },
+                },
+                {
+                  id: client.id,
+                  name: client.name,
+                  phone: client.phone,
+                  due_date: client.due_date,
+                  user_id: client.user_id,
+                },
+              );
 
               return json(
                 {

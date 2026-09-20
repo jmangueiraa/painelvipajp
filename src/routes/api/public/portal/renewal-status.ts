@@ -29,6 +29,7 @@ export const Route = createFileRoute("/api/public/portal/renewal-status")({
 
           if (!r) return json({ error: "Não encontrado" }, request, { status: 404 });
           let row = r as { mp_status: string | null; status: string | null; mp_payment_id: string | null; paid_at: string | null };
+          let finResult: any = null;
 
           // Fallback: se ainda não confirmado e existe mp_payment_id, consulta o MP diretamente
           // (caso o webhook não tenha chegado) e atualiza o registro.
@@ -80,11 +81,27 @@ export const Route = createFileRoute("/api/public/portal/renewal-status")({
                 const isApproved = payment.status === "approved";
                 if (isApproved) {
                   const { finalizePaidRenewal } = await import("@/lib/portal-renewal-finalize.server");
-                  await finalizePaidRenewal(id, {
-                    id: paymentId ?? payment.id,
-                    status: payment.status,
-                    date_approved: payment.date_approved,
-                  });
+                  const finResult = await finalizePaidRenewal(
+                    id,
+                    {
+                      id: paymentId ?? payment.id,
+                      status: payment.status,
+                      date_approved: payment.date_approved,
+                      transaction_amount: (payment as any).transaction_amount,
+                      payment_method_id: (payment as any).payment_method_id,
+                      payment_type_id: (payment as any).payment_type_id,
+                      description: (payment as any).description,
+                      payer: (payment as any).payer,
+                      metadata: (payment as any).metadata,
+                    },
+                    {
+                      id: client.id,
+                      name: client.name,
+                      phone: client.phone,
+                      due_date: client.due_date,
+                      user_id: client.user_id,
+                    },
+                  );
                   row = {
                     ...row,
                     mp_payment_id: paymentId ?? (payment.id ? String(payment.id) : row.mp_payment_id),
@@ -110,6 +127,7 @@ export const Route = createFileRoute("/api/public/portal/renewal-status")({
             status: row.mp_status ?? "pending",
             paid: row.status === "paid" || row.mp_status === "approved",
             paid_at: row.paid_at,
+            new_due_date: finResult?.newDueDate ?? undefined,
           }, request);
         } catch (e) {
           return json({ error: (e as Error).message }, request, { status: 500 });

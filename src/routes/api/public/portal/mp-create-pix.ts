@@ -61,9 +61,17 @@ export const Route = createFileRoute("/api/public/portal/mp-create-pix")({
           }
 
           // Cria a solicitação
+          const renewalLabel = body.label ? `${body.label} - ${client.name}` : `Renovação ${days} dias - ${client.name}`;
           const { data: renewal, error: insErr } = await supabaseAdmin
             .from("renewal_requests")
-            .insert({ client_id: client.id, user_id: client.user_id, days, amount_cents, status: "awaiting_payment" })
+            .insert({
+              client_id: client.id,
+              user_id: client.user_id,
+              days,
+              amount_cents,
+              status: "awaiting_payment",
+              label: renewalLabel,
+            })
             .select("id")
             .single();
           if (insErr || !renewal) {
@@ -78,7 +86,7 @@ export const Route = createFileRoute("/api/public/portal/mp-create-pix")({
           const idempotencyKey = `${renewal.id}`;
           const url = new URL(request.url);
           const origin = `${url.protocol}//${url.host}`;
-
+          const phoneDigits = (client.phone || "").replace(/\D/g, "");
 
           const mpRes = await fetch("https://api.mercadopago.com/v1/payments", {
             method: "POST",
@@ -96,11 +104,20 @@ export const Route = createFileRoute("/api/public/portal/mp-create-pix")({
                 email: payerEmail,
                 first_name: client.name?.split(" ")[0] || "Cliente",
                 last_name: client.name?.split(" ").slice(1).join(" ") || "VIP",
+                phone: {
+                  area_code: phoneDigits.slice(0, 2) || "11",
+                  number: phoneDigits.slice(2) || "999999999",
+                },
                 identification: { type: "CPF", number: "00000000000" }
               },
+              metadata: {
+                client_id: client.id,
+                client_name: client.name,
+                client_phone: client.phone,
+                current_due_date: client.due_date,
+                days,
+              },
               notification_url: `${origin}/api/public/portal/mp-webhook?external_reference=${renewal.id}`,
-
-
             }),
           });
 
