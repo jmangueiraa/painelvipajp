@@ -110,7 +110,7 @@ function PortalLoginPage() {
       <div className="flex flex-col items-center justify-center pt-2 sm:pt-4 mb-2.5 select-none z-10">
         <div className="w-40 h-40 sm:w-48 sm:h-48 md:w-52 md:h-52 aspect-square rounded-3xl overflow-hidden shadow-2xl shadow-orange-950/25 border-2 border-white/35 bg-[#FF5500] flex items-center justify-center transition-transform hover:scale-[1.02] duration-300">
           <img
-            src="/logo-ajp.jpg"
+            src="/portal-mascote.jpg?v=2"
             alt="Portal do Cliente AJP"
             className="w-full h-full object-cover"
             loading="eager"

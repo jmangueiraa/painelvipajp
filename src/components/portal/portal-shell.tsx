@@ -27,7 +27,7 @@ export function PortalShell({
           <div className="flex items-center gap-2.5">
             <div className="h-9 w-9 rounded-xl overflow-hidden flex items-center justify-center border border-white/30 shadow-inner bg-black/40">
               <img
-                src="/logo-ajp.jpg"
+                src="/portal-mascote.jpg?v=2"
                 alt="AJP"
                 className="w-full h-full object-cover"
                 onError={(e) => {
