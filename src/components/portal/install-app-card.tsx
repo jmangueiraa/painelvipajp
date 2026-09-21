@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Smartphone, Share, Plus, CheckCircle2, MoreVertical } from "lucide-react";
+import { Smartphone, Share, Plus, CheckCircle2, MoreVertical, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -163,67 +163,71 @@ export function InstallAppCard() {
   const actionLabel = canPrompt ? "📲 Instalar Aplicativo" : "Ver como instalar";
 
   return (
-    <Card className="border-primary/40 bg-gradient-to-br from-primary/10 to-transparent">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Smartphone className="h-4 w-4" />Instalar aplicativo
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          Adicione o portal à tela inicial e acesse como um app nativo — abre em tela cheia, sem barra do navegador.
-        </p>
-        <Button onClick={handleInstall} size="lg" className="w-full sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" />
-          {actionLabel}
-        </Button>
-        {showHelp && (
-          <div className="rounded-xl border bg-card p-3 text-sm">
-            {ios ? (
-              <>
-                <div className="mb-2 flex items-center gap-2 font-medium">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  Como instalar no iPhone (Safari)
-                </div>
-                <ol className="list-decimal space-y-1 pl-5">
-                  <li>Toque em <Share className="inline h-3.5 w-3.5" /> <strong>Compartilhar</strong> na barra do Safari.</li>
-                  <li>Role e toque em <strong>Adicionar à Tela de Início</strong>.</li>
-                  <li>Confirme em <strong>Adicionar</strong>.</li>
-                </ol>
-              </>
-            ) : canPrompt ? null : (
-              <>
-                <div className="mb-2 flex items-center gap-2 font-medium">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  Instalação pelo menu do navegador
-                </div>
-                {inAppBrowser ? (
-                  <ol className="list-decimal space-y-1 pl-5">
-                    <li>Toque em <MoreVertical className="inline h-3.5 w-3.5" /> e escolha <strong>Abrir no navegador</strong>.</li>
-                    <li>Abra no <strong>Chrome</strong> ou <strong>Edge</strong>.</li>
-                    <li>No menu do navegador, toque em <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
-                  </ol>
-                ) : android ? (
-                  <ol className="list-decimal space-y-1 pl-5">
-                    <li>Abra o menu <MoreVertical className="inline h-3.5 w-3.5" /> do <strong>Chrome</strong> ou <strong>Edge</strong>.</li>
-                    <li>Toque em <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
-                    <li>Confirme em <strong>Instalar</strong>.</li>
-                  </ol>
-                ) : (
-                  <ol className="list-decimal space-y-1 pl-5">
-                    <li>Abra o menu do navegador.</li>
-                    <li>Escolha <strong>Instalar Portal VIP</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
-                    <li>Confirme a instalação.</li>
-                  </ol>
-                )}
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Quando o navegador liberar o instalador automático, este botão muda para instalar direto.
-                </p>
-              </>
-            )}
+    <div className="w-full">
+      <button
+        type="button"
+        onClick={handleInstall}
+        className="w-full rounded-2xl bg-white/15 hover:bg-white/20 active:scale-[0.99] border border-white/25 p-3.5 sm:p-4 flex items-center justify-between text-left transition backdrop-blur-md cursor-pointer shadow-lg shadow-black/5"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl border-2 border-white/80 flex items-center justify-center shrink-0">
+            <Smartphone className="w-5 h-5 text-white stroke-[2.2]" />
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-white font-bold text-sm sm:text-base leading-tight">
+              Instalar aplicativo
+            </h3>
+            <p className="text-white/90 text-[11px] sm:text-xs mt-0.5 leading-snug">
+              Adicione o portal à tela inicial e acesse como seu app!
+            </p>
+          </div>
+        </div>
+        <ChevronRight className="w-5 h-5 text-white/90 shrink-0 ml-2 stroke-[2.5]" />
+      </button>
+
+      {showHelp && (
+        <div className="mt-2.5 rounded-2xl bg-white p-4 text-xs text-slate-800 shadow-xl border border-white/50 animate-in fade-in slide-in-from-top-2 duration-200">
+          {ios ? (
+            <>
+              <div className="mb-2 flex items-center gap-2 font-bold text-slate-900 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-[#FF5500]" />
+                Como instalar no iPhone (Safari)
+              </div>
+              <ol className="list-decimal space-y-1 pl-5 text-slate-700 leading-relaxed">
+                <li>Toque em <Share className="inline h-3.5 w-3.5 text-[#FF5500]" /> <strong>Compartilhar</strong> na barra inferior do Safari.</li>
+                <li>Role a lista e toque em <strong>Adicionar à Tela de Início</strong>.</li>
+                <li>Confirme tocando em <strong>Adicionar</strong> no canto superior direito.</li>
+              </ol>
+            </>
+          ) : canPrompt ? null : (
+            <>
+              <div className="mb-2 flex items-center gap-2 font-bold text-slate-900 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-[#FF5500]" />
+                Instalação pelo menu do navegador
+              </div>
+              {inAppBrowser ? (
+                <ol className="list-decimal space-y-1 pl-5 text-slate-700 leading-relaxed">
+                  <li>Toque nos três pontinhos <MoreVertical className="inline h-3.5 w-3.5" /> e escolha <strong>Abrir no navegador</strong>.</li>
+                  <li>Abra no <strong>Chrome</strong> ou <strong>Edge</strong>.</li>
+                  <li>No menu do navegador, toque em <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
+                </ol>
+              ) : android ? (
+                <ol className="list-decimal space-y-1 pl-5 text-slate-700 leading-relaxed">
+                  <li>Abra o menu <MoreVertical className="inline h-3.5 w-3.5" /> do <strong>Chrome</strong>.</li>
+                  <li>Toque em <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
+                  <li>Confirme em <strong>Instalar</strong>.</li>
+                </ol>
+              ) : (
+                <ol className="list-decimal space-y-1 pl-5 text-slate-700 leading-relaxed">
+                  <li>Abra o menu do navegador.</li>
+                  <li>Escolha <strong>Instalar Portal VIP</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
+                  <li>Confirme a instalação.</li>
+                </ol>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

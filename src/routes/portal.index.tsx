@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, KeyRound, User, Eye, EyeOff, MessageCircle, HelpCircle } from "lucide-react";
+import { Loader2, KeyRound, User, Eye, EyeOff, LogIn } from "lucide-react";
 
 import { toast } from "sonner";
 
@@ -101,61 +101,54 @@ function PortalLoginPage() {
   }
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center bg-[#FF5500] px-4 py-8 text-slate-800 font-sans selection:bg-orange-600 selection:text-white relative overflow-hidden">
+    <div className="min-h-dvh flex flex-col items-center justify-start bg-[#FF5500] px-4 pt-2 pb-8 text-slate-800 font-sans selection:bg-orange-600 selection:text-white relative overflow-x-hidden">
       {/* Background Decorative Rings */}
       <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/10 pointer-events-none blur-2xl" />
       <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-orange-700/20 pointer-events-none blur-2xl" />
 
-      {/* Brand Header */}
-      <div className="w-full max-w-md flex flex-col items-center justify-center mb-6 text-center z-10">
-        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-black/40 border-2 border-white/40 shadow-2xl mb-3 flex items-center justify-center">
+      {/* Brand Hero Artwork (Mascote + Logo + Slogan) */}
+      <div className="w-full max-w-[370px] sm:max-w-md flex flex-col items-center justify-center pt-2 select-none z-10">
+        <div className="w-full aspect-[1/0.97] overflow-hidden relative flex items-center justify-center">
           <img
-            src="/logo-ajp.jpg"
+            src="/portal-hero.jpg"
             alt="AJP Entretenimento"
-            className="w-full h-full object-cover"
+            className="w-full h-auto object-cover object-top pointer-events-none"
             onError={(e) => {
-              (e.currentTarget as HTMLElement).style.display = "none";
-              const parent = e.currentTarget.parentElement;
-              if (parent && !parent.querySelector(".fallback-a")) {
-                const span = document.createElement("span");
-                span.className = "fallback-a text-3xl font-black tracking-wider text-white";
-                span.textContent = "A";
-                parent.appendChild(span);
+              if (!e.currentTarget.src.includes("/logo-ajp.jpg")) {
+                e.currentTarget.src = "/logo-ajp.jpg";
+                e.currentTarget.className = "w-28 h-28 object-contain rounded-2xl mb-2";
               }
             }}
           />
         </div>
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-none drop-shadow-sm">
-          AJP<span className="text-orange-200">VIP</span>
-        </h1>
-        <p className="text-xs sm:text-sm font-medium text-white/80 mt-1 uppercase tracking-wider">
-          Autoatendimento &amp; Central do Assinante
-        </p>
       </div>
 
-      {/* White Card matching Alcans Reference (Image 3) */}
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 sm:p-8 z-10 border border-white/50 animate-in fade-in zoom-in-95 duration-300">
-        <div className="text-center mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-            Acesse sua conta
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+      {/* White Card matching reference */}
+      <div className="w-full max-w-[370px] sm:max-w-md bg-white rounded-3xl shadow-2xl p-6 sm:p-7 z-10 border border-white/60 animate-in fade-in zoom-in-95 duration-300">
+        <div className="text-center mb-5">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <User className="h-6 w-6 text-[#FF5500] stroke-[2.2]" />
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              Acesse sua conta
+            </h2>
+          </div>
+          <p className="text-xs text-slate-500 font-medium">
             Digite seu Usuário cadastrado
           </p>
         </div>
 
         <form onSubmit={loginPassword} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="username" className="text-xs font-semibold text-slate-700">
+            <Label htmlFor="username" className="text-xs font-bold text-slate-700">
               Usuário
             </Label>
             <div className="relative">
-              <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 stroke-[2]" />
               <Input
                 id="username"
                 autoComplete="username"
                 placeholder="Seu usuário"
-                className="pl-10 h-12 rounded-xl bg-slate-50 border-slate-200 text-slate-900 text-sm focus-visible:ring-2 focus-visible:ring-[#FF5500] focus-visible:border-transparent"
+                className="pl-10 h-12 rounded-xl bg-slate-50/70 border-slate-200 text-slate-900 text-sm focus-visible:ring-2 focus-visible:ring-[#FF5500] focus-visible:border-transparent placeholder:text-slate-400"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -164,19 +157,17 @@ function PortalLoginPage() {
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-xs font-semibold text-slate-700">
-                Senha
-              </Label>
-            </div>
+            <Label htmlFor="password" className="text-xs font-bold text-slate-700">
+              Senha
+            </Label>
             <div className="relative">
-              <KeyRound className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <KeyRound className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 stroke-[2]" />
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 placeholder="Sua senha de acesso"
-                className="pl-10 pr-10 h-12 rounded-xl bg-slate-50 border-slate-200 text-slate-900 text-sm focus-visible:ring-2 focus-visible:ring-[#FF5500] focus-visible:border-transparent"
+                className="pl-10 pr-10 h-12 rounded-xl bg-slate-50/70 border-slate-200 text-slate-900 text-sm focus-visible:ring-2 focus-visible:ring-[#FF5500] focus-visible:border-transparent placeholder:text-slate-400"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -184,7 +175,7 @@ function PortalLoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -194,22 +185,25 @@ function PortalLoginPage() {
 
           <Button
             type="submit"
-            className="w-full h-12 rounded-xl bg-[#FF5500] hover:bg-[#E04B00] active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-md shadow-orange-500/25 transition-all mt-2 cursor-pointer"
+            className="w-full h-12 rounded-xl bg-[#FF5500] hover:bg-[#E04B00] active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-md shadow-orange-500/25 transition-all mt-3 cursor-pointer"
             disabled={loading || !username.trim() || !password.trim()}
           >
             {loading ? (
-              <span className="flex items-center gap-2">
+              <span className="flex items-center justify-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Acessando...
               </span>
             ) : (
-              "Fazer login"
+              <span className="flex items-center justify-center gap-2">
+                <LogIn className="h-5 w-5 stroke-[2.2]" />
+                Fazer login
+              </span>
             )}
           </Button>
 
           {/* Links de Rodapé */}
-          <div className="pt-3 border-t border-slate-100 flex flex-col items-center gap-2">
-            <div className="flex items-center justify-center gap-2 text-xs text-slate-600 font-medium">
+          <div className="pt-3.5 border-t border-slate-100 flex flex-col items-center gap-2">
+            <div className="flex items-center justify-center gap-3 text-xs text-slate-600 font-semibold">
               <a
                 href="https://wa.me/5519981356505?text=Olá,%20esqueci%20minha%20senha%20do%20portal%20do%20cliente"
                 target="_blank"
@@ -229,13 +223,13 @@ function PortalLoginPage() {
               </a>
             </div>
 
-            <p className="text-[11px] text-slate-600 text-center leading-relaxed mt-1">
+            <p className="text-[11px] text-slate-500 text-center leading-relaxed">
               Dúvidas ou suporte?{" "}
               <a
                 href="https://wa.me/5519981356505?text=Olá,%20preciso%20de%20ajuda%20com%20o%20portal"
                 target="_blank"
                 rel="noreferrer"
-                className="text-[#FF5500] font-semibold hover:underline"
+                className="text-[#FF5500] font-bold hover:underline"
               >
                 Fale pelo WhatsApp
               </a>
@@ -245,7 +239,7 @@ function PortalLoginPage() {
       </div>
 
       {/* Optional Install PWA Card */}
-      <div className="w-full max-w-md mt-4 z-10">
+      <div className="w-full max-w-[370px] sm:max-w-md mt-3.5 z-10">
         <InstallAppCard />
       </div>
     </div>
