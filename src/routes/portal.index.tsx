@@ -126,21 +126,21 @@ function PortalLoginPage() {
             Acesse sua conta
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Digite seu Usuário ou Telefone cadastrado
+            Digite seu Usuário cadastrado
           </p>
         </div>
 
         <form onSubmit={loginPassword} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="username" className="text-xs font-semibold text-slate-700">
-              Usuário, CPF, Email ou Telefone
+              Usuário
             </Label>
             <div className="relative">
               <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 id="username"
                 autoComplete="username"
-                placeholder="Seu usuário, CPF, email ou telefone"
+                placeholder="Seu usuário"
                 className="pl-10 h-12 rounded-xl bg-slate-50 border-slate-200 text-slate-900 text-sm focus-visible:ring-2 focus-visible:ring-[#FF5500] focus-visible:border-transparent"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
