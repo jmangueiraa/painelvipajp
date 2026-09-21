@@ -101,10 +101,7 @@ function PortalLoginPage() {
   }
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-start bg-gradient-to-b from-[#FF5E00] via-[#FF5000] to-[#E54500] px-4 pt-2 pb-8 text-slate-800 font-sans selection:bg-orange-600 selection:text-white relative overflow-x-hidden">
-      {/* Background Decorative Rings */}
-      <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/10 pointer-events-none blur-2xl" />
-      <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-orange-700/20 pointer-events-none blur-2xl" />
+    <div className="min-h-dvh flex flex-col items-center justify-start bg-[#FC6802] px-4 pt-2 pb-8 text-slate-800 font-sans selection:bg-orange-600 selection:text-white relative overflow-x-hidden">
 
       {/* Imagem da Raposa (Mascote Oficial AJP - Portal do Cliente) */}
       <div className="flex flex-col items-center justify-center pt-2 sm:pt-4 mb-2 select-none z-10">
