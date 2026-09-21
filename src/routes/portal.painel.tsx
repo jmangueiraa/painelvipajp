@@ -213,21 +213,30 @@ function PortalDashboard() {
     }
   }, []);
 
-  const { data: remoteProducts } = useQuery({
+  const { data: remoteProducts, refetch: refetchStoreProducts } = useQuery({
     queryKey: ["portal-store-products"],
     queryFn: async () => {
       try {
         const j = await portalFetch<{ products: StoreItem[] }>("/api/public/portal/store-products");
-        return j.products ?? fallbackProducts;
+        if (Array.isArray(j?.products) && j.products.length > 0) {
+          return j.products;
+        }
+        return fallbackProducts;
       } catch {
         return fallbackProducts;
       }
     },
-    initialData: fallbackProducts,
-    staleTime: 1000 * 60 * 30,
-    refetchOnWindowFocus: false,
+    placeholderData: fallbackProducts,
+    staleTime: 1000 * 15,
+    refetchOnWindowFocus: true,
   });
   const storeProducts: StoreItem[] = remoteProducts && remoteProducts.length > 0 ? remoteProducts : fallbackProducts;
+
+  useEffect(() => {
+    if (storeOpen) {
+      void refetchStoreProducts();
+    }
+  }, [storeOpen, refetchStoreProducts]);
 
   useEffect(() => {
     if (!getPortalToken()) navigate({ to: "/portal" });
@@ -1578,9 +1587,9 @@ function PortalDashboard() {
                     onClick={() => openStoreItem(p)}
                     className="p-3 bg-white rounded-2xl border border-slate-100 hover:border-orange-300 shadow-sm flex flex-col items-center text-center transition active:scale-95 cursor-pointer"
                   >
-                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${p.gradient} flex items-center justify-center text-2xl text-white shadow-md mb-2`}>
+                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${p.gradient || "from-orange-500 to-amber-600"} flex items-center justify-center text-2xl text-white shadow-md mb-2 overflow-hidden`}>
                       {p.image_url ? (
-                        <img src={p.image_url} alt={p.label} className="w-full h-full object-cover rounded-2xl" />
+                        <img src={p.image_url} alt={p.label} className="w-full h-full object-cover" />
                       ) : (
                         p.emoji || "🛍️"
                       )}

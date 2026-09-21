@@ -20,12 +20,46 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
           if (!client) return json({ error: "Sessão inválida" }, request, { status: 401 });
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          const { data: ownerSettings } = await supabaseAdmin
-            .from("settings")
-            .select("mp_access_token")
-            .eq("user_id", client.user_id)
-            .maybeSingle();
-          const token = (ownerSettings as { mp_access_token?: string | null } | null)?.mp_access_token?.trim();
+
+          let targetUserId = client.user_id;
+          if (!targetUserId) {
+            const { data: anySettings } = await supabaseAdmin
+              .from("settings")
+              .select("user_id")
+              .not("user_id", "is", null)
+              .limit(1)
+              .maybeSingle();
+            if (anySettings?.user_id) {
+              targetUserId = anySettings.user_id;
+              client.user_id = anySettings.user_id;
+            }
+          }
+
+          let token: string | null = null;
+          if (targetUserId) {
+            const { data: ownerSettings } = await supabaseAdmin
+              .from("settings")
+              .select("mp_access_token")
+              .eq("user_id", targetUserId)
+              .maybeSingle();
+            token = (ownerSettings as { mp_access_token?: string | null } | null)?.mp_access_token?.trim() || null;
+          }
+
+          if (!token) {
+            const { data: anySettings } = await supabaseAdmin
+              .from("settings")
+              .select("mp_access_token, user_id")
+              .not("mp_access_token", "is", null)
+              .neq("mp_access_token", "")
+              .limit(1)
+              .maybeSingle();
+            token = (anySettings as { mp_access_token?: string | null } | null)?.mp_access_token?.trim() || null;
+            if (anySettings?.user_id && !client.user_id) {
+              client.user_id = anySettings.user_id;
+              targetUserId = anySettings.user_id;
+            }
+          }
+
           if (!token) return json({ error: "Mercado Pago não configurado pelo administrador" }, request, { status: 500 });
           if (token.startsWith("TEST-")) {
             return json({ error: "Token de TESTE. Use o token de PRODUÇÃO (APP_USR-)." }, request, { status: 500 });
@@ -45,24 +79,44 @@ export const Route = createFileRoute("/api/public/portal/mp-create-extra")({
 
           let product: StoreProductPrice | null = null;
           if (productKey) {
-            const { data } = await supabaseAdmin
+            let q = supabaseAdmin
               .from("store_products")
               .select("label,sale_cents")
-              .eq("user_id", client.user_id)
               .eq("key", productKey)
-              .eq("active", true)
-              .maybeSingle();
+              .eq("active", true);
+            if (targetUserId) q = q.eq("user_id", targetUserId);
+            const { data } = await q.maybeSingle();
             product = data as StoreProductPrice | null;
+
+            if (!product && targetUserId) {
+              const { data: anyProd } = await supabaseAdmin
+                .from("store_products")
+                .select("label,sale_cents")
+                .eq("key", productKey)
+                .eq("active", true)
+                .maybeSingle();
+              product = anyProd as StoreProductPrice | null;
+            }
           }
           if (!product && requestedLabel) {
-            const { data } = await supabaseAdmin
+            let q = supabaseAdmin
               .from("store_products")
               .select("label,sale_cents")
-              .eq("user_id", client.user_id)
               .eq("label", requestedLabel)
-              .eq("active", true)
-              .maybeSingle();
+              .eq("active", true);
+            if (targetUserId) q = q.eq("user_id", targetUserId);
+            const { data } = await q.maybeSingle();
             product = data as StoreProductPrice | null;
+
+            if (!product && targetUserId) {
+              const { data: anyProd } = await supabaseAdmin
+                .from("store_products")
+                .select("label,sale_cents")
+                .eq("label", requestedLabel)
+                .eq("active", true)
+                .maybeSingle();
+              product = anyProd as StoreProductPrice | null;
+            }
           }
 
           const label = product?.label ?? requestedLabel;
