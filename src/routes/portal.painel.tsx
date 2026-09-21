@@ -775,17 +775,17 @@ function PortalDashboard() {
                 </span>
               </a>
 
-              {/* 3. Especialista IA */}
+              {/* 3. Loja */}
               <button
                 type="button"
-                onClick={() => setSupportOpen(true)}
+                onClick={() => setStoreOpen(true)}
                 className="flex flex-col items-center gap-1.5 p-2 rounded-2xl bg-white border border-slate-100 hover:border-indigo-300 shadow-sm transition-all hover:shadow cursor-pointer active:scale-95"
               >
                 <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                  <BrainCircuit className="h-5 w-5" />
+                  <ShoppingBag className="h-5 w-5" />
                 </div>
                 <span className="text-[10px] sm:text-xs font-semibold text-slate-700 text-center leading-tight">
-                  Guia TV (IA)
+                  Loja
                 </span>
               </button>
 
