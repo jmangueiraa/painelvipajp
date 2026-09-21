@@ -106,20 +106,19 @@ function PortalLoginPage() {
       <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/10 pointer-events-none blur-2xl" />
       <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-orange-700/20 pointer-events-none blur-2xl" />
 
-      {/* Brand Hero Artwork (Mascote + Logo + Slogan) */}
-      <div className="w-full max-w-[370px] sm:max-w-md flex flex-col items-center justify-center pt-2 select-none z-10">
-        <div className="w-full aspect-[1/0.97] overflow-hidden relative flex items-center justify-center">
+      {/* Imagem da Raposa (Mascote Oficial AJP) */}
+      <div className="flex flex-col items-center justify-center pt-3 mb-2 select-none z-10">
+        <div className="w-44 h-44 sm:w-52 sm:h-52 rounded-3xl overflow-hidden shadow-2xl border-2 border-white/30 bg-black flex items-center justify-center p-1">
           <img
-            src="/portal-hero.jpg"
+            src="/logo-ajp.jpg"
             alt="AJP Entretenimento"
-            className="w-full h-auto object-cover object-top pointer-events-none"
-            onError={(e) => {
-              if (!e.currentTarget.src.includes("/logo-ajp.jpg")) {
-                e.currentTarget.src = "/logo-ajp.jpg";
-                e.currentTarget.className = "w-28 h-28 object-contain rounded-2xl mb-2";
-              }
-            }}
+            className="w-full h-full object-contain"
           />
+        </div>
+        <div className="text-white text-[11px] sm:text-xs font-black tracking-widest uppercase text-center mt-3 mb-1 drop-shadow-sm flex items-center justify-center gap-2">
+          <span>—</span>
+          <span>AUTOATENDIMENTO &amp; CENTRAL DO ASSINANTE</span>
+          <span>—</span>
         </div>
       </div>
 
