@@ -107,8 +107,8 @@ function PortalLoginPage() {
       <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-orange-700/20 pointer-events-none blur-2xl" />
 
       {/* Imagem da Raposa (Mascote Oficial AJP - Portal do Cliente) */}
-      <div className="flex flex-col items-center justify-center pt-2 sm:pt-4 mb-2.5 select-none z-10">
-        <div className="w-40 h-40 sm:w-48 sm:h-48 md:w-52 md:h-52 aspect-square rounded-3xl overflow-hidden shadow-2xl shadow-orange-950/25 border-2 border-white/35 bg-[#FF5500] flex items-center justify-center transition-transform hover:scale-[1.02] duration-300">
+      <div className="flex flex-col items-center justify-center pt-2 sm:pt-4 mb-2 select-none z-10">
+        <div className="w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 max-w-[84vw] aspect-square rounded-3xl overflow-hidden shadow-2xl shadow-orange-950/25 flex items-center justify-center transition-transform hover:scale-[1.01] duration-300">
           <img
             src="/portal-mascote.jpg?v=2"
             alt="Portal do Cliente AJP"
