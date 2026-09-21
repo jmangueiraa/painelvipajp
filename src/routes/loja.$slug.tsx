@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -17,9 +17,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Copy, ShoppingBag, LogOut, CheckCircle2 } from "lucide-react";
+import { isReservedSubdomain, isPortalHostname } from "@/lib/multi-tenant-routing";
 
 export const Route = createFileRoute("/loja/$slug")({
   ssr: false,
+  beforeLoad: ({ params }) => {
+    const slug = (params.slug || "").toLowerCase().trim();
+    if (slug === "portal" || isReservedSubdomain(slug)) {
+      throw redirect({ to: "/portal" });
+    }
+  },
   component: StorePage,
 });
 
@@ -28,17 +35,29 @@ const formatBRL = (cents: number) =>
 
 function StorePage() {
   const { slug } = Route.useParams();
+  const cleanSlug = (slug || "").toLowerCase().trim();
+  const isPortalTarget = cleanSlug === "portal" || isReservedSubdomain(cleanSlug);
 
   // No domínio customizado as server functions da loja não respondem;
   // servimos o conteúdo via iframe do domínio canônico mantendo a URL pública.
   const [isCustomHost, setIsCustomHost] = useState(false);
   const [hostChecked, setHostChecked] = useState(false);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const host = window.location.hostname;
-    setIsCustomHost(host === "ajpvip.com.br" || host === "www.ajpvip.com.br");
+    const host = window.location.hostname.toLowerCase();
+    if (isPortalHostname(host) || isPortalTarget) {
+      window.location.replace("/portal");
+      return;
+    }
+    setIsCustomHost(
+      host === "ajpvip.com.br" ||
+      host === "www.ajpvip.com.br" ||
+      host === "ajpstore.com.br" ||
+      host === "www.ajpstore.com.br"
+    );
     setHostChecked(true);
-  }, []);
+  }, [cleanSlug, isPortalTarget]);
 
   const fetchStore = useServerFn(getStorePublic);
   const fetchMine = useServerFn(getMyStoreData);
@@ -76,14 +95,23 @@ function StorePage() {
 
   const storeQ = useQuery({
     queryKey: ["store-public", slug],
+    enabled: !isPortalTarget && !!slug,
     queryFn: () => fetchStore({ data: { slug } }),
   });
 
   const mineQ = useQuery({
     queryKey: ["store-mine", slug, session?.user.id],
-    enabled: !!session,
+    enabled: !isPortalTarget && !!session,
     queryFn: () => fetchMine({ data: { slug } }),
   });
+
+  if (isPortalTarget) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (storeQ.isLoading || !authChecked) {
     return (

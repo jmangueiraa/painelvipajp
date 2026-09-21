@@ -3,7 +3,16 @@ const PORTAL_API_ORIGIN = "https://painelvipajp.lovable.app";
 
 function isCustomPortalDomain(): boolean {
   if (typeof window === "undefined") return false;
-  return window.location.hostname === "ajpvip.com.br" || window.location.hostname === "www.ajpvip.com.br";
+  const host = window.location.hostname.toLowerCase();
+  return (
+    host === "ajpvip.com.br" ||
+    host === "www.ajpvip.com.br" ||
+    host === "portal.ajpstore.com.br" ||
+    host === "ajpstore.com.br" ||
+    host === "www.ajpstore.com.br" ||
+    host.endsWith(".ajpstore.com.br") ||
+    host.endsWith(".ajpvip.com.br")
+  );
 }
 
 function getPortalApiUrl(path: string): string {

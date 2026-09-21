@@ -108,7 +108,13 @@ function NotificacoesPushPage() {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (sessionError || !accessToken) throw sessionError || new Error("Sessão expirada. Entre novamente.");
-      const isCustomDomain = typeof window !== "undefined" && (window.location.hostname === "ajpvip.com.br" || window.location.hostname === "www.ajpvip.com.br");
+      const isCustomDomain =
+        typeof window !== "undefined" &&
+        (window.location.hostname === "ajpvip.com.br" ||
+          window.location.hostname === "www.ajpvip.com.br" ||
+          window.location.hostname === "portal.ajpstore.com.br" ||
+          window.location.hostname === "ajpstore.com.br" ||
+          window.location.hostname === "www.ajpstore.com.br");
       const endpoint = isCustomDomain ? "https://painelvipajp.lovable.app/api/public/push/send" : "/api/public/push/send";
       const response = await fetch(endpoint, {
         method: "POST",

@@ -3,6 +3,7 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { setRuntimeFirebaseServiceAccount } from "./lib/fcm-send.server";
+import { handleMultiTenantRouting } from "./lib/multi-tenant-routing";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -56,6 +57,13 @@ export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       exposeRuntimeSecrets(env);
+
+      // Roteamento multi-tenant: subdomínios reservados (portal, www, etc.)
+      const tenantRedirect = handleMultiTenantRouting(request);
+      if (tenantRedirect) {
+        return tenantRedirect;
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import React, { useState, useEffect } from "react";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { isPortalHostname } from "@/lib/multi-tenant-routing";
 import { motion } from "framer-motion";
 import { 
   Play, 
@@ -25,10 +26,21 @@ import { AIChat } from "@/components/landing-page/AIChat";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export const Route = createFileRoute("/")({
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && isPortalHostname(window.location.hostname)) {
+      throw redirect({ to: "/portal" });
+    }
+  },
   component: LandingPage,
 });
 
 function LandingPage() {
+  useEffect(() => {
+    if (typeof window !== "undefined" && isPortalHostname(window.location.hostname)) {
+      window.location.replace("/portal");
+    }
+  }, []);
+
   const [activePlan, setActivePlan] = useState<"mensal" | "trimestral" | "anual">("mensal");
 
   const fadeIn = {

@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isReservedSubdomain } from "@/lib/multi-tenant-routing";
 
 const CARD_FEE_PERCENT = 4.99;
 const applyCardFee = (c: number) => Math.ceil(c / (1 - CARD_FEE_PERCENT / 100));
@@ -22,8 +23,11 @@ export type StorePublic = {
 export const getStorePublic = createServerFn({ method: "GET" })
   .inputValidator((data: { slug: string }) => data)
   .handler(async ({ data }): Promise<StorePublic | null> => {
+    const slug = (data?.slug || "").toLowerCase().trim();
+    if (!slug || isReservedSubdomain(slug)) return null;
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: owners } = await supabaseAdmin.rpc("find_store_owner_by_slug", { _slug: data.slug });
+    const { data: owners } = await supabaseAdmin.rpc("find_store_owner_by_slug", { _slug: slug });
     const owner = (owners as Array<{ user_id: string; store_title: string | null; store_description: string | null }> | null)?.[0];
     if (!owner) return null;
     const { data: prods } = await supabaseAdmin.rpc("list_store_products", { _owner: owner.user_id });
@@ -47,8 +51,11 @@ export const getMyStoreData = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { slug: string; name?: string; phone?: string }) => data)
   .handler(async ({ data, context }) => {
+    const slug = (data?.slug || "").toLowerCase().trim();
+    if (!slug || isReservedSubdomain(slug)) return { ok: false as const, error: "Loja não encontrada" };
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: owners } = await supabaseAdmin.rpc("find_store_owner_by_slug", { _slug: data.slug });
+    const { data: owners } = await supabaseAdmin.rpc("find_store_owner_by_slug", { _slug: slug });
     const owner = (owners as Array<{ user_id: string }> | null)?.[0];
     if (!owner) return { ok: false as const, error: "Loja não encontrada" };
 
@@ -110,8 +117,11 @@ export const createStorePayment = createServerFn({ method: "POST" })
     if (data.method !== "pix" && data.method !== "card") {
       return { ok: false as const, error: "Método inválido" };
     }
+    const slug = (data?.slug || "").toLowerCase().trim();
+    if (!slug || isReservedSubdomain(slug)) return { ok: false as const, error: "Loja não encontrada" };
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: owners } = await supabaseAdmin.rpc("find_store_owner_by_slug", { _slug: data.slug });
+    const { data: owners } = await supabaseAdmin.rpc("find_store_owner_by_slug", { _slug: slug });
     const owner = (owners as Array<{ user_id: string }> | null)?.[0];
     if (!owner) return { ok: false as const, error: "Loja não encontrada" };
 

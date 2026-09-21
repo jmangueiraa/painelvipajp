@@ -36,7 +36,8 @@ messaging.onBackgroundMessage((payload) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const TARGET = "https://ajpvip.com.br/portal";
+  const currentOrigin = (self.location && self.location.origin) ? self.location.origin : "https://portal.ajpstore.com.br";
+  const TARGET = `${currentOrigin}/portal`;
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
       for (const c of list) {
