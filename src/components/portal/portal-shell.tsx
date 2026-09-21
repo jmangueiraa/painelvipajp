@@ -25,8 +25,22 @@ export function PortalShell({
       <header className="sticky top-0 z-30 bg-[#FF5500] text-white shadow-md">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-xl bg-white/20 flex items-center justify-center font-black text-white text-base tracking-wider border border-white/30 shadow-inner">
-              A
+            <div className="h-9 w-9 rounded-xl overflow-hidden flex items-center justify-center border border-white/30 shadow-inner bg-black/40">
+              <img
+                src="/logo-ajp.jpg"
+                alt="AJP"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLElement).style.display = "none";
+                  const parent = e.currentTarget.parentElement;
+                  if (parent && !parent.querySelector(".fallback-a")) {
+                    const span = document.createElement("span");
+                    span.className = "fallback-a font-black text-white text-base tracking-wider";
+                    span.textContent = "A";
+                    parent.appendChild(span);
+                  }
+                }}
+              />
             </div>
             <div className="flex flex-col">
               <span className="font-extrabold text-base tracking-tight leading-none text-white drop-shadow-sm">

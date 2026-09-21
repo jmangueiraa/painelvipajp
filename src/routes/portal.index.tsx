@@ -108,8 +108,22 @@ function PortalLoginPage() {
 
       {/* Brand Header */}
       <div className="w-full max-w-md flex flex-col items-center justify-center mb-6 text-center z-10">
-        <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white shadow-lg mb-3">
-          <span className="text-3xl font-black tracking-wider">A</span>
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-black/40 border-2 border-white/40 shadow-2xl mb-3 flex items-center justify-center">
+          <img
+            src="/logo-ajp.jpg"
+            alt="AJP Entretenimento"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.currentTarget as HTMLElement).style.display = "none";
+              const parent = e.currentTarget.parentElement;
+              if (parent && !parent.querySelector(".fallback-a")) {
+                const span = document.createElement("span");
+                span.className = "fallback-a text-3xl font-black tracking-wider text-white";
+                span.textContent = "A";
+                parent.appendChild(span);
+              }
+            }}
+          />
         </div>
         <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-none drop-shadow-sm">
           AJP<span className="text-orange-200">VIP</span>
