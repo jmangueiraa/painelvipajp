@@ -102,6 +102,23 @@ export async function finalizePaidRenewal(
   if (renewal.days > 0 && renewal.client_id) {
     let rpcDone = false;
 
+    // Busca dados prévios do cliente para garantir nome, telefone e data fixa
+    const { data: clientRow } = await supabaseAdmin
+      .from("clients")
+      .select("id, name, phone, due_date, status")
+      .eq("id", renewal.client_id)
+      .maybeSingle();
+
+    const cData = clientRow as { name?: string | null; phone?: string | null; due_date?: string | null; status?: string | null } | null;
+    if (cData?.name) resolvedName = cData.name;
+    if (cData?.phone) resolvedPhone = cData.phone;
+
+    const current = cData?.due_date ?? clientFallback?.due_date ?? (paymentInfo.metadata?.current_due_date as string) ?? null;
+    const days = Number(renewal.days || 30);
+    const { calculateRenewalDueDate } = await import("./format");
+    const { computeStatus } = await import("./status");
+    const expectedFixedDue = calculateRenewalDueDate(current, days);
+
     // Tentativa A: RPC SECURITY DEFINER (imune a RLS)
     try {
       const { data: rpcData, error: rpcErr } = await (supabaseAdmin.rpc as any)(
@@ -119,6 +136,17 @@ export async function finalizePaidRenewal(
         resolvedName = (rpcData as any).name || resolvedName;
         resolvedPhone = (rpcData as any).phone || resolvedPhone;
         resolvedNewDue = (rpcData as any).new_due_date || null;
+
+        // Se o RPC retornou uma data que difere da data fixa calculada (ex: RPC antigo no banco),
+        // corrige explicitamente para manter a data fixa solicitada
+        if (expectedFixedDue && resolvedNewDue !== expectedFixedDue) {
+          await supabaseAdmin
+            .from("clients")
+            .update({ due_date: expectedFixedDue, status: "ativo" })
+            .eq("id", renewal.client_id);
+          resolvedNewDue = expectedFixedDue;
+        }
+
         console.log(`[finalizePaidRenewal] RPC portal_finalize_client_renewal successful: client ${renewal.client_id} -> ${resolvedNewDue}`);
       } else if (rpcErr) {
         console.warn("[finalizePaidRenewal] RPC not available or error:", rpcErr.message);
@@ -130,26 +158,7 @@ export async function finalizePaidRenewal(
     // Tentativa B: Fallback via consulta e atualização direta
     if (!rpcDone) {
       try {
-        const { data: clientRow, error: clientFetchErr } = await supabaseAdmin
-          .from("clients")
-          .select("id, name, phone, due_date, status")
-          .eq("id", renewal.client_id)
-          .maybeSingle();
-
-        if (clientFetchErr) {
-          console.error("[finalizePaidRenewal] direct fetch client error:", clientFetchErr);
-        }
-
-        const cData = clientRow as { name?: string | null; phone?: string | null; due_date?: string | null; status?: string | null } | null;
-        if (cData?.name) resolvedName = cData.name;
-        if (cData?.phone) resolvedPhone = cData.phone;
-
-        const current = cData?.due_date ?? clientFallback?.due_date ?? (paymentInfo.metadata?.current_due_date as string) ?? null;
-        const days = Number(renewal.days || 30);
-        const { calculateRenewalDueDate } = await import("./format");
-        const { computeStatus } = await import("./status");
-
-        const newDueDate = calculateRenewalDueDate(current, days);
+        const newDueDate = expectedFixedDue;
         const newStatus = computeStatus(newDueDate, "ativo");
         resolvedNewDue = newDueDate;
 
@@ -164,7 +173,7 @@ export async function finalizePaidRenewal(
         if (clientUpdateErr) {
           console.error("[finalizePaidRenewal] update client failed:", clientUpdateErr);
         } else {
-          console.log(`[finalizePaidRenewal] Client ${renewal.client_id} successfully updated: ${current} -> ${newDueDate} (+${days} days)`);
+          console.log(`[finalizePaidRenewal] Client ${renewal.client_id} successfully updated: ${current} -> ${newDueDate} (data fixa garantida)`);
         }
 
         // Histórico de pagamentos (apenas no fallback B, pois o RPC A já insere)
