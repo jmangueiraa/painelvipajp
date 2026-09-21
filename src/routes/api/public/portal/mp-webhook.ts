@@ -77,6 +77,7 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
             external_reference?: string;
             transaction_amount?: number;
             date_approved?: string | null;
+            description?: string;
           };
 
           const renewal = renewalRaw as {
