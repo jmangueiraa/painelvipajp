@@ -3,15 +3,38 @@
 export function buildChargeMessage(params: {
   identifier: string;
   dueDateISO: string;
+  login?: string | null;
+  password?: string | null;
 }): string {
   const due = new Date(params.dueDateISO + "T00:00:00");
   const dd = String(due.getDate()).padStart(2, "0");
   const mm = String(due.getMonth() + 1).padStart(2, "0");
-  const yyyy = due.getFullYear();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const diffDays = Math.floor((today.getTime() - due.getTime()) / 86400000);
-  return `Olá! ${params.identifier}, seu vencimento é: *${dd}/${mm}/${yyyy} (vencido há ${overdue} dias)*.\n\nRenove agora mesmo pelo nosso portal:\n🌐 https://portalajp.com.br/portal\n\nA renovação é rápida e automática. Aguardo você! 😊`;
+  const diffDays = Math.round((due.getTime() - today.getTime()) / 86400000);
+  const identifier = params.login || params.identifier;
+
+  let header: string;
+  let actionLine: string;
+  if (diffDays > 0) {
+    header = `⚠️ Aviso de Vencimento: *Faltam ${diffDays} ${diffDays === 1 ? "dia" : "dias"}!*`;
+    actionLine = `Olá! Seu acesso *(${identifier})* expira em *${dd}/${mm}*. Renove agora para evitar a interrupção do serviço.`;
+  } else if (diffDays === 0) {
+    header = `⚠️ Aviso de Vencimento: *Vence HOJE!*`;
+    actionLine = `Olá! Seu acesso *(${identifier})* expira *HOJE (${dd}/${mm})*. Renove agora para evitar a interrupção do serviço.`;
+  } else {
+    const overdue = Math.abs(diffDays);
+    header = `⚠️ Aviso de Vencimento: *Vencido há ${overdue} ${overdue === 1 ? "dia" : "dias"}!*`;
+    actionLine = `Olá! Seu acesso *(${identifier})* expirou em *${dd}/${mm}*. Renove agora para evitar a interrupção do serviço.`;
+  }
+
+  const userVal = params.login || params.identifier;
+  const credLines: string[] = [];
+  if (userVal) credLines.push(`👤 *Usuário:* ${userVal}`);
+  if (params.password) credLines.push(`🔑 *Senha:* ${params.password}`);
+  const credBlock = credLines.length ? `\n\n${credLines.join("\n")}` : "";
+
+  return `${header}\n\n\n${actionLine}\n\n\n*Acesse o portal:*\n🌐 https://portalajp.com.br/portal${credBlock}\n\n*Pagou, liberou!* A reativação é automática logo após a confirmação. Obrigado pela preferência! 😊`;
 }
 
 export function normalizeBrPhone(phone: string): string {

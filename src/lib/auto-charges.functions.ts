@@ -38,31 +38,32 @@ export const sendChargesToIds = createServerFn({ method: "POST" })
       const due = new Date(c.due_date + "T00:00:00");
       const dd = String(due.getDate()).padStart(2, "0");
       const mm = String(due.getMonth() + 1).padStart(2, "0");
-      const yyyy = due.getFullYear();
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const diffDays = Math.round((due.getTime() - today.getTime()) / 86400000);
       const identifier = c.iptv_login || c.name;
-      const credLines: string[] = [];
-      if (c.iptv_login) credLines.push(`👤 Usuário: ${c.iptv_login}`);
-      if (c.iptv_password) credLines.push(`🔑 Senha: ${c.iptv_password}`);
-      const credBlock = credLines.length ? `\n\n${credLines.join("\n")}\n` : "\n";
 
       let header: string;
-      let statusLine: string;
+      let actionLine: string;
       if (diffDays > 0) {
-        header = `⏰ Faltam ${diffDays} ${diffDays === 1 ? "dia" : "dias"} para o vencimento do seu acesso ${identifier}!`;
-        statusLine = `Olá! Seu acesso ${identifier} vence em ${dd}/${mm}/${yyyy} (faltam ${diffDays} ${diffDays === 1 ? "dia" : "dias"}).`;
+        header = `⚠️ Aviso de Vencimento: *Faltam ${diffDays} ${diffDays === 1 ? "dia" : "dias"}!*`;
+        actionLine = `Olá! Seu acesso *(${identifier})* expira em *${dd}/${mm}*. Renove agora para evitar a interrupção do serviço.`;
       } else if (diffDays === 0) {
-        header = `⚠️ Seu acesso ${identifier} vence HOJE!`;
-        statusLine = `Olá! Seu acesso ${identifier} vence hoje (${dd}/${mm}/${yyyy}).`;
+        header = `⚠️ Aviso de Vencimento: *Vence HOJE!*`;
+        actionLine = `Olá! Seu acesso *(${identifier})* expira *HOJE (${dd}/${mm})*. Renove agora para evitar a interrupção do serviço.`;
       } else {
         const overdue = Math.abs(diffDays);
-        header = `🚨 Seu acesso ${identifier} expirou!`;
-        statusLine = `Olá! Seu acesso ${identifier} venceu em ${dd}/${mm}/${yyyy} (${overdue} ${overdue === 1 ? "dia" : "dias"} em atraso).`;
+        header = `⚠️ Aviso de Vencimento: *Vencido há ${overdue} ${overdue === 1 ? "dia" : "dias"}!*`;
+        actionLine = `Olá! Seu acesso *(${identifier})* expirou em *${dd}/${mm}*. Renove agora para evitar a interrupção do serviço.`;
       }
 
-      return `${header}\n\n${statusLine}\n\nPara continuar aproveitando o serviço sem interrupções, renove agora mesmo pelo nosso portal:\n\n🌐 https://portalajp.com.br/portal\n${credBlock}\nA renovação é rápida e, após a confirmação do pagamento, a liberação do acesso é feita automaticamente.\n\nAgradecemos pela preferência e esperamos você de volta! 😊`;
+      const userVal = c.iptv_login || c.name;
+      const credLines: string[] = [];
+      if (userVal) credLines.push(`👤 *Usuário:* ${userVal}`);
+      if (c.iptv_password) credLines.push(`🔑 *Senha:* ${c.iptv_password}`);
+      const credBlock = credLines.length ? `\n\n${credLines.join("\n")}` : "";
+
+      return `${header}\n\n\n${actionLine}\n\n\n*Acesse o portal:*\n🌐 https://portalajp.com.br/portal${credBlock}\n\n*Pagou, liberou!* A reativação é automática logo após a confirmação. Obrigado pela preferência! 😊`;
     };
 
 
@@ -100,7 +101,7 @@ export const sendChargesNow = createServerFn({ method: "POST" })
 
     let query = supabase
       .from("clients")
-      .select("id,name,phone,iptv_login,due_date,auto_charge,status");
+      .select("id,name,phone,iptv_login,iptv_password,due_date,auto_charge,status");
 
     if (data.filter === "due_today") query = query.eq("due_date", today);
     else if (data.filter === "due_tomorrow") query = query.eq("due_date", addDaysISO(today, 1));
@@ -130,7 +131,9 @@ export const sendChargesNow = createServerFn({ method: "POST" })
         const r = await sendZapiText({
           phone,
           message: buildChargeMessage({
-            identifier: c.iptv_login || c.name,
+            identifier: c.name,
+            login: c.iptv_login,
+            password: (c as any).iptv_password,
             dueDateISO: c.due_date,
           }),
         });

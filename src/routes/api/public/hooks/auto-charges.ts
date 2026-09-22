@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/public/hooks/auto-charges")({
         const today = new Date().toISOString().slice(0, 10);
         const { data: rows, error } = await supabaseAdmin
           .from("clients")
-          .select("id,name,phone,iptv_login,due_date,auto_charge")
+          .select("id,name,phone,iptv_login,iptv_password,due_date,auto_charge")
           .eq("auto_charge", true)
           .lte("due_date", today);
 
@@ -43,7 +43,9 @@ export const Route = createFileRoute("/api/public/hooks/auto-charges")({
             const r = await sendZapiText({
               phone,
               message: buildChargeMessage({
-                identifier: c.iptv_login || c.name,
+                identifier: c.name,
+                login: c.iptv_login,
+                password: (c as any).iptv_password,
                 dueDateISO: c.due_date,
               }),
             });
