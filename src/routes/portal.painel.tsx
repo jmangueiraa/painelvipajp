@@ -100,6 +100,7 @@ type Me = {
   };
   plans: { id: string; name: string; price_cents: number; duration_days: number }[];
   updates: { id: string; kind: "movie" | "series"; title: string; description: string | null; image_url: string | null; created_at: string }[];
+  store_products?: StoreItem[];
 };
 
 function parseUpdatesText(text: string | null | undefined): { category: string; items: string[] }[] {
@@ -145,6 +146,7 @@ type StoreItem = {
 };
 
 const fallbackProducts: StoreItem[] = [
+  { id: "gemini", label: "Gemini Pro - 30 dias", price_cents: 4000, emoji: "✨", gradient: "from-blue-600 to-indigo-600" },
   { id: "chatgpt", label: "ChatGPT Plus - 30 dias", price_cents: 3000, emoji: "🤖", gradient: "from-emerald-500 to-teal-600" },
   { id: "spotify", label: "Spotify Premium - 30 dias", price_cents: 1500, emoji: "🎵", gradient: "from-green-500 to-emerald-600" },
   { id: "youtube", label: "YouTube Premium - 30 dias", price_cents: 1500, emoji: "▶️", gradient: "from-red-500 to-rose-600" },
@@ -216,21 +218,44 @@ function PortalDashboard() {
   const { data: remoteProducts, refetch: refetchStoreProducts } = useQuery({
     queryKey: ["portal-store-products"],
     queryFn: async () => {
+      // 1. Tenta API pública
       try {
         const j = await portalFetch<{ products: StoreItem[] }>("/api/public/portal/store-products");
         if (Array.isArray(j?.products) && j.products.length > 0) {
           return j.products;
         }
-        return fallbackProducts;
-      } catch {
-        return fallbackProducts;
+      } catch (e) {
+        console.warn("[portal-store-products api fallback]", e);
       }
+
+      // 2. Tenta Supabase direto
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data: dbProds } = await supabase
+          .from("store_products")
+          .select("id,key,label,sale_cents,duration_days,emoji,gradient,sort_order,image_url")
+          .eq("active", true)
+          .order("sort_order", { ascending: true });
+        if (dbProds && dbProds.length > 0) {
+          return dbProds.map((p) => ({
+            id: p.key || p.id,
+            label: p.label,
+            price_cents: p.sale_cents,
+            emoji: p.emoji || "🛒",
+            gradient: p.gradient || "from-emerald-500 to-teal-600",
+            image_url: p.image_url ?? null,
+          }));
+        }
+      } catch (e) {
+        console.warn("[portal-store-products db fallback]", e);
+      }
+
+      return fallbackProducts;
     },
     placeholderData: fallbackProducts,
     staleTime: 1000 * 15,
     refetchOnWindowFocus: true,
   });
-  const storeProducts: StoreItem[] = remoteProducts && remoteProducts.length > 0 ? remoteProducts : fallbackProducts;
 
   useEffect(() => {
     if (storeOpen) {
@@ -306,6 +331,11 @@ function PortalDashboard() {
     refetchOnWindowFocus: false, // Evita travamentos ao trocar de aba no celular
     retry: false,
   });
+
+  const storeProducts: StoreItem[] =
+    (remoteProducts && remoteProducts.length > 0 ? remoteProducts : null) ??
+    (data?.store_products && data.store_products.length > 0 ? data.store_products : null) ??
+    fallbackProducts;
 
   useEffect(() => {
     if (error) {

@@ -10,6 +10,9 @@ function isCustomPortalDomain(): boolean {
     host === "portal.ajpstore.com.br" ||
     host === "ajpstore.com.br" ||
     host === "www.ajpstore.com.br" ||
+    host === "portalajp.com.br" ||
+    host === "www.portalajp.com.br" ||
+    host.endsWith(".portalajp.com.br") ||
     host.endsWith(".ajpstore.com.br") ||
     host.endsWith(".ajpvip.com.br")
   );

@@ -39,7 +39,7 @@ messaging.onBackgroundMessage((payload) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const currentOrigin = (self.location && self.location.origin) ? self.location.origin : "https://portal.ajpstore.com.br";
+  const currentOrigin = (self.location && self.location.origin) ? self.location.origin : "https://portalajp.com.br";
   const TARGET = `${currentOrigin}/portal`;
   event.waitUntil(
     (async () => {

@@ -26,6 +26,8 @@ export function extractSubdomain(hostname: string): string | null {
 
   // Tratamento direto para portal em domínios conhecidos
   if (
+    host === "portalajp.com.br" ||
+    host === "www.portalajp.com.br" ||
     host === "portal.ajpstore.com.br" ||
     host === "portal.ajpvip.com.br" ||
     host.startsWith("portal.")
@@ -35,6 +37,7 @@ export function extractSubdomain(hostname: string): string | null {
 
   // Domínios base conhecidos
   const knownBases = [
+    "portalajp.com.br",
     "ajpstore.com.br",
     "ajpvip.com.br",
     "lovable.app",
@@ -75,6 +78,9 @@ export function isPortalHostname(hostname: string): boolean {
   if (!hostname) return false;
   const host = hostname.toLowerCase().split(":")[0].trim();
   return (
+    host === "portalajp.com.br" ||
+    host === "www.portalajp.com.br" ||
+    host.endsWith(".portalajp.com.br") ||
     host === "portal.ajpstore.com.br" ||
     host === "portal.ajpvip.com.br" ||
     host.startsWith("portal.")

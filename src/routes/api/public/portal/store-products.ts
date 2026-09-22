@@ -12,12 +12,19 @@ export const Route = createFileRoute("/api/public/portal/store-products")({
       GET: async ({ request }) => {
         try {
           const portal = await import("@/integrations/portal/session.server");
-          const client = await portal.getSessionFromRequest(request);
-          if (!client) return json({ error: "Sessão inválida" }, request, { status: 401 });
+          const client = await portal.getSessionFromRequest(request).catch(() => null);
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-          let targetUserId = client.user_id;
+          // 1. Tenta buscar via RPC SECURITY DEFINER (bypassa qualquer bloqueio de RLS)
+          try {
+            const { data: rpcProds, error: rpcErr } = await (supabaseAdmin.rpc as any)("portal_get_store_products");
+            if (!rpcErr && Array.isArray(rpcProds) && rpcProds.length > 0) {
+              return json({ products: rpcProds }, request);
+            }
+          } catch {}
+
+          let targetUserId = client?.user_id || null;
           if (!targetUserId) {
             const { data: s } = await supabaseAdmin.from("settings").select("user_id").limit(1).maybeSingle();
             if (s?.user_id) targetUserId = s.user_id;

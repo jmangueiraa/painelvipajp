@@ -114,7 +114,9 @@ function NotificacoesPushPage() {
           window.location.hostname === "www.ajpvip.com.br" ||
           window.location.hostname === "portal.ajpstore.com.br" ||
           window.location.hostname === "ajpstore.com.br" ||
-          window.location.hostname === "www.ajpstore.com.br");
+          window.location.hostname === "www.ajpstore.com.br" ||
+          window.location.hostname === "portalajp.com.br" ||
+          window.location.hostname === "www.portalajp.com.br");
       const endpoint = isCustomDomain ? "https://painelvipajp.lovable.app/api/public/push/send" : "/api/public/push/send";
       const response = await fetch(endpoint, {
         method: "POST",

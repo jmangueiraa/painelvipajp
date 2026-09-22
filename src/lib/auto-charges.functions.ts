@@ -62,7 +62,7 @@ export const sendChargesToIds = createServerFn({ method: "POST" })
         statusLine = `Olá! Seu acesso ${identifier} venceu em ${dd}/${mm}/${yyyy} (${overdue} ${overdue === 1 ? "dia" : "dias"} em atraso).`;
       }
 
-      return `${header}\n\n${statusLine}\n\nPara continuar aproveitando o serviço sem interrupções, renove agora mesmo pelo nosso portal:\n\n🌐 portal.ajpstore.com.br\n${credBlock}\nA renovação é rápida e, após a confirmação do pagamento, a liberação do acesso é feita automaticamente.\n\nAgradecemos pela preferência e esperamos você de volta! 😊`;
+      return `${header}\n\n${statusLine}\n\nPara continuar aproveitando o serviço sem interrupções, renove agora mesmo pelo nosso portal:\n\n🌐 https://portalajp.com.br/portal\n${credBlock}\nA renovação é rápida e, após a confirmação do pagamento, a liberação do acesso é feita automaticamente.\n\nAgradecemos pela preferência e esperamos você de volta! 😊`;
     };
 
 

@@ -11,8 +11,7 @@ export function buildChargeMessage(params: {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const diffDays = Math.floor((today.getTime() - due.getTime()) / 86400000);
-  const overdue = Math.max(0, diffDays);
-  return `Ola!  ${params.identifier} seu vencimento é: *${dd}/${mm}/${yyyy}  vencido há ${overdue}* dias. Aguardo contato para renovação`;
+  return `Olá! ${params.identifier}, seu vencimento é: *${dd}/${mm}/${yyyy} (vencido há ${overdue} dias)*.\n\nRenove agora mesmo pelo nosso portal:\n🌐 https://portalajp.com.br/portal\n\nA renovação é rápida e automática. Aguardo você! 😊`;
 }
 
 export function normalizeBrPhone(phone: string): string {
