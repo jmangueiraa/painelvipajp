@@ -181,6 +181,7 @@ function ClientesPage() {
       if (!user) throw new Error("Sem sessão");
       let partner_id: string | null | undefined = undefined;
       let partner_code: string | null | undefined = undefined;
+      let referred_by: string | null | undefined = undefined;
       const refCode = values.referred_by_code?.trim().toUpperCase();
       if (refCode) {
         const { data: ref } = await supabase.from("clients").select("id").eq("referral_code", refCode).maybeSingle();
@@ -190,7 +191,6 @@ function ClientesPage() {
           partner_code = (p as any).code;
         } else if (!ref) {
           throw new Error("Código de indicação não encontrado");
-        }
         } else {
           referred_by = ref?.id;
         }
