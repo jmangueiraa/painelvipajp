@@ -24,6 +24,17 @@ export function extractSubdomain(hostname: string): string | null {
   if (!hostname) return null;
   const host = hostname.toLowerCase().split(":")[0].trim();
 
+  // Endereços da plataforma (preview/publicado) e localhost nunca são lojas
+  if (
+    host === "localhost" ||
+    /^\d+\.\d+\.\d+\.\d+$/.test(host) ||
+    host.endsWith(".lovable.app") ||
+    host.endsWith(".lovableproject.com") ||
+    host.endsWith(".lovable.dev")
+  ) {
+    return null;
+  }
+
   // Tratamento direto para portal em domínios conhecidos
   if (
     host === "portalajp.com.br" ||
@@ -40,8 +51,6 @@ export function extractSubdomain(hostname: string): string | null {
     "portalajp.com.br",
     "ajpstore.com.br",
     "ajpvip.com.br",
-    "lovable.app",
-    "lovableproject.com",
   ];
 
   for (const base of knownBases) {
