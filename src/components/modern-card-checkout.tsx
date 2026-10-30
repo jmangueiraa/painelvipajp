@@ -29,7 +29,7 @@ interface ModernCardCheckoutProps {
   amountCents: number;
   baseCents?: number;
   itemTitle?: string;
-  onSubmit: (cardData: CardFormData) => Promise<{ ok: boolean; message?: string; error?: string; detail?: string }>;
+  onSubmit: (cardData: CardFormData) => Promise<{ ok: boolean; pending?: boolean; message?: string; error?: string; detail?: string }>;
   onSuccess?: () => void;
   onCancel?: () => void;
   accentColor?: string; // default "#FF5500" or custom
@@ -102,6 +102,7 @@ export function ModernCardCheckout({
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isPending, setIsPending] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
 
   const brandInfo = useMemo(() => getCardBrandInfo(cardNumber), [cardNumber]);
@@ -218,7 +219,9 @@ export function ModernCardCheckout({
         installments: Number(installments),
       });
 
-      if (res.ok) {
+      if (res.ok && res.pending) {
+        setIsPending(true);
+      } else if (res.ok) {
         setIsSuccess(true);
         if (onSuccess) onSuccess();
       } else {
@@ -229,6 +232,28 @@ export function ModernCardCheckout({
     } finally {
       setLoading(false);
     }
+  }
+
+  if (isPending) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-8 text-center bg-white rounded-2xl p-6 shadow-sm">
+        <div>
+          <h2 className="text-xl font-bold text-amber-600">Pagamento em análise</h2>
+          <p className="mt-1 text-xs text-slate-500">
+            O Mercado Pago está analisando sua transação. A liberação acontece automaticamente assim que o pagamento for aprovado.
+          </p>
+        </div>
+        {onCancel && (
+          <Button
+            style={{ backgroundColor: accentColor }}
+            className="w-full text-white font-bold rounded-xl py-3 cursor-pointer hover:opacity-95"
+            onClick={onCancel}
+          >
+            Fechar
+          </Button>
+        )}
+      </div>
+    );
   }
 
   // Se já concluiu com sucesso

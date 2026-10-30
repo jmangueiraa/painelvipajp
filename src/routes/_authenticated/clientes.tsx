@@ -184,7 +184,7 @@ function ClientesPage() {
       let partner_code: string | null | undefined = undefined;
       const refCode = values.referred_by_code?.trim().toUpperCase();
       if (refCode) {
-        const { data: p } = await (supabase.from("partners") as any).select("id, code").eq("code", refCode).maybeSingle();
+        const { data: p } = await (supabase as any).from("partners").select("id, code").eq("code", refCode).maybeSingle();
         if (p) {
           partner_id = (p as any).id;
           partner_code = (p as any).code;

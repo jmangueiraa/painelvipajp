@@ -436,7 +436,7 @@ function RenovacaoPage() {
                       return { ok: true, message: res.message };
                     } else if (res.status === "in_process") {
                       toast.info("Pagamento em análise pelo Mercado Pago.");
-                      return { ok: true, message: res.message };
+                      return { ok: true, pending: true, message: res.message };
                     }
                     return { ok: false, error: "Pagamento não aprovado." };
                   } catch (err) {

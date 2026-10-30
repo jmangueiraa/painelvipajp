@@ -541,7 +541,7 @@ function PortalDashboard() {
         if (res.renewal_id) setRenewalId(res.renewal_id);
         setPaymentStatus("in_process");
         toast.info("Pagamento em análise pelo Mercado Pago.");
-        return { ok: true, message: res.message };
+        return { ok: true, pending: true, message: res.message };
       } else {
         return { ok: false, message: res.error || res.message || "Pagamento recusado" };
       }
@@ -581,7 +581,7 @@ function PortalDashboard() {
         if (res.renewal_id) setRenewalId(res.renewal_id);
         setPaymentStatus("in_process");
         toast.info("Pagamento em análise pelo Mercado Pago.");
-        return { ok: true, message: res.message };
+        return { ok: true, pending: true, message: res.message };
       } else {
         return { ok: false, message: res.error || res.message || "Pagamento recusado" };
       }
