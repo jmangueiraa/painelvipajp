@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+const adminDb = supabaseAdmin as any;
 import { getCycleForDate } from "./partner-closings";
 
 /**
@@ -10,7 +11,7 @@ import { getCycleForDate } from "./partner-closings";
 export const getPartnerMeFn = createServerFn({ method: "POST" })
   .inputValidator((data: { email?: string; authUserId?: string }) => data)
   .handler(async ({ data }) => {
-    let q = supabaseAdmin.from("partners").select("*");
+    let q = adminDb.from("partners").select("*");
     if (data.authUserId) {
       q = q.eq("auth_user_id", data.authUserId);
     } else if (data.email) {
@@ -31,10 +32,10 @@ export const getPartnerDashboardStatsFn = createServerFn({ method: "POST" })
     if (!partnerId) throw new Error("ID obrigatório");
 
     const [partnerRes, clientsRes, commissionsRes, closingsRes] = await Promise.all([
-      supabaseAdmin.from("partners").select("*").eq("id", partnerId).single(),
-      supabaseAdmin.from("clients").select("id, name, phone, due_date, status, created_at").eq("partner_id", partnerId),
-      supabaseAdmin.from("partner_commissions").select("id, amount_cents, status, created_at").eq("partner_id", partnerId),
-      supabaseAdmin.from("partner_weekly_closings").select("*").eq("partner_id", partnerId).order("payment_due_date", { ascending: false }),
+      adminDb.from("partners").select("*").eq("id", partnerId).single(),
+      adminDb.from("clients").select("id, name, phone, due_date, status, created_at").eq("partner_id", partnerId),
+      adminDb.from("partner_commissions").select("id, amount_cents, status, created_at").eq("partner_id", partnerId),
+      adminDb.from("partner_weekly_closings").select("*").eq("partner_id", partnerId).order("payment_due_date", { ascending: false }),
     ]);
 
     const partner = partnerRes.data;
@@ -67,7 +68,7 @@ export const updatePartnerPixFn = createServerFn({ method: "POST" })
     (data: { partnerId: string; pixKey: string; pixKeyType: string }) => data
   )
   .handler(async ({ data }) => {
-    const { error } = await supabaseAdmin
+    const { error } = await adminDb
       .from("partners")
       .update({
         pix_key: data.pixKey.trim(),
@@ -83,7 +84,7 @@ export const updatePartnerPixFn = createServerFn({ method: "POST" })
 export const getPartnerRankingPositionFn = createServerFn({ method: "POST" })
   .inputValidator((data: { partnerId: string }) => data)
   .handler(async ({ data }) => {
-    const { data: allPartners } = await supabaseAdmin
+    const { data: allPartners } = await adminDb
       .from("partners")
       .select("id, total_earned_cents")
       .order("total_earned_cents", { ascending: false });

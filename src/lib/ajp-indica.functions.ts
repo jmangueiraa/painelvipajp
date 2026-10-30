@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+const adminDb = supabaseAdmin as any;
 import {
   getAdminIndicaStats,
   generateWeeklyClosingsForPeriod,
@@ -20,7 +21,7 @@ export const getIndicaOverviewStatsFn = createServerFn({ method: "GET" }).handle
 export const listPartnersFn = createServerFn({ method: "GET" })
   .inputValidator((data?: { search?: string; status?: string }) => data ?? {})
   .handler(async ({ data }): Promise<Partner[]> => {
-    let q = supabaseAdmin.from("partners").select("*").order("created_at", { ascending: false });
+    let q = (adminDb.from("partners") as any).select("*").order("created_at", { ascending: false });
     if (data?.status && data.status !== "todos") {
       q = q.eq("status", data.status);
     }
@@ -62,7 +63,7 @@ export const savePartnerFn = createServerFn({ method: "POST" })
     if (!data.email.trim()) throw new Error("E-mail é obrigatório");
 
     // Verifica se o código já existe em outro parceiro
-    let checkQ = supabaseAdmin.from("partners").select("id").eq("code", code);
+    let checkQ = (adminDb.from("partners") as any).select("id").eq("code", code);
     if (data.id) checkQ = checkQ.neq("id", data.id);
     const { data: existing } = await checkQ.maybeSingle();
     if (existing) throw new Error(`O código ${code} já está em uso por outro parceiro.`);
@@ -80,11 +81,11 @@ export const savePartnerFn = createServerFn({ method: "POST" })
     };
 
     if (data.id) {
-      const { error } = await supabaseAdmin.from("partners").update(payload).eq("id", data.id);
+      const { error } = await (adminDb.from("partners") as any).update(payload).eq("id", data.id);
       if (error) throw new Error(error.message);
       return { success: true, id: data.id };
     } else {
-      const { data: created, error } = await supabaseAdmin
+      const { data: created, error } = await adminDb
         .from("partners")
         .insert({
           ...payload,
@@ -102,7 +103,7 @@ export const savePartnerFn = createServerFn({ method: "POST" })
 export const deletePartnerFn = createServerFn({ method: "POST" })
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data }) => {
-    const { error } = await supabaseAdmin.from("partners").delete().eq("id", data.id);
+    const { error } = await (adminDb.from("partners") as any).delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { success: true };
   });
@@ -113,7 +114,7 @@ export const deletePartnerFn = createServerFn({ method: "POST" })
 export const listCommissionsFn = createServerFn({ method: "GET" })
   .inputValidator((data?: { partnerId?: string; status?: string }) => data ?? {})
   .handler(async ({ data }): Promise<PartnerCommission[]> => {
-    let q = supabaseAdmin
+    let q = adminDb
       .from("partner_commissions")
       .select("*, partner:partner_id(name, code, pix_key, pix_key_type), client:client_id(name, phone, due_date, status)")
       .order("created_at", { ascending: false });
@@ -132,7 +133,7 @@ export const listCommissionsFn = createServerFn({ method: "GET" })
 export const listReferredClientsFn = createServerFn({ method: "GET" })
   .inputValidator((data?: { partnerId?: string }) => data ?? {})
   .handler(async ({ data }) => {
-    let q = supabaseAdmin
+    let q = adminDb
       .from("clients")
       .select("id, name, phone, due_date, status, price_cents, created_at, partner_id, partner_code, partner:partner_id(name, code)")
       .not("partner_id", "is", null)
@@ -151,7 +152,7 @@ export const listReferredClientsFn = createServerFn({ method: "GET" })
 export const listWeeklyClosingsFn = createServerFn({ method: "GET" })
   .inputValidator((data?: { status?: string }) => data ?? {})
   .handler(async ({ data }): Promise<PartnerWeeklyClosing[]> => {
-    let q = supabaseAdmin
+    let q = adminDb
       .from("partner_weekly_closings")
       .select("*, partner:partner_id(name, code, email, phone)")
       .order("payment_due_date", { ascending: false });
@@ -182,7 +183,7 @@ export const markClosingPaidFn = createServerFn({ method: "POST" })
 export const listPartnerWalletTransactionsFn = createServerFn({ method: "GET" })
   .inputValidator((data?: { partnerId?: string }) => data ?? {})
   .handler(async ({ data }): Promise<PartnerWalletTransaction[]> => {
-    let q = supabaseAdmin
+    let q = adminDb
       .from("partner_wallet_transactions")
       .select("*")
       .order("created_at", { ascending: false });
@@ -198,7 +199,7 @@ export const listPartnerWalletTransactionsFn = createServerFn({ method: "GET" })
  * 7. Ranking dos Parceiros
  */
 export const getPartnerRankingFn = createServerFn({ method: "GET" }).handler(async () => {
-  const { data: partners, error } = await supabaseAdmin
+  const { data: partners, error } = await adminDb
     .from("partners")
     .select("id, name, code, total_earned_cents, balance_cents, status")
     .order("total_earned_cents", { ascending: false });
@@ -206,7 +207,7 @@ export const getPartnerRankingFn = createServerFn({ method: "GET" }).handler(asy
   if (error) throw new Error(error.message);
 
   // Conta clientes ativos por parceiro
-  const { data: clients } = await supabaseAdmin
+  const { data: clients } = await adminDb
     .from("clients")
     .select("partner_id, status")
     .not("partner_id", "is", null);
@@ -239,7 +240,7 @@ export const getPartnerRankingFn = createServerFn({ method: "GET" }).handler(asy
  * 8. Configurações AJP INDICA
  */
 export const getIndicaSettingsFn = createServerFn({ method: "GET" }).handler(async () => {
-  const { data } = await supabaseAdmin.from("partner_settings").select("*").limit(1).maybeSingle();
+  const { data } = await adminDb.from("partner_settings").select("*").limit(1).maybeSingle();
   return (
     data ?? {
       commission_cents: 2000,
@@ -260,14 +261,14 @@ export const updateIndicaSettingsFn = createServerFn({ method: "POST" })
     }) => data
   )
   .handler(async ({ data }) => {
-    const { data: existing } = await supabaseAdmin.from("partner_settings").select("id").limit(1).maybeSingle();
+    const { data: existing } = await adminDb.from("partner_settings").select("id").limit(1).maybeSingle();
     if (existing) {
-      await supabaseAdmin.from("partner_settings").update(data).eq("id", existing.id);
+      await adminDb.from("partner_settings").update(data).eq("id", existing.id);
     } else {
       // Pega qualquer user_id admin
-      const { data: s } = await supabaseAdmin.from("settings").select("user_id").limit(1).maybeSingle();
+      const { data: s } = await adminDb.from("settings").select("user_id").limit(1).maybeSingle();
       const userId = s?.user_id || "00000000-0000-0000-0000-000000000000";
-      await supabaseAdmin.from("partner_settings").insert({ ...data, user_id: userId });
+      await adminDb.from("partner_settings").insert({ ...data, user_id: userId });
     }
     return { success: true };
   });
@@ -276,7 +277,7 @@ export const updateIndicaSettingsFn = createServerFn({ method: "POST" })
  * 9. Indicações / Log de Cliques
  */
 export const listPartnerClicksFn = createServerFn({ method: "GET" }).handler(async () => {
-  const { data: rows, error } = await supabaseAdmin
+  const { data: rows, error } = await adminDb
     .from("partner_clicks")
     .select("*, partner:partner_id(name, code)")
     .order("created_at", { ascending: false })

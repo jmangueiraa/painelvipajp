@@ -27,6 +27,8 @@ import { Route as AuthenticatedRenovacaoRouteImport } from './routes/_authentica
 import { Route as AuthenticatedServidoresRouteImport } from './routes/_authenticated/servidores'
 import { Route as AuthenticatedSolicitacoesRouteImport } from './routes/_authenticated/solicitacoes'
 import { Route as LojaSlugRouteImport } from './routes/loja.$slug'
+import { Route as ParceiroIndexRouteImport } from './routes/parceiro.index'
+import { Route as ParceiroLoginRouteImport } from './routes/parceiro.login'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
 import { Route as PortalIndiqueRouteImport } from './routes/portal.indique'
 import { Route as PortalPainelRouteImport } from './routes/portal.painel'
@@ -36,6 +38,8 @@ import { Route as AuthenticatedLojaProdutosRouteImport } from './routes/_authent
 import { Route as AuthenticatedPortalClientesIdRouteImport } from './routes/_authenticated/portal-clientes.$id'
 import { Route as ApiPublicPushCronRouteImport } from './routes/api/public/push-cron'
 import { Route as AuthenticatedAdminAssinantesIdRouteImport } from './routes/_authenticated/admin.assinantes.$id'
+import { Route as AuthenticatedAdminIndicaIndexRouteImport } from './routes/_authenticated/admin.indica.index'
+import { Route as AuthenticatedAdminIndicaTabRouteImport } from './routes/_authenticated/admin.indica.$tab'
 import { Route as ApiPublicAppMpWebhookRouteImport } from './routes/api/public/app/mp-webhook'
 import { Route as ApiPublicHooksAutoChargesRouteImport } from './routes/api/public/hooks/auto-charges'
 import { Route as ApiPublicPortalAiAgentChatRouteImport } from './routes/api/public/portal/ai-agent-chat'
@@ -53,6 +57,7 @@ import { Route as ApiPublicPortalRenewalStatusRouteImport } from './routes/api/p
 import { Route as ApiPublicPortalRequestOtpRouteImport } from './routes/api/public/portal/request-otp'
 import { Route as ApiPublicPortalSavePushTokenRouteImport } from './routes/api/public/portal/save-push-token'
 import { Route as ApiPublicPortalStoreProductsRouteImport } from './routes/api/public/portal/store-products'
+import { Route as ApiPublicPortalTrackRefRouteImport } from './routes/api/public/portal/track-ref'
 import { Route as ApiPublicPortalVerifyOtpRouteImport } from './routes/api/public/portal/verify-otp'
 import { Route as ApiPublicPushSendRouteImport } from './routes/api/public/push/send'
 import { Route as ApiPublicZapiDisconnectRouteImport } from './routes/api/public/zapi/disconnect'
@@ -153,6 +158,16 @@ const LojaSlugRoute = LojaSlugRouteImport.update({
   path: '/loja/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ParceiroIndexRoute = ParceiroIndexRouteImport.update({
+  id: '/parceiro/',
+  path: '/parceiro/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParceiroLoginRoute = ParceiroLoginRouteImport.update({
+  id: '/parceiro/login',
+  path: '/parceiro/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PortalIndexRoute = PortalIndexRouteImport.update({
   id: '/portal/',
   path: '/portal/',
@@ -202,6 +217,18 @@ const AuthenticatedAdminAssinantesIdRoute =
     id: '/$id',
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminAssinantesRoute,
+  } as any)
+const AuthenticatedAdminIndicaIndexRoute =
+  AuthenticatedAdminIndicaIndexRouteImport.update({
+    id: '/admin/indica/',
+    path: '/admin/indica/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminIndicaTabRoute =
+  AuthenticatedAdminIndicaTabRouteImport.update({
+    id: '/admin/indica/$tab',
+    path: '/admin/indica/$tab',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const ApiPublicAppMpWebhookRoute = ApiPublicAppMpWebhookRouteImport.update({
   id: '/api/public/app/mp-webhook',
@@ -302,6 +329,11 @@ const ApiPublicPortalStoreProductsRoute =
     path: '/api/public/portal/store-products',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPortalTrackRefRoute = ApiPublicPortalTrackRefRouteImport.update({
+  id: '/api/public/portal/track-ref',
+  path: '/api/public/portal/track-ref',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPortalVerifyOtpRoute =
   ApiPublicPortalVerifyOtpRouteImport.update({
     id: '/api/public/portal/verify-otp',
@@ -347,8 +379,10 @@ export interface FileRoutesByFullPath {
   '/servidores': typeof AuthenticatedServidoresRoute
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/loja/$slug': typeof LojaSlugRoute
+  '/parceiro/login': typeof ParceiroLoginRoute
   '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
+  '/parceiro/': typeof ParceiroIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/loja/clientes': typeof AuthenticatedLojaClientesRoute
@@ -356,6 +390,7 @@ export interface FileRoutesByFullPath {
   '/portal-clientes/$id': typeof AuthenticatedPortalClientesIdRoute
   '/api/public/push-cron': typeof ApiPublicPushCronRoute
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
+  '/admin/indica/$tab': typeof AuthenticatedAdminIndicaTabRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
   '/api/public/portal/ai-agent-chat': typeof ApiPublicPortalAiAgentChatRoute
@@ -373,11 +408,13 @@ export interface FileRoutesByFullPath {
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
   '/api/public/portal/save-push-token': typeof ApiPublicPortalSavePushTokenRoute
   '/api/public/portal/store-products': typeof ApiPublicPortalStoreProductsRoute
+  '/api/public/portal/track-ref': typeof ApiPublicPortalTrackRefRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
   '/api/public/push/send': typeof ApiPublicPushSendRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
   '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
+  '/admin/indica/': typeof AuthenticatedAdminIndicaIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -397,8 +434,10 @@ export interface FileRoutesByTo {
   '/servidores': typeof AuthenticatedServidoresRoute
   '/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/loja/$slug': typeof LojaSlugRoute
+  '/parceiro/login': typeof ParceiroLoginRoute
   '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
+  '/parceiro': typeof ParceiroIndexRoute
   '/portal': typeof PortalIndexRoute
   '/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/loja/clientes': typeof AuthenticatedLojaClientesRoute
@@ -406,6 +445,7 @@ export interface FileRoutesByTo {
   '/portal-clientes/$id': typeof AuthenticatedPortalClientesIdRoute
   '/api/public/push-cron': typeof ApiPublicPushCronRoute
   '/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
+  '/admin/indica/$tab': typeof AuthenticatedAdminIndicaTabRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
   '/api/public/portal/ai-agent-chat': typeof ApiPublicPortalAiAgentChatRoute
@@ -423,11 +463,13 @@ export interface FileRoutesByTo {
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
   '/api/public/portal/save-push-token': typeof ApiPublicPortalSavePushTokenRoute
   '/api/public/portal/store-products': typeof ApiPublicPortalStoreProductsRoute
+  '/api/public/portal/track-ref': typeof ApiPublicPortalTrackRefRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
   '/api/public/push/send': typeof ApiPublicPushSendRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
   '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
+  '/admin/indica': typeof AuthenticatedAdminIndicaIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -449,8 +491,10 @@ export interface FileRoutesById {
   '/_authenticated/servidores': typeof AuthenticatedServidoresRoute
   '/_authenticated/solicitacoes': typeof AuthenticatedSolicitacoesRoute
   '/loja/$slug': typeof LojaSlugRoute
+  '/parceiro/login': typeof ParceiroLoginRoute
   '/portal/indique': typeof PortalIndiqueRoute
   '/portal/painel': typeof PortalPainelRoute
+  '/parceiro/': typeof ParceiroIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/_authenticated/admin/assinantes': typeof AuthenticatedAdminAssinantesRouteWithChildren
   '/_authenticated/loja/clientes': typeof AuthenticatedLojaClientesRoute
@@ -458,6 +502,7 @@ export interface FileRoutesById {
   '/_authenticated/portal-clientes/$id': typeof AuthenticatedPortalClientesIdRoute
   '/api/public/push-cron': typeof ApiPublicPushCronRoute
   '/_authenticated/admin/assinantes/$id': typeof AuthenticatedAdminAssinantesIdRoute
+  '/_authenticated/admin/indica/$tab': typeof AuthenticatedAdminIndicaTabRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
   '/api/public/portal/ai-agent-chat': typeof ApiPublicPortalAiAgentChatRoute
@@ -475,11 +520,13 @@ export interface FileRoutesById {
   '/api/public/portal/request-otp': typeof ApiPublicPortalRequestOtpRoute
   '/api/public/portal/save-push-token': typeof ApiPublicPortalSavePushTokenRoute
   '/api/public/portal/store-products': typeof ApiPublicPortalStoreProductsRoute
+  '/api/public/portal/track-ref': typeof ApiPublicPortalTrackRefRoute
   '/api/public/portal/verify-otp': typeof ApiPublicPortalVerifyOtpRoute
   '/api/public/push/send': typeof ApiPublicPushSendRoute
   '/api/public/zapi/disconnect': typeof ApiPublicZapiDisconnectRoute
   '/api/public/zapi/qr': typeof ApiPublicZapiQrRoute
   '/api/public/zapi/status': typeof ApiPublicZapiStatusRoute
+  '/_authenticated/admin/indica/': typeof AuthenticatedAdminIndicaIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -501,8 +548,10 @@ export interface FileRouteTypes {
     | '/servidores'
     | '/solicitacoes'
     | '/loja/$slug'
+    | '/parceiro/login'
     | '/portal/indique'
     | '/portal/painel'
+    | '/parceiro/'
     | '/portal/'
     | '/admin/assinantes'
     | '/loja/clientes'
@@ -510,6 +559,7 @@ export interface FileRouteTypes {
     | '/portal-clientes/$id'
     | '/api/public/push-cron'
     | '/admin/assinantes/$id'
+    | '/admin/indica/$tab'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
     | '/api/public/portal/ai-agent-chat'
@@ -527,11 +577,13 @@ export interface FileRouteTypes {
     | '/api/public/portal/request-otp'
     | '/api/public/portal/save-push-token'
     | '/api/public/portal/store-products'
+    | '/api/public/portal/track-ref'
     | '/api/public/portal/verify-otp'
     | '/api/public/push/send'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
     | '/api/public/zapi/status'
+    | '/admin/indica/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -551,8 +603,10 @@ export interface FileRouteTypes {
     | '/servidores'
     | '/solicitacoes'
     | '/loja/$slug'
+    | '/parceiro/login'
     | '/portal/indique'
     | '/portal/painel'
+    | '/parceiro'
     | '/portal'
     | '/admin/assinantes'
     | '/loja/clientes'
@@ -560,6 +614,7 @@ export interface FileRouteTypes {
     | '/portal-clientes/$id'
     | '/api/public/push-cron'
     | '/admin/assinantes/$id'
+    | '/admin/indica/$tab'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
     | '/api/public/portal/ai-agent-chat'
@@ -577,11 +632,13 @@ export interface FileRouteTypes {
     | '/api/public/portal/request-otp'
     | '/api/public/portal/save-push-token'
     | '/api/public/portal/store-products'
+    | '/api/public/portal/track-ref'
     | '/api/public/portal/verify-otp'
     | '/api/public/push/send'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
     | '/api/public/zapi/status'
+    | '/admin/indica'
   id:
     | '__root__'
     | '/'
@@ -602,8 +659,10 @@ export interface FileRouteTypes {
     | '/_authenticated/servidores'
     | '/_authenticated/solicitacoes'
     | '/loja/$slug'
+    | '/parceiro/login'
     | '/portal/indique'
     | '/portal/painel'
+    | '/parceiro/'
     | '/portal/'
     | '/_authenticated/admin/assinantes'
     | '/_authenticated/loja/clientes'
@@ -611,6 +670,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal-clientes/$id'
     | '/api/public/push-cron'
     | '/_authenticated/admin/assinantes/$id'
+    | '/_authenticated/admin/indica/$tab'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
     | '/api/public/portal/ai-agent-chat'
@@ -628,11 +688,13 @@ export interface FileRouteTypes {
     | '/api/public/portal/request-otp'
     | '/api/public/portal/save-push-token'
     | '/api/public/portal/store-products'
+    | '/api/public/portal/track-ref'
     | '/api/public/portal/verify-otp'
     | '/api/public/push/send'
     | '/api/public/zapi/disconnect'
     | '/api/public/zapi/qr'
     | '/api/public/zapi/status'
+    | '/_authenticated/admin/indica/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -641,8 +703,10 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   LojaSlugRoute: typeof LojaSlugRoute
+  ParceiroLoginRoute: typeof ParceiroLoginRoute
   PortalIndiqueRoute: typeof PortalIndiqueRoute
   PortalPainelRoute: typeof PortalPainelRoute
+  ParceiroIndexRoute: typeof ParceiroIndexRoute
   PortalIndexRoute: typeof PortalIndexRoute
   ApiPublicPushCronRoute: typeof ApiPublicPushCronRoute
   ApiPublicAppMpWebhookRoute: typeof ApiPublicAppMpWebhookRoute
@@ -662,6 +726,7 @@ export interface RootRouteChildren {
   ApiPublicPortalRequestOtpRoute: typeof ApiPublicPortalRequestOtpRoute
   ApiPublicPortalSavePushTokenRoute: typeof ApiPublicPortalSavePushTokenRoute
   ApiPublicPortalStoreProductsRoute: typeof ApiPublicPortalStoreProductsRoute
+  ApiPublicPortalTrackRefRoute: typeof ApiPublicPortalTrackRefRoute
   ApiPublicPortalVerifyOtpRoute: typeof ApiPublicPortalVerifyOtpRoute
   ApiPublicPushSendRoute: typeof ApiPublicPushSendRoute
   ApiPublicZapiDisconnectRoute: typeof ApiPublicZapiDisconnectRoute
@@ -797,6 +862,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LojaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/parceiro/': {
+      id: '/parceiro/'
+      path: '/parceiro'
+      fullPath: '/parceiro/'
+      preLoaderRoute: typeof ParceiroIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parceiro/login': {
+      id: '/parceiro/login'
+      path: '/parceiro/login'
+      fullPath: '/parceiro/login'
+      preLoaderRoute: typeof ParceiroLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/portal/': {
       id: '/portal/'
       path: '/portal'
@@ -859,6 +938,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/assinantes/$id'
       preLoaderRoute: typeof AuthenticatedAdminAssinantesIdRouteImport
       parentRoute: typeof AuthenticatedAdminAssinantesRoute
+    }
+    '/_authenticated/admin/indica/': {
+      id: '/_authenticated/admin/indica/'
+      path: '/admin/indica'
+      fullPath: '/admin/indica/'
+      preLoaderRoute: typeof AuthenticatedAdminIndicaIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/indica/$tab': {
+      id: '/_authenticated/admin/indica/$tab'
+      path: '/admin/indica/$tab'
+      fullPath: '/admin/indica/$tab'
+      preLoaderRoute: typeof AuthenticatedAdminIndicaTabRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/app/mp-webhook': {
       id: '/api/public/app/mp-webhook'
@@ -979,6 +1072,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPortalStoreProductsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/portal/track-ref': {
+      id: '/api/public/portal/track-ref'
+      path: '/api/public/portal/track-ref'
+      fullPath: '/api/public/portal/track-ref'
+      preLoaderRoute: typeof ApiPublicPortalTrackRefRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/portal/verify-otp': {
       id: '/api/public/portal/verify-otp'
       path: '/api/public/portal/verify-otp'
@@ -1062,6 +1162,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminAssinantesRoute: typeof AuthenticatedAdminAssinantesRouteWithChildren
   AuthenticatedLojaClientesRoute: typeof AuthenticatedLojaClientesRoute
   AuthenticatedLojaProdutosRoute: typeof AuthenticatedLojaProdutosRoute
+  AuthenticatedAdminIndicaTabRoute: typeof AuthenticatedAdminIndicaTabRoute
+  AuthenticatedAdminIndicaIndexRoute: typeof AuthenticatedAdminIndicaIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1083,6 +1185,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedAdminAssinantesRouteWithChildren,
   AuthenticatedLojaClientesRoute: AuthenticatedLojaClientesRoute,
   AuthenticatedLojaProdutosRoute: AuthenticatedLojaProdutosRoute,
+  AuthenticatedAdminIndicaTabRoute: AuthenticatedAdminIndicaTabRoute,
+  AuthenticatedAdminIndicaIndexRoute: AuthenticatedAdminIndicaIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -1094,8 +1198,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   LojaSlugRoute: LojaSlugRoute,
+  ParceiroLoginRoute: ParceiroLoginRoute,
   PortalIndiqueRoute: PortalIndiqueRoute,
   PortalPainelRoute: PortalPainelRoute,
+  ParceiroIndexRoute: ParceiroIndexRoute,
   PortalIndexRoute: PortalIndexRoute,
   ApiPublicPushCronRoute: ApiPublicPushCronRoute,
   ApiPublicAppMpWebhookRoute: ApiPublicAppMpWebhookRoute,
@@ -1115,6 +1221,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPortalRequestOtpRoute: ApiPublicPortalRequestOtpRoute,
   ApiPublicPortalSavePushTokenRoute: ApiPublicPortalSavePushTokenRoute,
   ApiPublicPortalStoreProductsRoute: ApiPublicPortalStoreProductsRoute,
+  ApiPublicPortalTrackRefRoute: ApiPublicPortalTrackRefRoute,
   ApiPublicPortalVerifyOtpRoute: ApiPublicPortalVerifyOtpRoute,
   ApiPublicPushSendRoute: ApiPublicPushSendRoute,
   ApiPublicZapiDisconnectRoute: ApiPublicZapiDisconnectRoute,

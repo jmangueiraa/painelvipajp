@@ -4,7 +4,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown, Camera, ShieldCheck, Inbox, ShoppingBag, Store, KeyRound, Bell, Smartphone, Target, BrainCircuit
+  LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown, Camera, ShieldCheck, Inbox, ShoppingBag, Store, KeyRound, Bell, Smartphone, Target, BrainCircuit,
   Gift, ChevronDown, MousePointerClick, UserCheck, DollarSign, CalendarRange, QrCode, Trophy, Sliders,
 } from "lucide-react";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
