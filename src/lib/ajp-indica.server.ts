@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+const adminDb = supabaseAdmin as any;
 import { getCycleForDate, getMonthlyClosingCycles } from "./partner-closings";
 import type { IndicaOverviewStats, Partner, PartnerCommission, PartnerWeeklyClosing } from "./ajp-indica.types";
 
@@ -23,7 +24,7 @@ export async function processPartnerCommissionForPaidClient(params: {
     if (!clientId) return { commissionCreated: false, reason: "Sem client_id" };
 
     // 1. Busca dados do cliente para verificar parceiro
-    const { data: client, error: clientErr } = await supabaseAdmin
+    const { data: client, error: clientErr } = await adminDb
       .from("clients")
       .select("id, name, phone, partner_id, partner_code, created_at")
       .eq("id", clientId)
@@ -38,7 +39,7 @@ export async function processPartnerCommissionForPaidClient(params: {
 
     // Se só tem o código mas não o partner_id, resolve o ID
     if (!partnerId && partnerCode) {
-      const { data: p } = await supabaseAdmin
+      const { data: p } = await adminDb
         .from("partners")
         .select("id, status")
         .eq("code", partnerCode.trim().toUpperCase())
@@ -46,7 +47,7 @@ export async function processPartnerCommissionForPaidClient(params: {
       if (p && (p as any).status === "ativo") {
         partnerId = (p as any).id;
         // Salva partner_id no cliente para histórico definitivo
-        await supabaseAdmin.from("clients").update({ partner_id: partnerId }).eq("id", clientId);
+        await adminDb.from("clients").update({ partner_id: partnerId }).eq("id", clientId);
       }
     }
 
@@ -55,7 +56,7 @@ export async function processPartnerCommissionForPaidClient(params: {
     }
 
     // 2. Verifica se o parceiro está ativo
-    const { data: partnerRow } = await supabaseAdmin
+    const { data: partnerRow } = await adminDb
       .from("partners")
       .select("id, name, balance_cents, total_earned_cents, status")
       .eq("id", partnerId)
@@ -67,7 +68,7 @@ export async function processPartnerCommissionForPaidClient(params: {
     }
 
     // 3. Verifica se já existe comissão para este cliente (Garantia de 1ª assinatura)
-    const { data: existingCommission } = await supabaseAdmin
+    const { data: existingCommission } = await adminDb
       .from("partner_commissions")
       .select("id")
       .eq("client_id", clientId)
@@ -78,7 +79,7 @@ export async function processPartnerCommissionForPaidClient(params: {
     }
 
     // 4. Verifica histórico de pagamentos anteriores do cliente (para garantir que é cliente realmente novo)
-    const { count: priorPaymentsCount } = await supabaseAdmin
+    const { count: priorPaymentsCount } = await adminDb
       .from("payments")
       .select("id", { count: "exact", head: true })
       .eq("client_id", clientId);
@@ -90,7 +91,7 @@ export async function processPartnerCommissionForPaidClient(params: {
 
     // 5. Busca valor padrão da comissão nas configurações (default R$ 20,00 = 2000 centavos)
     let commissionCents = 2000;
-    const { data: settings } = await supabaseAdmin
+    const { data: settings } = await adminDb
       .from("partner_settings")
       .select("commission_cents, is_enabled")
       .limit(1)
@@ -106,7 +107,7 @@ export async function processPartnerCommissionForPaidClient(params: {
     }
 
     // 6. Insere a comissão em partner_commissions de forma atômica
-    const { data: insertedCommission, error: commErr } = await supabaseAdmin
+    const { data: insertedCommission, error: commErr } = await adminDb
       .from("partner_commissions")
       .insert({
         partner_id: partner.id,
@@ -132,7 +133,7 @@ export async function processPartnerCommissionForPaidClient(params: {
     const newBalance = currentBalance + commissionCents;
     const newEarned = currentEarned + commissionCents;
 
-    await supabaseAdmin
+    await adminDb
       .from("partners")
       .update({
         balance_cents: newBalance,
@@ -142,7 +143,7 @@ export async function processPartnerCommissionForPaidClient(params: {
       .eq("id", partner.id);
 
     // 8. Registra no extrato da carteira (partner_wallet_transactions)
-    await supabaseAdmin.from("partner_wallet_transactions").insert({
+    await adminDb.from("partner_wallet_transactions").insert({
       partner_id: partner.id,
       type: "comissao_creditada",
       amount_cents: commissionCents,
@@ -173,7 +174,7 @@ export async function trackPartnerReferralClick(params: {
     const cleanCode = (params.code || "").trim().toUpperCase();
     if (!cleanCode) return { valid: false };
 
-    const { data: partner } = await supabaseAdmin
+    const { data: partner } = await adminDb
       .from("partners")
       .select("id, name, status")
       .eq("code", cleanCode)
@@ -183,7 +184,7 @@ export async function trackPartnerReferralClick(params: {
       return { valid: false };
     }
 
-    await supabaseAdmin.from("partner_clicks").insert({
+    await adminDb.from("partner_clicks").insert({
       partner_id: (partner as any).id,
       ip: params.ip || null,
       user_agent: params.userAgent || null,
@@ -205,7 +206,7 @@ export async function linkClientToPartnerCode(clientId: string, code: string): P
     const cleanCode = (code || "").trim().toUpperCase();
     if (!cleanCode || !clientId) return false;
 
-    const { data: partner } = await supabaseAdmin
+    const { data: partner } = await adminDb
       .from("partners")
       .select("id, status")
       .eq("code", cleanCode)
@@ -213,7 +214,7 @@ export async function linkClientToPartnerCode(clientId: string, code: string): P
 
     if (!partner || (partner as any).status !== "ativo") return false;
 
-    await supabaseAdmin
+    await adminDb
       .from("clients")
       .update({
         partner_id: (partner as any).id,
@@ -241,7 +242,7 @@ export async function generateWeeklyClosingsForPeriod(params: {
   if (!cycle) throw new Error("Ciclo inválido");
 
   // Busca todas as comissões aprovadas no período que ainda não foram vinculadas a um fechamento
-  const { data: commissions, error } = await supabaseAdmin
+  const { data: commissions, error } = await adminDb
     .from("partner_commissions")
     .select("id, partner_id, amount_cents, created_at, status")
     .eq("status", "aprovada")
@@ -267,7 +268,7 @@ export async function generateWeeklyClosingsForPeriod(params: {
   let createdCount = 0;
   for (const [pId, group] of byPartner.entries()) {
     // Busca dados Pix do parceiro
-    const { data: p } = await supabaseAdmin
+    const { data: p } = await adminDb
       .from("partners")
       .select("pix_key, pix_key_type")
       .eq("id", pId)
@@ -277,7 +278,7 @@ export async function generateWeeklyClosingsForPeriod(params: {
     const pixKeyType = (p as any)?.pix_key_type || null;
 
     // Cria fechamento semanal
-    const { data: closing, error: closeErr } = await supabaseAdmin
+    const { data: closing, error: closeErr } = await adminDb
       .from("partner_weekly_closings")
       .insert({
         partner_id: pId,
@@ -297,7 +298,7 @@ export async function generateWeeklyClosingsForPeriod(params: {
     if (!closeErr && closing) {
       createdCount += 1;
       // Atualiza comissões com o ID do fechamento
-      await supabaseAdmin
+      await adminDb
         .from("partner_commissions")
         .update({ closing_id: closing.id })
         .in("id", group.ids);
@@ -316,7 +317,7 @@ export async function markWeeklyClosingAsPaid(params: {
 }): Promise<boolean> {
   const { closingId, pixTransactionId } = params;
 
-  const { data: closing } = await supabaseAdmin
+  const { data: closing } = await adminDb
     .from("partner_weekly_closings")
     .select("*")
     .eq("id", closingId)
@@ -328,7 +329,7 @@ export async function markWeeklyClosingAsPaid(params: {
   const partnerId = (closing as any).partner_id;
 
   // Atualiza fechamento para pago
-  await supabaseAdmin
+  await adminDb
     .from("partner_weekly_closings")
     .update({
       status: "pago",
@@ -339,7 +340,7 @@ export async function markWeeklyClosingAsPaid(params: {
     .eq("id", closingId);
 
   // Atualiza as comissões correspondentes para pagas
-  await supabaseAdmin
+  await adminDb
     .from("partner_commissions")
     .update({
       status: "paga",
@@ -348,7 +349,7 @@ export async function markWeeklyClosingAsPaid(params: {
     .eq("closing_id", closingId);
 
   // Atualiza saldo e total sacado do parceiro
-  const { data: partner } = await supabaseAdmin
+  const { data: partner } = await adminDb
     .from("partners")
     .select("balance_cents, total_withdrawn_cents")
     .eq("id", partnerId)
@@ -360,7 +361,7 @@ export async function markWeeklyClosingAsPaid(params: {
     const newBalance = Math.max(0, curBalance - totalCents);
     const newWithdrawn = curWithdrawn + totalCents;
 
-    await supabaseAdmin
+    await adminDb
       .from("partners")
       .update({
         balance_cents: newBalance,
@@ -370,7 +371,7 @@ export async function markWeeklyClosingAsPaid(params: {
       .eq("id", partnerId);
 
     // Registra débito no extrato
-    await supabaseAdmin.from("partner_wallet_transactions").insert({
+    await adminDb.from("partner_wallet_transactions").insert({
       partner_id: partnerId,
       type: "saque_pix",
       amount_cents: -totalCents,
@@ -388,9 +389,9 @@ export async function markWeeklyClosingAsPaid(params: {
  */
 export async function getAdminIndicaStats(): Promise<IndicaOverviewStats> {
   const [partnersRes, clientsRes, commissionsRes] = await Promise.all([
-    supabaseAdmin.from("partners").select("id, status"),
-    supabaseAdmin.from("clients").select("id, status, price_cents, partner_id").not("partner_id", "is", null),
-    supabaseAdmin.from("partner_commissions").select("amount_cents, status"),
+    adminDb.from("partners").select("id, status"),
+    adminDb.from("clients").select("id, status, price_cents, partner_id").not("partner_id", "is", null),
+    adminDb.from("partner_commissions").select("amount_cents, status"),
   ]);
 
   const partners = partnersRes.data ?? [];
