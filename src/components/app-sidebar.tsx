@@ -31,6 +31,7 @@ const items = [
   { title: "Servidores", url: "/servidores", icon: Server },
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
   { title: "Renovação", url: "/renovacao", icon: RefreshCw },
+  { title: "AJP INDICA", url: "/admin/indica/visao-geral", icon: Gift },
   { title: "Solicitações", url: "/solicitacoes", icon: Inbox },
   { title: "Loja - Produtos", url: "/loja/produtos", icon: Store },
   { title: "Loja - Clientes", url: "/loja/clientes", icon: ShoppingBag },
@@ -40,9 +41,6 @@ const items = [
   { title: "Leads IA", url: "/leads", icon: Target },
   { title: "Agente Suporte IA", url: "/ai-agent", icon: BrainCircuit },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
-
-
-
 ];
 
 const indicaItems = [
@@ -137,19 +135,6 @@ function SidebarAvatar({ collapsed }: { collapsed: boolean }) {
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
-
-const indicaItems = [
-  { title: "Visão geral", url: "/admin/indica/visao-geral", icon: LayoutDashboard },
-  { title: "Indicadores", url: "/admin/indica/indicadores", icon: Users },
-  { title: "Indicações", url: "/admin/indica/indicacoes", icon: MousePointerClick },
-  { title: "Clientes indicados", url: "/admin/indica/clientes", icon: UserCheck },
-  { title: "Comissões", url: "/admin/indica/comissoes", icon: DollarSign },
-  { title: "Carteiras", url: "/admin/indica/carteiras", icon: Wallet },
-  { title: "Fechamentos semanais", url: "/admin/indica/fechamentos", icon: CalendarRange },
-  { title: "Pagamentos Pix", url: "/admin/indica/pagamentos", icon: QrCode },
-  { title: "Ranking", url: "/admin/indica/ranking", icon: Trophy },
-  { title: "Configurações", url: "/admin/indica/configuracoes", icon: Sliders },
-];
           if (f) upload.mutate(f);
           e.target.value = "";
         }}
@@ -187,7 +172,7 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
-                      <Link to={item.url} className="flex items-center gap-2">
+                      <Link to={item.url as any} className="flex items-center gap-2">
                         <item.icon className="size-4" />
                         <span>{item.title}</span>
                       </Link>
@@ -199,12 +184,12 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
-          <Collapsible defaultOpen={pathname.startsWith("/admin/indica")} className="group/collapsible">
+          <Collapsible defaultOpen={true} className="group/collapsible">
             <SidebarGroupLabel asChild>
               <CollapsibleTrigger className="flex w-full items-center justify-between text-xs font-semibold text-zinc-300 hover:text-zinc-100 cursor-pointer py-1">
                 <span className="flex items-center gap-2">
                   <Gift className="size-4 text-[#FF5500]" />
-                  <span className="text-zinc-200 font-bold">AJP INDICA</span>
+                  <span className="text-zinc-200 font-bold tracking-wide">AJP INDICA</span>
                 </span>
                 <ChevronDown className="size-3.5 text-zinc-400 transition-transform group-data-[state=open]/collapsible:rotate-180" />
               </CollapsibleTrigger>
@@ -217,7 +202,7 @@ export function AppSidebar() {
                     return (
                       <SidebarMenuItem key={sub.url}>
                         <SidebarMenuButton asChild isActive={active} tooltip={sub.title}>
-                          <Link to={sub.url} className="flex items-center gap-2 pl-3">
+                          <Link to={sub.url as any} className="flex items-center gap-2 pl-3">
                             <sub.icon className="size-3.5" />
                             <span className="text-xs">{sub.title}</span>
                           </Link>
@@ -241,7 +226,7 @@ export function AppSidebar() {
                     isActive={pathname.startsWith("/admin/assinantes")}
                     tooltip="Assinantes"
                   >
-                    <Link to="/admin/assinantes" className="flex items-center gap-2">
+                    <Link to={"/admin/assinantes" as any} className="flex items-center gap-2">
                       <ShieldCheck className="size-4" />
                       <span>Assinantes</span>
                     </Link>
