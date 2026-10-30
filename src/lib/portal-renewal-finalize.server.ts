@@ -192,6 +192,22 @@ export async function finalizePaidRenewal(
     }
   }
 
+  // AJP INDICA: Processa comissão de R$ 20,00 se for a 1ª assinatura do cliente indicado
+  if (renewal.days > 0 && renewal.client_id) {
+    try {
+      const { processPartnerCommissionForPaidClient } = await import("./ajp-indica.server");
+      await processPartnerCommissionForPaidClient({
+        clientId: renewal.client_id,
+        renewalRequestId: renewal.id,
+        mpPaymentId: paymentInfo.id,
+        clientName: resolvedName,
+        paymentAmountCents: amountCents,
+      });
+    } catch (indicaErr) {
+      console.error("[finalizePaidRenewal] AJP INDICA comissão falhou:", indicaErr);
+    }
+  }
+
   // Compras da loja por comprador externo
   if (renewal.buyer_id && renewal.days === 0 && renewal.label) {
     const { data: buyer } = await supabaseAdmin

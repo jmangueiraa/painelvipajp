@@ -28,6 +28,19 @@ export const Route = createFileRoute("/api/public/portal/mp-create-card")({
           const client = await portal.getSessionFromRequest(request, body.token);
           if (!client) return json({ error: "Sessão inválida" }, request, { status: 401 });
 
+          // Rastreamento AJP INDICA: se o cliente ainda não tem indicador, vincula o ref do cookie/body
+          try {
+            const cookieHeader = request.headers.get("cookie") || "";
+            const match = cookieHeader.match(/ajp_ref=([^;]+)/);
+            const refCode = (body as any).ref_code || (match ? decodeURIComponent(match[1]) : null);
+            if (refCode && !(client as any).partner_id) {
+              const { linkClientToPartnerCode } = await import("@/lib/ajp-indica.server");
+              await linkClientToPartnerCode(client.id, refCode);
+            }
+          } catch {
+            /* noop */
+          }
+
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
           // Busca token do Mercado Pago nas configurações

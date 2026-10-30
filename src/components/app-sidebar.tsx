@@ -5,7 +5,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   LayoutDashboard, Users, Package, Server, Wallet, RefreshCw, Settings, Crown, Camera, ShieldCheck, Inbox, ShoppingBag, Store, KeyRound, Bell, Smartphone, Target, BrainCircuit
+  Gift, ChevronDown, MousePointerClick, UserCheck, DollarSign, CalendarRange, QrCode, Trophy, Sliders,
 } from "lucide-react";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import {
   Sidebar,
@@ -41,6 +43,19 @@ const items = [
 
 
 
+];
+
+const indicaItems = [
+  { title: "Visão geral", url: "/admin/indica/visao-geral", icon: LayoutDashboard },
+  { title: "Indicadores", url: "/admin/indica/indicadores", icon: Users },
+  { title: "Indicações", url: "/admin/indica/indicacoes", icon: MousePointerClick },
+  { title: "Clientes indicados", url: "/admin/indica/clientes", icon: UserCheck },
+  { title: "Comissões", url: "/admin/indica/comissoes", icon: DollarSign },
+  { title: "Carteiras", url: "/admin/indica/carteiras", icon: Wallet },
+  { title: "Fechamentos semanais", url: "/admin/indica/fechamentos", icon: CalendarRange },
+  { title: "Pagamentos Pix", url: "/admin/indica/pagamentos", icon: QrCode },
+  { title: "Ranking", url: "/admin/indica/ranking", icon: Trophy },
+  { title: "Configurações", url: "/admin/indica/configuracoes", icon: Sliders },
 ];
 
 function SidebarAvatar({ collapsed }: { collapsed: boolean }) {
@@ -122,6 +137,19 @@ function SidebarAvatar({ collapsed }: { collapsed: boolean }) {
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
+
+const indicaItems = [
+  { title: "Visão geral", url: "/admin/indica/visao-geral", icon: LayoutDashboard },
+  { title: "Indicadores", url: "/admin/indica/indicadores", icon: Users },
+  { title: "Indicações", url: "/admin/indica/indicacoes", icon: MousePointerClick },
+  { title: "Clientes indicados", url: "/admin/indica/clientes", icon: UserCheck },
+  { title: "Comissões", url: "/admin/indica/comissoes", icon: DollarSign },
+  { title: "Carteiras", url: "/admin/indica/carteiras", icon: Wallet },
+  { title: "Fechamentos semanais", url: "/admin/indica/fechamentos", icon: CalendarRange },
+  { title: "Pagamentos Pix", url: "/admin/indica/pagamentos", icon: QrCode },
+  { title: "Ranking", url: "/admin/indica/ranking", icon: Trophy },
+  { title: "Configurações", url: "/admin/indica/configuracoes", icon: Sliders },
+];
           if (f) upload.mutate(f);
           e.target.value = "";
         }}
@@ -169,6 +197,38 @@ export function AppSidebar() {
               })}
             </SidebarMenu>
           </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <Collapsible defaultOpen={pathname.startsWith("/admin/indica")} className="group/collapsible">
+            <SidebarGroupLabel asChild>
+              <CollapsibleTrigger className="flex w-full items-center justify-between text-xs font-semibold text-zinc-300 hover:text-zinc-100 cursor-pointer py-1">
+                <span className="flex items-center gap-2">
+                  <Gift className="size-4 text-[#FF5500]" />
+                  <span className="text-zinc-200 font-bold">AJP INDICA</span>
+                </span>
+                <ChevronDown className="size-3.5 text-zinc-400 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+              </CollapsibleTrigger>
+            </SidebarGroupLabel>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {indicaItems.map((sub) => {
+                    const active = pathname === sub.url || pathname.startsWith(sub.url + "/");
+                    return (
+                      <SidebarMenuItem key={sub.url}>
+                        <SidebarMenuButton asChild isActive={active} tooltip={sub.title}>
+                          <Link to={sub.url} className="flex items-center gap-2 pl-3">
+                            <sub.icon className="size-3.5" />
+                            <span className="text-xs">{sub.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </Collapsible>
         </SidebarGroup>
         {isAdmin && (
           <SidebarGroup>

@@ -36,6 +36,25 @@ export const Route = createFileRoute("/portal/")({
 
 function PortalLoginPage() {
   useRegisterPortalSW();
+
+  // Rastreamento AJP INDICA: captura ?ref=... da URL e persiste no localStorage e cookie
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get("ref")?.trim().toUpperCase();
+    if (refCode) {
+      try {
+        localStorage.setItem("ajp_ref", refCode);
+        document.cookie = `ajp_ref=${encodeURIComponent(refCode)}; path=/; max-age=2592000; SameSite=Lax`;
+        portalFetch("/api/public/portal/track-ref", {
+          method: "POST",
+          body: JSON.stringify({ code: refCode }),
+        }).catch(() => {});
+      } catch {
+        /* noop */
+      }
+    }
+  }, []);
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -91,6 +110,19 @@ function PortalLoginPage() {
       }
 
       setPortalToken(token);
+
+      // Vincula código do indicador se houver indicação pendente
+      try {
+        const savedRef = localStorage.getItem("ajp_ref");
+        if (savedRef) {
+          portalFetch("/api/public/portal/track-ref", {
+            method: "POST",
+            body: JSON.stringify({ code: savedRef }),
+          }).catch(() => {});
+        }
+      } catch {
+        /* noop */
+      }
       toast.success("Login realizado com sucesso!");
       navigate({ to: "/portal/painel" });
     } catch (err) {
