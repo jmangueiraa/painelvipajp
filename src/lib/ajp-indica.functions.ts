@@ -20,7 +20,7 @@ export const getIndicaOverviewStatsFn = createServerFn({ method: "GET" }).handle
 export const listPartnersFn = createServerFn({ method: "GET" })
   .inputValidator((data?: { search?: string; status?: string }) => data ?? {})
   .handler(async ({ data }): Promise<Partner[]> => {
-    let q = supabaseAdmin.from("partners").select("*").order("created_at", { ascending: false });
+    let q = (supabaseAdmin.from("partners") as any).select("*").order("created_at", { ascending: false });
     if (data?.status && data.status !== "todos") {
       q = q.eq("status", data.status);
     }
@@ -62,7 +62,7 @@ export const savePartnerFn = createServerFn({ method: "POST" })
     if (!data.email.trim()) throw new Error("E-mail é obrigatório");
 
     // Verifica se o código já existe em outro parceiro
-    let checkQ = supabaseAdmin.from("partners").select("id").eq("code", code);
+    let checkQ = (supabaseAdmin.from("partners") as any).select("id").eq("code", code);
     if (data.id) checkQ = checkQ.neq("id", data.id);
     const { data: existing } = await checkQ.maybeSingle();
     if (existing) throw new Error(`O código ${code} já está em uso por outro parceiro.`);
@@ -80,7 +80,7 @@ export const savePartnerFn = createServerFn({ method: "POST" })
     };
 
     if (data.id) {
-      const { error } = await supabaseAdmin.from("partners").update(payload).eq("id", data.id);
+      const { error } = await (supabaseAdmin.from("partners") as any).update(payload).eq("id", data.id);
       if (error) throw new Error(error.message);
       return { success: true, id: data.id };
     } else {
@@ -102,7 +102,7 @@ export const savePartnerFn = createServerFn({ method: "POST" })
 export const deletePartnerFn = createServerFn({ method: "POST" })
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data }) => {
-    const { error } = await supabaseAdmin.from("partners").delete().eq("id", data.id);
+    const { error } = await (supabaseAdmin.from("partners") as any).delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { success: true };
   });
