@@ -134,100 +134,58 @@ ALTER TABLE public.partner_wallet_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.partner_clicks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.partner_settings ENABLE ROW LEVEL SECURITY;
 
--- 10. Políticas de Segurança (Admin total + Parceiro apenas seus próprios dados)
+-- 10. Políticas de Segurança e Permissões Completas
 DROP POLICY IF EXISTS admin_all_partners ON public.partners;
-CREATE POLICY admin_all_partners ON public.partners
-  FOR ALL TO authenticated
-  USING (auth.uid() = user_id OR EXISTS (
-    SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'
-  ));
-
 DROP POLICY IF EXISTS partner_own_profile ON public.partners;
-CREATE POLICY partner_own_profile ON public.partners
-  FOR SELECT TO authenticated
-  USING (auth_user_id = auth.uid());
-
 DROP POLICY IF EXISTS partner_update_own_pix ON public.partners;
-CREATE POLICY partner_update_own_pix ON public.partners
-  FOR UPDATE TO authenticated
-  USING (auth_user_id = auth.uid())
-  WITH CHECK (auth_user_id = auth.uid());
+DROP POLICY IF EXISTS partners_all_access ON public.partners;
+CREATE POLICY partners_all_access ON public.partners
+  FOR ALL TO anon, authenticated, service_role
+  USING (true)
+  WITH CHECK (true);
 
 DROP POLICY IF EXISTS admin_all_commissions ON public.partner_commissions;
-CREATE POLICY admin_all_commissions ON public.partner_commissions
-  FOR ALL TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.partners WHERE partners.id = partner_commissions.partner_id AND (
-      partners.user_id = auth.uid() OR EXISTS (
-        SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'
-      )
-    )
-  ));
-
 DROP POLICY IF EXISTS partner_own_commissions ON public.partner_commissions;
-CREATE POLICY partner_own_commissions ON public.partner_commissions
-  FOR SELECT TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.partners WHERE partners.id = partner_commissions.partner_id AND partners.auth_user_id = auth.uid()
-  ));
+DROP POLICY IF EXISTS partner_commissions_all_access ON public.partner_commissions;
+CREATE POLICY partner_commissions_all_access ON public.partner_commissions
+  FOR ALL TO anon, authenticated, service_role
+  USING (true)
+  WITH CHECK (true);
 
 DROP POLICY IF EXISTS admin_all_closings ON public.partner_weekly_closings;
-CREATE POLICY admin_all_closings ON public.partner_weekly_closings
-  FOR ALL TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.partners WHERE partners.id = partner_weekly_closings.partner_id AND (
-      partners.user_id = auth.uid() OR EXISTS (
-        SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'
-      )
-    )
-  ));
-
 DROP POLICY IF EXISTS partner_own_closings ON public.partner_weekly_closings;
-CREATE POLICY partner_own_closings ON public.partner_weekly_closings
-  FOR SELECT TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.partners WHERE partners.id = partner_weekly_closings.partner_id AND partners.auth_user_id = auth.uid()
-  ));
+DROP POLICY IF EXISTS partner_weekly_closings_all_access ON public.partner_weekly_closings;
+CREATE POLICY partner_weekly_closings_all_access ON public.partner_weekly_closings
+  FOR ALL TO anon, authenticated, service_role
+  USING (true)
+  WITH CHECK (true);
 
 DROP POLICY IF EXISTS admin_all_wallet ON public.partner_wallet_transactions;
-CREATE POLICY admin_all_wallet ON public.partner_wallet_transactions
-  FOR ALL TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.partners WHERE partners.id = partner_wallet_transactions.partner_id AND (
-      partners.user_id = auth.uid() OR EXISTS (
-        SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'
-      )
-    )
-  ));
-
 DROP POLICY IF EXISTS partner_own_wallet ON public.partner_wallet_transactions;
-CREATE POLICY partner_own_wallet ON public.partner_wallet_transactions
-  FOR SELECT TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.partners WHERE partners.id = partner_wallet_transactions.partner_id AND partners.auth_user_id = auth.uid()
-  ));
+DROP POLICY IF EXISTS partner_wallet_transactions_all_access ON public.partner_wallet_transactions;
+CREATE POLICY partner_wallet_transactions_all_access ON public.partner_wallet_transactions
+  FOR ALL TO anon, authenticated, service_role
+  USING (true)
+  WITH CHECK (true);
 
 DROP POLICY IF EXISTS admin_all_clicks ON public.partner_clicks;
-CREATE POLICY admin_all_clicks ON public.partner_clicks
-  FOR ALL TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.partners WHERE partners.id = partner_clicks.partner_id AND (
-      partners.user_id = auth.uid() OR EXISTS (
-        SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'
-      )
-    )
-  ));
-
 DROP POLICY IF EXISTS partner_own_clicks ON public.partner_clicks;
-CREATE POLICY partner_own_clicks ON public.partner_clicks
-  FOR SELECT TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.partners WHERE partners.id = partner_clicks.partner_id AND partners.auth_user_id = auth.uid()
-  ));
+DROP POLICY IF EXISTS partner_clicks_all_access ON public.partner_clicks;
+CREATE POLICY partner_clicks_all_access ON public.partner_clicks
+  FOR ALL TO anon, authenticated, service_role
+  USING (true)
+  WITH CHECK (true);
 
 DROP POLICY IF EXISTS admin_all_settings ON public.partner_settings;
-CREATE POLICY admin_all_settings ON public.partner_settings
-  FOR ALL TO authenticated
-  USING (user_id = auth.uid() OR EXISTS (
-    SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'
-  ));
+DROP POLICY IF EXISTS partner_settings_all_access ON public.partner_settings;
+CREATE POLICY partner_settings_all_access ON public.partner_settings
+  FOR ALL TO anon, authenticated, service_role
+  USING (true)
+  WITH CHECK (true);
+
+GRANT ALL ON public.partners TO anon, authenticated, service_role;
+GRANT ALL ON public.partner_commissions TO anon, authenticated, service_role;
+GRANT ALL ON public.partner_weekly_closings TO anon, authenticated, service_role;
+GRANT ALL ON public.partner_wallet_transactions TO anon, authenticated, service_role;
+GRANT ALL ON public.partner_clicks TO anon, authenticated, service_role;
+GRANT ALL ON public.partner_settings TO anon, authenticated, service_role;
