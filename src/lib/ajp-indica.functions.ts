@@ -85,7 +85,7 @@ export const savePartnerFn = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       return { success: true, id: data.id };
     } else {
-      const { data: created, error } = await supabaseAdmin
+      const { data: created, error } = await adminDb
         .from("partners")
         .insert({
           ...payload,
@@ -114,7 +114,7 @@ export const deletePartnerFn = createServerFn({ method: "POST" })
 export const listCommissionsFn = createServerFn({ method: "GET" })
   .inputValidator((data?: { partnerId?: string; status?: string }) => data ?? {})
   .handler(async ({ data }): Promise<PartnerCommission[]> => {
-    let q = supabaseAdmin
+    let q = adminDb
       .from("partner_commissions")
       .select("*, partner:partner_id(name, code, pix_key, pix_key_type), client:client_id(name, phone, due_date, status)")
       .order("created_at", { ascending: false });
@@ -133,7 +133,7 @@ export const listCommissionsFn = createServerFn({ method: "GET" })
 export const listReferredClientsFn = createServerFn({ method: "GET" })
   .inputValidator((data?: { partnerId?: string }) => data ?? {})
   .handler(async ({ data }) => {
-    let q = supabaseAdmin
+    let q = adminDb
       .from("clients")
       .select("id, name, phone, due_date, status, price_cents, created_at, partner_id, partner_code, partner:partner_id(name, code)")
       .not("partner_id", "is", null)
@@ -152,7 +152,7 @@ export const listReferredClientsFn = createServerFn({ method: "GET" })
 export const listWeeklyClosingsFn = createServerFn({ method: "GET" })
   .inputValidator((data?: { status?: string }) => data ?? {})
   .handler(async ({ data }): Promise<PartnerWeeklyClosing[]> => {
-    let q = supabaseAdmin
+    let q = adminDb
       .from("partner_weekly_closings")
       .select("*, partner:partner_id(name, code, email, phone)")
       .order("payment_due_date", { ascending: false });
@@ -183,7 +183,7 @@ export const markClosingPaidFn = createServerFn({ method: "POST" })
 export const listPartnerWalletTransactionsFn = createServerFn({ method: "GET" })
   .inputValidator((data?: { partnerId?: string }) => data ?? {})
   .handler(async ({ data }): Promise<PartnerWalletTransaction[]> => {
-    let q = supabaseAdmin
+    let q = adminDb
       .from("partner_wallet_transactions")
       .select("*")
       .order("created_at", { ascending: false });
@@ -199,7 +199,7 @@ export const listPartnerWalletTransactionsFn = createServerFn({ method: "GET" })
  * 7. Ranking dos Parceiros
  */
 export const getPartnerRankingFn = createServerFn({ method: "GET" }).handler(async () => {
-  const { data: partners, error } = await supabaseAdmin
+  const { data: partners, error } = await adminDb
     .from("partners")
     .select("id, name, code, total_earned_cents, balance_cents, status")
     .order("total_earned_cents", { ascending: false });
@@ -207,7 +207,7 @@ export const getPartnerRankingFn = createServerFn({ method: "GET" }).handler(asy
   if (error) throw new Error(error.message);
 
   // Conta clientes ativos por parceiro
-  const { data: clients } = await supabaseAdmin
+  const { data: clients } = await adminDb
     .from("clients")
     .select("partner_id, status")
     .not("partner_id", "is", null);
@@ -277,7 +277,7 @@ export const updateIndicaSettingsFn = createServerFn({ method: "POST" })
  * 9. Indicações / Log de Cliques
  */
 export const listPartnerClicksFn = createServerFn({ method: "GET" }).handler(async () => {
-  const { data: rows, error } = await supabaseAdmin
+  const { data: rows, error } = await adminDb
     .from("partner_clicks")
     .select("*, partner:partner_id(name, code)")
     .order("created_at", { ascending: false })
