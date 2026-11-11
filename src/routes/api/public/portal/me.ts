@@ -13,6 +13,15 @@ export const Route = createFileRoute("/api/public/portal/me")({
         try {
           const auth = request.headers.get("authorization");
           const token = auth?.startsWith("Bearer ") ? auth.slice(7) : "";
+          const portalAdmin = await import("@/lib/portal-admin.server");
+          const xPortalToken = portalAdmin.extractPortalToken(request);
+          if (xPortalToken.startsWith("adm.")) {
+            const admin = portalAdmin.verifyAdminToken(xPortalToken);
+            if (!admin) return json({ error: "Sessão administrativa inválida" }, request, { status: 401 });
+            const adminPayload = await portalAdmin.getAdminMePayload(admin);
+            return json(adminPayload, request);
+          }
+
           if (!token) return json({ error: "Sessão inválida" }, request, { status: 401 });
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

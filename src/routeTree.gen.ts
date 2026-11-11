@@ -42,6 +42,7 @@ import { Route as AuthenticatedAdminIndicaIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminIndicaTabRouteImport } from './routes/_authenticated/admin.indica.$tab'
 import { Route as ApiPublicAppMpWebhookRouteImport } from './routes/api/public/app/mp-webhook'
 import { Route as ApiPublicHooksAutoChargesRouteImport } from './routes/api/public/hooks/auto-charges'
+import { Route as ApiPublicPortalAdminRouteImport } from './routes/api/public/portal/admin'
 import { Route as ApiPublicPortalAiAgentChatRouteImport } from './routes/api/public/portal/ai-agent-chat'
 import { Route as ApiPublicPortalLoginPasswordRouteImport } from './routes/api/public/portal/login-password'
 import { Route as ApiPublicPortalLogoutRouteImport } from './routes/api/public/portal/logout'
@@ -241,6 +242,11 @@ const ApiPublicHooksAutoChargesRoute =
     path: '/api/public/hooks/auto-charges',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPortalAdminRoute = ApiPublicPortalAdminRouteImport.update({
+  id: '/api/public/portal/admin',
+  path: '/api/public/portal/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPortalAiAgentChatRoute =
   ApiPublicPortalAiAgentChatRouteImport.update({
     id: '/api/public/portal/ai-agent-chat',
@@ -393,6 +399,7 @@ export interface FileRoutesByFullPath {
   '/admin/indica/$tab': typeof AuthenticatedAdminIndicaTabRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
+  '/api/public/portal/admin': typeof ApiPublicPortalAdminRoute
   '/api/public/portal/ai-agent-chat': typeof ApiPublicPortalAiAgentChatRoute
   '/api/public/portal/login-password': typeof ApiPublicPortalLoginPasswordRoute
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
@@ -448,6 +455,7 @@ export interface FileRoutesByTo {
   '/admin/indica/$tab': typeof AuthenticatedAdminIndicaTabRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
+  '/api/public/portal/admin': typeof ApiPublicPortalAdminRoute
   '/api/public/portal/ai-agent-chat': typeof ApiPublicPortalAiAgentChatRoute
   '/api/public/portal/login-password': typeof ApiPublicPortalLoginPasswordRoute
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
@@ -505,6 +513,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/indica/$tab': typeof AuthenticatedAdminIndicaTabRoute
   '/api/public/app/mp-webhook': typeof ApiPublicAppMpWebhookRoute
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
+  '/api/public/portal/admin': typeof ApiPublicPortalAdminRoute
   '/api/public/portal/ai-agent-chat': typeof ApiPublicPortalAiAgentChatRoute
   '/api/public/portal/login-password': typeof ApiPublicPortalLoginPasswordRoute
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
@@ -562,6 +571,7 @@ export interface FileRouteTypes {
     | '/admin/indica/$tab'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
+    | '/api/public/portal/admin'
     | '/api/public/portal/ai-agent-chat'
     | '/api/public/portal/login-password'
     | '/api/public/portal/logout'
@@ -617,6 +627,7 @@ export interface FileRouteTypes {
     | '/admin/indica/$tab'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
+    | '/api/public/portal/admin'
     | '/api/public/portal/ai-agent-chat'
     | '/api/public/portal/login-password'
     | '/api/public/portal/logout'
@@ -673,6 +684,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/indica/$tab'
     | '/api/public/app/mp-webhook'
     | '/api/public/hooks/auto-charges'
+    | '/api/public/portal/admin'
     | '/api/public/portal/ai-agent-chat'
     | '/api/public/portal/login-password'
     | '/api/public/portal/logout'
@@ -711,6 +723,7 @@ export interface RootRouteChildren {
   ApiPublicPushCronRoute: typeof ApiPublicPushCronRoute
   ApiPublicAppMpWebhookRoute: typeof ApiPublicAppMpWebhookRoute
   ApiPublicHooksAutoChargesRoute: typeof ApiPublicHooksAutoChargesRoute
+  ApiPublicPortalAdminRoute: typeof ApiPublicPortalAdminRoute
   ApiPublicPortalAiAgentChatRoute: typeof ApiPublicPortalAiAgentChatRoute
   ApiPublicPortalLoginPasswordRoute: typeof ApiPublicPortalLoginPasswordRoute
   ApiPublicPortalLogoutRoute: typeof ApiPublicPortalLogoutRoute
@@ -967,6 +980,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAutoChargesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/portal/admin': {
+      id: '/api/public/portal/admin'
+      path: '/api/public/portal/admin'
+      fullPath: '/api/public/portal/admin'
+      preLoaderRoute: typeof ApiPublicPortalAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/portal/ai-agent-chat': {
       id: '/api/public/portal/ai-agent-chat'
       path: '/api/public/portal/ai-agent-chat'
@@ -1206,6 +1226,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPushCronRoute: ApiPublicPushCronRoute,
   ApiPublicAppMpWebhookRoute: ApiPublicAppMpWebhookRoute,
   ApiPublicHooksAutoChargesRoute: ApiPublicHooksAutoChargesRoute,
+  ApiPublicPortalAdminRoute: ApiPublicPortalAdminRoute,
   ApiPublicPortalAiAgentChatRoute: ApiPublicPortalAiAgentChatRoute,
   ApiPublicPortalLoginPasswordRoute: ApiPublicPortalLoginPasswordRoute,
   ApiPublicPortalLogoutRoute: ApiPublicPortalLogoutRoute,

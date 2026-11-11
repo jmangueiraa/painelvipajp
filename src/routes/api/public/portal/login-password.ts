@@ -19,6 +19,15 @@ export const Route = createFileRoute("/api/public/portal/login-password")({
             return json({ error: "Informe login e senha." }, request, { status: 400 });
           }
 
+          const portalAdmin = await import("@/lib/portal-admin.server");
+          if (portalAdmin.isAdminUsername(username)) {
+            if (!portalAdmin.verifyAdminCredentials(username, password)) {
+              return json({ error: "Login ou senha incorretos." }, request, { status: 401 });
+            }
+            const session = portalAdmin.createAdminSession(username);
+            return json({ token: session.token, expires_at: session.expires_at, is_admin: true }, request);
+          }
+
           const portal = await import("@/integrations/portal/session.server");
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 

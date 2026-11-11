@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -41,6 +41,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { brl, formatDateBR } from "@/lib/format";
 import { clearPortalToken, getPortalToken, portalFetch, PortalFetchError } from "@/lib/portal-client";
 import { PortalShell, type PortalTab } from "@/components/portal/portal-shell";
+import { PortalAdminPanel } from "@/components/portal/portal-admin-panel";
 import { InstallAppCard } from "@/components/portal/install-app-card";
 import { PushNotificationCard } from "@/components/portal/push-notification-card";
 import { ModernCardCheckout, type CardFormData } from "@/components/modern-card-checkout";
@@ -69,6 +70,8 @@ export const Route = createFileRoute("/portal/painel")({
 });
 
 type Me = {
+  is_admin?: boolean;
+  admin?: { username: string; name: string };
   client: {
     id: string;
     name: string;
@@ -157,8 +160,12 @@ const fallbackProducts: StoreItem[] = [
 ];
 
 function PortalDashboard() {
+  const qc = useQueryClient();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<PortalTab>("inicio");
+  const adminInitRef = useRef(false);
+  const [activeTab, setActiveTab] = useState<PortalTab>(() =>
+    typeof window !== "undefined" && getPortalToken()?.startsWith("adm.") ? "admin" : "inicio",
+  );
 
   // Invoice & Renewal Modal state
   const [renewOpen, setRenewOpen] = useState(false);
@@ -268,7 +275,7 @@ function PortalDashboard() {
   }, [navigate]);
 
   useEffect(() => {
-    if (!getPortalToken()) return;
+    if (!getPortalToken() || getPortalToken()?.startsWith("adm.")) return;
     const t = window.setTimeout(() => {
       import("@/lib/fcm").then((m) => m.initPortalPush({ silent: true })).catch(() => {});
     }, 5000);
@@ -276,7 +283,7 @@ function PortalDashboard() {
   }, []);
 
   useEffect(() => {
-    if (!getPortalToken()) return;
+    if (!getPortalToken() || getPortalToken()?.startsWith("adm.")) return;
     const t = window.setTimeout(() => {
       const standalone =
         window.matchMedia?.("(display-mode: standalone)").matches ||
@@ -296,7 +303,8 @@ function PortalDashboard() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["portal", "me"],
     queryFn: async () => {
-      const token = getPortalToken();
+      const rawToken = getPortalToken();
+      const token = rawToken && !rawToken.startsWith("adm.") ? rawToken : null;
       // 1. Chamada DIRETA ao Supabase RPC (resposta instantânea em ~30ms, sem proxy)
       if (token) {
         try {
@@ -323,7 +331,13 @@ function PortalDashboard() {
       if (typeof window === "undefined") return undefined;
       try {
         const cached = localStorage.getItem("portal_cached_me");
-        if (cached) return JSON.parse(cached) as Me;
+        if (cached) {
+          const parsed = JSON.parse(cached) as Me;
+          const t = getPortalToken();
+          if (t?.startsWith("adm.") && !parsed?.is_admin) return undefined;
+          if (!t?.startsWith("adm.") && parsed?.is_admin) return undefined;
+          return parsed;
+        }
       } catch {}
       return undefined;
     },
@@ -343,13 +357,28 @@ function PortalDashboard() {
         (error instanceof PortalFetchError && error.status === 401) ||
         error.message?.includes("401") ||
         error.message?.includes("Sessão inválida") ||
-        error.message?.includes("Unauthorized");
+        error.message?.includes("Unauthorized") ||
+        error.message?.includes("Sessão administrativa");
       if (is401) {
-        clearPortalToken();
+        try { localStorage.removeItem("portal_cached_me"); } catch {}
+    qc.removeQueries({ queryKey: ["portal"] });
+    clearPortalToken();
         navigate({ to: "/portal" });
       }
     }
   }, [error, navigate]);
+
+  useEffect(() => {
+    if (!data || !data.client) return;
+    if (data.is_admin) {
+      if (!adminInitRef.current) {
+        adminInitRef.current = true;
+        setActiveTab("admin");
+      }
+    } else if (activeTab === "admin" || activeTab === "clientes") {
+      setActiveTab("inicio");
+    }
+  }, [data, activeTab]);
 
   // Polling payment status
   useEffect(() => {
@@ -460,7 +489,7 @@ function PortalDashboard() {
   });
 
   function openInvoiceModal() {
-    if (!data) return;
+    if (!data || !data.client) return;
     const defaultPrice = data.client.price_cents > 0 ? data.client.price_cents : data.plan?.price_cents || 3000;
     const defaultDays = data.plan?.duration_days || 30;
     setChosenPeriod({
@@ -603,12 +632,14 @@ function PortalDashboard() {
 
   function handleLogout() {
     void portalFetch("/api/public/portal/logout", { method: "POST" }).catch(() => undefined);
+    try { localStorage.removeItem("portal_cached_me"); } catch {}
+    qc.removeQueries({ queryKey: ["portal"] });
     clearPortalToken();
     navigate({ to: "/portal" });
   }
 
   function downloadReceipt(p: { id: string; amount_cents: number; paid_at: string; method: string | null }) {
-    if (!data) return;
+    if (!data || !data.client) return;
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Comprovante ${p.id.slice(0, 8)}</title>
       <style>body{font-family:system-ui,-apple-system,sans-serif;max-width:520px;margin:40px auto;padding:24px;color:#0f172a}
       h1{margin:0 0 4px 0;font-size:20px} .muted{color:#64748b;font-size:13px}
@@ -675,6 +706,33 @@ function PortalDashboard() {
         <Loader2 className="h-8 w-8 animate-spin text-[#FF5500]" />
         <span className="text-sm font-semibold">Carregando painel do assinante...</span>
       </div>
+    );
+  }
+
+  if (data.is_admin || !data.client) {
+    if (!data.is_admin) {
+      return (
+        <div className="min-h-dvh flex flex-col items-center justify-center bg-[#F4F5F7] text-slate-500 gap-3 p-4">
+          <span className="text-sm font-semibold">Sessão inválida.</span>
+          <Button variant="outline" onClick={handleLogout}>Voltar ao login</Button>
+        </div>
+      );
+    }
+    return (
+      <PortalShell
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onLogout={handleLogout}
+        clientName={data.admin?.name ?? "Administrador"}
+        isAdmin
+      >
+        <PortalAdminPanel
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onLogout={handleLogout}
+          adminName={data.admin?.name ?? "Administrador"}
+        />
+      </PortalShell>
     );
   }
 

@@ -1,7 +1,7 @@
 import React from "react";
-import { Home, FileText, MoreHorizontal, LogOut } from "lucide-react";
+import { Home, FileText, MoreHorizontal, LogOut, Users, UserCog } from "lucide-react";
 
-export type PortalTab = "inicio" | "faturas" | "mais";
+export type PortalTab = "inicio" | "faturas" | "admin" | "clientes" | "mais";
 
 interface PortalShellProps {
   children: React.ReactNode;
@@ -10,6 +10,7 @@ interface PortalShellProps {
   onLogout?: () => void;
   clientName?: string;
   hideBottomNav?: boolean;
+  isAdmin?: boolean;
 }
 
 export function PortalShell({
@@ -18,6 +19,7 @@ export function PortalShell({
   onTabChange,
   onLogout,
   hideBottomNav = false,
+  isAdmin = false,
 }: PortalShellProps) {
   return (
     <div className="min-h-dvh bg-[#F4F5F7] text-slate-800 flex flex-col font-sans selection:bg-orange-500 selection:text-white antialiased">
@@ -81,7 +83,7 @@ export function PortalShell({
           className="fixed bottom-0 inset-x-0 z-40 bg-[#FF5500] text-white shadow-[0_-4px_25px_rgba(255,85,0,0.25)] border-t border-orange-600/30"
           style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)" }}
         >
-          <div className="max-w-lg mx-auto px-6 h-16 flex items-center justify-around">
+          <div className={`max-w-lg mx-auto h-16 flex items-center justify-around ${isAdmin ? "px-2" : "px-6"}`}>
             {/* Tab Início */}
             <button
               type="button"
@@ -93,12 +95,12 @@ export function PortalShell({
               }`}
             >
               <div className="relative flex items-center justify-center">
-                <Home className={`h-6 w-6 transition-transform ${activeTab === "inicio" ? "stroke-[2.5]" : "stroke-[1.75]"}`} />
+                <Home className={`${isAdmin ? "h-5 w-5" : "h-6 w-6"} transition-transform ${activeTab === "inicio" ? "stroke-[2.5]" : "stroke-[1.75]"}`} />
                 {activeTab === "inicio" && (
                   <span className="absolute -bottom-1.5 w-1.5 h-1.5 rounded-full bg-white animate-in fade-in zoom-in duration-200" />
                 )}
               </div>
-              <span className="text-[11px] mt-1.5 leading-none tracking-tight">Início</span>
+              <span className={`${isAdmin ? "text-[10px]" : "text-[11px]"} mt-1.5 leading-none tracking-tight`}>Início</span>
             </button>
 
             {/* Tab Faturas */}
@@ -112,13 +114,54 @@ export function PortalShell({
               }`}
             >
               <div className="relative flex items-center justify-center">
-                <FileText className={`h-6 w-6 transition-transform ${activeTab === "faturas" ? "stroke-[2.5]" : "stroke-[1.75]"}`} />
+                <FileText className={`${isAdmin ? "h-5 w-5" : "h-6 w-6"} transition-transform ${activeTab === "faturas" ? "stroke-[2.5]" : "stroke-[1.75]"}`} />
                 {activeTab === "faturas" && (
                   <span className="absolute -bottom-1.5 w-1.5 h-1.5 rounded-full bg-white animate-in fade-in zoom-in duration-200" />
                 )}
               </div>
-              <span className="text-[11px] mt-1.5 leading-none tracking-tight">Faturas</span>
+              <span className={`${isAdmin ? "text-[10px]" : "text-[11px]"} mt-1.5 leading-none tracking-tight`}>Faturas</span>
             </button>
+
+            {isAdmin && (
+              <>
+                {/* Tab Central Elevado: Painel ADM */}
+                <button
+                  type="button"
+                  onClick={() => onTabChange("admin")}
+                  className="flex flex-col items-center justify-center flex-1 pb-1 transition-all cursor-pointer text-white font-bold"
+                >
+                  <div
+                    className={`w-13 h-13 -mt-6 rounded-full bg-gradient-to-b from-[#FF7722] to-[#E64A00] border-[3px] border-white shadow-[0_6px_18px_rgba(0,0,0,0.22)] flex items-center justify-center transition-transform ${
+                      activeTab === "admin" ? "scale-105 ring-2 ring-white/40" : "opacity-95 hover:scale-105"
+                    }`}
+                  >
+                    <UserCog className="h-6 w-6 text-white stroke-[2]" />
+                  </div>
+                  <span className="text-[10px] mt-1 leading-none tracking-tight font-extrabold whitespace-nowrap">
+                    Painel ADM
+                  </span>
+                </button>
+
+                {/* Tab Clientes */}
+                <button
+                  type="button"
+                  onClick={() => onTabChange("clientes")}
+                  className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${
+                    activeTab === "clientes"
+                      ? "text-white font-bold scale-105"
+                      : "text-white/75 hover:text-white font-medium"
+                  }`}
+                >
+                  <div className="relative flex items-center justify-center">
+                    <Users className={`h-5 w-5 transition-transform ${activeTab === "clientes" ? "stroke-[2.5]" : "stroke-[1.75]"}`} />
+                    {activeTab === "clientes" && (
+                      <span className="absolute -bottom-1.5 w-1.5 h-1.5 rounded-full bg-white animate-in fade-in zoom-in duration-200" />
+                    )}
+                  </div>
+                  <span className="text-[10px] mt-1.5 leading-none tracking-tight">Clientes</span>
+                </button>
+              </>
+            )}
 
             {/* Tab Mais */}
             <button
@@ -131,12 +174,12 @@ export function PortalShell({
               }`}
             >
               <div className="relative flex items-center justify-center">
-                <MoreHorizontal className={`h-6 w-6 transition-transform ${activeTab === "mais" ? "stroke-[2.5]" : "stroke-[1.75]"}`} />
+                <MoreHorizontal className={`${isAdmin ? "h-5 w-5" : "h-6 w-6"} transition-transform ${activeTab === "mais" ? "stroke-[2.5]" : "stroke-[1.75]"}`} />
                 {activeTab === "mais" && (
                   <span className="absolute -bottom-1.5 w-1.5 h-1.5 rounded-full bg-white animate-in fade-in zoom-in duration-200" />
                 )}
               </div>
-              <span className="text-[11px] mt-1.5 leading-none tracking-tight">Mais</span>
+              <span className={`${isAdmin ? "text-[10px]" : "text-[11px]"} mt-1.5 leading-none tracking-tight`}>Mais</span>
             </button>
           </div>
         </nav>

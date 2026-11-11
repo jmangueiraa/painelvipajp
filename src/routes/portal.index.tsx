@@ -91,7 +91,8 @@ function PortalLoginPage() {
       }
 
       // 2. Fallback via rota de API do servidor
-      if (!token && !lastErrorMessage) {
+      // 2. Fallback via rota de API do servidor (também autentica Área ADM e casos fora da RPC)
+      if (!token) {
         try {
           const res = await portalFetch<{ token?: string; error?: string }>("/api/public/portal/login-password", {
             method: "POST",
@@ -109,6 +110,7 @@ function PortalLoginPage() {
         throw new Error(lastErrorMessage || "Login ou senha incorretos.");
       }
 
+      try { localStorage.removeItem("portal_cached_me"); } catch {}
       setPortalToken(token);
 
       // Vincula código do indicador se houver indicação pendente
