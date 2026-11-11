@@ -262,7 +262,7 @@ export async function getAdminFullSnapshot() {
     supabaseAdmin
       .from("clients")
       .select(
-        "id,user_id,name,phone,email,iptv_login,iptv_password,plan_id,server_id,price_cents,due_date,status,auto_charge,notes,points,pwa_installed_at,last_login_at,last_device,login_count,referral_code,bonus_days,created_at",
+        "id,user_id,name,phone,email,iptv_login,iptv_password,plan_id,server_id,price_cents,due_date,status,auto_charge,notes,points,pwa_installed_at,last_login_at,last_device,login_count,referral_code,referred_by,partner_id,partner_code,bonus_days,created_at",
       )
       .order("due_date", { ascending: true })
       .limit(2000),
@@ -466,6 +466,8 @@ export async function getAdminFullSnapshot() {
       ...c,
       plan_name: planMap.get(c.plan_id)?.name ?? null,
       server_name: serverMap.get(c.server_id)?.name ?? null,
+      referred_by_code:
+        c.partner_code ?? (c.referred_by ? clientMap.get(c.referred_by)?.referral_code ?? null : null),
     })),
     plans,
     servers: serverStats,

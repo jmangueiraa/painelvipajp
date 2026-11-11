@@ -96,7 +96,7 @@ BEGIN
     INSERT INTO public.clients (
       user_id, name, phone, iptv_login, iptv_password,
       plan_id, server_id, price_cents, points, due_date,
-      status, auto_charge, notes
+      status, auto_charge, notes, referred_by, partner_id, partner_code
     )
     VALUES (
       _owner_id,
@@ -111,7 +111,10 @@ BEGIN
       (_payload->>'due_date')::DATE,
       coalesce((_payload->>'status')::public.client_status, 'ativo'::public.client_status),
       coalesce((_payload->>'auto_charge')::BOOLEAN, true),
-      NULLIF(_payload->>'notes', '')
+      NULLIF(_payload->>'notes', ''),
+      NULLIF(_payload->>'referred_by', '')::UUID,
+      NULLIF(_payload->>'partner_id', '')::UUID,
+      NULLIF(_payload->>'partner_code', '')
     )
     RETURNING id INTO v_id;
   ELSE
@@ -128,7 +131,10 @@ BEGIN
       due_date = coalesce((_payload->>'due_date')::DATE, due_date),
       status = coalesce((_payload->>'status')::public.client_status, status),
       auto_charge = coalesce((_payload->>'auto_charge')::BOOLEAN, auto_charge),
-      notes = NULLIF(_payload->>'notes', '')
+      notes = NULLIF(_payload->>'notes', ''),
+      referred_by = CASE WHEN _payload ? 'referred_by' THEN NULLIF(_payload->>'referred_by', '')::UUID ELSE referred_by END,
+      partner_id = CASE WHEN _payload ? 'partner_id' THEN NULLIF(_payload->>'partner_id', '')::UUID ELSE partner_id END,
+      partner_code = CASE WHEN _payload ? 'partner_code' THEN NULLIF(_payload->>'partner_code', '') ELSE partner_code END
     WHERE id = _id
     RETURNING id INTO v_id;
   END IF;

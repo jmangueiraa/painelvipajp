@@ -101,7 +101,40 @@ export const Route = createFileRoute("/api/public/portal/admin")({
                 ? rawStatus
                 : portalAdmin.computeStatusSP(dueDate, "ativo");
 
-            const payload = {
+            let referredBy: string | null | undefined = undefined;
+            let partnerId: string | null | undefined = undefined;
+            let partnerCode: string | null | undefined = undefined;
+            const refCode = String(body.referred_by_code ?? "").trim().toUpperCase();
+            if (refCode) {
+              const { data: partnerMatch } = await (supabaseAdmin as any)
+                .from("partners")
+                .select("id,code")
+                .eq("code", refCode)
+                .maybeSingle();
+              if (partnerMatch) {
+                partnerId = partnerMatch.id;
+                partnerCode = partnerMatch.code;
+                referredBy = null;
+              } else {
+                const { data: clientMatch } = await supabaseAdmin
+                  .from("clients")
+                  .select("id")
+                  .eq("referral_code", refCode)
+                  .maybeSingle();
+                if (!clientMatch) {
+                  return json({ error: "Código de indicação não encontrado." }, request, { status: 400 });
+                }
+                referredBy = clientMatch.id;
+                partnerId = null;
+                partnerCode = null;
+              }
+            } else if (body.clear_referral === true) {
+              referredBy = null;
+              partnerId = null;
+              partnerCode = null;
+            }
+
+            const payload: Record<string, any> = {
               user_id: ownerId,
               name,
               phone,
@@ -116,11 +149,14 @@ export const Route = createFileRoute("/api/public/portal/admin")({
               auto_charge: body.auto_charge !== false,
               notes: body.notes ? String(body.notes).trim() : null,
             };
+            if (referredBy !== undefined) payload.referred_by = referredBy;
+            if (partnerId !== undefined) payload.partner_id = partnerId;
+            if (partnerCode !== undefined) payload.partner_code = partnerCode;
 
             if (action === "update_client") {
               const id = String(body.id ?? "").trim();
               if (!id) return json({ error: "ID do cliente ausente." }, request, { status: 400 });
-              const { error } = await supabaseAdmin.from("clients").update(payload).eq("id", id);
+              const { error } = await (supabaseAdmin.from("clients") as any).update(payload).eq("id", id);
               if (!error) return json({ ok: true }, request);
 
               if (isRlsOrPermissionError(error)) {
@@ -136,7 +172,7 @@ export const Route = createFileRoute("/api/public/portal/admin")({
               return json({ error: error.message }, request, { status: 400 });
             }
 
-            const { error } = await supabaseAdmin.from("clients").insert(payload);
+            const { error } = await (supabaseAdmin.from("clients") as any).insert(payload);
             if (!error) return json({ ok: true }, request);
 
             if (isRlsOrPermissionError(error)) {

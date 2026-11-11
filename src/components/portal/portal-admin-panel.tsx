@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
+  Gift,
   Headphones,
   Loader2,
   Lock,
@@ -38,6 +39,7 @@ import {
   UserPlus,
   Users,
   Wallet,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -55,6 +57,12 @@ import { Textarea } from "@/components/ui/textarea";
 import type { PortalTab } from "@/components/portal/portal-shell";
 import { brl, formatDateBR, formatDateTimeBR, parseBrlToCents, todayISO } from "@/lib/format";
 import { portalFetch } from "@/lib/portal-client";
+import {
+  buildChargeMessage,
+  buildWhatsAppHref,
+  handleAndroidWhatsAppIntent,
+  normalizeBrPhone,
+} from "@/lib/whatsapp-message";
 
 export type AdminSubView = "home" | "loja" | "apis" | "apk" | "config" | "iptv";
 export type ClientFilter =
@@ -89,7 +97,47 @@ type AdminClientRow = {
   last_login_at: string | null;
   last_device: string | null;
   login_count: number | null;
+  referred_by_code?: string | null;
 };
+
+const PORTAL_MODAL_CLASS =
+  "max-w-md w-[94vw] max-h-[90dvh] p-0 overflow-hidden rounded-3xl border-none shadow-2xl bg-[#F4F5F7] text-slate-900 [&>button:last-child]:hidden";
+const PORTAL_LABEL_CLASS = "block text-[11px] font-bold text-slate-700 mb-1";
+const PORTAL_INPUT_CLASS =
+  "h-10 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-400 border border-slate-200 px-3 text-xs font-medium shadow-none focus-visible:bg-white focus-visible:border-[#FF5500] focus-visible:ring-2 focus-visible:ring-[#FF5500]/15 [color-scheme:light]";
+const PORTAL_TEXTAREA_CLASS =
+  "rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-400 border border-slate-200 px-3 py-2.5 text-xs font-medium shadow-none focus-visible:bg-white focus-visible:border-[#FF5500] focus-visible:ring-2 focus-visible:ring-[#FF5500]/15 [color-scheme:light]";
+const PORTAL_SELECT_CLASS =
+  "w-full h-10 rounded-xl bg-slate-50 text-slate-900 border border-slate-200 px-3 text-xs font-medium outline-none focus:bg-white focus:border-[#FF5500] focus:ring-2 focus:ring-[#FF5500]/15 [color-scheme:light]";
+const PORTAL_SWITCH_CLASS =
+  "data-[state=checked]:bg-[#FF5500] data-[state=unchecked]:bg-slate-300 border-transparent shrink-0";
+
+function PortalModalHeader({
+  title,
+  subtitle,
+  onClose,
+}: {
+  title: string;
+  subtitle?: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="bg-gradient-to-r from-[#FF5500] to-[#E64A00] text-white px-5 py-4 flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <h3 className="font-extrabold text-base text-white tracking-tight truncate">{title}</h3>
+        {subtitle && <p className="text-[11px] text-orange-50/90 truncate">{subtitle}</p>}
+      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Fechar janela"
+        className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center shrink-0 cursor-pointer"
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
 
 type AdminPlanRow = {
   id: string;
@@ -207,12 +255,6 @@ function adminPost<T = any>(action: string, payload: Record<string, any> = {}) {
     method: "POST",
     body: JSON.stringify({ action, ...payload }),
   });
-}
-
-function whatsAppHref(phone: string) {
-  const digits = phone.replace(/\D/g, "");
-  const full = digits.startsWith("55") ? digits : `55${digits}`;
-  return `https://wa.me/${full}`;
 }
 
 export function PortalAdminPanel({
@@ -499,9 +541,22 @@ export function PortalAdminPanel({
               </div>
               {data.settings.whatsapp_instance ? (
                 <a
-                  href={whatsAppHref(data.settings.whatsapp_instance)}
+                  href={buildWhatsAppHref(
+                    data.settings.whatsapp_instance,
+                    "Olá! Preciso de atendimento no Painel ADM.",
+                  )}
                   target="_blank"
                   rel="noreferrer"
+                  onClick={(e) => {
+                    if (
+                      handleAndroidWhatsAppIntent(
+                        data.settings.whatsapp_instance,
+                        "Olá! Preciso de atendimento no Painel ADM.",
+                      )
+                    ) {
+                      e.preventDefault();
+                    }
+                  }}
                   className="text-xs font-bold text-[#FF5500] shrink-0 hover:underline"
                 >
                   Falar agora
@@ -912,7 +967,7 @@ function AdminClientsTab({
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Buscar nome, WhatsApp ou login IPTV..."
-            className="pl-9 h-10 rounded-xl bg-slate-50 border-slate-200 text-xs"
+            className={`${PORTAL_INPUT_CLASS} pl-9`}
           />
         </div>
 
@@ -1024,14 +1079,35 @@ function AdminClientsTab({
                     {isBlocked ? <Unlock className="h-3 w-3 mr-1" /> : <Lock className="h-3 w-3 mr-1" />}
                     {isBlocked ? "Ativar" : "Bloq."}
                   </Button>
-                  <a
-                    href={whatsAppHref(c.phone)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center justify-center h-8 px-2.5 text-[11px] font-bold rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                  >
-                    <MessageCircle className="h-3 w-3 mr-1" /> Zap
-                  </a>
+                  {(() => {
+                    const chargeMsg = buildChargeMessage({
+                      identifier: c.name,
+                      dueDateISO: c.due_date,
+                      login: c.iptv_login,
+                      password: c.iptv_password,
+                    });
+                    const hasPhone = Boolean(normalizeBrPhone(c.phone));
+                    return (
+                      <a
+                        href={buildWhatsAppHref(c.phone, chargeMsg)}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => {
+                          if (!hasPhone) {
+                            e.preventDefault();
+                            toast.error("Cliente sem WhatsApp cadastrado.");
+                            return;
+                          }
+                          if (handleAndroidWhatsAppIntent(c.phone, chargeMsg)) {
+                            e.preventDefault();
+                          }
+                        }}
+                        className="inline-flex items-center justify-center h-8 px-2.5 text-[11px] font-bold rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                      >
+                        <MessageCircle className="h-3 w-3 mr-1" /> Zap
+                      </a>
+                    );
+                  })()}
                   <button
                     type="button"
                     onClick={() => {
@@ -1303,60 +1379,102 @@ function AdminLojaSubView({
       </div>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-sm rounded-3xl">
-          <DialogHeader>
+        <DialogContent className={PORTAL_MODAL_CLASS}>
+          <DialogHeader className="sr-only">
             <DialogTitle>{form.id ? "Editar Produto" : "Novo Produto"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 text-xs">
-            <div className="grid grid-cols-[72px_1fr] gap-2">
-              <div>
-                <Label>Emoji</Label>
-                <Input value={form.emoji} onChange={(e) => setForm({ ...form, emoji: e.target.value })} />
+          <PortalModalHeader
+            title={form.id ? "Editar Produto" : "Novo Produto"}
+            subtitle="Configure o item exibido na loja do portal"
+            onClose={() => setModalOpen(false)}
+          />
+          <div className="p-4 space-y-3 overflow-y-auto max-h-[calc(90dvh-136px)]">
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3">
+              <div className="grid grid-cols-[76px_1fr] gap-2.5">
+                <div>
+                  <Label className={PORTAL_LABEL_CLASS}>Emoji</Label>
+                  <Input
+                    value={form.emoji}
+                    onChange={(e) => setForm({ ...form, emoji: e.target.value })}
+                    className={`${PORTAL_INPUT_CLASS} text-center text-base`}
+                  />
+                </div>
+                <div>
+                  <Label className={PORTAL_LABEL_CLASS}>Nome do produto *</Label>
+                  <Input
+                    value={form.label}
+                    onChange={(e) => setForm({ ...form, label: e.target.value })}
+                    placeholder="ChatGPT Plus - 30 dias"
+                    className={PORTAL_INPUT_CLASS}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className={PORTAL_LABEL_CLASS}>Venda (R$)</Label>
+                  <Input
+                    value={form.sale}
+                    onChange={(e) => setForm({ ...form, sale: e.target.value })}
+                    placeholder="30,00"
+                    inputMode="decimal"
+                    className={PORTAL_INPUT_CLASS}
+                  />
+                </div>
+                <div>
+                  <Label className={PORTAL_LABEL_CLASS}>Custo (R$)</Label>
+                  <Input
+                    value={form.cost}
+                    onChange={(e) => setForm({ ...form, cost: e.target.value })}
+                    placeholder="0,00"
+                    inputMode="decimal"
+                    className={PORTAL_INPUT_CLASS}
+                  />
+                </div>
+                <div>
+                  <Label className={PORTAL_LABEL_CLASS}>Validade (d)</Label>
+                  <Input
+                    value={form.duration_days}
+                    onChange={(e) => setForm({ ...form, duration_days: e.target.value })}
+                    inputMode="numeric"
+                    className={PORTAL_INPUT_CLASS}
+                  />
+                </div>
               </div>
               <div>
-                <Label>Nome do produto</Label>
+                <Label className={PORTAL_LABEL_CLASS}>URL da Foto (opcional)</Label>
                 <Input
-                  value={form.label}
-                  onChange={(e) => setForm({ ...form, label: e.target.value })}
-                  placeholder="ChatGPT Plus - 30 dias"
+                  value={form.image_url}
+                  onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                  placeholder="https://..."
+                  className={PORTAL_INPUT_CLASS}
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <div>
-                <Label>Venda (R$)</Label>
-                <Input value={form.sale} onChange={(e) => setForm({ ...form, sale: e.target.value })} />
-              </div>
-              <div>
-                <Label>Custo (R$)</Label>
-                <Input value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} />
-              </div>
-              <div>
-                <Label>Dias</Label>
-                <Input
-                  value={form.duration_days}
-                  onChange={(e) => setForm({ ...form, duration_days: e.target.value })}
+              <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold text-slate-800">Ativo no Portal do Cliente</p>
+                  <p className="text-[11px] text-slate-500">Exibe o produto para compra na vitrine</p>
+                </div>
+                <Switch
+                  checked={form.active}
+                  onCheckedChange={(v) => setForm({ ...form, active: v })}
+                  className={PORTAL_SWITCH_CLASS}
                 />
               </div>
-            </div>
-            <div>
-              <Label>URL da Foto (opcional)</Label>
-              <Input
-                value={form.image_url}
-                onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                placeholder="https://..."
-              />
-            </div>
-            <div className="flex items-center justify-between pt-1">
-              <Label>Ativo no Portal do Cliente</Label>
-              <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="bg-white border-t border-slate-200/80 px-4 py-3 flex-row gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setModalOpen(false)}
+              className="rounded-xl border-slate-200 text-slate-600 hover:bg-slate-100 h-10"
+            >
+              Cancelar
+            </Button>
             <Button
               onClick={() => saveProduct.mutate()}
               disabled={saveProduct.isPending}
-              className="w-full bg-[#FF5500] hover:bg-[#E04B00] text-white rounded-xl font-bold"
+              className="flex-1 bg-[#FF5500] hover:bg-[#E04B00] text-white rounded-xl font-bold h-10 shadow-sm"
             >
               {saveProduct.isPending ? "Salvando..." : "Salvar Produto"}
             </Button>
@@ -1434,7 +1552,7 @@ function AdminApisSubView({
       />
 
       {/* Mercado Pago */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-2.5">
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-xs font-extrabold text-slate-900">Mercado Pago (Produção)</p>
           <span
@@ -1445,47 +1563,56 @@ function AdminApisSubView({
             {mp ? "Configurado" : "Não configurado"}
           </span>
         </div>
-        <Input
-          type={showSecrets ? "text" : "password"}
-          value={mp}
-          onChange={(e) => setMp(e.target.value)}
-          placeholder="APP_USR-..."
-          className="text-xs rounded-xl"
-        />
+        <div>
+          <Label className={PORTAL_LABEL_CLASS}>Access Token de Produção</Label>
+          <Input
+            type={showSecrets ? "text" : "password"}
+            value={mp}
+            onChange={(e) => setMp(e.target.value)}
+            placeholder="APP_USR-..."
+            className={PORTAL_INPUT_CLASS}
+          />
+        </div>
         <Button
           size="sm"
           disabled={savePatch.isPending}
           onClick={() => savePatch.mutate({ mp_access_token: mp })}
-          className="bg-[#FF5500] hover:bg-[#E04B00] text-white rounded-xl text-xs font-bold"
+          className="h-9 bg-[#FF5500] hover:bg-[#E04B00] text-white rounded-xl text-xs font-bold shadow-sm shadow-[#FF5500]/20 cursor-pointer"
         >
           <Save className="h-3.5 w-3.5 mr-1" /> Salvar Mercado Pago
         </Button>
       </div>
 
       {/* Telegram */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-2.5">
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3">
         <p className="text-xs font-extrabold text-slate-900">Telegram Bot</p>
-        <div className="space-y-2">
-          <Input
-            type={showSecrets ? "text" : "password"}
-            value={tgToken}
-            onChange={(e) => setTgToken(e.target.value)}
-            placeholder="Bot Token (BotFather)"
-            className="text-xs rounded-xl"
-          />
-          <Input
-            value={tgChat}
-            onChange={(e) => setTgChat(e.target.value)}
-            placeholder="Chat ID (Ex: 8010768365)"
-            className="text-xs rounded-xl"
-          />
+        <div className="space-y-2.5">
+          <div>
+            <Label className={PORTAL_LABEL_CLASS}>Bot Token</Label>
+            <Input
+              type={showSecrets ? "text" : "password"}
+              value={tgToken}
+              onChange={(e) => setTgToken(e.target.value)}
+              placeholder="Bot Token (BotFather)"
+              className={PORTAL_INPUT_CLASS}
+            />
+          </div>
+          <div>
+            <Label className={PORTAL_LABEL_CLASS}>Chat ID</Label>
+            <Input
+              value={tgChat}
+              onChange={(e) => setTgChat(e.target.value)}
+              placeholder="Chat ID (Ex: 8010768365)"
+              className={PORTAL_INPUT_CLASS}
+            />
+          </div>
         </div>
         <div className="flex gap-2">
           <Button
             size="sm"
             disabled={savePatch.isPending}
             onClick={() => savePatch.mutate({ telegram_bot_token: tgToken, telegram_chat_id: tgChat })}
-            className="bg-[#FF5500] hover:bg-[#E04B00] text-white rounded-xl text-xs font-bold"
+            className="h-9 bg-[#FF5500] hover:bg-[#E04B00] text-white rounded-xl text-xs font-bold shadow-sm shadow-[#FF5500]/20 cursor-pointer"
           >
             Salvar
           </Button>
@@ -1494,7 +1621,7 @@ function AdminApisSubView({
             variant="outline"
             disabled={testTg.isPending}
             onClick={() => testTg.mutate()}
-            className="rounded-xl text-xs"
+            className="h-9 rounded-xl text-xs font-bold bg-white border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer"
           >
             <Send className="h-3.5 w-3.5 mr-1" /> Testar Telegram
           </Button>
@@ -1502,7 +1629,7 @@ function AdminApisSubView({
       </div>
 
       {/* Z-API WhatsApp */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-2.5">
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-xs font-extrabold text-slate-900">WhatsApp (Z-API)</p>
           <span
@@ -1515,26 +1642,35 @@ function AdminApisSubView({
             {zapiStatus.data?.connected ? "Conectado" : "Desconectado"}
           </span>
         </div>
-        <Input
-          value={zInst}
-          onChange={(e) => setZInst(e.target.value)}
-          placeholder="Instance ID"
-          className="text-xs rounded-xl"
-        />
-        <Input
-          type={showSecrets ? "text" : "password"}
-          value={zTok}
-          onChange={(e) => setZTok(e.target.value)}
-          placeholder="Token da instância"
-          className="text-xs rounded-xl"
-        />
-        <Input
-          type={showSecrets ? "text" : "password"}
-          value={zCli}
-          onChange={(e) => setZCli(e.target.value)}
-          placeholder="Client-Token (opcional)"
-          className="text-xs rounded-xl"
-        />
+        <div>
+          <Label className={PORTAL_LABEL_CLASS}>Instance ID</Label>
+          <Input
+            value={zInst}
+            onChange={(e) => setZInst(e.target.value)}
+            placeholder="Instance ID"
+            className={PORTAL_INPUT_CLASS}
+          />
+        </div>
+        <div>
+          <Label className={PORTAL_LABEL_CLASS}>Token da Instância</Label>
+          <Input
+            type={showSecrets ? "text" : "password"}
+            value={zTok}
+            onChange={(e) => setZTok(e.target.value)}
+            placeholder="Token da instância"
+            className={PORTAL_INPUT_CLASS}
+          />
+        </div>
+        <div>
+          <Label className={PORTAL_LABEL_CLASS}>Client-Token (opcional)</Label>
+          <Input
+            type={showSecrets ? "text" : "password"}
+            value={zCli}
+            onChange={(e) => setZCli(e.target.value)}
+            placeholder="Client-Token (opcional)"
+            className={PORTAL_INPUT_CLASS}
+          />
+        </div>
         <div className="flex gap-2">
           <Button
             size="sm"
@@ -1546,7 +1682,7 @@ function AdminApisSubView({
                 zapi_client_token: zCli,
               })
             }
-            className="bg-[#FF5500] hover:bg-[#E04B00] text-white rounded-xl text-xs font-bold"
+            className="h-9 bg-[#FF5500] hover:bg-[#E04B00] text-white rounded-xl text-xs font-bold shadow-sm shadow-[#FF5500]/20 cursor-pointer"
           >
             Salvar WhatsApp
           </Button>
@@ -1554,7 +1690,7 @@ function AdminApisSubView({
             size="sm"
             variant="outline"
             onClick={() => void zapiStatus.refetch()}
-            className="rounded-xl text-xs"
+            className="h-9 rounded-xl text-xs font-bold bg-white border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer"
           >
             <RefreshCw className="h-3.5 w-3.5 mr-1" /> Status
           </Button>
@@ -1637,14 +1773,14 @@ function AdminApkSubView({
       </div>
 
       <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3">
-        <div className="space-y-1">
-          <Label className="text-xs font-bold">Link APK Android (exibido no Portal)</Label>
+        <div>
+          <Label className={PORTAL_LABEL_CLASS}>Link APK Android (exibido no Portal)</Label>
           <div className="flex gap-1.5">
             <Input
               value={androidUrl}
               onChange={(e) => setAndroidUrl(e.target.value)}
               placeholder="https://..."
-              className="text-xs rounded-xl"
+              className={PORTAL_INPUT_CLASS}
             />
             {androidUrl && (
               <button
@@ -1653,7 +1789,7 @@ function AdminApkSubView({
                   void navigator.clipboard.writeText(androidUrl);
                   toast.success("Link Android copiado!");
                 }}
-                className="px-3 rounded-xl bg-slate-100 text-slate-700 cursor-pointer"
+                className="px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer shrink-0"
                 aria-label="Copiar link Android"
               >
                 <Copy className="h-4 w-4" />
@@ -1662,13 +1798,13 @@ function AdminApkSubView({
           </div>
         </div>
 
-        <div className="space-y-1">
-          <Label className="text-xs font-bold">Link App iOS / Web Clip</Label>
+        <div>
+          <Label className={PORTAL_LABEL_CLASS}>Link App iOS / Web Clip</Label>
           <Input
             value={iosUrl}
             onChange={(e) => setIosUrl(e.target.value)}
             placeholder="https://..."
-            className="text-xs rounded-xl"
+            className={PORTAL_INPUT_CLASS}
           />
         </div>
 
@@ -1772,74 +1908,80 @@ function AdminConfigSubView({
 
       <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3 text-xs">
         <div>
-          <Label>WhatsApp de Atendimento</Label>
+          <Label className={PORTAL_LABEL_CLASS}>WhatsApp de Atendimento</Label>
           <Input
             value={whatsapp}
             onChange={(e) => setWhatsapp(e.target.value)}
             placeholder="5511999999999"
-            className="mt-1 rounded-xl"
+            className={PORTAL_INPUT_CLASS}
           />
         </div>
         <div>
-          <Label>Mensagem Padrão de Cobrança / Suporte</Label>
+          <Label className={PORTAL_LABEL_CLASS}>Mensagem Padrão de Cobrança / Suporte</Label>
           <Textarea
             value={supportMsg}
             onChange={(e) => setSupportMsg(e.target.value)}
             rows={2}
-            className="mt-1 rounded-xl"
+            className={PORTAL_TEXTAREA_CLASS}
           />
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2.5">
           <div>
-            <Label>Slug Loja (/loja/...)</Label>
+            <Label className={PORTAL_LABEL_CLASS}>Slug Loja (/loja/...)</Label>
             <Input
               value={storeSlug}
               onChange={(e) => setStoreSlug(e.target.value)}
-              className="mt-1 rounded-xl"
+              className={PORTAL_INPUT_CLASS}
             />
           </div>
           <div>
-            <Label>Título da Loja</Label>
+            <Label className={PORTAL_LABEL_CLASS}>Título da Loja</Label>
             <Input
               value={storeTitle}
               onChange={(e) => setStoreTitle(e.target.value)}
-              className="mt-1 rounded-xl"
+              className={PORTAL_INPUT_CLASS}
             />
           </div>
         </div>
-        <div className="flex items-center justify-between pt-1">
-          <Label>Programa Indique e Ganhe Ativo</Label>
-          <Switch checked={referralEnabled} onCheckedChange={setReferralEnabled} />
+        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+          <Label className="text-xs font-bold text-slate-800 cursor-pointer">
+            Programa Indique e Ganhe Ativo
+          </Label>
+          <Switch
+            checked={referralEnabled}
+            onCheckedChange={setReferralEnabled}
+            className={PORTAL_SWITCH_CLASS}
+          />
         </div>
       </div>
 
       <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3 text-xs">
         <p className="font-extrabold text-slate-900">Novidades exibidas no Portal</p>
         <div>
-          <Label>Filmes Adicionados</Label>
+          <Label className={PORTAL_LABEL_CLASS}>Filmes Adicionados</Label>
           <Textarea
             value={moviesText}
             onChange={(e) => setMoviesText(e.target.value)}
             rows={3}
-            className="mt-1 rounded-xl font-mono text-[11px]"
+            className={`${PORTAL_TEXTAREA_CLASS} font-mono text-[11px]`}
           />
         </div>
         <div>
-          <Label>Séries Adicionadas</Label>
+          <Label className={PORTAL_LABEL_CLASS}>Séries Adicionadas</Label>
           <Textarea
             value={seriesText}
             onChange={(e) => setSeriesText(e.target.value)}
             rows={3}
-            className="mt-1 rounded-xl font-mono text-[11px]"
+            className={`${PORTAL_TEXTAREA_CLASS} font-mono text-[11px]`}
           />
         </div>
         <div>
-          <Label>Jogos do Dia</Label>
+          <Label className={PORTAL_LABEL_CLASS}>Jogos do Dia</Label>
           <Textarea
             value={gamesText}
             onChange={(e) => setGamesText(e.target.value)}
             rows={3}
-            className="mt-1 rounded-xl font-mono text-[11px]"
+            className={`${PORTAL_TEXTAREA_CLASS} font-mono text-[11px]`}
           />
         </div>
       </div>
@@ -1981,13 +2123,13 @@ function AdminIptvSubView({
             value={srvName}
             onChange={(e) => setSrvName(e.target.value)}
             placeholder="Novo servidor..."
-            className="h-9 text-xs rounded-xl"
+            className={`${PORTAL_INPUT_CLASS} h-9`}
           />
           <Input
             value={srvCost}
             onChange={(e) => setSrvCost(e.target.value)}
             placeholder="Custo R$"
-            className="h-9 text-xs rounded-xl"
+            className={`${PORTAL_INPUT_CLASS} h-9`}
           />
           <Button
             size="sm"
@@ -2011,7 +2153,7 @@ function AdminIptvSubView({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar cliente, login ou servidor..."
-          className="h-9 text-xs rounded-xl bg-slate-50"
+          className={`${PORTAL_INPUT_CLASS} h-9`}
         />
         <div className="divide-y divide-slate-100">
           {iptvClients.map((c) => (
@@ -2073,6 +2215,7 @@ function ClientFormDialog({
   const [dueDate, setDueDate] = useState(defaultDue);
   const [autoCharge, setAutoCharge] = useState(true);
   const [notes, setNotes] = useState("");
+  const [referredByCode, setReferredByCode] = useState("");
 
   React.useEffect(() => {
     if (!open) return;
@@ -2088,6 +2231,7 @@ function ClientFormDialog({
       setDueDate(editing.due_date || defaultDue);
       setAutoCharge(editing.auto_charge !== false);
       setNotes(editing.notes ?? "");
+      setReferredByCode(editing.referred_by_code ?? "");
     } else {
       setName("");
       setPhone("");
@@ -2100,6 +2244,7 @@ function ClientFormDialog({
       setDueDate(defaultDue);
       setAutoCharge(true);
       setNotes("");
+      setReferredByCode("");
     }
   }, [open, editing, defaultDue]);
 
@@ -2119,6 +2264,8 @@ function ClientFormDialog({
         auto_charge: autoCharge,
         notes,
         status: editing?.status,
+        referred_by_code: referredByCode.trim().toUpperCase(),
+        clear_referral: Boolean(editing?.referred_by_code && !referredByCode.trim()),
       }),
     onSuccess: () => {
       toast.success(editing ? "Cliente atualizado!" : "Cliente cadastrado!");
@@ -2128,104 +2275,212 @@ function ClientFormDialog({
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const pointOptions = Array.from(
+    new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, Math.max(1, Number(points) || 1)]),
+  ).sort((a, b) => a - b);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto rounded-3xl">
-        <DialogHeader>
+      <DialogContent className={PORTAL_MODAL_CLASS}>
+        <DialogHeader className="sr-only">
           <DialogTitle>{editing ? "Editar Cliente" : "Cadastrar Novo Cliente"}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3 text-xs">
-          <div>
-            <Label>Nome completo *</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome do assinante" />
-          </div>
-          <div>
-            <Label>WhatsApp *</Label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="11999999999" />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
+        <PortalModalHeader
+          title={editing ? "Editar Cliente" : "Cadastrar Novo Cliente"}
+          subtitle={
+            editing
+              ? `Atualizando cadastro de ${editing.name}`
+              : "Preencha os dados para ativar o assinante"
+          }
+          onClose={() => onOpenChange(false)}
+        />
+
+        <div className="p-4 space-y-3 overflow-y-auto max-h-[calc(90dvh-142px)]">
+          {/* Dados Básicos */}
+          <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-3">
+            <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+              Dados do Assinante
+            </p>
             <div>
-              <Label>Login IPTV</Label>
-              <Input value={iptvLogin} onChange={(e) => setIptvLogin(e.target.value)} />
+              <Label className={PORTAL_LABEL_CLASS}>Nome completo *</Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Nome do assinante"
+                className={PORTAL_INPUT_CLASS}
+              />
             </div>
             <div>
-              <Label>Senha IPTV</Label>
-              <Input value={iptvPassword} onChange={(e) => setIptvPassword(e.target.value)} />
+              <Label className={PORTAL_LABEL_CLASS}>WhatsApp *</Label>
+              <Input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="11999999999"
+                inputMode="tel"
+                className={PORTAL_INPUT_CLASS}
+              />
             </div>
           </div>
 
-          {plans.length > 0 && (
-            <div>
-              <Label>Plano</Label>
-              <select
-                value={planId}
-                onChange={(e) => {
-                  const id = e.target.value;
-                  setPlanId(id);
-                  const found = plans.find((p) => p.id === id);
-                  if (found) setPrice((found.price_cents / 100).toFixed(2).replace(".", ","));
-                }}
-                className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs"
-              >
-                <option value="">Selecionar plano...</option>
-                {plans.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({brl(p.price_cents)})
+          {/* Plano, Servidor e IPTV */}
+          <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-3">
+            <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+              Plano, Servidor e IPTV
+            </p>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <Label className={PORTAL_LABEL_CLASS}>Plano</Label>
+                <select
+                  value={planId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setPlanId(id);
+                    const found = plans.find((p) => p.id === id);
+                    if (found) setPrice((found.price_cents / 100).toFixed(2).replace(".", ","));
+                  }}
+                  className={PORTAL_SELECT_CLASS}
+                >
+                  <option value="">
+                    {plans.length > 0 ? "Selecionar plano..." : "Sem planos"}
                   </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {servers.length > 0 && (
-            <div>
-              <Label>Servidor</Label>
-              <select
-                value={serverId}
-                onChange={(e) => setServerId(e.target.value)}
-                className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs"
-              >
-                <option value="">Selecionar servidor...</option>
-                {servers.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
+                  {plans.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({brl(p.price_cents)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label className={PORTAL_LABEL_CLASS}>Servidor</Label>
+                <select
+                  value={serverId}
+                  onChange={(e) => setServerId(e.target.value)}
+                  className={PORTAL_SELECT_CLASS}
+                >
+                  <option value="">
+                    {servers.length > 0 ? "Selecionar servidor..." : "Sem servidores"}
                   </option>
-                ))}
-              </select>
+                  {servers.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          )}
 
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <Label>Valor (R$)</Label>
-              <Input value={price} onChange={(e) => setPrice(e.target.value)} />
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <Label className={PORTAL_LABEL_CLASS}>Login IPTV</Label>
+                <Input
+                  value={iptvLogin}
+                  onChange={(e) => setIptvLogin(e.target.value)}
+                  placeholder="Usuário"
+                  className={PORTAL_INPUT_CLASS}
+                />
+              </div>
+              <div>
+                <Label className={PORTAL_LABEL_CLASS}>Senha IPTV</Label>
+                <Input
+                  value={iptvPassword}
+                  onChange={(e) => setIptvPassword(e.target.value)}
+                  placeholder="Senha"
+                  className={PORTAL_INPUT_CLASS}
+                />
+              </div>
             </div>
-            <div>
-              <Label>Telas</Label>
-              <Input value={points} onChange={(e) => setPoints(e.target.value)} inputMode="numeric" />
-            </div>
-            <div>
-              <Label>Vencimento</Label>
-              <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <Label className={PORTAL_LABEL_CLASS}>Valor (R$)</Label>
+                <Input
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="30,00"
+                  className={PORTAL_INPUT_CLASS}
+                />
+              </div>
+              <div>
+                <Label className={PORTAL_LABEL_CLASS}>Telas</Label>
+                <select
+                  value={String(Math.max(1, Number(points) || 1))}
+                  onChange={(e) => setPoints(e.target.value)}
+                  className={PORTAL_SELECT_CLASS}
+                >
+                  {pointOptions.map((n) => (
+                    <option key={n} value={String(n)}>
+                      {n} {n === 1 ? "Tela" : "Telas"}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label className={PORTAL_LABEL_CLASS}>Vencimento</Label>
+                <Input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  className={PORTAL_INPUT_CLASS}
+                />
+              </div>
             </div>
           </div>
 
-          <div>
-            <Label>Observações</Label>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
-          </div>
+          {/* Indicação & Cobrança */}
+          <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-3">
+            <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+              Indicação e Observações
+            </p>
 
-          <div className="flex items-center justify-between">
-            <Label>Cobrança Automática WhatsApp</Label>
-            <Switch checked={autoCharge} onCheckedChange={setAutoCharge} />
+            <div>
+              <Label className={`${PORTAL_LABEL_CLASS} flex items-center gap-1.5`}>
+                <Gift className="h-3.5 w-3.5 text-[#FF5500]" />
+                Código de indicação (opcional)
+              </Label>
+              <Input
+                value={referredByCode}
+                onChange={(e) => setReferredByCode(e.target.value.toUpperCase())}
+                placeholder="Ex.: ABC123"
+                maxLength={20}
+                autoCapitalize="characters"
+                className={`${PORTAL_INPUT_CLASS} uppercase font-bold tracking-wider`}
+              />
+              <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+                Se o cliente foi indicado, informe o código. O indicador ganha dias bônus ao 1º pagamento.
+              </p>
+            </div>
+
+            <div>
+              <Label className={PORTAL_LABEL_CLASS}>Observações</Label>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+                placeholder="Anotações internas sobre o cliente..."
+                className={PORTAL_TEXTAREA_CLASS}
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-3 pt-2 border-t border-slate-100">
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-slate-800">Cobrança Automática WhatsApp</p>
+                <p className="text-[10px] text-slate-500">Lembrete automático antes do vencimento</p>
+              </div>
+              <Switch
+                checked={autoCharge}
+                onCheckedChange={setAutoCharge}
+                className={PORTAL_SWITCH_CLASS}
+              />
+            </div>
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="bg-white border-t border-slate-200 px-4 py-3 sm:justify-stretch">
           <Button
             onClick={() => save.mutate()}
             disabled={save.isPending}
-            className="w-full bg-[#FF5500] hover:bg-[#E04B00] text-white rounded-xl font-bold h-10"
+            className="w-full bg-[#FF5500] hover:bg-[#E04B00] text-white rounded-xl font-extrabold h-11 shadow-md shadow-[#FF5500]/25 cursor-pointer"
           >
             {save.isPending ? "Salvando..." : editing ? "Salvar Alterações" : "Cadastrar Cliente"}
           </Button>
@@ -2274,19 +2529,24 @@ function RenewClientDialog({
 
   return (
     <Dialog open={Boolean(client)} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-sm rounded-3xl">
-        <DialogHeader>
+      <DialogContent className={`${PORTAL_MODAL_CLASS} max-w-sm`}>
+        <DialogHeader className="sr-only">
           <DialogTitle>Renovar Assinatura</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
-          <div className="bg-slate-50 rounded-2xl p-3 text-xs">
+        <PortalModalHeader
+          title="Renovar Assinatura"
+          subtitle={client.name}
+          onClose={onClose}
+        />
+        <div className="p-4 space-y-3">
+          <div className="bg-white rounded-2xl p-3.5 text-xs shadow-sm border border-slate-100 space-y-1">
             <p className="font-extrabold text-slate-900">{client.name}</p>
             <p className="text-slate-500">
-              Vencimento atual: <strong>{formatDateBR(client.due_date)}</strong> · Valor:{" "}
-              <strong>{brl(client.price_cents)}</strong>
+              Vencimento atual: <strong className="text-slate-800">{formatDateBR(client.due_date)}</strong> · Valor:{" "}
+              <strong className="text-slate-800">{brl(client.price_cents)}</strong>
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             {[
               { label: "+1 Mês (30d)", days: 30 },
               { label: "+3 Meses (90d)", days: 90 },
@@ -2297,7 +2557,7 @@ function RenewClientDialog({
                 key={opt.days}
                 disabled={renew.isPending}
                 onClick={() => renew.mutate({ c: client, days: opt.days })}
-                className="h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold"
+                className="h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm cursor-pointer"
               >
                 <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
                 {opt.label}
