@@ -1,0 +1,19 @@
+# Aplicar manualmente ao .gitignore: a plataforma bloqueia sua edição automática.
+# Estas regras NÃO estão ativas só por existir este arquivo.
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.apk
+*.aab
+*.apks
+android-twa/generated/
+android-twa/.gradle/
+android-twa/**/build/
+android-twa/**/local.properties
+android-twa/**/key.properties
+android-twa/**/keystore.properties
+android-twa/**/signing.properties
+android-twa/**/.env*
+android-twa/**/service-account*.json
+android-twa/**/play-service-account*.json

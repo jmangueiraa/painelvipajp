@@ -1,0 +1,33 @@
+{
+  "packageId": "br.com.ajpvip.portal",
+  "host": "portalajp.com.br",
+  "name": "AJP VIP",
+  "launcherName": "AJP VIP",
+  "display": "standalone",
+  "themeColor": "#FF5500",
+  "themeColorDark": "#FF5500",
+  "navigationColor": "#F4F5F7",
+  "navigationColorDark": "#F4F5F7",
+  "backgroundColor": "#F4F5F7",
+  "enableNotifications": false,
+  "startUrl": "/portal/",
+  "iconUrl": "https://portalajp.com.br/portal-icon-512.png",
+  "maskableIconUrl": "https://portalajp.com.br/portal-icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "__DEFINIR_CAMINHO_ABSOLUTO_DA_KEYSTORE__",
+    "alias": "__DEFINIR_ALIAS_DA_CHAVE__"
+  },
+  "appVersion": "1.0.0",
+  "appVersionCode": 1,
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://portalajp.com.br/portal-manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": { "enabled": false },
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "isChromeOSOnly": false,
+  "isMetaQuest": false
+}
