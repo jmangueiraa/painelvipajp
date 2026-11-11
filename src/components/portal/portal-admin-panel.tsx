@@ -154,6 +154,7 @@ type AdminServerRow = {
   credit_cost_cents: number;
   client_count: number;
   active_count: number;
+  active_accesses?: number;
   monthly_cost_cents: number;
 };
 
@@ -192,7 +193,7 @@ type AdminSnapshot = {
   store_products: AdminStoreProduct[];
   store_purchases: {
     id: string;
-    product_key: string;
+    product_id?: string | null;
     label: string;
     sale_cents: number;
     cost_cents: number;
@@ -206,6 +207,8 @@ type AdminSnapshot = {
     lucroAno: number;
     lucroTotal: number;
     totalClientesValor: number;
+    activeAccesses?: number;
+    catalogBlocked?: boolean;
     paymentsCount: number;
     storeStats: { sales: number; cost: number; profit: number; count: number };
     recentEntries: {
@@ -1044,7 +1047,9 @@ function AdminClientsTab({
                   <div>
                     <span className="text-slate-400 text-[10px] block">Valor / Plano</span>
                     <span className="font-extrabold text-slate-800">
-                      {brl(c.price_cents)} {c.plan_name ? `· ${c.plan_name}` : ""}
+                      {brl(c.price_cents)}
+                      {c.plan_name ? ` · ${c.plan_name}` : ""}
+                      {c.points && c.points > 1 ? ` · ${c.points} telas` : ""}
                     </span>
                   </div>
                   <div className="text-right">
@@ -1154,6 +1159,20 @@ function AdminFinanceTab({ data }: { data: AdminSnapshot }) {
         <h2 className="text-lg font-black text-slate-900">Faturamento & Lucro</h2>
       </div>
 
+      {f.catalogBlocked && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-900 space-y-1">
+          <p className="font-extrabold flex items-center gap-1.5">
+            <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+            Servidores e Loja bloqueados pelo RLS no Supabase
+          </p>
+          <p className="text-[11px] leading-snug text-amber-800">
+            Execute a migration <code className="font-mono font-bold">20261111_portal_admin.sql</code> no SQL
+            Editor do Supabase para liberar o custo por servidor/acesso (ex.: R$ 7,00 × telas) e as
+            vendas da loja.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-2.5">
         <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100">
           <p className="text-[11px] text-slate-500 font-medium">Receita prevista / mês</p>
@@ -1162,6 +1181,9 @@ function AdminFinanceTab({ data }: { data: AdminSnapshot }) {
         <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100">
           <p className="text-[11px] text-slate-500 font-medium">Despesa servidores / mês</p>
           <p className="text-lg font-black text-rose-600 mt-0.5">{brl(f.despesaMes)}</p>
+          {typeof f.activeAccesses === "number" && (
+            <p className="text-[10px] text-slate-400 mt-0.5">{f.activeAccesses} acesso(s) ativo(s)</p>
+          )}
         </div>
         <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100">
           <p className="text-[11px] text-slate-500 font-medium">Lucro líquido no mês</p>
@@ -2085,7 +2107,11 @@ function AdminIptvSubView({
         </h3>
 
         {data.servers.length === 0 ? (
-          <p className="text-xs text-slate-400">Nenhum servidor visível (verifique RLS ou cadastre abaixo).</p>
+          <p className="text-xs text-slate-500 bg-amber-50 border border-amber-200 rounded-xl p-2.5">
+            {data.finance.catalogBlocked
+              ? "Servidores bloqueados pelo RLS no Supabase. Execute a migration 20261111_portal_admin.sql no SQL Editor para exibir e somar o custo por acesso."
+              : "Nenhum servidor cadastrado ainda."}
+          </p>
         ) : (
           <div className="space-y-2">
             {data.servers.map((s) => (
@@ -2098,7 +2124,8 @@ function AdminIptvSubView({
                   <div className="min-w-0">
                     <p className="text-xs font-extrabold text-slate-900 truncate">{s.name}</p>
                     <p className="text-[10px] text-slate-500">
-                      Custo/crédito: {brl(s.credit_cost_cents)} · {s.active_count} ativo(s) · Est.{" "}
+                      Custo/crédito: {brl(s.credit_cost_cents)} · {s.active_count} cliente(s) ·{" "}
+                      {s.active_accesses ?? s.active_count} acesso(s) · Est.{" "}
                       {brl(s.monthly_cost_cents)}/mês
                     </p>
                   </div>
@@ -2159,7 +2186,14 @@ function AdminIptvSubView({
           {iptvClients.map((c) => (
             <div key={c.id} className="py-2.5 flex items-center justify-between gap-2 text-xs">
               <div className="min-w-0">
-                <p className="font-bold text-slate-900 truncate">{c.name}</p>
+                <p className="font-bold text-slate-900 truncate">
+                  {c.name}
+                  {c.points && c.points > 1 ? (
+                    <span className="ml-1.5 text-[10px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full">
+                      {c.points} telas
+                    </span>
+                  ) : null}
+                </p>
                 <p className="text-[11px] font-mono text-slate-600 truncate">
                   {c.iptv_login || "—"} / {c.iptv_password || "—"}
                 </p>

@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { computeClientServerCostCents, getClientAccessCount } from "@/lib/client-cost";
 import type { ClientStatus } from "@/lib/status";
 
 const ADMIN_USERNAME = (process.env.PORTAL_ADMIN_USERNAME || "jmangueira").trim();
@@ -222,7 +223,7 @@ async function fetchCatalogWithRpcFallback(ownerId: string) {
       .order("name", { ascending: true }),
     supabaseAdmin
       .from("store_purchases")
-      .select("id,client_id,product_key,label,sale_cents,cost_cents,purchased_at,buyer_name")
+      .select("id,client_id,product_id,label,sale_cents,cost_cents,purchased_at,buyer_name")
       .eq("user_id", ownerId)
       .order("purchased_at", { ascending: false })
       .limit(200),
@@ -323,31 +324,37 @@ export async function getAdminFullSnapshot() {
 
   const payments = (paymentsRes.data ?? []) as any[];
 
-  const monthsForClient = (c: any) => {
-    const p = c?.plan_id ? planMap.get(c.plan_id) : null;
-    if (!p?.duration_days) return 1;
-    return Math.max(1, Math.round(p.duration_days / 30));
-  };
-
   const serverCostForClient = (clientId: string | null | undefined) => {
     if (!clientId) return 0;
     const c = clientMap.get(clientId);
     if (!c?.server_id) return 0;
     const srv = serverMap.get(c.server_id);
-    return (srv?.credit_cost_cents ?? 0) * monthsForClient(c);
+    const plan = c.plan_id ? planMap.get(c.plan_id) : null;
+    return computeClientServerCostCents({
+      creditCostCents: srv?.credit_cost_cents,
+      durationDays: plan?.duration_days,
+      points: c.points,
+    });
   };
 
   let receitaMes = 0;
   let despesaMes = 0;
   let totalClientesValor = 0;
+  let activeAccesses = 0;
   for (const c of clients) {
     totalClientesValor += c.price_cents ?? 0;
     if (c.computed_status !== "suspenso" && c.computed_status !== "cancelado") {
       receitaMes += c.price_cents ?? 0;
-    }
-    if (c.computed_status === "ativo" && c.server_id) {
-      const srv = serverMap.get(c.server_id);
-      despesaMes += (srv?.credit_cost_cents ?? 0) * monthsForClient(c);
+      activeAccesses += getClientAccessCount(c.points);
+      if (c.server_id) {
+        const srv = serverMap.get(c.server_id);
+        const plan = c.plan_id ? planMap.get(c.plan_id) : null;
+        despesaMes += computeClientServerCostCents({
+          creditCostCents: srv?.credit_cost_cents,
+          durationDays: plan?.duration_days,
+          points: c.points,
+        });
+      }
     }
   }
 
@@ -398,7 +405,7 @@ export async function getAdminFullSnapshot() {
       kind: "Loja" as const,
       name: s.buyer_name ?? clientMap.get(s.client_id ?? "")?.name ?? "Loja",
       date: s.purchased_at,
-      method: s.label ?? s.product_key,
+      method: s.label ?? "Loja",
       amount_cents: s.sale_cents ?? 0,
     })),
   ]
@@ -407,15 +414,29 @@ export async function getAdminFullSnapshot() {
 
   const serverStats = servers.map((srv: any) => {
     const linked = clients.filter((c) => c.server_id === srv.id);
-    const activeLinked = linked.filter((c) => c.computed_status === "ativo");
+    const activeLinked = linked.filter(
+      (c) => c.computed_status !== "suspenso" && c.computed_status !== "cancelado",
+    );
+    const activeAccessesOnSrv = activeLinked.reduce(
+      (acc, c) => acc + getClientAccessCount(c.points),
+      0,
+    );
     return {
       ...srv,
       client_count: linked.length,
       active_count: activeLinked.length,
-      monthly_cost_cents: activeLinked.reduce(
-        (acc, c) => acc + (srv.credit_cost_cents ?? 0) * monthsForClient(c),
-        0,
-      ),
+      active_accesses: activeAccessesOnSrv,
+      monthly_cost_cents: activeLinked.reduce((acc, c) => {
+        const plan = c.plan_id ? planMap.get(c.plan_id) : null;
+        return (
+          acc +
+          computeClientServerCostCents({
+            creditCostCents: srv.credit_cost_cents,
+            durationDays: plan?.duration_days,
+            points: c.points,
+          })
+        );
+      }, 0),
     };
   });
 
@@ -480,6 +501,8 @@ export async function getAdminFullSnapshot() {
       lucroAno: lucroAno || projecaoMes,
       lucroTotal: lucroTotal || projecaoMes,
       totalClientesValor,
+      activeAccesses,
+      catalogBlocked: servers.length === 0 && clients.some((c) => Boolean(c.server_id)),
       paymentsCount: payments.length,
       storeStats: {
         sales: storeSalesTotal,

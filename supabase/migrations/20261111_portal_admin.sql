@@ -60,7 +60,7 @@ BEGIN
   SELECT coalesce(jsonb_agg(row_to_json(sp) ORDER BY sp.purchased_at DESC), '[]'::jsonb)
   INTO v_purchases
   FROM (
-    SELECT id, client_id, product_key, label, sale_cents, cost_cents, purchased_at, buyer_name
+    SELECT id, client_id, product_id, label, sale_cents, cost_cents, purchased_at, buyer_name
     FROM public.store_purchases
     WHERE v_owner IS NULL OR user_id = v_owner
     ORDER BY purchased_at DESC

@@ -6,6 +6,7 @@ import { Wallet, TrendingUp, ArrowUpRight, ArrowDownRight, Users } from "lucide-
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { supabase } from "@/integrations/supabase/client";
+import { getClientAccessCount } from "@/lib/client-cost";
 import { brl, formatDateBR, formatDateTimeBR } from "@/lib/format";
 
 import { PageHeader } from "@/components/page-header";
@@ -19,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/financeiro")({
 });
 
 type Payment = { id: string; amount_cents: number; paid_at: string; method: string | null; client_id: string };
-type Client = { id: string; name: string; price_cents: number; server_id: string | null; plan_id: string | null; status: "ativo" | "vencido" | "suspenso" | "cancelado" };
+type Client = { id: string; name: string; price_cents: number; server_id: string | null; plan_id: string | null; points: number | null; status: "ativo" | "vencido" | "suspenso" | "cancelado" };
 type Plan = { id: string; duration_days: number };
 type Server = { id: string; credit_cost_cents: number };
 
@@ -55,7 +56,7 @@ function FinanceiroPage() {
   const { data: clients = [] } = useQuery({
     queryKey: ["clients", "fin"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("id,name,price_cents,server_id,plan_id,status");
+      const { data, error } = await supabase.from("clients").select("id,name,price_cents,server_id,plan_id,points,status");
       if (error) throw error;
       return data as Client[];
     },
@@ -96,7 +97,7 @@ function FinanceiroPage() {
       const c = clientMap.get(clientId);
       if (!c?.server_id) return 0;
       const base = m.get(c.server_id) ?? 0;
-      return base * monthsForClient(clientId);
+      return base * monthsForClient(clientId) * getClientAccessCount(c.points);
     };
   }, [servers, clientMap, monthsForClient]);
 
@@ -198,6 +199,13 @@ function FinanceiroPage() {
 
 
   const totalClientesValor = useMemo(() => clients.reduce((acc, c) => acc + c.price_cents, 0), [clients]);
+  const totalActiveAccesses = useMemo(
+    () =>
+      clients
+        .filter((c) => c.status !== "cancelado" && c.status !== "suspenso")
+        .reduce((acc, c) => acc + getClientAccessCount(c.points), 0),
+    [clients],
+  );
 
   return (
     <div className="space-y-6">
@@ -238,7 +246,7 @@ function FinanceiroPage() {
           <div>
             <p className="text-[11px] font-semibold tracking-wider uppercase text-zinc-400">Clientes no valor do mês</p>
             <p className="text-2xl md:text-3xl font-semibold text-zinc-100 mt-1 tabular-nums">{brl(totalClientesValor)}</p>
-            <p className="text-xs text-zinc-400 mt-1">{clients.length} cliente(s) cadastrado(s)</p>
+            <p className="text-xs text-zinc-400 mt-1">{clients.length} cliente(s) cadastrado(s) · {totalActiveAccesses} acesso(s) ativo(s)</p>
           </div>
           <div className="size-11 rounded-lg grid place-items-center bg-zinc-800/60 border border-zinc-700/50 text-zinc-300">
             <Users className="size-5" />
