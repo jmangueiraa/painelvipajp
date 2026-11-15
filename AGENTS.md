@@ -12,3 +12,6 @@
 ## Android packaging
 - Isolate TWA packaging in `android-twa/` and generate Android sources outside this repository; packaging must not modify the live portal.
 - Treat the tracked TWA manifest as a Bubblewrap-compatible template; resolve signing placeholders only locally and preserve the generated project's signing identity and version when applying it.
+
+## Portal invoice confirmation
+- Keep renewal confirmation in a dedicated portal component with semantic invoice tokens; normalize the existing status response client-side without changing payment processing.

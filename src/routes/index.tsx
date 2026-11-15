@@ -26,6 +26,14 @@ import { AIChat } from "@/components/landing-page/AIChat";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export const Route = createFileRoute("/")({
+  head: () => ({ meta: [
+    { title: "AJP VIP — Planos de Streaming" },
+    { name: "description", content: "Conheça os planos AJP VIP e acesse o portal do cliente para acompanhar sua assinatura." },
+    { property: "og:title", content: "AJP VIP — Planos de Streaming" },
+    { property: "og:description", content: "Planos de streaming e portal do cliente AJP VIP." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   beforeLoad: () => {
     if (typeof window !== "undefined" && isPortalHostname(window.location.hostname)) {
       throw redirect({ to: "/portal" });

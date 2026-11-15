@@ -24,6 +24,13 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --color-invoice-surface: var(--invoice-surface);
+  --color-invoice-foreground: var(--invoice-foreground);
+  --color-invoice-muted: var(--invoice-muted);
+  --color-invoice-success: var(--invoice-success);
+  --color-invoice-action: var(--invoice-action);
+  --color-invoice-action-hover: var(--invoice-action-hover);
+  --shadow-invoice-button: var(--invoice-button-shadow);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-glow: var(--primary-glow);
   --color-secondary: var(--secondary);
@@ -68,6 +75,14 @@
 
 :root {
   --radius: 0.5rem;
+  --invoice-surface: oklch(1 0 0);
+  --invoice-foreground: oklch(0.28 0.012 260);
+  --invoice-muted: oklch(0.49 0.012 260);
+  --invoice-success: oklch(0.54 0.13 166);
+  --invoice-action: #FF5500;
+  --invoice-action-hover: oklch(0.59 0.20 40);
+  --invoice-card-shadow: 0 3px 12px color-mix(in oklab, var(--invoice-foreground) 16%, transparent);
+  --invoice-button-shadow: 0 3px 8px color-mix(in oklab, var(--invoice-action) 24%, transparent);
 
   /* SaaS Dark Minimalist base (Linear / Vercel / Shadcn) */
   --background: #09090b;
@@ -160,6 +175,29 @@
   align-items: center;
   justify-content: center;
   cursor: help;
+}
+
+.renewal-success-card {
+  box-shadow: var(--invoice-card-shadow);
+  animation: renewal-success-enter 450ms ease-out both;
+  letter-spacing: 0;
+}
+.renewal-success-art { animation: renewal-success-enter 650ms ease-out both; }
+.renewal-success-check {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 0;
+  animation: renewal-success-draw 600ms ease-out both;
+}
+@keyframes renewal-success-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes renewal-success-draw {
+  from { stroke-dashoffset: 60; }
+  to { stroke-dashoffset: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .renewal-success-card, .renewal-success-art, .renewal-success-check { animation: none; }
 }
 
 .state-flag {

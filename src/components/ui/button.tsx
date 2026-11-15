@@ -9,6 +9,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        invoice: "bg-invoice-action text-invoice-surface hover:bg-invoice-action-hover shadow-invoice-button active:scale-[0.99] focus-visible:ring-invoice-action",
+        invoiceLink: "text-invoice-muted hover:text-invoice-foreground focus-visible:ring-invoice-action",
         default: "bg-white text-zinc-950 font-medium hover:bg-zinc-200 shadow-sm active:scale-[0.99]",
         destructive: "bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 shadow-none",
         outline:
