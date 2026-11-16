@@ -1,6 +1,8 @@
 # Preparação Android TWA
 
 ## WhatsApp Evolution API
+- [x] Corrigir seleção da credencial administrativa externa sem expor a API Key Evolution no navegador; integração usa servidor do próprio portal, não Edge Functions.
+- [ ] Validar salvar/ler/status autenticados com instância real no banco externo (sessão do proprietário e tabela configurada necessárias).
 - [x] Permitir espaços e hífens no nome da instância e verificar validação e codificação da URL.
 - [x] Substituir os cards Z-API no portal e no painel mantendo o visual e o status de conexão.
 - [x] Preparar armazenamento protegido por conta e ações de conexão da Evolution API.

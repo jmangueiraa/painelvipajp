@@ -18,3 +18,4 @@
 
 ## WhatsApp integrations
 - Store Evolution credentials in a dedicated owner-scoped table with server-only API-key access; connection and sending must use the same owner's instance to prevent cross-account delivery.
+- Prefer external administrative credentials with the external/browser database URL when configured; never fall back to publishable keys for privileged access, because private integration rows require the matching service role.
