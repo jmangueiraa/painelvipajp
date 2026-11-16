@@ -11,6 +11,7 @@ export interface FinalizeResult {
   newDueDate?: string;
   clientName?: string;
   clientPhone?: string;
+  whatsapp?: string;
 }
 
 export interface ClientFallbackInfo {
@@ -43,6 +44,7 @@ export async function finalizePaidRenewal(
   paymentInfo: PaymentExtendedInfo,
   clientFallback?: ClientFallbackInfo,
 ): Promise<FinalizeResult> {
+  if (paymentInfo.status !== "approved") return { ok: true, claimed: false, reason: "not approved" };
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { notify } = await import("./notifications.server");
 
@@ -296,6 +298,15 @@ export async function finalizePaidRenewal(
     console.error("[finalize] notify failed", e);
   }
 
+  // Mesmo caminho para webhook, polling e cartão: apenas quem confirmou envia.
+  let whatsapp = "failed";
+  try {
+    const { invokePaymentWhatsApp } = await import("./payment-whatsapp.server");
+    whatsapp = await invokePaymentWhatsApp(renewal.id);
+  } catch {
+    console.error("[finalize] send-whatsapp failed; payment remains confirmed");
+  }
+
   // Push FCM: pagamento confirmado
   if (renewal.client_id) {
     try {
@@ -316,6 +327,7 @@ export async function finalizePaidRenewal(
   return {
     ok: true,
     claimed: true,
+    whatsapp,
     newDueDate: resolvedNewDue ?? undefined,
     clientName: resolvedName ?? undefined,
     clientPhone: formattedPhone ?? undefined,

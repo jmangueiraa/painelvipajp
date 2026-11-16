@@ -11,7 +11,12 @@ import { formatDateBR, formatDateTimeBR, brl } from "@/lib/format";
 import { getPortalClientDetail } from "@/lib/portal-clients.functions";
 
 export const Route = createFileRoute("/_authenticated/portal-clientes/$id")({
-  head: () => ({ meta: [{ title: "Cliente — Portal dos Clientes" }] }),
+  head: () => ({ meta: [{ title: "Cliente — Portal dos Clientes" },
+      { name: "description", content: "Acesse cliente no AJP VIP." },
+      { property: "og:title", content: "Cliente — Portal dos Clientes" },
+      { property: "og:description", content: "Acesse cliente no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: PortalClientDetailPage,
 });
 

@@ -27,6 +27,10 @@ export const Route = createFileRoute("/_authenticated/portal-clientes")({
   head: () => ({
     meta: [
       { title: "Portal dos Clientes — Painel VIP" },
+      { property: "og:title", content: "Portal dos Clientes — Painel VIP" },
+      { property: "og:description", content: "Acompanhe quais clientes já instalaram o aplicativo PWA." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "description", content: "Acompanhe quais clientes já instalaram o aplicativo PWA." },
     ],
   }),

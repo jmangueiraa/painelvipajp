@@ -52,7 +52,12 @@ function getPageItems(current: number, total: number): (number | "...")[] {
 
 
 export const Route = createFileRoute("/_authenticated/clientes")({
-  head: () => ({ meta: [{ title: "Clientes — Painel VIP" }] }),
+  head: () => ({ meta: [{ title: "Clientes — Painel VIP" },
+      { name: "description", content: "Acesse clientes no AJP VIP." },
+      { property: "og:title", content: "Clientes — Painel VIP" },
+      { property: "og:description", content: "Acesse clientes no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   validateSearch: (search: Record<string, unknown>) => ({
     filter: (search.filter as FilterChip | undefined) ?? undefined,
   }),

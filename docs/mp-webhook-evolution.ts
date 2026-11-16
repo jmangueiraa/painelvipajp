@@ -121,6 +121,9 @@ export async function handleWebhook(request: Request, env: Env, send: Fetch = fe
     // O processador já faz a disputa atômica contra polling e webhooks repetidos.
     // Sem uma fila de entrega persistente, não reenviar quando já processado.
     if (result.skipped) return json({ ok: true, skipped: String(result.skipped) });
+    // Portal atualizado já chama send-whatsapp também no polling/cartão.
+    // Não duplicar a mensagem aqui, inclusive quando a tentativa falhou.
+    if (typeof result.whatsapp === "string") return json({ ok: true, whatsapp: result.whatsapp });
     const paid = await one("renewal_requests", "status", { id: renewal.id, user_id: owner });
     if (paid?.status !== "paid") return json({ error: "renewal_not_paid" }, 409);
 

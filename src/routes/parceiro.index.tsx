@@ -27,7 +27,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/parceiro/")({
-  head: () => ({ meta: [{ title: "Painel do Parceiro — AJP INDICA" }] }),
+  head: () => ({ meta: [{ title: "Painel do Parceiro — AJP INDICA" },
+      { name: "description", content: "Acesse painel do parceiro no AJP VIP." },
+      { property: "og:title", content: "Painel do Parceiro — AJP INDICA" },
+      { property: "og:description", content: "Acesse painel do parceiro no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: PartnerDashboardPage,
 });
 

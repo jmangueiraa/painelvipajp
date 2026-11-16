@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { formatDateTimeBR } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/ai-agent")({
+  head: () => ({ meta: [{ title: "Agente de Atendimento — AJP VIP" }, { name: "description", content: "Acesse agente de atendimento no AJP VIP." }, { property: "og:title", content: "Agente de Atendimento — AJP VIP" }, { property: "og:description", content: "Acesse agente de atendimento no AJP VIP." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: AIAgentPage,
 });
 

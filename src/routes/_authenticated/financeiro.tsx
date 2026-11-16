@@ -15,7 +15,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export const Route = createFileRoute("/_authenticated/financeiro")({
-  head: () => ({ meta: [{ title: "Financeiro — Painel VIP" }] }),
+  head: () => ({ meta: [{ title: "Financeiro — Painel VIP" },
+      { name: "description", content: "Acesse financeiro no AJP VIP." },
+      { property: "og:title", content: "Financeiro — Painel VIP" },
+      { property: "og:description", content: "Acesse financeiro no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: FinanceiroPage,
 });
 

@@ -30,7 +30,12 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/assinantes")({
-  head: () => ({ meta: [{ title: "Assinantes — Painel VIP" }] }),
+  head: () => ({ meta: [{ title: "Assinantes — Painel VIP" },
+      { name: "description", content: "Acesse assinantes no AJP VIP." },
+      { property: "og:title", content: "Assinantes — Painel VIP" },
+      { property: "og:description", content: "Acesse assinantes no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: AssinantesPage,
 });
 

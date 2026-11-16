@@ -18,7 +18,12 @@ import { Textarea } from "@/components/ui/textarea";
 
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
-  head: () => ({ meta: [{ title: "Configurações — Painel VIP" }] }),
+  head: () => ({ meta: [{ title: "Configurações — Painel VIP" },
+      { name: "description", content: "Acesse configurações no AJP VIP." },
+      { property: "og:title", content: "Configurações — Painel VIP" },
+      { property: "og:description", content: "Acesse configurações no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: ConfiguracoesPage,
 });
 

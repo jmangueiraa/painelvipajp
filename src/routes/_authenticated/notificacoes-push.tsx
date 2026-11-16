@@ -19,7 +19,12 @@ import { translateError } from "@/lib/translate-error";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/notificacoes-push")({
-  head: () => ({ meta: [{ title: "Notificações Push" }] }),
+  head: () => ({ meta: [{ title: "Notificações Push — AJP VIP" },
+      { name: "description", content: "Acesse notificações push no AJP VIP." },
+      { property: "og:title", content: "Notificações Push — AJP VIP" },
+      { property: "og:description", content: "Acesse notificações push no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: NotificacoesPushPage,
 });
 

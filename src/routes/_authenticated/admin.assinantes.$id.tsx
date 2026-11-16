@@ -34,7 +34,12 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export const Route = createFileRoute("/_authenticated/admin/assinantes/$id")({
-  head: () => ({ meta: [{ title: "Detalhes do assinante — Painel VIP" }] }),
+  head: () => ({ meta: [{ title: "Detalhes do assinante — Painel VIP" },
+      { name: "description", content: "Acesse detalhes do assinante no AJP VIP." },
+      { property: "og:title", content: "Detalhes do assinante — Painel VIP" },
+      { property: "og:description", content: "Acesse detalhes do assinante no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: AssinanteDetalhe,
 });
 

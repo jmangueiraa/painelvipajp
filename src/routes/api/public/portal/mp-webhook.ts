@@ -159,7 +159,7 @@ export const Route = createFileRoute("/api/public/portal/mp-webhook")({
           });
           if (!result.claimed) return json({ ok: true, skipped: result.reason });
 
-          return json({ ok: true });
+          return json({ ok: true, whatsapp: result.whatsapp });
         } catch (e) {
           return json({ error: (e as Error).message }, { status: 500 });
         }

@@ -49,7 +49,12 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/indica/$tab")({
-  head: () => ({ meta: [{ title: "AJP INDICA — Painel VIP" }] }),
+  head: () => ({ meta: [{ title: "AJP INDICA — Painel VIP" },
+      { name: "description", content: "Acesse ajp indica no AJP VIP." },
+      { property: "og:title", content: "AJP INDICA — Painel VIP" },
+      { property: "og:description", content: "Acesse ajp indica no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: AdminIndicaPage,
 });
 

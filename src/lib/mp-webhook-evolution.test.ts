@@ -20,7 +20,7 @@ async function signedRequest() {
     body: JSON.stringify({ type: "payment", data: { id: "12345" } }),
   });
 }
-async function run(status = "approved", skipped?: string, mismatch = false) {
+async function run(status = "approved", skipped?: string, mismatch = false, whatsapp?: string) {
   const calls: { url: URL; init?: RequestInit }[] = [];
   const fake: typeof fetch = async (input, init) => {
     const url = new URL(String(input));
@@ -31,7 +31,7 @@ async function run(status = "approved", skipped?: string, mismatch = false) {
     }]);
     if (url.pathname === "/rest/v1/settings") return respond([{ mp_access_token: "test-only-mp" }]);
     if (url.hostname === "api.mercadopago.com") return respond({ id: 12345, status, external_reference: renewalId, transaction_amount: mismatch ? 15 : 30 });
-    if (url.pathname === "/api/public/portal/mp-webhook") return respond({ ok: true, ...(skipped ? { skipped } : {}) });
+    if (url.pathname === "/api/public/portal/mp-webhook") return respond({ ok: true, ...(skipped ? { skipped } : {}), ...(whatsapp ? { whatsapp } : {}) });
     if (url.pathname === "/rest/v1/clients") return respond([{ name: "Teste", phone: "(16) 99785-5438" }]);
     if (url.pathname === "/rest/v1/evolution_integrations") return respond([{ base_url: "https://evolution.example.com/", instance_name: "AJP VIP-test", api_key: "test-only-evolution" }]);
     if (url.hostname === "evolution.example.com") return respond({ key: { id: "test-only-message" } });
@@ -41,6 +41,13 @@ async function run(status = "approved", skipped?: string, mismatch = false) {
   return { response, calls, body: await response.json() };
 }
 describe("External Mercado Pago Evolution webhook", () => {
+  test("updated portal already attempted WhatsApp, including failures: adapter must not duplicate", async () => {
+    for (const whatsapp of ["accepted", "failed"]) {
+      const { calls, body } = await run("approved", undefined, false, whatsapp);
+      assert.equal(body.whatsapp, whatsapp);
+      assert.equal(calls.some(call => call.url.hostname === "evolution.example.com"), false);
+    }
+  });
   test("client masks normalize to 5516997855438 without duplicating country code", () => {
     for (const phone of ["(16) 99785-5438", "16997855438", "+55 (16) 99785-5438", "005516997855438"]) assert.equal(normalizeBrazilPhone(phone), "5516997855438");
     assert.throws(() => normalizeBrazilPhone("997855438"));

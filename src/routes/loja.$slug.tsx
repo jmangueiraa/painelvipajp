@@ -20,6 +20,7 @@ import { Loader2, Copy, ShoppingBag, LogOut, CheckCircle2 } from "lucide-react";
 import { isReservedSubdomain, isPortalHostname } from "@/lib/multi-tenant-routing";
 
 export const Route = createFileRoute("/loja/$slug")({
+  head: () => ({ meta: [{ title: "Loja Digital — AJP VIP" }, { name: "description", content: "Acesse loja digital no AJP VIP." }, { property: "og:title", content: "Loja Digital — AJP VIP" }, { property: "og:description", content: "Acesse loja digital no AJP VIP." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   ssr: false,
   beforeLoad: ({ params }) => {
     const slug = (params.slug || "").toLowerCase().trim();

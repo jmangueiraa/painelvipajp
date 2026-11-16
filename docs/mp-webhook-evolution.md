@@ -1,8 +1,8 @@
 # Webhook externo Mercado Pago → Evolution
 
-`mp-webhook-evolution.ts` é o código completo de um **adaptador para a função externa**, não uma cópia da função atualmente publicada no seu banco: esse código externo não está disponível no repositório. O webhook encontrado é `src/routes/api/public/portal/mp-webhook.ts`, que chama `finalizePaidRenewal`; hoje esse finalizador envia Telegram/push, mas não WhatsApp.
+`mp-webhook-evolution.ts` é o código completo de um **adaptador para a função externa**, não uma cópia da função atualmente publicada no seu banco: esse código externo não está disponível no repositório. O webhook encontrado é `src/routes/api/public/portal/mp-webhook.ts`, que chama `finalizePaidRenewal`; o finalizador atualizado envia Telegram/push e invoca a função externa `send-whatsapp` (veja `send-whatsapp.md`).
 
-O adaptador confirma a assinatura e consulta o pagamento no Mercado Pago com o token do proprietário. Em seguida chama o processador existente do portal para preservar renovação, datas de vencimento, histórico financeiro, Telegram, compras, comissões e push. Só depois de o processador confirmar o pagamento ele busca `public.evolution_integrations` por `user_id` do mesmo proprietário e envia ao telefone desse cliente. Não procura a primeira integração disponível e não usa credenciais de outra conta.
+O adaptador confirma a assinatura e consulta o pagamento no Mercado Pago com o token do proprietário. Em seguida chama o processador existente do portal para preservar renovação, datas de vencimento, histórico financeiro, Telegram, compras, comissões e push. Quando o portal retorna o resultado WhatsApp, não envia novamente, mesmo se a tentativa falhou. Para compatibilidade com o processador anterior, somente quando esse resultado está ausente mantém o envio direto com as credenciais do mesmo proprietário.
 
 ## Como aplicar
 
@@ -27,6 +27,6 @@ O adaptador confirma a assinatura e consulta o pagamento no Mercado Pago com o t
 
 Não houve deploy nem teste com pagamento real nesta entrega. O processador publicado precisa estar acessível e ligado ao banco correto. Este adaptador depende dele; não é um substituto independente de todas as regras de pagamento do portal.
 
-A renovação atual é marcada como paga antes das notificações. Se o polling do portal vencer a disputa, a função retorna `already processed` e não envia WhatsApp; se a Evolution falhar após a confirmação, repetir o webhook também não reenvia. Um pagamento antigo já notificado no Telegram não será reenviado automaticamente. Para garantia de entrega com tentativas independentes, é necessária uma fila persistente por pagamento/canal integrada também ao polling (não criada nesta entrega). Evite reabrir a fatura ou reprocessar a renovação para tentar reenviar uma mensagem.
+A renovação atual é marcada como paga antes das notificações. No portal atualizado, o polling que vencer a disputa também chama send-whatsapp; o webhook repetido retorna `already processed` sem novo envio. Se a Evolution falhar após a confirmação, repetir o webhook não reenvia. Um pagamento antigo já notificado no Telegram não será reenviado automaticamente. Para garantia de entrega com tentativas independentes, é necessária uma fila persistente por pagamento/canal (não criada nesta entrega). Evite reabrir a fatura ou reprocessar a renovação para tentar reenviar uma mensagem.
 
 Validação: testes automatizados com respostas simuladas de banco, Mercado Pago, processador e Evolution; nenhum cliente recebeu mensagem nos testes.

@@ -26,7 +26,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/_authenticated/planos")({
-  head: () => ({ meta: [{ title: "Planos — Painel VIP" }] }),
+  head: () => ({ meta: [{ title: "Planos — Painel VIP" },
+      { name: "description", content: "Acesse planos no AJP VIP." },
+      { property: "og:title", content: "Planos — Painel VIP" },
+      { property: "og:description", content: "Acesse planos no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: PlanosPage,
 });
 

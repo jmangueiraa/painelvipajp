@@ -11,7 +11,12 @@ import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/reset-password")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Redefinir senha — Painel VIP" }] }),
+  head: () => ({ meta: [{ title: "Redefinir senha — Painel VIP" },
+      { name: "description", content: "Acesse redefinir senha no AJP VIP." },
+      { property: "og:title", content: "Redefinir senha — Painel VIP" },
+      { property: "og:description", content: "Acesse redefinir senha no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: ResetPasswordPage,
 });
 
