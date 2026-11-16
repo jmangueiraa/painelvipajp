@@ -14,7 +14,7 @@ export function evolutionRequest(config: EvolutionConfig, action: "status" | "qr
   const paths = { status: "instance/connectionState", qr: "instance/connect", disconnect: "instance/logout", send: "message/sendText" };
   return { url: `${normalizeEvolutionUrl(config.base_url)}/${paths[action]}/${encodeURIComponent(config.instance_name)}`, init: {
     method: action === "disconnect" ? "DELETE" : action === "send" ? "POST" : "GET",
-    redirect: "error" as const,
+    redirect: "manual" as const,
     headers: { "Content-Type": "application/json", apikey: config.api_key },
     ...(message ? { body: JSON.stringify({ number: message.phone, text: message.message }) } : {}),
   } };

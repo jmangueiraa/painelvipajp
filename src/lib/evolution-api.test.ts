@@ -26,6 +26,12 @@ describe("Evolution integration", () => {
     assert.equal(request.init.method, "POST");
     assert.equal(request.init.headers.apikey, "test-only");
     assert.deepEqual(JSON.parse(request.init.body ?? "{}"), { number: "5519999999999", text: "Aviso" });
-    assert.equal(request.init.redirect, "error");
+    assert.equal(request.init.redirect, "manual");
+  });
+  test("all Evolution calls use edge-compatible manual redirects", () => {
+    for (const action of ["status", "qr", "disconnect", "send"] as const) {
+      const request = evolutionRequest({ base_url: "https://api.seudominio.com.br", instance_name: "ajp-vip", api_key: "test-only" }, action);
+      assert.equal(request.init.redirect, "manual", action);
+    }
   });
 });
