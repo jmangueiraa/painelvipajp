@@ -1,6 +1,7 @@
 # Preparação Android TWA
 
 ## WhatsApp Evolution API
+- [x] Entregar adaptador completo do webhook externo com credenciais Evolution do proprietário, telefone 5516997855438 e redirect manual; 15 testes simulados aprovados, sem deploy/envio real. Dependência do processador publicado e limites de disputa com polling/reenvio documentados.
 - [x] Corrigir seleção da credencial administrativa externa sem expor a API Key Evolution no navegador; integração usa servidor do próprio portal, não Edge Functions.
 - [ ] Validar salvar/ler/status autenticados com instância real no banco externo (sessão do proprietário e tabela configurada necessárias).
 - [x] Permitir espaços e hífens no nome da instância e verificar validação e codificação da URL.
