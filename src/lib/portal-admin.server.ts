@@ -454,15 +454,20 @@ export async function getAdminFullSnapshot() {
     sort_order: p.sort_order ?? 0,
   }));
 
+  let evolutionMetadata: { base_url?: string; instance_name?: string; api_key?: string } | null = null;
+  try {
+    const { getEvolutionConfig } = await import("./evolution-api.server");
+    evolutionMetadata = await getEvolutionConfig(ownerId);
+  } catch { /* External schema may not yet be applied; other integrations remain usable. */ }
   const safeSettings = {
     whatsapp_instance: settingsRow?.whatsapp_instance ?? "",
     support_message: settingsRow?.support_message ?? "",
     mp_access_token: settingsRow?.mp_access_token ?? "",
     telegram_bot_token: settingsRow?.telegram_bot_token ?? "",
     telegram_chat_id: settingsRow?.telegram_chat_id ?? "",
-    zapi_instance_id: settingsRow?.zapi_instance_id ?? "",
-    zapi_token: settingsRow?.zapi_token ?? "",
-    zapi_client_token: settingsRow?.zapi_client_token ?? "",
+    evolution_base_url: evolutionMetadata?.base_url ?? "",
+    evolution_instance_name: evolutionMetadata?.instance_name ?? "",
+    evolution_configured: Boolean(evolutionMetadata?.api_key),
     app_android_url: settingsRow?.app_android_url ?? "",
     app_ios_url: settingsRow?.app_ios_url ?? "",
     updates_movies_text: settingsRow?.updates_movies_text ?? "",

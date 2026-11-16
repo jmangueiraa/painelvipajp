@@ -401,42 +401,18 @@ export const Route = createFileRoute("/api/public/portal/admin")({
             return json({ error: error.message }, request, { status: 400 });
           }
 
-          if (action === "zapi_status" || action === "zapi_qr" || action === "zapi_disconnect") {
-            const cfg = await portalAdmin.getZapiConfigFromSettings();
-            if (!cfg) {
-              return json({ configured: false, connected: false, image: null }, request);
-            }
-            if (action === "zapi_status") {
-              const res = await fetch(`${cfg.url}/status`, { headers: cfg.headers });
-              const data = (await res.json().catch(() => ({}))) as {
-                connected?: boolean;
-                smartphoneConnected?: boolean;
-              };
-              return json(
-                {
-                  configured: true,
-                  connected: Boolean(data.connected || data.smartphoneConnected),
-                },
-                request,
-              );
-            }
-            if (action === "zapi_qr") {
-              const res = await fetch(`${cfg.url}/qr-code/image`, { headers: cfg.headers });
-              const data = (await res.json().catch(() => ({}))) as {
-                connected?: boolean;
-                value?: string;
-              };
-              return json(
-                {
-                  configured: true,
-                  connected: Boolean(data.connected),
-                  image: data.value ?? null,
-                },
-                request,
-              );
-            }
-            const res = await fetch(`${cfg.url}/disconnect`, { headers: cfg.headers });
-            return json({ ok: res.ok }, request);
+          if (action === "save_evolution") {
+            const { saveEvolutionConfig } = await import("@/lib/evolution-api.server");
+            return json(await saveEvolutionConfig(ownerId, {
+              base_url: String(body.base_url ?? ""),
+              instance_name: String(body.instance_name ?? ""),
+              api_key: String(body.api_key ?? ""),
+            }), request);
+          }
+          if (action === "evolution_status" || action === "evolution_qr" || action === "evolution_disconnect") {
+            const { evolutionConnectionAction } = await import("@/lib/evolution-api.server");
+            const op = action === "evolution_status" ? "status" : action === "evolution_qr" ? "qr" : "disconnect";
+            return json(await evolutionConnectionAction(ownerId, op), request);
           }
 
           if (action === "test_telegram") {

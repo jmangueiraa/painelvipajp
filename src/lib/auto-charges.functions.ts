@@ -27,7 +27,8 @@ export const sendChargesToIds = createServerFn({ method: "POST" })
       .in("id", data.ids);
     if (error) throw new Error(error.message);
 
-    const { sendZapiText, normalizeBrPhone } = await import("./zapi.server");
+    const { normalizeBrPhone } = await import("./zapi.server");
+    const { sendWhatsAppText } = await import("./whatsapp-delivery.server");
 
     const buildMsg = (c: {
       name: string;
@@ -78,7 +79,7 @@ export const sendChargesToIds = createServerFn({ method: "POST" })
         continue;
       }
       try {
-        const r = await sendZapiText({ phone, message: buildMsg(c) });
+        const r = await sendWhatsAppText({ userId: context.userId, phone, message: buildMsg(c) });
         if (r.ok) sent++;
         else {
           failed++;
@@ -114,7 +115,8 @@ export const sendChargesNow = createServerFn({ method: "POST" })
     const { data: rows, error } = await query;
     if (error) throw new Error(error.message);
 
-    const { sendZapiText, buildChargeMessage, normalizeBrPhone } = await import("./zapi.server");
+    const { buildChargeMessage, normalizeBrPhone } = await import("./zapi.server");
+    const { sendWhatsAppText } = await import("./whatsapp-delivery.server");
 
     let sent = 0;
     let failed = 0;
@@ -128,7 +130,8 @@ export const sendChargesNow = createServerFn({ method: "POST" })
         continue;
       }
       try {
-        const r = await sendZapiText({
+        const r = await sendWhatsAppText({
+          userId: context.userId,
           phone,
           message: buildChargeMessage({
             identifier: c.name,

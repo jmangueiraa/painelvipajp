@@ -182,6 +182,18 @@
   animation: renewal-success-enter 450ms ease-out both;
   letter-spacing: 0;
 }
+.evolution-portal-card {
+  background: var(--invoice-surface);
+  color: var(--invoice-foreground);
+  border: 1px solid color-mix(in oklab, var(--invoice-muted) 12%, transparent);
+  box-shadow: var(--invoice-card-shadow);
+}
+.evolution-portal-input {
+  background: var(--invoice-surface);
+  color: var(--invoice-foreground);
+  border-color: color-mix(in oklab, var(--invoice-muted) 24%, transparent);
+}
+.evolution-portal-input::placeholder { color: var(--invoice-muted); }
 .renewal-success-art { animation: renewal-success-enter 650ms ease-out both; }
 .renewal-success-check {
   stroke-dasharray: 60;

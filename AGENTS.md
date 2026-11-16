@@ -15,3 +15,6 @@
 
 ## Portal invoice confirmation
 - Keep renewal confirmation in a dedicated portal component with semantic invoice tokens; normalize the existing status response client-side without changing payment processing.
+
+## WhatsApp integrations
+- Store Evolution credentials in a dedicated owner-scoped table with server-only API-key access; connection and sending must use the same owner's instance to prevent cross-account delivery.
