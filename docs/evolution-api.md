@@ -4,9 +4,9 @@ Esta integração usa Evolution API v2: `GET /instance/connectionState/{instânc
 
 ## Ativação no banco externo existente
 
-1. Execute `docs/evolution-setup.sql` no editor SQL do banco já utilizado. O script cria somente a tabela de integração, sem modificar clientes, pagamentos ou credenciais anteriores.
+1. Execute `docs/evolution-setup.sql` no editor SQL do banco já utilizado (`zfafucaxbktpifydecng`). O script cria somente a tabela de integração, sem modificar clientes, pagamentos ou credenciais anteriores. A chave `service_role` permite operações de dados, mas não execução de DDL; aplicar a migração exige o editor SQL, uma conexão PostgreSQL ou acesso autorizado à API de gerenciamento. Não execute todas as migrações históricas para esta etapa.
 2. Confirme que o servidor tem a credencial administrativa **do mesmo banco externo**. A chave pública não permite ler ou salvar a chave privada da Evolution.
-3. No Portal do Cliente, entre como administrador → API e Integrações. Salve a URL HTTPS pública (sem barra final), o nome da instância existente e sua API Key.
+3. No Portal do Cliente, entre como administrador → API e Integrações. Salve a URL HTTPS pública (sem barra final), o nome da instância existente e sua API Key. O nome aceita letras, números, espaços internos, hífens e sublinhados, até 100 caracteres; espaços nas extremidades são removidos, sem substituir espaços internos por hífens. Informe exatamente o nome cadastrado na Evolution.
 4. Consulte Status e escaneie o QR Code no WhatsApp. Somente `instance.state = open` aparece como Conectado.
 5. Teste uma cobrança com um contato autorizado antes de liberar envios automáticos.
 

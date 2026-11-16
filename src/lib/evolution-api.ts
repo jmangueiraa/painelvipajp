@@ -1,4 +1,9 @@
 export type EvolutionConfig = { base_url: string; instance_name: string; api_key: string };
+export function normalizeEvolutionInstance(value: string): string {
+  const instance = value.trim();
+  if (!/^[a-zA-Z0-9_ -]{1,100}$/.test(instance)) throw new Error("Informe um nome de instância com até 100 caracteres, usando letras, números, espaços, hífens ou sublinhados.");
+  return instance;
+}
 export function normalizeEvolutionUrl(value: string): string {
   const url = new URL(value.trim());
   const host = url.hostname.toLowerCase();

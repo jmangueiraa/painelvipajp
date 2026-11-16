@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { evolutionConnected, evolutionRequest, normalizeEvolutionUrl, type EvolutionConfig } from "./evolution-api";
+import { evolutionConnected, evolutionRequest, normalizeEvolutionUrl, normalizeEvolutionInstance, type EvolutionConfig } from "./evolution-api";
 export async function getEvolutionConfig(userId: string): Promise<EvolutionConfig | null> {
   if (!userId) throw new Error("Conta não identificada.");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -26,8 +26,7 @@ export async function evolutionConnectionAction(userId: string, action: "status"
 }
 export async function saveEvolutionConfig(userId: string, input: { base_url: string; instance_name: string; api_key?: string }) {
   const base_url = normalizeEvolutionUrl(input.base_url);
-  const instance_name = input.instance_name.trim();
-  if (!/^[a-zA-Z0-9_-]{1,100}$/.test(instance_name)) throw new Error("Informe um nome de instância válido.");
+  const instance_name = normalizeEvolutionInstance(input.instance_name);
   const old = await getEvolutionConfig(userId);
   const api_key = input.api_key?.trim() || old?.api_key;
   if (!api_key) throw new Error("Informe a chave de API da Evolution.");

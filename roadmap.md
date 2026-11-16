@@ -1,10 +1,11 @@
 # Preparação Android TWA
 
 ## WhatsApp Evolution API
+- [x] Permitir espaços e hífens no nome da instância e verificar validação e codificação da URL.
 - [x] Substituir os cards Z-API no portal e no painel mantendo o visual e o status de conexão.
 - [x] Preparar armazenamento protegido por conta e ações de conexão da Evolution API.
 - [x] Adaptar lembretes existentes; 7 testes aprovados e endpoints protegidos verificados sem envio real.
-- [ ] Aplicar docs/evolution-setup.sql no banco externo e validar conexão/envio com instância real (depende de acesso e credenciais).
+- [ ] Aplicar docs/evolution-setup.sql no banco externo: sem conexão SQL ou acesso de gerenciamento nesta sessão; service_role não executa DDL; depois validar conexão/envio com instância real.
 - [ ] Configurar AUTO_CHARGES_SECRET no servidor e no agendador existente (depende do proprietário); chaves públicas não autorizam disparos.
 
 ## Confirmação Pix no portal
