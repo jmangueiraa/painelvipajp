@@ -45,7 +45,7 @@ export function normalizeBrPhone(phone: string): string {
   return d;
 }
 
-async function getZapiCreds() {
+async function getZapiCreds(userId?: string) {
   let instance = process.env.Z_API_INSTANCE_ID;
   let token = process.env.Z_API_TOKEN;
   let clientToken = process.env.Z_API_CLIENT_TOKEN;
@@ -54,7 +54,7 @@ async function getZapiCreds() {
     const { data } = await supabaseAdmin
       .from("settings")
       .select("zapi_instance_id,zapi_token,zapi_client_token")
-      .limit(1)
+      .eq("user_id", userId ?? "")
       .maybeSingle();
     if (data?.zapi_instance_id) instance = data.zapi_instance_id;
     if (data?.zapi_token) token = data.zapi_token;
@@ -66,10 +66,11 @@ async function getZapiCreds() {
 }
 
 export async function sendZapiText(args: {
+  userId?: string;
   phone: string;
   message: string;
 }): Promise<{ ok: boolean; status: number; body: unknown }> {
-  const { instance, token, clientToken } = await getZapiCreds();
+  const { instance, token, clientToken } = await getZapiCreds(args.userId);
   if (!instance || !token) {
     throw new Error("Z-API não configurada (Z_API_INSTANCE_ID/Z_API_TOKEN ausentes)");
   }

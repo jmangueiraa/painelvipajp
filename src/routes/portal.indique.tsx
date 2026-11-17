@@ -14,6 +14,11 @@ export const Route = createFileRoute("/portal/indique")({
   head: () => ({
     meta: [
       { title: "Indique e Ganhe — Portal do Cliente" },
+      { name: "description", content: "Acesse indique e ganhe no AJP VIP." },
+      { property: "og:title", content: "Indique e Ganhe — Portal do Cliente" },
+      { property: "og:description", content: "Acesse indique e ganhe no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "theme-color", content: "#FF5500" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "Portal VIP" },

@@ -14,7 +14,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/solicitacoes")({
-  head: () => ({ meta: [{ title: "Solicitações — Painel VIP" }] }),
+  head: () => ({ meta: [{ title: "Solicitações — Painel VIP" },
+      { name: "description", content: "Acesse solicitações no AJP VIP." },
+      { property: "og:title", content: "Solicitações — Painel VIP" },
+      { property: "og:description", content: "Acesse solicitações no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: SolicitacoesPage,
 });
 

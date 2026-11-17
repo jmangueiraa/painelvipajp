@@ -11,7 +11,12 @@ import { useServerFn } from "@tanstack/react-start";
 import { getPartnerMeFn } from "@/lib/partner-portal.functions";
 
 export const Route = createFileRoute("/parceiro/login")({
-  head: () => ({ meta: [{ title: "Área do Indicador — AJP INDICA" }] }),
+  head: () => ({ meta: [{ title: "Área do Indicador — AJP INDICA" },
+      { name: "description", content: "Acesse área do indicador no AJP VIP." },
+      { property: "og:title", content: "Área do Indicador — AJP INDICA" },
+      { property: "og:description", content: "Acesse área do indicador no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: PartnerLoginPage,
 });
 

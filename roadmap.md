@@ -1,5 +1,22 @@
 # Preparação Android TWA
 
+## WhatsApp Evolution API
+- [x] Entregar send-whatsapp externa protegida e integrar a confirmação central de pagamento; 25 testes simulados aprovados, instruções e código completo entregues.
+- [ ] Publicar send-whatsapp e atualização do portal/adaptador externo, depois validar novo pagamento real (depende da publicação no painel externo pelo proprietário).
+- [x] Entregar adaptador completo do webhook externo com credenciais Evolution do proprietário, telefone 5516997855438 e redirect manual; 15 testes simulados aprovados, sem deploy/envio real. Dependência do processador publicado e limites de disputa com polling/reenvio documentados.
+- [x] Corrigir seleção da credencial administrativa externa sem expor a API Key Evolution no navegador; integração usa servidor do próprio portal, não Edge Functions.
+- [ ] Validar salvar/ler/status autenticados com instância real no banco externo (sessão do proprietário e tabela configurada necessárias).
+- [x] Permitir espaços e hífens no nome da instância e verificar validação e codificação da URL.
+- [x] Substituir os cards Z-API no portal e no painel mantendo o visual e o status de conexão.
+- [x] Preparar armazenamento protegido por conta e ações de conexão da Evolution API.
+- [x] Adaptar lembretes existentes; 7 testes aprovados e endpoints protegidos verificados sem envio real.
+- [ ] Aplicar docs/evolution-setup.sql no banco externo: sem conexão SQL ou acesso de gerenciamento nesta sessão; service_role não executa DDL; depois validar conexão/envio com instância real.
+- [ ] Configurar AUTO_CHARGES_SECRET no servidor e no agendador existente (depende do proprietário); chaves públicas não autorizam disparos.
+
+## Confirmação Pix no portal
+- [x] Substituir QR Code por confirmação após aprovação ou fatura paga, com ações de início e detalhes.
+- [x] Validar regras de status (3 testes) e apresentação em celular e computador com pagamento simulado; confirmação real do Mercado Pago não testada.
+
 - [x] Conferir manifesto web, ícones e formato oficial Bubblewrap.
 - [x] Preparar configuração isolada e documentação em português.
 - [x] Documentar assinatura, Digital Asset Links e testes Android.

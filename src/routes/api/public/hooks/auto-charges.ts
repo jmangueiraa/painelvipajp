@@ -4,8 +4,8 @@ export const Route = createFileRoute("/api/public/hooks/auto-charges")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = request.headers.get("apikey");
-        if (!apiKey || apiKey !== process.env.SUPABASE_PUBLISHABLE_KEY) {
+        const secret = process.env.AUTO_CHARGES_SECRET;
+        if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
           return new Response(JSON.stringify({ error: "unauthorized" }), {
             status: 401,
             headers: { "Content-Type": "application/json" },
@@ -13,14 +13,15 @@ export const Route = createFileRoute("/api/public/hooks/auto-charges")({
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { sendZapiText, buildChargeMessage, normalizeBrPhone } = await import(
+        const { buildChargeMessage, normalizeBrPhone } = await import(
           "@/lib/zapi.server"
         );
 
+        const { sendWhatsAppText } = await import("@/lib/whatsapp-delivery.server");
         const today = new Date().toISOString().slice(0, 10);
         const { data: rows, error } = await supabaseAdmin
           .from("clients")
-          .select("id,name,phone,iptv_login,iptv_password,due_date,auto_charge")
+          .select("id,user_id,name,phone,iptv_login,iptv_password,due_date,auto_charge")
           .eq("auto_charge", true)
           .lte("due_date", today);
 
@@ -40,7 +41,8 @@ export const Route = createFileRoute("/api/public/hooks/auto-charges")({
             continue;
           }
           try {
-            const r = await sendZapiText({
+            const r = await sendWhatsAppText({
+              userId: c.user_id,
               phone,
               message: buildChargeMessage({
                 identifier: c.name,

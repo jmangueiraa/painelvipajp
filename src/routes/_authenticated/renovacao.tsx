@@ -34,7 +34,12 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/renovacao")({
-  head: () => ({ meta: [{ title: "Renovação — Painel VIP" }] }),
+  head: () => ({ meta: [{ title: "Renovação — Painel VIP" },
+      { name: "description", content: "Acesse renovação no AJP VIP." },
+      { property: "og:title", content: "Renovação — Painel VIP" },
+      { property: "og:description", content: "Acesse renovação no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: RenovacaoPage,
 });
 

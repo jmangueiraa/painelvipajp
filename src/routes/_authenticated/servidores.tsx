@@ -18,7 +18,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/servidores")({
-  head: () => ({ meta: [{ title: "Servidores — Painel VIP" }] }),
+  head: () => ({ meta: [{ title: "Servidores — Painel VIP" },
+      { name: "description", content: "Acesse servidores no AJP VIP." },
+      { property: "og:title", content: "Servidores — Painel VIP" },
+      { property: "og:description", content: "Acesse servidores no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: ServidoresPage,
 });
 

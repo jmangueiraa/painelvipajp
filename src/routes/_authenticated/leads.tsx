@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 
 export const Route = createFileRoute("/_authenticated/leads")({
+  head: () => ({ meta: [{ title: "Leads — AJP VIP" }, { name: "description", content: "Acesse leads no AJP VIP." }, { property: "og:title", content: "Leads — AJP VIP" }, { property: "og:description", content: "Acesse leads no AJP VIP." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: LeadsPage,
 });
 

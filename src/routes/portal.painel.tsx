@@ -46,6 +46,8 @@ import { InstallAppCard } from "@/components/portal/install-app-card";
 import { PushNotificationCard } from "@/components/portal/push-notification-card";
 import { ModernCardCheckout, type CardFormData } from "@/components/modern-card-checkout";
 import { supabase } from "@/integrations/supabase/client";
+import { RenewalSuccessCard } from "@/components/portal/renewal-success-card";
+import { invoicePaymentStatus } from "@/lib/portal-payment-status";
 import { triggerSendWhatsappEdgeFunction } from "@/lib/send-whatsapp-function";
 
 export const Route = createFileRoute("/portal/painel")({
@@ -53,6 +55,11 @@ export const Route = createFileRoute("/portal/painel")({
   head: () => ({
     meta: [
       { title: "Painel do Cliente — AJP VIP" },
+      { name: "description", content: "Acompanhe seu plano AJP VIP, faturas e renovações no portal do cliente." },
+      { property: "og:title", content: "Painel do Cliente — AJP VIP" },
+      { property: "og:description", content: "Consulte seu plano, pagamentos e renovações AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#FF5500" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
@@ -389,37 +396,42 @@ function PortalDashboard() {
     pollRef.current = window.setInterval(async () => {
       try {
         const r = await portalFetch<{ status: string; paid?: boolean }>(`/api/public/portal/renewal-status?id=${renewalId}`);
-        const isApproved = r.status === "approved" || r.paid === true;
-        if (isApproved && paymentStatus !== "approved") {
-          setPaymentStatus("approved");
-          toast.success("Pagamento confirmado com sucesso!");
-          void refetch();
-          if (pollRef.current) window.clearInterval(pollRef.current);
+        const nextStatus = invoicePaymentStatus(r);
+        if (nextStatus !== paymentStatus) {
+          setPaymentStatus(nextStatus);
+          if (nextStatus === "approved") {
+            toast.success("Pagamento confirmado com sucesso!");
+            void refetch();
+            if (pollRef.current) window.clearInterval(pollRef.current);
 
-          const currentRenewalId = renewalId;
-          if (currentRenewalId && !sentWhatsappRef.current.has(currentRenewalId)) {
-            sentWhatsappRef.current.add(currentRenewalId);
-            void triggerSendWhatsappEdgeFunction(currentRenewalId);
+            const currentRenewalId = renewalId;
+            if (currentRenewalId && !sentWhatsappRef.current.has(currentRenewalId)) {
+              sentWhatsappRef.current.add(currentRenewalId);
+              void triggerSendWhatsappEdgeFunction(currentRenewalId);
+            }
+
+            // Keep the invoice confirmation visible until the customer chooses an action.
+            if (!renewOpen) {
+              setTimeout(() => {
+                setRenewOpen(false);
+                setPixPeriod(null);
+                setQrBase64(null);
+                setPixPayload("");
+                setRenewalId(null);
+                setPaymentId(null);
+                setPaymentStatus("pending");
+                setStoreOpen(false);
+                setStoreItem(null);
+                setStoreMethod(null);
+                setStoreQrBase64(null);
+                setStorePixPayload("");
+                setStoreCardLink(null);
+              }, 3500);
+            }
+          } else if (nextStatus === "rejected" || nextStatus === "cancelled") {
+            toast.error("Pagamento não aprovado. Gere um novo PIX.");
+            if (pollRef.current) window.clearInterval(pollRef.current);
           }
-
-          setTimeout(() => {
-            setRenewOpen(false);
-            setPixPeriod(null);
-            setQrBase64(null);
-            setPixPayload("");
-            setRenewalId(null);
-            setPaymentId(null);
-            setPaymentStatus("pending");
-            setStoreOpen(false);
-            setStoreItem(null);
-            setStoreMethod(null);
-            setStoreQrBase64(null);
-            setStorePixPayload("");
-            setStoreCardLink(null);
-          }, 3500);
-        } else if (r.status === "rejected" || r.status === "cancelled") {
-          toast.error("Pagamento não aprovado. Gere um novo PIX.");
-          if (pollRef.current) window.clearInterval(pollRef.current);
         }
       } catch {
         /* noop */
@@ -428,7 +440,7 @@ function PortalDashboard() {
     return () => {
       if (pollRef.current) window.clearInterval(pollRef.current);
     };
-  }, [renewalId, paymentStatus, refetch]);
+  }, [renewalId, paymentStatus, refetch, renewOpen]);
 
   const renew = useMutation({
     mutationFn: (o: { days: number; amount_cents: number; label: string }) =>
@@ -498,6 +510,9 @@ function PortalDashboard() {
 
   function openInvoiceModal() {
     if (!data || !data.client) return;
+    setRenewalId(null);
+    setPaymentId(null);
+    setPaymentStatus("pending");
     const defaultPrice = data.client.price_cents > 0 ? data.client.price_cents : data.plan?.price_cents || 3000;
     const defaultDays = data.plan?.duration_days || 30;
     setChosenPeriod({
@@ -1379,23 +1394,20 @@ function PortalDashboard() {
 
           <div className="p-4 sm:p-5 max-h-[80vh] overflow-y-auto space-y-4">
             {paymentStatus === "approved" ? (
-              <div className="flex flex-col items-center gap-4 py-8 text-center bg-white rounded-2xl p-6 shadow-sm">
-                <div className="grid h-20 w-20 place-items-center rounded-full bg-emerald-500/15 animate-in zoom-in duration-500">
-                  <CheckCircle2 className="h-12 w-12 text-emerald-500" strokeWidth={2.5} />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-emerald-600">Pagamento confirmado!</h2>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Sua fatura foi quitada e seu plano foi renovado com sucesso.
-                  </p>
-                </div>
-                <Button
-                  className="w-full bg-[#FF5500] hover:bg-[#E04B00] text-white font-bold rounded-xl py-3"
-                  onClick={() => setRenewOpen(false)}
-                >
-                  Voltar ao painel
-                </Button>
-              </div>
+              <RenewalSuccessCard
+                onHome={() => {
+                  setRenewOpen(false);
+                  setActiveTab("inicio");
+                  void refetch();
+                  window.scrollTo({ top: 0, behavior: "instant" });
+                }}
+                onPlanDetails={() => {
+                  setRenewOpen(false);
+                  setActiveTab("faturas");
+                  void refetch();
+                  window.scrollTo({ top: 0, behavior: "instant" });
+                }}
+              />
             ) : (
               <>
                 {/* Resumo da Fatura (Card Branco com Vencimento, Valor e Ver Mais) */}

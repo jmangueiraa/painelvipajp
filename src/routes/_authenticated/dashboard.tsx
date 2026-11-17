@@ -15,7 +15,12 @@ import { Badge } from "@/components/ui/badge";
 import { statusLabel, statusVariant, computeStatus } from "@/lib/status";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — Painel VIP" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — Painel VIP" },
+      { name: "description", content: "Acesse dashboard no AJP VIP." },
+      { property: "og:title", content: "Dashboard — Painel VIP" },
+      { property: "og:description", content: "Acesse dashboard no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: DashboardPage,
 });
 

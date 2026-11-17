@@ -20,7 +20,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/loja/produtos")({
-  head: () => ({ meta: [{ title: "Produtos da Loja — Painel VIP" }] }),
+  head: () => ({ meta: [{ title: "Produtos da Loja — Painel VIP" },
+      { name: "description", content: "Acesse produtos da loja no AJP VIP." },
+      { property: "og:title", content: "Produtos da Loja — Painel VIP" },
+      { property: "og:description", content: "Acesse produtos da loja no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: LojaProdutosPage,
 });
 

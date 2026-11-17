@@ -17,7 +17,12 @@ import {
 } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/loja/clientes")({
-  head: () => ({ meta: [{ title: "Clientes da Loja — Painel VIP" }] }),
+  head: () => ({ meta: [{ title: "Clientes da Loja — Painel VIP" },
+      { name: "description", content: "Acesse clientes da loja no AJP VIP." },
+      { property: "og:title", content: "Clientes da Loja — Painel VIP" },
+      { property: "og:description", content: "Acesse clientes da loja no AJP VIP." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }] }),
   component: LojaClientesPage,
 });
 

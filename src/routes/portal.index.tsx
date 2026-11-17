@@ -16,6 +16,10 @@ export const Route = createFileRoute("/portal/")({
   head: () => ({
     meta: [
       { title: "Acesse sua conta — Portal do Cliente" },
+      { property: "og:title", content: "Acesse sua conta — Portal do Cliente" },
+      { property: "og:description", content: "Acesse seu plano, faturas e renovações." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "description", content: "Acesse seu plano, faturas e renovações." },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#FF5500" },

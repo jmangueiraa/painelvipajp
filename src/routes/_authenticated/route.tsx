@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 
 export const Route = createFileRoute("/_authenticated")({
+  head: () => ({ meta: [{ title: "Gestão — AJP VIP" }, { name: "description", content: "Acesse gestão no AJP VIP." }, { property: "og:title", content: "Gestão — AJP VIP" }, { property: "og:description", content: "Acesse gestão no AJP VIP." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   ssr: false,
   component: AuthenticatedLayout,
 });

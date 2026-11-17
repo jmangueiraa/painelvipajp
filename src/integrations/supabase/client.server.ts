@@ -5,28 +5,27 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-function createSupabaseAdminClient() {
-  let SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "https://zfafucaxbktpifydecng.supabase.co";
-  if (SUPABASE_URL.includes("mbwxubnwaeywstnmlrqg")) {
-    SUPABASE_URL = "https://zfafucaxbktpifydecng.supabase.co";
-  }
-  const SUPABASE_SERVICE_ROLE_KEY =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    "sb_publishable_gf1PnxpslEUMrDamFmuWhg_2cSl8FEI";
+export function resolveSupabaseAdminConfig(env: Record<string, string | undefined>) {
+  const external = Boolean(env.EXTERNAL_SUPABASE_SERVICE_ROLE_KEY);
+  const url = external
+    ? env.EXTERNAL_SUPABASE_URL || env.VITE_SUPABASE_URL || env.SUPABASE_URL
+    : env.SUPABASE_URL || env.VITE_SUPABASE_URL;
+  const key = env.EXTERNAL_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Credencial administrativa do banco indisponível. Configure a URL e a chave administrativa do mesmo banco.");
+  return { url, key };
+}
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    const missing = [
-      ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
-      ...(!SUPABASE_SERVICE_ROLE_KEY ? ['SUPABASE_SERVICE_ROLE_KEY'] : []),
-    ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
-  }
+function createSupabaseAdminClient() {
+  // Resolve at request time. Public keys cannot read private integration credentials.
+  const { url: SUPABASE_URL, key: SUPABASE_SERVICE_ROLE_KEY } = resolveSupabaseAdminConfig(process.env);
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    global: { fetch: (input, init) => {
+      const headers = new Headers(init?.headers);
+      if (SUPABASE_SERVICE_ROLE_KEY.startsWith('sb_') && headers.get('Authorization') === `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`) headers.delete('Authorization');
+      headers.set('apikey', SUPABASE_SERVICE_ROLE_KEY);
+      return fetch(input, { ...init, headers });
+    } },
     auth: {
       storage: undefined,
       persistSession: false,
