@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState, useMemo } from "react";
 import { RefreshCw, CalendarCheck, Copy, Loader2, CheckCircle2, QrCode, CreditCard, KeyRound, CalendarClock, Plus, Trash2, Star, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { triggerSendWhatsappEdgeFunction } from "@/lib/send-whatsapp-function";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -73,6 +74,7 @@ function RenovacaoPage() {
   const [card, setCard] = useState<CardData | null>(null);
   const [paid, setPaid] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sentWhatsappRef = useRef<Set<string>>(new Set());
 
   const { data, refetch } = useQuery({
     queryKey: ["settings", user?.id, "renovacao"],
@@ -176,6 +178,10 @@ function RenovacaoPage() {
           setPaid(true);
           toast.success("Pagamento aprovado! Assinatura renovada.");
           refetch();
+          if (activeRenewalId && !sentWhatsappRef.current.has(activeRenewalId)) {
+            sentWhatsappRef.current.add(activeRenewalId);
+            void triggerSendWhatsappEdgeFunction(activeRenewalId);
+          }
           if (pollRef.current) clearInterval(pollRef.current);
         }
       } catch {

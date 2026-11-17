@@ -46,6 +46,7 @@ import { InstallAppCard } from "@/components/portal/install-app-card";
 import { PushNotificationCard } from "@/components/portal/push-notification-card";
 import { ModernCardCheckout, type CardFormData } from "@/components/modern-card-checkout";
 import { supabase } from "@/integrations/supabase/client";
+import { triggerSendWhatsappEdgeFunction } from "@/lib/send-whatsapp-function";
 
 export const Route = createFileRoute("/portal/painel")({
   ssr: false,
@@ -189,6 +190,7 @@ function PortalDashboard() {
   const [paidOpen, setPaidOpen] = useState(true);
   const [payPage, setPayPage] = useState(1);
   const pollRef = useRef<number | null>(null);
+  const sentWhatsappRef = useRef<Set<string>>(new Set());
 
   // Updates & AI Agent & Store
   const [updatesKind, setUpdatesKind] = useState<"movie" | "series" | "games" | null>(null);
@@ -386,32 +388,38 @@ function PortalDashboard() {
     if (paymentStatus === "approved" || paymentStatus === "rejected" || paymentStatus === "cancelled") return;
     pollRef.current = window.setInterval(async () => {
       try {
-        const r = await portalFetch<{ status: string }>(`/api/public/portal/renewal-status?id=${renewalId}`);
-        if (r.status && r.status !== paymentStatus) {
-          setPaymentStatus(r.status);
-          if (r.status === "approved") {
-            toast.success("Pagamento confirmado com sucesso!");
-            void refetch();
-            if (pollRef.current) window.clearInterval(pollRef.current);
-            setTimeout(() => {
-              setRenewOpen(false);
-              setPixPeriod(null);
-              setQrBase64(null);
-              setPixPayload("");
-              setRenewalId(null);
-              setPaymentId(null);
-              setPaymentStatus("pending");
-              setStoreOpen(false);
-              setStoreItem(null);
-              setStoreMethod(null);
-              setStoreQrBase64(null);
-              setStorePixPayload("");
-              setStoreCardLink(null);
-            }, 3500);
-          } else if (r.status === "rejected" || r.status === "cancelled") {
-            toast.error("Pagamento não aprovado. Gere um novo PIX.");
-            if (pollRef.current) window.clearInterval(pollRef.current);
+        const r = await portalFetch<{ status: string; paid?: boolean }>(`/api/public/portal/renewal-status?id=${renewalId}`);
+        const isApproved = r.status === "approved" || r.paid === true;
+        if (isApproved && paymentStatus !== "approved") {
+          setPaymentStatus("approved");
+          toast.success("Pagamento confirmado com sucesso!");
+          void refetch();
+          if (pollRef.current) window.clearInterval(pollRef.current);
+
+          const currentRenewalId = renewalId;
+          if (currentRenewalId && !sentWhatsappRef.current.has(currentRenewalId)) {
+            sentWhatsappRef.current.add(currentRenewalId);
+            void triggerSendWhatsappEdgeFunction(currentRenewalId);
           }
+
+          setTimeout(() => {
+            setRenewOpen(false);
+            setPixPeriod(null);
+            setQrBase64(null);
+            setPixPayload("");
+            setRenewalId(null);
+            setPaymentId(null);
+            setPaymentStatus("pending");
+            setStoreOpen(false);
+            setStoreItem(null);
+            setStoreMethod(null);
+            setStoreQrBase64(null);
+            setStorePixPayload("");
+            setStoreCardLink(null);
+          }, 3500);
+        } else if (r.status === "rejected" || r.status === "cancelled") {
+          toast.error("Pagamento não aprovado. Gere um novo PIX.");
+          if (pollRef.current) window.clearInterval(pollRef.current);
         }
       } catch {
         /* noop */
@@ -565,6 +573,11 @@ function PortalDashboard() {
         setPaymentStatus("approved");
         toast.success("Pagamento confirmado com sucesso!");
         void refetch();
+        const currentRenewalId = res.renewal_id || renewalId;
+        if (currentRenewalId && !sentWhatsappRef.current.has(currentRenewalId)) {
+          sentWhatsappRef.current.add(currentRenewalId);
+          void triggerSendWhatsappEdgeFunction(currentRenewalId);
+        }
         return { ok: true, message: res.message };
       } else if (res.ok && res.status === "in_process") {
         if (res.renewal_id) setRenewalId(res.renewal_id);
@@ -605,6 +618,11 @@ function PortalDashboard() {
         setPaymentStatus("approved");
         toast.success("Compra confirmada com sucesso!");
         void refetch();
+        const currentRenewalId = res.renewal_id || renewalId;
+        if (currentRenewalId && !sentWhatsappRef.current.has(currentRenewalId)) {
+          sentWhatsappRef.current.add(currentRenewalId);
+          void triggerSendWhatsappEdgeFunction(currentRenewalId);
+        }
         return { ok: true, message: res.message };
       } else if (res.ok && res.status === "in_process") {
         if (res.renewal_id) setRenewalId(res.renewal_id);

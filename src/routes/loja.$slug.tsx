@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { triggerSendWhatsappEdgeFunction } from "@/lib/send-whatsapp-function";
 import { Loader2, Copy, ShoppingBag, LogOut, CheckCircle2 } from "lucide-react";
 import { isReservedSubdomain, isPortalHostname } from "@/lib/multi-tenant-routing";
 
@@ -273,6 +274,7 @@ function Authed({
   const [status, setStatus] = useState<"pending" | "approved">("pending");
   const [, setCopied] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sentWhatsappRef = useRef<Set<string>>(new Set());
 
   const reset = () => {
     setProduct(null);
@@ -294,6 +296,10 @@ function Authed({
       if (r.ok && r.status === "paid") {
         setStatus("approved");
         refetchMine();
+        if (renewalId && !sentWhatsappRef.current.has(renewalId)) {
+          sentWhatsappRef.current.add(renewalId);
+          void triggerSendWhatsappEdgeFunction(renewalId);
+        }
         if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
       }
     }, 4000);
