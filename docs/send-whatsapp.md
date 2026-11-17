@@ -1,31 +1,29 @@
-# send-whatsapp — código completo para o Supabase externo
+# Edge Function: `send-whatsapp` (Código Corrigido com Valor Líquido do Mercado Pago)
 
-Cole **todo o conteúdo de `send-whatsapp.ts`** no `index.ts` de uma nova Edge Function chamada **send-whatsapp** no seu painel Supabase e publique a função.
+Esta Edge Function deve ser publicada no seu Supabase externo (`https://zfafucaxbktpifydecng.supabase.co/functions/v1/send-whatsapp`).
 
-## Configuração
+## O que causava o erro `Status MP: Token MP recusado (HTTP 401)` e o valor estimado:
+1. **Falta do prefixo `Bearer` ou token indefinido:** No Mercado Pago, requisições de pagamento exigem obrigatoriamente o header `Authorization: Bearer APP_USR-...`. Se o token for passado sem `Bearer` ou se tentar ler uma variável de ambiente não configurada, o Mercado Pago rejeita com `HTTP 401 Unauthorized`.
+2. **Endpoint de Saldo da Conta vs Valor Líquido do Pagamento:** O endpoint de saldo geral de carteira do Mercado Pago (`/mercadopago_account/balance`) retorna `403 Forbidden` para credenciais comuns de vendedor. O valor líquido real da transação é retornado em `https://api.mercadopago.com/v1/payments/{payment_id}` no campo:
+   - `transaction_details.net_received_amount`: Valor líquido creditado na sua conta (ex: **R$ 1,98**).
+   - `fee_details`: Taxa descontada pelo Mercado Pago (ex: **R$ 0,02**).
+   - `transaction_amount`: Valor bruto pago pelo cliente (ex: **R$ 2,00**).
 
-- `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` normalmente já são fornecidos automaticamente no ambiente da função. Devem corresponder ao banco externo que contém os pagamentos e `public.evolution_integrations`.
-- Configure **verify_jwt = false** para aceitar também chaves administrativas modernas `sb_secret_`. A função NÃO fica pública: o código exige que o header `apikey` (ou Bearer) corresponda exatamente à chave administrativa. Não remova essa validação.
-- Não coloque essa chave no navegador, no código do aplicativo, nem no formulário Evolution.
-- A tabela precisa existir e conceder SELECT a `service_role` para as colunas usadas. RLS não substitui GRANT. A configuração existente em `evolution-setup.sql` já inclui os privilégios administrativos; esta entrega não altera políticas nem cria banco.
-- Configure a URL base HTTPS e instância conectada da Evolution no painel existente.
+## Como aplicar a correção:
+1. Abra o painel do seu Supabase em **Edge Functions** → **send-whatsapp**.
+2. Substitua o conteúdo do `index.ts` pelo código de `docs/send-whatsapp.ts`.
+3. Clique em **Deploy** ou publique via CLI.
+4. Garanta que nas configurações da função esteja desativado o "Enforce JWT Verification" (para aceitar chamadas com a chave anon do portal) e que o CORS esteja ativo.
 
-## Fluxo integrado
-
-O finalizador central do portal agora chama `POST https://SEU-BANCO.supabase.co/functions/v1/send-whatsapp` **no servidor**, após marcar um pagamento aprovado como pago e disparar Telegram. O corpo é somente:
-
-```json
-{ "renewal_id": "UUID-DA-RENOVACAO" }
+## Formato da Mensagem WhatsApp Gerada:
 ```
+💰 NOVA RENOVAÇÃO RECEBIDA — AJP VIP
 
-A função verifica a credencial administrativa, consulta a renovação paga com `mp_status = approved`, deriva o proprietário do registro e lê o contato e `base_url`, `instance_name`, `api_key` exclusivamente desse proprietário. Não aceita telefone, dono ou texto arbitrários do navegador. Envia o número sem máscara — `(16) 99785-5438` vira `5516997855438` — com `POST /message/sendText/${encodeURIComponent(instance_name)}`, header `apikey` e `redirect: "manual"`.
-
-O mesmo finalizador atende webhook Mercado Pago, atualização da fatura e cartão. A disputa atômica já existente evita que dois caminhos enviem na mesma confirmação. Telegram, vencimento fixo, comissões e push permanecem no portal.
-
-**Publique também a atualização do portal.** Se usa o adaptador externo `mp-webhook-evolution.ts`, atualize-o com a versão desta entrega: ele reconhece a tentativa feita pelo portal e não envia uma segunda mensagem. Se o seu webhook externo não delega ao portal, acrescente uma chamada administrativa a send-whatsapp após a confirmação aprovada no seu processador; não ative os dois caminhos para a mesma confirmação.
-
-## Validação e limites
-
-Testes automatizados usam respostas simuladas; não houve deploy da função externa nem envio ou pagamento real. Um retorno `accepted` significa aceitação pela Evolution, não entrega garantida ao aparelho.
-
-Sem fila persistente, falhas/timeout não têm reenvio automático; a fatura continua paga. Pagamentos antigos não disparam retroativamente. Chamadas administrativas manuais repetidas a send-whatsapp podem reenviar a mensagem: a função não armazena recibo de entrega. Nunca reabra uma fatura para reenviar WhatsApp.
+👤 Cliente: adm
+🔑 Usuário: adm
+📱 WhatsApp: (16) 99785-5438
+💵 Valor bruto: R$ 2,00
+🏷️ Taxa MP: R$ 0,02
+💚 Valor líquido MP: R$ 1,98
+⌛ Período: +30 dias
+```
