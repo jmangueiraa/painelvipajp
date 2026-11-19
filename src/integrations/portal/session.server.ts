@@ -31,7 +31,7 @@ export async function getClientByPortalUsername(username: string): Promise<Porta
   return data[0] as unknown as PortalClient;
 }
 
-export const SESSION_TTL_DAYS = 30;
+export const SESSION_TTL_DAYS = 90;
 export const OTP_TTL_MIN = 10;
 export const OTP_MAX_ATTEMPTS = 5;
 
@@ -90,6 +90,25 @@ export async function getClientByPhone(phoneDigits: string): Promise<PortalClien
   return (match as PortalClient) ?? null;
 }
 
+export async function touchSession(token: string): Promise<string | null> {
+  try {
+    const hash = sha256(token);
+    const newExpires = new Date(Date.now() + SESSION_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const { error } = await supabaseAdmin
+      .from("portal_sessions")
+      .update({ last_seen_at: new Date().toISOString(), expires_at: newExpires })
+      .eq("token_hash", hash);
+    if (error) {
+      console.warn("[touchSession error]", error);
+      return null;
+    }
+    return newExpires;
+  } catch (err) {
+    console.warn("[touchSession exception]", err);
+    return null;
+  }
+}
+
 export async function getSessionFromRequest(request: Request, bodyToken?: string): Promise<PortalClient | null> {
   const auth = request.headers.get("authorization") || request.headers.get("Authorization");
   let token = auth?.startsWith("Bearer ") ? auth.slice(7).trim() : (auth || "").trim();
@@ -116,6 +135,8 @@ export async function getSessionFromRequest(request: Request, bodyToken?: string
         const { data: s } = await supabaseAdmin.from("settings").select("user_id").limit(1).maybeSingle();
         if (s?.user_id) c.user_id = s.user_id;
       }
+      // Renovação silenciosa da sessão no banco
+      void touchSession(token);
       return c;
     }
   } catch (ex) {
@@ -135,13 +156,15 @@ export async function getSessionFromRequest(request: Request, bodyToken?: string
         const { data: s } = await supabaseAdmin.from("settings").select("user_id").limit(1).maybeSingle();
         if (s?.user_id) c.user_id = s.user_id;
       }
+      // Renovação silenciosa da sessão no banco
+      void touchSession(token);
       return c;
     }
   } catch (ex) {
     console.warn("[getSessionFromRequest rpc get_session fallback]", ex);
   }
 
-  // 3. Fallback via consulta direta às tabelas
+  // 3. Fallback via consulta direta às tabelas com renovação contínua da sessão
   try {
     const hash = sha256(token);
     const { data: sess, error: sessErr } = await supabaseAdmin
@@ -154,7 +177,13 @@ export async function getSessionFromRequest(request: Request, bodyToken?: string
     if (!sess) return null;
     if (new Date(sess.expires_at).getTime() < Date.now()) return null;
 
-    await supabaseAdmin.from("portal_sessions").update({ last_seen_at: new Date().toISOString() }).eq("token_hash", hash);
+    // Renova silentemente expires_at para mais 90 dias a cada acesso
+    const rollingExpires = new Date(Date.now() + SESSION_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    await supabaseAdmin
+      .from("portal_sessions")
+      .update({ last_seen_at: new Date().toISOString(), expires_at: rollingExpires })
+      .eq("token_hash", hash);
+
     const { data: c, error: clientErr } = await supabaseAdmin
       .from("clients")
       .select("id,user_id,name,phone,due_date,status,price_cents,plan_id,server_id,iptv_login,iptv_password,referral_code,referred_by,bonus_days,points")

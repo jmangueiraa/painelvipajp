@@ -39,7 +39,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { brl, formatDateBR } from "@/lib/format";
-import { clearPortalToken, getPortalToken, portalFetch, PortalFetchError } from "@/lib/portal-client";
+import { clearPortalToken, getPortalToken, portalFetch, PortalFetchError, silentRefreshSession } from "@/lib/portal-client";
 import { PortalShell, type PortalTab } from "@/components/portal/portal-shell";
 import { PortalAdminPanel } from "@/components/portal/portal-admin-panel";
 import { InstallAppCard } from "@/components/portal/install-app-card";
@@ -199,6 +199,11 @@ function PortalDashboard() {
   const pollRef = useRef<number | null>(null);
   const sentWhatsappRef = useRef<Set<string>>(new Set());
 
+  // Silent session renewal & live invoice revalidation state
+  const [isValidatingInvoices, setIsValidatingInvoices] = useState(false);
+  const [isRefreshingPaymentSession, setIsRefreshingPaymentSession] = useState(false);
+  const lastRevalidationTimeRef = useRef(0);
+
   // Updates & AI Agent & Store
   const [updatesKind, setUpdatesKind] = useState<"movie" | "series" | "games" | null>(null);
   const [supportOpen, setSupportOpen] = useState(false);
@@ -350,10 +355,60 @@ function PortalDashboard() {
       } catch {}
       return undefined;
     },
-    staleTime: 1000 * 60 * 3, // 3 min de cache ativo (troca de aba instantânea)
-    refetchOnWindowFocus: false, // Evita travamentos ao trocar de aba no celular
+    staleTime: 1000 * 20, // 20s para revalidação rápida
+    refetchOnWindowFocus: false, // Gerenciado explicitamente pelo listener com renovação silenciosa
     retry: false,
   });
+
+  // Listener para visibilitychange e focus com renovação silenciosa transparente e revalidação de faturas
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleVisibilityOrFocus = async () => {
+      const now = Date.now();
+      if (now - lastRevalidationTimeRef.current < 2500) return;
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+
+      const token = getPortalToken();
+      if (!token) return;
+
+      lastRevalidationTimeRef.current = now;
+      setIsValidatingInvoices(true);
+
+      try {
+        // 1. Renovação silenciosa da sessão (supabase.auth e token do portal) ANTES de consultar as faturas
+        const refreshResult = await silentRefreshSession();
+        if (!refreshResult.ok && refreshResult.fatal) {
+          console.warn("[portal] Sessão definitivamente inválida ou revogada.");
+          handleLogout();
+          return;
+        }
+
+        // 2. Consulta imediata ao banco de dados para atualizar faturas e contrato
+        try { localStorage.removeItem("portal_cached_me"); } catch {}
+        await refetch();
+      } catch (err) {
+        console.warn("[portal] Falha não-crítica ao revalidar faturas:", err);
+      } finally {
+        setIsValidatingInvoices(false);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+    window.addEventListener("focus", handleVisibilityOrFocus);
+
+    // Validação silenciosa em segundo plano ao abrir o painel
+    void silentRefreshSession().then((res) => {
+      if (!res.ok && res.fatal) {
+        handleLogout();
+      }
+    });
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+    };
+  }, [refetch]);
 
   const storeProducts: StoreItem[] =
     (remoteProducts && remoteProducts.length > 0 ? remoteProducts : null) ??
@@ -369,13 +424,20 @@ function PortalDashboard() {
         error.message?.includes("Unauthorized") ||
         error.message?.includes("Sessão administrativa");
       if (is401) {
-        try { localStorage.removeItem("portal_cached_me"); } catch {}
-    qc.removeQueries({ queryKey: ["portal"] });
-    clearPortalToken();
-        navigate({ to: "/portal" });
+        // Tenta renovar silenciosamente antes de deslogar o cliente
+        void silentRefreshSession().then((res) => {
+          if (!res.ok && res.fatal) {
+            try { localStorage.removeItem("portal_cached_me"); } catch {}
+            qc.removeQueries({ queryKey: ["portal"] });
+            clearPortalToken();
+            navigate({ to: "/portal" });
+          } else {
+            void refetch();
+          }
+        });
       }
     }
-  }, [error, navigate]);
+  }, [error, navigate, qc, refetch]);
 
   useEffect(() => {
     if (!data || !data.client) return;
@@ -530,6 +592,27 @@ function PortalDashboard() {
     setRenewOpen(true);
   }
 
+  // Ação "Pagar agora" com renovação silenciosa transparente e revalidação do banco
+  async function handlePayNow(e?: React.MouseEvent) {
+    if (e) e.preventDefault();
+    setIsRefreshingPaymentSession(true);
+    try {
+      const refreshResult = await silentRefreshSession();
+      if (!refreshResult.ok && refreshResult.fatal) {
+        toast.error("Sua sessão expirou. Faça login novamente.");
+        handleLogout();
+        return;
+      }
+      try { localStorage.removeItem("portal_cached_me"); } catch {}
+      await refetch();
+    } catch (err) {
+      console.warn("[handlePayNow silent refresh warning]", err);
+    } finally {
+      setIsRefreshingPaymentSession(false);
+    }
+    openInvoiceModal();
+  }
+
   function openStoreItem(p: StoreItem) {
     setStoreItem(p);
     setStoreMethod(null);
@@ -548,22 +631,39 @@ function PortalDashboard() {
     }
   }
 
-  function choosePix() {
+  async function choosePix() {
     if (!chosenPeriod) return;
     setMethod("pix");
     setPixPeriod(chosenPeriod);
     setCreating(true);
+    const refreshResult = await silentRefreshSession();
+    if (!refreshResult.ok && refreshResult.fatal) {
+      toast.error("Sua sessão expirou. Faça login novamente.");
+      handleLogout();
+      return;
+    }
     renew.mutate({ days: chosenPeriod.days, amount_cents: chosenPeriod.price_cents, label: chosenPeriod.label });
   }
 
-  function chooseCard() {
+  async function chooseCard() {
     if (!chosenPeriod) return;
     setMethod("card");
     setCreating(false);
+    const refreshResult = await silentRefreshSession();
+    if (!refreshResult.ok && refreshResult.fatal) {
+      toast.error("Sua sessão expirou. Faça login novamente.");
+      handleLogout();
+    }
   }
 
   async function handleCardSubmit(cardData: CardFormData) {
     if (!chosenPeriod) return { ok: false, error: "Nenhum plano selecionado" };
+    const refreshResult = await silentRefreshSession();
+    if (!refreshResult.ok && refreshResult.fatal) {
+      toast.error("Sua sessão expirou. Faça login novamente.");
+      handleLogout();
+      return { ok: false, message: "Sessão expirada" };
+    }
     try {
       const res = await portalFetch<{
         ok: boolean;
@@ -840,36 +940,55 @@ function PortalDashboard() {
               </span>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="bg-amber-100 text-amber-900 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                  {overdue ? "Vencido" : "A vencer"}
-                </span>
-                <span className="text-xs text-slate-400 font-medium">
-                  {overdue ? `Vencido há ${Math.abs(dueDays)} dias` : `Faltam ${dueDays} dias`}
-                </span>
-              </div>
-
-              <div>
-                <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                  {brl(data.client.price_cents > 0 ? data.client.price_cents : data.plan?.price_cents || 3000)}
+            {isValidatingInvoices ? (
+              <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4 animate-pulse">
+                <div className="flex items-center justify-between">
+                  <div className="h-5 w-24 bg-slate-200 rounded-full" />
+                  <div className="h-4 w-28 bg-slate-100 rounded" />
                 </div>
-                <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
-                  <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                  <span>Vencimento em {formatDateBR(data.client.due_date)}</span>
+                <div className="space-y-2">
+                  <div className="h-8 w-36 bg-slate-200 rounded-lg" />
+                  <div className="h-4 w-44 bg-slate-100 rounded" />
                 </div>
+                <div className="h-12 w-full bg-slate-200 rounded-xl" />
               </div>
+            ) : (
+              <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="bg-amber-100 text-amber-900 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                    {overdue ? "Vencido" : "A vencer"}
+                  </span>
+                  <span className="text-xs text-slate-400 font-medium">
+                    {overdue ? `Vencido há ${Math.abs(dueDays)} dias` : `Faltam ${dueDays} dias`}
+                  </span>
+                </div>
 
-              {/* Botão Pagar Agora (Grande, Laranja, com Ícone) */}
-              <button
-                type="button"
-                onClick={openInvoiceModal}
-                className="w-full bg-[#FF5500] hover:bg-[#E04B00] active:scale-[0.99] text-white font-extrabold py-3.5 px-4 rounded-xl shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 text-sm sm:text-base transition-all cursor-pointer"
-              >
-                <QrCode className="h-5 w-5" />
-                <span>Pagar agora</span>
-              </button>
-            </div>
+                <div>
+                  <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                    {brl(data.client.price_cents > 0 ? data.client.price_cents : data.plan?.price_cents || 3000)}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
+                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                    <span>Vencimento em {formatDateBR(data.client.due_date)}</span>
+                  </div>
+                </div>
+
+                {/* Botão Pagar Agora (Grande, Laranja, com Ícone) */}
+                <button
+                  type="button"
+                  onClick={handlePayNow}
+                  disabled={isRefreshingPaymentSession}
+                  className="w-full bg-[#FF5500] hover:bg-[#E04B00] active:scale-[0.99] text-white font-extrabold py-3.5 px-4 rounded-xl shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 text-sm sm:text-base transition-all cursor-pointer disabled:opacity-80"
+                >
+                  {isRefreshingPaymentSession ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <QrCode className="h-5 w-5" />
+                  )}
+                  <span>Pagar agora</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Seção "Acesso Rápido" (Botões Circulares da Imagem 2) */}
@@ -879,7 +998,7 @@ function PortalDashboard() {
               {/* 1. Pagamento / Renovação */}
               <button
                 type="button"
-                onClick={openInvoiceModal}
+                onClick={handlePayNow}
                 className="flex flex-col items-center gap-1.5 p-2 rounded-2xl bg-white border border-slate-100 hover:border-orange-300 shadow-sm transition-all hover:shadow cursor-pointer active:scale-95"
               >
                 <div className="w-12 h-12 rounded-2xl bg-orange-50 text-[#FF5500] flex items-center justify-center">
@@ -1062,30 +1181,42 @@ function PortalDashboard() {
               Em aberto
             </span>
 
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between gap-3">
-              <div className="space-y-1">
-                <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-                  <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                  <span>Vencimento em {formatDateBR(data.client.due_date)}</span>
+            {isValidatingInvoices ? (
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between gap-3 animate-pulse">
+                <div className="space-y-2">
+                  <div className="h-4 w-36 bg-slate-200 rounded" />
+                  <div className="h-6 w-28 bg-slate-200 rounded" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-black text-slate-900">
-                    {brl(data.client.price_cents > 0 ? data.client.price_cents : data.plan?.price_cents || 3000)}
-                  </span>
-                  <span className="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-                    {overdue ? "Vencido" : "A vencer"}
-                  </span>
-                </div>
+                <div className="h-9 w-20 bg-slate-200 rounded-xl" />
               </div>
+            ) : (
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                    <span>Vencimento em {formatDateBR(data.client.due_date)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-black text-slate-900">
+                      {brl(data.client.price_cents > 0 ? data.client.price_cents : data.plan?.price_cents || 3000)}
+                    </span>
+                    <span className="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                      {overdue ? "Vencido" : "A vencer"}
+                    </span>
+                  </div>
+                </div>
 
-              <button
-                type="button"
-                onClick={openInvoiceModal}
-                className="bg-[#FF5500] hover:bg-[#E04B00] active:scale-95 text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-sm transition cursor-pointer"
-              >
-                Pagar
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={handlePayNow}
+                  disabled={isRefreshingPaymentSession}
+                  className="bg-[#FF5500] hover:bg-[#E04B00] active:scale-95 text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-sm transition cursor-pointer disabled:opacity-80 flex items-center gap-1.5"
+                >
+                  {isRefreshingPaymentSession ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                  <span>Pagar</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Seção "PAGAS" (Lista Sanfonada com Checkmark Verde da Imagem 5) */}

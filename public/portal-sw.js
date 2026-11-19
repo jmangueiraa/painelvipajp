@@ -13,7 +13,7 @@ firebase.initializeApp({
 });
 
 const messaging = firebase.messaging();
-const VERSION = "v3";
+const VERSION = "v4";
 const STATIC_CACHE = `portal-static-${VERSION}`;
 const RUNTIME_CACHE = `portal-runtime-${VERSION}`;
 const APP_SHELL = ["/portal/", "/portal/painel", "/portal-manifest.webmanifest", "/portal-icon-192.png", "/portal-icon-512.png"];
@@ -78,10 +78,21 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
 
-  // Nunca interceptar APIs/auth
-  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/~oauth")) return;
+  // Regra NetworkOnly estrita: NUNCA interceptar nem cachear APIs, autenticação, Supabase ou faturas
+  if (
+    url.hostname.includes("supabase.co") ||
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/~oauth") ||
+    url.pathname.includes("portal_sessions") ||
+    url.pathname.includes("clients") ||
+    url.pathname.includes("payments") ||
+    url.searchParams.has("token")
+  ) {
+    return;
+  }
+
+  if (url.origin !== self.location.origin) return;
 
   // HTML / navegação: NetworkFirst
   if (req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html")) {

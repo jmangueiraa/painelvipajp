@@ -51,6 +51,70 @@ export class PortalFetchError extends Error {
   }
 }
 
+export type RefreshResult = {
+  ok: boolean;
+  token?: string;
+  fatal?: boolean;
+  error?: string;
+};
+
+/**
+ * Renovação silenciosa da sessão do usuário:
+ * 1. Renova supabase.auth se houver sessão auth ativa.
+ * 2. Renova o token de sessão do cliente (/api/public/portal/refresh-session).
+ * Nunca desloga em erros transitórios de conexão/rede; apenas em caso de token revogado/inválido (401/403 fatal).
+ */
+export async function silentRefreshSession(): Promise<RefreshResult> {
+  const token = getPortalToken();
+  if (!token) {
+    return { ok: false, fatal: true, error: "no_token" };
+  }
+
+  // 1. Tenta renovar a sessão Supabase se existir
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+    if (data?.session) {
+      await supabase.auth.refreshSession().catch((e) => {
+        console.warn("[portal-client] supabase.auth.refreshSession warning:", e);
+      });
+    }
+  } catch (authErr) {
+    console.warn("[portal-client] supabase.auth silent refresh warning:", authErr);
+  }
+
+  // 2. Renova a sessão do Portal VIP
+  try {
+    const res = await portalFetch<{ ok: boolean; token?: string; error?: string; fatal?: boolean }>(
+      "/api/public/portal/refresh-session",
+      {
+        method: "POST",
+        body: JSON.stringify({ token }),
+      }
+    );
+
+    if (res?.ok) {
+      if (res.token && res.token !== token) {
+        setPortalToken(res.token);
+      }
+      return { ok: true, token: res.token || token };
+    }
+
+    if (res?.fatal) {
+      return { ok: false, fatal: true, error: res.error || "invalid_session" };
+    }
+
+    return { ok: true, token };
+  } catch (err) {
+    if (err instanceof PortalFetchError && (err.status === 401 || err.status === 403)) {
+      return { ok: false, fatal: true, error: err.message };
+    }
+    // Em caso de falha de rede temporária ou 500, NÃO desloga o usuário!
+    console.warn("[portal-client] Falha transitória ao renovar sessão (mantendo login local):", err);
+    return { ok: true, token };
+  }
+}
+
 export async function portalFetch<T = unknown>(path: string, init?: RequestInit): Promise<T> {
   const token = getPortalToken();
   const headers: Record<string, string> = {

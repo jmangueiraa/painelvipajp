@@ -52,6 +52,7 @@ import { Route as ApiPublicPortalMpCreateExtraRouteImport } from './routes/api/p
 import { Route as ApiPublicPortalMpCreatePixRouteImport } from './routes/api/public/portal/mp-create-pix'
 import { Route as ApiPublicPortalMpWebhookRouteImport } from './routes/api/public/portal/mp-webhook'
 import { Route as ApiPublicPortalPublicAiAgentRouteImport } from './routes/api/public/portal/public-ai-agent'
+import { Route as ApiPublicPortalRefreshSessionRouteImport } from './routes/api/public/portal/refresh-session'
 import { Route as ApiPublicPortalRegisterInstallRouteImport } from './routes/api/public/portal/register-install'
 import { Route as ApiPublicPortalRenewRequestRouteImport } from './routes/api/public/portal/renew-request'
 import { Route as ApiPublicPortalRenewalStatusRouteImport } from './routes/api/public/portal/renewal-status'
@@ -299,6 +300,12 @@ const ApiPublicPortalPublicAiAgentRoute =
     path: '/api/public/portal/public-ai-agent',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPortalRefreshSessionRoute =
+  ApiPublicPortalRefreshSessionRouteImport.update({
+    id: '/api/public/portal/refresh-session',
+    path: '/api/public/portal/refresh-session',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPortalRegisterInstallRoute =
   ApiPublicPortalRegisterInstallRouteImport.update({
     id: '/api/public/portal/register-install',
@@ -409,6 +416,7 @@ export interface FileRoutesByFullPath {
   '/api/public/portal/mp-create-pix': typeof ApiPublicPortalMpCreatePixRoute
   '/api/public/portal/mp-webhook': typeof ApiPublicPortalMpWebhookRoute
   '/api/public/portal/public-ai-agent': typeof ApiPublicPortalPublicAiAgentRoute
+  '/api/public/portal/refresh-session': typeof ApiPublicPortalRefreshSessionRoute
   '/api/public/portal/register-install': typeof ApiPublicPortalRegisterInstallRoute
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
@@ -465,6 +473,7 @@ export interface FileRoutesByTo {
   '/api/public/portal/mp-create-pix': typeof ApiPublicPortalMpCreatePixRoute
   '/api/public/portal/mp-webhook': typeof ApiPublicPortalMpWebhookRoute
   '/api/public/portal/public-ai-agent': typeof ApiPublicPortalPublicAiAgentRoute
+  '/api/public/portal/refresh-session': typeof ApiPublicPortalRefreshSessionRoute
   '/api/public/portal/register-install': typeof ApiPublicPortalRegisterInstallRoute
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
@@ -523,6 +532,7 @@ export interface FileRoutesById {
   '/api/public/portal/mp-create-pix': typeof ApiPublicPortalMpCreatePixRoute
   '/api/public/portal/mp-webhook': typeof ApiPublicPortalMpWebhookRoute
   '/api/public/portal/public-ai-agent': typeof ApiPublicPortalPublicAiAgentRoute
+  '/api/public/portal/refresh-session': typeof ApiPublicPortalRefreshSessionRoute
   '/api/public/portal/register-install': typeof ApiPublicPortalRegisterInstallRoute
   '/api/public/portal/renew-request': typeof ApiPublicPortalRenewRequestRoute
   '/api/public/portal/renewal-status': typeof ApiPublicPortalRenewalStatusRoute
@@ -581,6 +591,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/mp-create-pix'
     | '/api/public/portal/mp-webhook'
     | '/api/public/portal/public-ai-agent'
+    | '/api/public/portal/refresh-session'
     | '/api/public/portal/register-install'
     | '/api/public/portal/renew-request'
     | '/api/public/portal/renewal-status'
@@ -637,6 +648,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/mp-create-pix'
     | '/api/public/portal/mp-webhook'
     | '/api/public/portal/public-ai-agent'
+    | '/api/public/portal/refresh-session'
     | '/api/public/portal/register-install'
     | '/api/public/portal/renew-request'
     | '/api/public/portal/renewal-status'
@@ -694,6 +706,7 @@ export interface FileRouteTypes {
     | '/api/public/portal/mp-create-pix'
     | '/api/public/portal/mp-webhook'
     | '/api/public/portal/public-ai-agent'
+    | '/api/public/portal/refresh-session'
     | '/api/public/portal/register-install'
     | '/api/public/portal/renew-request'
     | '/api/public/portal/renewal-status'
@@ -733,6 +746,7 @@ export interface RootRouteChildren {
   ApiPublicPortalMpCreatePixRoute: typeof ApiPublicPortalMpCreatePixRoute
   ApiPublicPortalMpWebhookRoute: typeof ApiPublicPortalMpWebhookRoute
   ApiPublicPortalPublicAiAgentRoute: typeof ApiPublicPortalPublicAiAgentRoute
+  ApiPublicPortalRefreshSessionRoute: typeof ApiPublicPortalRefreshSessionRoute
   ApiPublicPortalRegisterInstallRoute: typeof ApiPublicPortalRegisterInstallRoute
   ApiPublicPortalRenewRequestRoute: typeof ApiPublicPortalRenewRequestRoute
   ApiPublicPortalRenewalStatusRoute: typeof ApiPublicPortalRenewalStatusRoute
@@ -1050,6 +1064,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPortalPublicAiAgentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/portal/refresh-session': {
+      id: '/api/public/portal/refresh-session'
+      path: '/api/public/portal/refresh-session'
+      fullPath: '/api/public/portal/refresh-session'
+      preLoaderRoute: typeof ApiPublicPortalRefreshSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/portal/register-install': {
       id: '/api/public/portal/register-install'
       path: '/api/public/portal/register-install'
@@ -1236,6 +1257,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPortalMpCreatePixRoute: ApiPublicPortalMpCreatePixRoute,
   ApiPublicPortalMpWebhookRoute: ApiPublicPortalMpWebhookRoute,
   ApiPublicPortalPublicAiAgentRoute: ApiPublicPortalPublicAiAgentRoute,
+  ApiPublicPortalRefreshSessionRoute: ApiPublicPortalRefreshSessionRoute,
   ApiPublicPortalRegisterInstallRoute: ApiPublicPortalRegisterInstallRoute,
   ApiPublicPortalRenewRequestRoute: ApiPublicPortalRenewRequestRoute,
   ApiPublicPortalRenewalStatusRoute: ApiPublicPortalRenewalStatusRoute,
