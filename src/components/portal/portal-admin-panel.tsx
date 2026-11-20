@@ -1,5 +1,6 @@
 import React, { Component, type ReactNode, useMemo, useState } from "react";
 import { EvolutionPortalCard } from "@/components/portal/evolution-portal-card";
+import { ServerClientActions } from "@/components/portal/server-client-actions";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
@@ -47,7 +48,6 @@ import {
   Users,
   Wallet,
   X,
-  Radio,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -2894,7 +2894,7 @@ function AdminServerClientsSubView({
       ) : (
         <div className="space-y-2">
           {filteredClients.map((client) => {
-            const isPendingThis = pendingClientId === client.id && importClient.isPending;
+            const isPendingThis = pendingClientId === String(client.id) && importClient.isPending;
             const localClient = localMap.get(client.username.toLowerCase());
             const isLinked = !!localClient;
             const hasDateDiff = isLinked && localClient.due_date !== client.due_date_str && client.due_date_str !== null;
@@ -2992,7 +2992,7 @@ function AdminServerClientsSubView({
                 </div>
 
                 {/* Rodapé / Ações de Vínculo e Importação */}
-                <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100">
                   <div>
                     {isLinked ? (
                       <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600">
@@ -3009,7 +3009,10 @@ function AdminServerClientsSubView({
                     )}
                   </div>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <CardErrorBoundary>
+                      <ServerClientActions client={client} localClient={localClient} onChanged={onChanged} />
+                    </CardErrorBoundary>
                     {hasDateDiff && (
                       <Button
                         size="sm"

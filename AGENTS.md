@@ -16,6 +16,10 @@
 ## Portal invoice confirmation
 - Keep renewal confirmation in a dedicated portal component with semantic invoice tokens; normalize the existing status response client-side without changing payment processing.
 
+## RBOYS client actions
+- Route client operations through the existing admin-token-verified portal endpoint and a validated server-only action adapter, never a browser API key or a second payment engine; this preserves portal authentication and owner-scoped integrations.
+- Keep each client's actions in an isolated menu/dialog component and invalidate server clients, access messages and credits after mutations; provider failures must stay local to the action.
+
 ## WhatsApp integrations
 - Approved-payment WhatsApp delivery is invoked once by the central portal finalizer through the external send-whatsapp export under docs; this covers polling and card approvals without exposing credentials or duplicating webhook sends.
 - Keep external webhook export adapters under docs and delegate payment finalization to the existing portal processor; this preserves commissions, push and billing behavior without deploying a second payment engine.

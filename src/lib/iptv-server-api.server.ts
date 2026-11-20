@@ -365,6 +365,7 @@ export async function callIptvServerApi<T = any>(
     method,
     headers,
     signal: controller.signal,
+    redirect: "manual",
   };
 
   if (options?.body) {
@@ -375,7 +376,7 @@ export async function callIptvServerApi<T = any>(
     const res = await fetch(fullUrl, init).finally(() => clearTimeout(timeout));
     const data = await res.json().catch(() => ({}));
 
-    if (!res.ok) {
+    if (!res.ok || (data && (data.ok === false || data.success === false))) {
       const errMsg = (data && (data.error || data.message)) || `HTTP ${res.status}`;
       throw new Error(`Erro na API do servidor IPTV (${errMsg})`);
     }

@@ -446,6 +446,30 @@ export const Route = createFileRoute("/api/public/portal/admin")({
             return json(result, request);
           }
 
+          if (action === "server_client_action" || action === "send_server_access_whatsapp") {
+            const { serverClientActionSchema } = await import("@/lib/server-client-actions");
+            const { runServerClientAction } = await import("@/lib/server-client-actions.server");
+            const parsed = serverClientActionSchema.safeParse(action === "send_server_access_whatsapp"
+              ? { ...body, operation: "message" } : body);
+            if (!parsed.success) return json({ error: "Dados da ação inválidos." }, request, { status: 400 });
+            if (action === "server_client_action") return json(await runServerClientAction(ownerId, parsed.data), request);
+            const { fetchServerClients } = await import("@/lib/iptv-server-api.server");
+            const serverClients = await fetchServerClients(ownerId);
+            const serverClient = serverClients.clients.find(client => String(client.id) === String(parsed.data.client_id)
+              && client.type.toLowerCase() === parsed.data.service_type);
+            if (!serverClient) return json({ error: "Cliente não encontrado no servidor." }, request, { status: 404 });
+            const { data: localClient, error } = await supabaseAdmin.from("clients").select("id,phone,iptv_login")
+              .eq("user_id", ownerId).eq("id", String(body.local_client_id ?? "")).maybeSingle();
+            if (error || !localClient?.phone || localClient.iptv_login?.trim().toLowerCase() !== serverClient.username.trim().toLowerCase()) {
+              return json({ error: "Vincule este cliente a um telefone no AJPVIP antes de enviar." }, request, { status: 400 });
+            }
+            const result = await runServerClientAction(ownerId, parsed.data);
+            if (!("message" in result) || !result.message) throw new Error("Dados de acesso indisponíveis.");
+            const { sendEvolutionText } = await import("@/lib/evolution-api.server");
+            await sendEvolutionText({ userId: ownerId, phone: localClient.phone, message: result.message });
+            return json({ ok: true }, request);
+          }
+
           if (action === "get_server_clients") {
             const { fetchServerClients } = await import("@/lib/iptv-server-api.server");
             const data = await fetchServerClients(ownerId);

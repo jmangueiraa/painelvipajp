@@ -1,5 +1,9 @@
 # Preparação Android TWA
 
+## Ações dos clientes RBOYS
+- [x] Adicionar seis ações sem player, modais e confirmações, com servidor central do portal protegido (não Edge Function externa) e envio Evolution ao telefone vinculado.
+- [x] Validar 8 testes de contratos; painel autenticado com 175 menus, 19 planos e mensagem de acesso real; celular sem transbordamento e alteração simulada atualizando lista/créditos, sem alterar clientes nem consumir créditos reais.
+
 ## WhatsApp Evolution API
 - [x] Entregar send-whatsapp externa protegida e integrar a confirmação central de pagamento; 25 testes simulados aprovados, instruções e código completo entregues.
 - [ ] Publicar send-whatsapp e atualização do portal/adaptador externo, depois validar novo pagamento real (depende da publicação no painel externo pelo proprietário).
