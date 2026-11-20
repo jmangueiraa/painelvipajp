@@ -1191,8 +1191,10 @@ function AdminFinanceTab({ data }: { data: AdminSnapshot }) {
           <p className="text-lg font-black text-emerald-600 mt-0.5">{brl(f.lucroMes)}</p>
         </div>
         <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100">
-          <p className="text-[11px] text-slate-500 font-medium">Lucro no ano</p>
-          <p className="text-lg font-black text-sky-600 mt-0.5">{brl(f.lucroAno)}</p>
+          <p className="text-[11px] text-slate-500 font-medium">Lucro estimado do mês</p>
+          <p className="text-lg font-black text-sky-600 mt-0.5">
+            {brl((f.receitaMes ?? 0) - (f.despesaMes ?? 0))}
+          </p>
         </div>
       </div>
 
