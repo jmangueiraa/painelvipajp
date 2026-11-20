@@ -27,6 +27,7 @@ import {
   Plug,
   Plus,
   QrCode,
+  Radio,
   RefreshCw,
   Save,
   Search,
