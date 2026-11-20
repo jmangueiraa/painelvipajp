@@ -446,6 +446,28 @@ export const Route = createFileRoute("/api/public/portal/admin")({
             return json(result, request);
           }
 
+          if (action === "get_server_clients") {
+            const { fetchServerClients } = await import("@/lib/iptv-server-api.server");
+            const data = await fetchServerClients(ownerId);
+            return json(data, request);
+          }
+
+          if (action === "import_server_client") {
+            const { importServerClient } = await import("@/lib/iptv-server-api.server");
+            const result = await importServerClient(ownerId, {
+              username: String(body.username ?? ""),
+              password: body.password ? String(body.password) : undefined,
+              name: body.name ? String(body.name) : undefined,
+              phone: body.phone ? String(body.phone) : undefined,
+              due_date: body.due_date ? String(body.due_date) : null,
+              type: body.type ? String(body.type) : "IPTV",
+              server_name: body.server_name ? String(body.server_name) : "RBOYS",
+              price_cents: body.price_cents ? Number(body.price_cents) : 3000,
+              notes: body.notes ? String(body.notes) : undefined,
+            });
+            return json(result, request);
+          }
+
           if (action === "test_telegram") {
             const s = await portalAdmin.getAdminSettingsRow(ownerId);
             const botToken = String(s?.telegram_bot_token ?? "").trim();

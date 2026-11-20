@@ -58,6 +58,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { PortalTab } from "@/components/portal/portal-shell";
 import { brl, formatDateBR, formatDateTimeBR, parseBrlToCents, todayISO } from "@/lib/format";
 import { portalFetch } from "@/lib/portal-client";
+import type { NormalizedServerClient } from "@/lib/iptv-server-api";
 import {
   buildChargeMessage,
   buildWhatsAppHref,
@@ -65,7 +66,7 @@ import {
   normalizeBrPhone,
 } from "@/lib/whatsapp-message";
 
-export type AdminSubView = "home" | "loja" | "apis" | "apk" | "config" | "iptv";
+export type AdminSubView = "home" | "loja" | "apis" | "apk" | "config" | "iptv" | "server_clients";
 export type ClientFilter =
   | "todos"
   | "ativos"
@@ -498,6 +499,13 @@ export function PortalAdminPanel({
                 onClick={() => openClientsWithFilter("todos")}
               />
               <QuickActionTile
+                label="CLIENTES"
+                subLabel="RBOYS"
+                badgeClass="bg-sky-100/80 text-sky-600"
+                icon={<ServerIcon className="h-5 w-5" />}
+                onClick={() => setSubView("server_clients")}
+              />
+              <QuickActionTile
                 label="Faturamento"
                 badgeClass="bg-amber-100/80 text-amber-600"
                 icon={<TrendingUp className="h-5 w-5" />}
@@ -622,6 +630,9 @@ export function PortalAdminPanel({
       )}
       {activeTab === "admin" && subView === "iptv" && (
         <AdminIptvSubView data={data} onBack={() => setSubView("home")} onChanged={invalidateAdmin} />
+      )}
+      {activeTab === "admin" && subView === "server_clients" && (
+        <AdminServerClientsSubView data={data} onBack={() => setSubView("home")} onChanged={invalidateAdmin} />
       )}
 
       {/* ===================================================================== */}
@@ -828,11 +839,13 @@ export function PortalAdminPanel({
 
 function QuickActionTile({
   label,
+  subLabel,
   badgeClass,
   icon,
   onClick,
 }: {
   label: string;
+  subLabel?: string;
   badgeClass: string;
   icon: React.ReactNode;
   onClick: () => void;
@@ -841,12 +854,17 @@ function QuickActionTile({
     <button
       type="button"
       onClick={onClick}
-      className="bg-white rounded-2xl py-3 px-1.5 shadow-sm border border-slate-100 flex flex-col items-center justify-start gap-1.5 text-center hover:border-orange-200 active:scale-95 transition cursor-pointer min-h-[92px]"
+      className="bg-white rounded-2xl py-3 px-1.5 shadow-sm border border-slate-100 flex flex-col items-center justify-start gap-1 text-center hover:border-orange-200 active:scale-95 transition cursor-pointer min-h-[92px]"
     >
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${badgeClass}`}>
         {icon}
       </div>
-      <span className="text-[11px] font-bold text-slate-700 leading-tight break-words">{label}</span>
+      <div className="flex flex-col items-center">
+        <span className="text-[11px] font-bold text-slate-700 leading-tight break-words">{label}</span>
+        {subLabel && (
+          <span className="text-[9px] font-extrabold text-[#FF5500] leading-none mt-0.5 tracking-wider">{subLabel}</span>
+        )}
+      </div>
     </button>
   );
 }
@@ -2258,6 +2276,457 @@ function AdminIptvSubView({
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ========================================================================== */
+/* SUBMÓDULO: CLIENTES DO SERVIDOR (RBOYS)                                    */
+/* ========================================================================== */
+function AdminServerClientsSubView({
+  data,
+  onBack,
+  onChanged,
+}: {
+  data: AdminSnapshot;
+  onBack: () => void;
+  onChanged: () => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"todos" | "ativos" | "vencem_hoje" | "vencidos">("todos");
+  const [typeFilter, setTypeFilter] = useState<"todos" | "iptv" | "p2p">("todos");
+  const [showSecrets, setShowSecrets] = useState(false);
+  const [pendingClientId, setPendingClientId] = useState<string | null>(null);
+
+  // Mapa local para identificar quem já está cadastrado no AJPVIP (por iptv_login)
+  const localMap = useMemo(() => {
+    const map = new Map<string, AdminClientRow>();
+    for (const c of data.clients) {
+      if (c.iptv_login) {
+        map.set(c.iptv_login.trim().toLowerCase(), c);
+      }
+    }
+    return map;
+  }, [data.clients]);
+
+  // Consulta em tempo real à API do servidor RBOYS
+  const serverQuery = useQuery({
+    queryKey: ["portal", "admin", "server-clients"],
+    queryFn: () =>
+      adminPost<{
+        ok: boolean;
+        server_name: string;
+        base_url: string;
+        total: number;
+        kpis: {
+          total: number;
+          ativos: number;
+          vencidos: number;
+          vencem_hoje: number;
+        };
+        clients: NormalizedServerClient[];
+        error?: string;
+      }>("get_server_clients"),
+    staleTime: 1000 * 30,
+    refetchOnWindowFocus: false,
+  });
+
+  // Mutação para importar ou atualizar vínculo mantendo data exata do servidor
+  const importClient = useMutation({
+    mutationFn: (client: NormalizedServerClient) => {
+      setPendingClientId(client.id);
+      return adminPost("import_server_client", { client });
+    },
+    onSuccess: (_, client) => {
+      setPendingClientId(null);
+      toast.success(`Cliente ${client.username} sincronizado com sucesso no AJPVIP!`);
+      onChanged();
+      void serverQuery.refetch();
+    },
+    onError: (err: Error) => {
+      setPendingClientId(null);
+      toast.error(err.message || "Falha ao vincular cliente");
+    },
+  });
+
+  const allClients = serverQuery.data?.clients ?? [];
+  const kpis = serverQuery.data?.kpis ?? {
+    total: allClients.length,
+    ativos: allClients.filter((c) => c.status === "ativo").length,
+    vencidos: allClients.filter((c) => c.status === "vencido").length,
+    vencem_hoje: allClients.filter((c) => c.status === "vencem_hoje").length,
+  };
+
+  // Filtragem
+  const filteredClients = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return allClients.filter((client) => {
+      if (typeFilter !== "todos" && client.type !== typeFilter) {
+        return false;
+      }
+      if (statusFilter !== "todos" && client.status !== statusFilter) {
+        return false;
+      }
+      if (term) {
+        const matchesUser = client.username.toLowerCase().includes(term);
+        const matchesName = client.name?.toLowerCase().includes(term);
+        const matchesNotes = client.notes?.toLowerCase().includes(term);
+        if (!matchesUser && !matchesName && !matchesNotes) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [allClients, search, statusFilter, typeFilter]);
+
+  return (
+    <div className="space-y-4">
+      <SubViewHeader
+        title="Clientes do Servidor"
+        subtitle={`Sincronização em tempo real — ${serverQuery.data?.server_name || "RBOYS"}`}
+        onBack={onBack}
+        rightAction={
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSecrets(!showSecrets)}
+              className="h-8 px-2.5 rounded-xl text-xs font-semibold border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer"
+            >
+              {showSecrets ? <EyeOff className="h-3.5 w-3.5 mr-1 text-slate-500" /> : <Eye className="h-3.5 w-3.5 mr-1 text-slate-500" />}
+              {showSecrets ? "Ocultar Senhas" : "Ver Senhas"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={serverQuery.isFetching}
+              onClick={() => void serverQuery.refetch()}
+              className="h-8 px-2.5 rounded-xl text-xs font-semibold border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 mr-1 ${serverQuery.isFetching ? "animate-spin text-[#FF5500]" : "text-slate-500"}`} />
+              Atualizar
+            </Button>
+          </div>
+        }
+      />
+
+      {/* KPIs Cards Resumidos */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm">
+          <p className="text-[11px] font-bold text-slate-500">Total no Servidor</p>
+          <p className="text-xl font-extrabold text-slate-900 mt-0.5">{kpis.total}</p>
+        </div>
+        <div className="bg-white rounded-2xl p-3 border border-emerald-100 shadow-sm bg-gradient-to-br from-white to-emerald-50/30">
+          <p className="text-[11px] font-bold text-emerald-700">Ativos</p>
+          <p className="text-xl font-extrabold text-emerald-600 mt-0.5">{kpis.ativos}</p>
+        </div>
+        <div className="bg-white rounded-2xl p-3 border border-amber-100 shadow-sm bg-gradient-to-br from-white to-amber-50/30">
+          <p className="text-[11px] font-bold text-amber-700">Vencendo Hoje</p>
+          <p className="text-xl font-extrabold text-amber-600 mt-0.5">{kpis.vencem_hoje}</p>
+        </div>
+        <div className="bg-white rounded-2xl p-3 border border-rose-100 shadow-sm bg-gradient-to-br from-white to-rose-50/30">
+          <p className="text-[11px] font-bold text-rose-700">Vencidos</p>
+          <p className="text-xl font-extrabold text-rose-600 mt-0.5">{kpis.vencidos}</p>
+        </div>
+      </div>
+
+      {/* Barra de Busca e Filtros */}
+      <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm space-y-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por login, nome ou observação..."
+            className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#FF5500] focus:bg-white transition"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+          {/* Filtro Status */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+            <button
+              type="button"
+              onClick={() => setStatusFilter("todos")}
+              className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer ${
+                statusFilter === "todos" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              Todos ({allClients.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter("ativos")}
+              className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer ${
+                statusFilter === "ativos" ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+              }`}
+            >
+              Ativos ({kpis.ativos})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter("vencem_hoje")}
+              className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer ${
+                statusFilter === "vencem_hoje" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+              }`}
+            >
+              Hoje ({kpis.vencem_hoje})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter("vencidos")}
+              className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer ${
+                statusFilter === "vencidos" ? "bg-rose-600 text-white" : "bg-rose-50 text-rose-700 hover:bg-rose-100"
+              }`}
+            >
+              Vencidos ({kpis.vencidos})
+            </button>
+          </div>
+
+          {/* Filtro Tipo */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setTypeFilter("todos")}
+              className={`px-2 py-1 rounded-lg font-bold text-[10px] transition cursor-pointer ${
+                typeFilter === "todos" ? "bg-slate-800 text-white" : "text-slate-500 hover:bg-slate-100"
+              }`}
+            >
+              Tudo
+            </button>
+            <button
+              type="button"
+              onClick={() => setTypeFilter("iptv")}
+              className={`px-2 py-1 rounded-lg font-bold text-[10px] transition cursor-pointer ${
+                typeFilter === "iptv" ? "bg-sky-600 text-white" : "text-sky-700 bg-sky-50 hover:bg-sky-100"
+              }`}
+            >
+              IPTV
+            </button>
+            <button
+              type="button"
+              onClick={() => setTypeFilter("p2p")}
+              className={`px-2 py-1 rounded-lg font-bold text-[10px] transition cursor-pointer ${
+                typeFilter === "p2p" ? "bg-purple-600 text-white" : "text-purple-700 bg-purple-50 hover:bg-purple-100"
+              }`}
+            >
+              P2P
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Lista de Clientes */}
+      {serverQuery.isLoading ? (
+        <div className="bg-white rounded-2xl p-10 border border-slate-100 shadow-sm flex flex-col items-center justify-center gap-3">
+          <Loader2 className="h-8 w-8 text-[#FF5500] animate-spin" />
+          <p className="text-xs font-semibold text-slate-600">Consultando clientes no servidor RBOYS...</p>
+        </div>
+      ) : serverQuery.isError ? (
+        <div className="bg-white rounded-2xl p-6 border border-rose-100 shadow-sm flex flex-col items-center text-center gap-2">
+          <AlertTriangle className="h-8 w-8 text-rose-500" />
+          <p className="text-sm font-bold text-slate-800">Falha ao consultar servidor IPTV</p>
+          <p className="text-xs text-slate-500 max-w-md">
+            {(serverQuery.error as Error)?.message || "Verifique se a URL Base e a X-API-Key estão salvas corretamente na aba API e Integrações."}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => void serverQuery.refetch()}
+            className="mt-2 text-xs font-bold rounded-xl"
+          >
+            Tentar novamente
+          </Button>
+        </div>
+      ) : filteredClients.length === 0 ? (
+        <div className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm text-center">
+          <p className="text-sm font-bold text-slate-700">Nenhum cliente encontrado</p>
+          <p className="text-xs text-slate-400 mt-1">
+            {search ? "Tente alterar o termo de busca ou filtros." : "O servidor não retornou registros com os filtros atuais."}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filteredClients.map((client) => {
+            const isPendingThis = pendingClientId === client.id && importClient.isPending;
+            const localClient = localMap.get(client.username.toLowerCase());
+            const isLinked = !!localClient;
+            const hasDateDiff = isLinked && localClient.due_date !== client.due_date_str && client.due_date_str !== null;
+
+            return (
+              <div
+                key={`${client.type}-${client.id}-${client.username}`}
+                className="bg-white rounded-2xl p-3.5 border border-slate-100 shadow-sm hover:border-orange-100 transition flex flex-col gap-2.5"
+              >
+                {/* Linha superior: Login/Nome + Badges */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-extrabold text-sm text-slate-900 tracking-tight font-mono">
+                        {client.username}
+                      </span>
+                      <span
+                        className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                          client.type === "iptv" ? "bg-sky-50 text-sky-700 border border-sky-100" : "bg-purple-50 text-purple-700 border border-purple-100"
+                        }`}
+                      >
+                        {client.type.toUpperCase()}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          client.status === "ativo"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                            : client.status === "vencem_hoje"
+                            ? "bg-amber-50 text-amber-700 border border-amber-100"
+                            : client.status === "vencido"
+                            ? "bg-rose-50 text-rose-700 border border-rose-100"
+                            : "bg-slate-50 text-slate-600 border border-slate-100"
+                        }`}
+                      >
+                        {client.status === "ativo"
+                          ? "Ativo"
+                          : client.status === "vencem_hoje"
+                          ? "Vence Hoje"
+                          : client.status === "vencido"
+                          ? "Vencido"
+                          : "Sem Vencimento"}
+                      </span>
+                    </div>
+
+                    {(client.name || client.notes) && (
+                      <p className="text-xs text-slate-600 mt-0.5 truncate font-medium">
+                        {client.name || client.notes}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Botão copiar login */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(client.username);
+                      toast.success(`Usuário ${client.username} copiado!`);
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-lg shrink-0 cursor-pointer"
+                    title="Copiar usuário"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+
+                {/* Linha do Meio: Vencimento e Senha */}
+                <div className="flex items-center justify-between gap-3 text-xs bg-slate-50/80 rounded-xl px-3 py-2">
+                  <div className="flex items-center gap-1.5 text-slate-700">
+                    <CalendarClock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                    <span className="text-slate-500 text-[11px]">Vencimento:</span>
+                    <span className="font-extrabold text-slate-900 font-mono">
+                      {client.display_due}
+                    </span>
+                  </div>
+
+                  {client.password && (
+                    <div className="flex items-center gap-1.5 text-slate-600 font-mono text-[11px]">
+                      <span className="text-slate-400 font-sans text-[10px]">Senha:</span>
+                      <span className="font-bold">
+                        {showSecrets ? client.password : "••••••••"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void navigator.clipboard.writeText(client.password || "");
+                          toast.success(`Senha copiada!`);
+                        }}
+                        className="p-1 hover:bg-slate-200/80 rounded cursor-pointer"
+                        title="Copiar senha"
+                      >
+                        <Copy className="h-3 w-3 text-slate-400 hover:text-slate-700" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Rodapé / Ações de Vínculo e Importação */}
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                  <div>
+                    {isLinked ? (
+                      <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        <span>Vinculado no AJPVIP</span>
+                        {localClient?.name && localClient.name !== client.username && (
+                          <span className="text-slate-400 font-normal">({localClient.name})</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-[11px] text-slate-400 font-medium">
+                        Não cadastrado no banco local
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {hasDateDiff && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={isPendingThis}
+                        onClick={() => importClient.mutate(client)}
+                        className="h-8 rounded-xl text-[11px] font-bold border-amber-300 text-amber-800 bg-amber-50 hover:bg-amber-100 cursor-pointer"
+                      >
+                        {isPendingThis ? (
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-3 w-3 mr-1" />
+                        )}
+                        Sincronizar Data
+                      </Button>
+                    )}
+
+                    {!isLinked ? (
+                      <Button
+                        size="sm"
+                        disabled={isPendingThis}
+                        onClick={() => importClient.mutate(client)}
+                        className="h-8 bg-[#FF5500] hover:bg-[#E04B00] text-white rounded-xl text-[11px] font-bold shadow-sm shadow-[#FF5500]/20 cursor-pointer"
+                      >
+                        {isPendingThis ? (
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        ) : (
+                          <UserPlus className="h-3 w-3 mr-1" />
+                        )}
+                        Vincular / Importar
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={isPendingThis}
+                        onClick={() => importClient.mutate(client)}
+                        className="h-8 text-[11px] font-medium text-slate-500 hover:text-slate-900 cursor-pointer"
+                      >
+                        {isPendingThis ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+                        Re-sincronizar
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
