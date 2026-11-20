@@ -21,10 +21,10 @@ function MetricCard({ label, value, icon, tone = "neutral", onClick }: {
   );
 }
 
-export function ServerOverviewCards({ online, credits, onClients, onOnline, onCredits }: {
-  online: number; credits: string;
+export function ServerOverviewCards({ online, onClients, onOnline }: {
+  online: number; credits?: string;
   onClients: (filter: ServerClientStatusFilter) => void;
-  onOnline: () => void; onCredits: () => void;
+  onOnline: () => void; onCredits?: () => void;
 }) {
   const query = useQuery(serverClientsQueryOptions);
   const summary = query.data?.ok ? query.data : undefined;
@@ -40,7 +40,6 @@ export function ServerOverviewCards({ online, credits, onClients, onOnline, onCr
         <MetricCard label="Total de clientes" value={kpis?.total ?? "--"} icon={<Users />} onClick={() => onClients("todos")} />
         <MetricCard label="Clientes ativos" value={kpis?.ativos ?? "--"} icon={<UserCheck />} tone="success" onClick={() => onClients("ativos")} />
         <MetricCard label="Clientes online" value={online} icon={<Tv />} tone="success" onClick={onOnline} />
-        <MetricCard label="Créditos RBOYS" value={credits} icon={<Coins />} tone="info" onClick={onCredits} />
         <MetricCard label="Vencidos" value={kpis?.vencidos ?? "--"} icon={<AlertTriangle />} tone="danger" onClick={() => onClients("vencidos")} />
         <MetricCard label="Vencem hoje" value={kpis?.vencem_hoje ?? "--"} icon={<CalendarClock />} tone="warning" onClick={() => onClients("vencem_hoje")} />
         <MetricCard label="A vencer no mês" value={monthly ?? "--"} icon={<Calendar />} tone="info" onClick={() => onClients("a_vencer_mes")} />
