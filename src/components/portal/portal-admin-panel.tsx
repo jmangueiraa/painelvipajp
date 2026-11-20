@@ -467,24 +467,92 @@ export function PortalAdminPanel({
             </div>
             <button
               type="button"
-              onClick={() => void refetch()}
+              onClick={() => {
+                void refetch();
+                void onlineConnectionsQuery.refetch();
+                void serverCreditsQuery.refetch();
+              }}
               aria-label="Atualizar dados do painel"
               className="w-9 h-9 rounded-xl bg-white border border-slate-200/80 shadow-sm flex items-center justify-center text-slate-600 hover:text-[#FF5500] cursor-pointer"
             >
-              <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin text-[#FF5500]" : ""}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${
+                  isFetching || onlineConnectionsQuery.isFetching || serverCreditsQuery.isFetching
+                    ? "animate-spin text-[#FF5500]"
+                    : ""
+                }`}
+              />
             </button>
           </div>
 
-          {/* Card Duplo: Área Administrativa Ativa + Painel do Administrador */}
+          {/* Card Duplo: Área Administrativa Ativa + Painel do Administrador com Saldo de Créditos */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="bg-[#E3F3EB] px-4 py-2.5 flex items-center gap-2 border-b border-emerald-200/50">
-              <Users className="h-4 w-4 text-emerald-700 shrink-0" />
-              <span className="text-xs font-bold text-emerald-800">Área Administrativa Ativa</span>
+            <div className="bg-[#E3F3EB] px-4 py-2.5 flex items-center justify-between border-b border-emerald-200/50">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-emerald-700 shrink-0" />
+                <span className="text-xs font-bold text-emerald-800">Área Administrativa Ativa</span>
+              </div>
             </div>
-            <div className="px-4 py-4">
-              <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">
-                Painel do Administrador
-              </h2>
+            <div className="px-4 py-3.5 flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
+              <div className="min-w-0">
+                <h2 className="text-lg font-extrabold text-slate-900 tracking-tight leading-tight">
+                  Painel do Administrador
+                </h2>
+                {serverCreditsQuery.data?.configured && serverCreditsQuery.data?.name && (
+                  <p className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
+                    {serverCreditsQuery.data.name}
+                  </p>
+                )}
+              </div>
+
+              {/* Saldo de Créditos RBOYS posicionado no topo */}
+              {(serverCreditsQuery.isLoading || serverCreditsQuery.data?.configured) && (
+                <div
+                  className={`flex items-center gap-2.5 px-3 py-1.5 rounded-xl border transition shrink-0 ${
+                    serverCreditsQuery.data?.is_low_balance
+                      ? "border-amber-300 bg-amber-50/80 text-amber-900"
+                      : "border-slate-200/80 bg-slate-50/80 text-slate-800"
+                  }`}
+                  title={
+                    serverCreditsQuery.data?.configured
+                      ? `Saldo do servidor ${serverCreditsQuery.data.server_name || "RBOYS"}`
+                      : "Carregando créditos..."
+                  }
+                >
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                      serverCreditsQuery.data?.is_low_balance
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-blue-100 text-blue-700"
+                    }`}
+                  >
+                    <Coins className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        Créditos
+                      </span>
+                      {serverCreditsQuery.data?.is_low_balance && (
+                        <span className="text-[9px] font-extrabold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded-full border border-amber-200">
+                          Baixo
+                        </span>
+                      )}
+                    </div>
+                    <p
+                      className={`text-base font-black leading-none ${
+                        serverCreditsQuery.data?.is_low_balance ? "text-amber-600" : "text-slate-900"
+                      }`}
+                    >
+                      {serverCreditsQuery.isLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin inline text-slate-400" />
+                      ) : (
+                        serverCreditsQuery.data?.formatted_credits ?? "0.00"
+                      )}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -492,164 +560,70 @@ export function PortalAdminPanel({
           <div className="space-y-2.5">
             <h3 className="text-sm font-extrabold text-slate-900 px-0.5">Visão geral do negócio</h3>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-3 gap-2.5">
               <button
                 type="button"
                 onClick={() => openClientsWithFilter("todos")}
-                className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between text-left hover:border-slate-200 active:scale-[0.98] transition cursor-pointer"
+                className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between text-left hover:border-slate-200 active:scale-[0.98] transition cursor-pointer"
               >
                 <div>
-                  <p className="text-[11px] font-medium text-slate-600">Total de clientes</p>
-                  <p className="text-2xl font-black text-slate-900 mt-0.5 leading-none">
+                  <p className="text-[11px] font-medium text-slate-600 leading-tight">Total de clientes</p>
+                  <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1 leading-none">
                     {data.kpis.total}
                   </p>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
-                  <Users className="h-5 w-5" />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => openClientsWithFilter("ativos")}
-                className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between text-left hover:border-emerald-200 active:scale-[0.98] transition cursor-pointer"
+                className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between text-left hover:border-emerald-200 active:scale-[0.98] transition cursor-pointer"
               >
                 <div>
-                  <p className="text-[11px] font-medium text-slate-600">Clientes ativos</p>
-                  <p className="text-2xl font-black text-slate-900 mt-0.5 leading-none">
+                  <p className="text-[11px] font-medium text-slate-600 leading-tight">Clientes ativos</p>
+                  <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1 leading-none">
                     {data.kpis.ativos}
                   </p>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0">
-                  <UserCheck className="h-5 w-5" />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0">
+                  <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => setOnlineModalOpen(true)}
-                className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between text-left hover:border-emerald-200 active:scale-[0.98] transition cursor-pointer relative group"
+                className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between text-left hover:border-emerald-200 active:scale-[0.98] transition cursor-pointer relative group"
               >
                 <div className="min-w-0 pr-1">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-[11px] font-medium text-slate-600 truncate">Clientes Online</p>
+                    <p className="text-[11px] font-medium text-slate-600 truncate leading-tight">Clientes Online</p>
                     <span className="relative flex h-2 w-2 shrink-0">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
                   </div>
-                  <div className="flex items-baseline gap-2 mt-0.5">
-                    <p className="text-2xl font-black text-slate-900 leading-none">
+                  <div className="flex items-baseline gap-1.5 mt-1">
+                    <p className="text-xl sm:text-2xl font-black text-slate-900 leading-none">
                       {onlineConnectionsQuery.isLoading ? (
-                        <Loader2 className="h-6 w-6 animate-spin text-slate-300 inline" />
+                        <Loader2 className="h-5 w-5 animate-spin text-slate-300 inline" />
                       ) : (
                         onlineConnectionsQuery.data?.total ?? 0
                       )}
                     </p>
-                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100/60 leading-none">
+                    <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100/60 leading-none">
                       Ao vivo
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0">
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    title="Atualizar conexões online"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void onlineConnectionsQuery.refetch();
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.stopPropagation();
-                        void onlineConnectionsQuery.refetch();
-                      }
-                    }}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
-                  >
-                    <RefreshCw className={`h-3.5 w-3.5 ${onlineConnectionsQuery.isFetching ? "animate-spin text-[#FF5500]" : ""}`} />
-                  </span>
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0">
-                    <Tv className="h-5 w-5" />
-                  </div>
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Tv className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
               </button>
-
-              <div
-                className={`bg-white rounded-2xl p-3.5 shadow-sm border transition flex items-center justify-between text-left relative ${
-                  serverCreditsQuery.data?.is_low_balance
-                    ? "border-amber-300 bg-amber-50/20 ring-1 ring-amber-200"
-                    : "border-slate-100 hover:border-slate-200"
-                }`}
-              >
-                <div className="min-w-0 pr-1">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-[11px] font-medium text-slate-600 truncate">Créditos RBOYS</p>
-                    {serverCreditsQuery.data?.is_low_balance && (
-                      <span className="text-[9px] font-extrabold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full border border-amber-200 leading-none">
-                        Saldo baixo
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-baseline gap-1 mt-0.5">
-                    <p
-                      className={`text-2xl font-black leading-none ${
-                        serverCreditsQuery.data?.is_low_balance ? "text-amber-600" : "text-slate-900"
-                      }`}
-                    >
-                      {serverCreditsQuery.isLoading ? (
-                        <Loader2 className="h-6 w-6 animate-spin text-slate-300 inline" />
-                      ) : !serverCreditsQuery.data?.configured ? (
-                        <span className="text-xs font-bold text-slate-400">Não config.</span>
-                      ) : (
-                        serverCreditsQuery.data?.formatted_credits ?? "0.00"
-                      )}
-                    </p>
-                    {serverCreditsQuery.data?.configured && (
-                      <span className="text-[10px] font-semibold text-slate-500 leading-none">
-                        créditos
-                      </span>
-                    )}
-                  </div>
-                  {serverCreditsQuery.data?.name && (
-                    <p className="text-[10px] text-slate-500 truncate mt-0.5" title={serverCreditsQuery.data.name}>
-                      {serverCreditsQuery.data.name}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-1 shrink-0">
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    title="Atualizar saldo de créditos"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void serverCreditsQuery.refetch();
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.stopPropagation();
-                        void serverCreditsQuery.refetch();
-                      }
-                    }}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
-                  >
-                    <RefreshCw className={`h-3.5 w-3.5 ${serverCreditsQuery.isFetching ? "animate-spin text-[#FF5500]" : ""}`} />
-                  </span>
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      serverCreditsQuery.data?.is_low_balance
-                        ? "bg-amber-100 text-amber-600"
-                        : "bg-blue-50 text-blue-600"
-                    }`}
-                  >
-                    <Coins className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-2.5">
