@@ -941,16 +941,16 @@ function PortalDashboard() {
             </div>
 
             {isValidatingInvoices ? (
-              <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4 animate-pulse">
+              <div className="rounded-2xl p-5 space-y-4 opacity-0 pointer-events-none select-none" aria-hidden="true">
                 <div className="flex items-center justify-between">
-                  <div className="h-5 w-24 bg-slate-200 rounded-full" />
-                  <div className="h-4 w-28 bg-slate-100 rounded" />
+                  <div className="h-5 w-24" />
+                  <div className="h-4 w-28" />
                 </div>
                 <div className="space-y-2">
-                  <div className="h-8 w-36 bg-slate-200 rounded-lg" />
-                  <div className="h-4 w-44 bg-slate-100 rounded" />
+                  <div className="h-8 w-36" />
+                  <div className="h-4 w-44" />
                 </div>
-                <div className="h-12 w-full bg-slate-200 rounded-xl" />
+                <div className="h-12 w-full" />
               </div>
             ) : (
               <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4">
@@ -1182,12 +1182,12 @@ function PortalDashboard() {
             </span>
 
             {isValidatingInvoices ? (
-              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between gap-3 animate-pulse">
+              <div className="rounded-2xl p-4 flex items-center justify-between gap-3 opacity-0 pointer-events-none select-none" aria-hidden="true">
                 <div className="space-y-2">
-                  <div className="h-4 w-36 bg-slate-200 rounded" />
-                  <div className="h-6 w-28 bg-slate-200 rounded" />
+                  <div className="h-4 w-36" />
+                  <div className="h-6 w-28" />
                 </div>
-                <div className="h-9 w-20 bg-slate-200 rounded-xl" />
+                <div className="h-9 w-20" />
               </div>
             ) : (
               <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between gap-3">
