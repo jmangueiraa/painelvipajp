@@ -2,6 +2,7 @@ export type IptvServerConfig = {
   server_name: string;
   base_url: string;
   api_key: string;
+  is_active?: boolean;
 };
 
 export function normalizeIptvBaseUrl(raw: string): string {

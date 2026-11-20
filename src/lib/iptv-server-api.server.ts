@@ -8,7 +8,7 @@ export async function getIptvServerConfig(userId?: string): Promise<IptvServerCo
   try {
     let query = (supabaseAdmin as SupabaseClient)
       .from("iptv_server_integrations")
-      .select("server_name,base_url,api_key");
+      .select("server_name,base_url,api_key,is_active");
 
     if (userId) {
       query = query.eq("user_id", userId);
@@ -20,6 +20,7 @@ export async function getIptvServerConfig(userId?: string): Promise<IptvServerCo
         server_name: data.server_name || "RBOYS",
         base_url: normalizeIptvBaseUrl(data.base_url),
         api_key: data.api_key.trim(),
+        is_active: data.is_active !== false,
       };
     }
   } catch (err) {
@@ -74,16 +75,29 @@ export async function saveIptvServerConfig(
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   // Upsert na tabela iptv_server_integrations
-  const { error } = await (supabaseAdmin as SupabaseClient).from("iptv_server_integrations").upsert({
+  let { error } = await (supabaseAdmin as SupabaseClient).from("iptv_server_integrations").upsert({
     user_id: userId,
     server_name,
     base_url,
     api_key,
+    is_active: true,
     updated_at: new Date().toISOString(),
   });
 
+  // Se o erro for de coluna 'is_active' ausente em caso de tabela preexistente sem a coluna
+  if (error && error.message?.includes("is_active")) {
+    const retry = await (supabaseAdmin as SupabaseClient).from("iptv_server_integrations").upsert({
+      user_id: userId,
+      server_name,
+      base_url,
+      api_key,
+      updated_at: new Date().toISOString(),
+    });
+    error = retry.error;
+  }
+
   if (error) {
-    // Tenta fallback em settings se a tabela ainda não tiver sido criada
+    // Tenta fallback em settings se colunas foram adicionadas
     const settingsFallback = await (supabaseAdmin as SupabaseClient)
       .from("settings")
       .update({
@@ -95,9 +109,17 @@ export async function saveIptvServerConfig(
 
     if (settingsFallback.error) {
       console.error("[saveIptvServerConfig error]", error);
-      throw new Error(
-        `Falha ao salvar servidor no banco de dados (${error.message}). Execute a migration de banco caso a tabela não exista.`
-      );
+      if (
+        error.message?.includes("schema cache") ||
+        error.message?.includes("does not exist") ||
+        error.code === "PGRST204" ||
+        error.code === "42P01"
+      ) {
+        throw new Error(
+          "A tabela 'public.iptv_server_integrations' ainda não foi criada no Supabase. Execute a migration SQL no SQL Editor do painel do Supabase."
+        );
+      }
+      throw new Error(`Falha ao salvar servidor no banco de dados (${error.message}).`);
     }
   }
 
