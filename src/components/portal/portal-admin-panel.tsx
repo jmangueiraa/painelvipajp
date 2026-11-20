@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { Component, type ReactNode, useMemo, useState } from "react";
 import { EvolutionPortalCard } from "@/components/portal/evolution-portal-card";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -277,6 +277,35 @@ function adminPost<T = any>(action: string, payload: Record<string, any> = {}) {
   });
 }
 
+function safeConnection(c: NormalizedServerConnection): NormalizedServerConnection {
+  const x = (c ?? {}) as NormalizedServerConnection;
+  return {
+    ...x,
+    type: String(x.type ?? "iptv") as NormalizedServerConnection["type"],
+    username: String(x.username ?? ""),
+    channel: String(x.channel ?? "--"),
+    duration: String(x.duration ?? "--"),
+  };
+}
+
+export class CardErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(error: unknown) {
+    console.error("[painel] card falhou", error);
+  }
+  render() {
+    if (this.state.failed) {
+      return this.props.fallback !== undefined ? this.props.fallback : (
+        <div className="bg-white rounded-2xl p-3.5 border border-slate-100 text-xs text-slate-500">--</div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export function PortalAdminPanel({
   activeTab,
   onTabChange,
@@ -303,7 +332,20 @@ export function PortalAdminPanel({
         total: number;
         connections: NormalizedServerConnection[];
         error?: string;
-      }>("get_online_connections"),
+      }>("get_online_connections")
+        .then((r) => ({
+          ...(r ?? {}),
+          ok: Boolean(r?.ok),
+          server_name: String(r?.server_name ?? ""),
+          base_url: String(r?.base_url ?? ""),
+          total: Number(r?.total ?? 0) || 0,
+          connections: (Array.isArray(r?.connections) ? r.connections : []).map(safeConnection),
+        }))
+        .catch((e: unknown) => ({
+          ok: false, server_name: "", base_url: "", total: 0,
+          connections: [] as NormalizedServerConnection[],
+          error: e instanceof Error ? e.message : "indisponível",
+        })),
     refetchInterval: 30000,
     refetchIntervalInBackground: false,
     staleTime: 15000,
@@ -311,14 +353,42 @@ export function PortalAdminPanel({
 
   const serverCreditsQuery = useQuery<ServerCreditsSummary>({
     queryKey: ["portal", "admin", "server-credits"],
-    queryFn: () => adminPost<ServerCreditsSummary>("get_server_credits"),
+    queryFn: () =>
+      adminPost<ServerCreditsSummary>("get_server_credits")
+        .then((r): ServerCreditsSummary => {
+          const n = Number(r?.credits);
+          return {
+            ...(r ?? ({} as ServerCreditsSummary)),
+            ok: Boolean(r?.ok),
+            configured: Boolean(r?.configured),
+            server_name: String(r?.server_name ?? ""),
+            credits: Number.isFinite(n) ? n : null,
+            formatted_credits:
+              typeof r?.formatted_credits === "string" ? r.formatted_credits : Number.isFinite(n) ? n.toFixed(2) : "--",
+            is_low_balance: Boolean(r?.is_low_balance),
+          };
+        })
+        .catch((): ServerCreditsSummary => ({
+          ok: false, configured: false, server_name: "", credits: null,
+          formatted_credits: "--", is_low_balance: false,
+        })),
     staleTime: 30000,
     retry: 1,
   });
 
   const { data, isLoading, isFetching, error, refetch } = useQuery<AdminSnapshot>({
     queryKey: ["portal", "admin", "snapshot"],
-    queryFn: () => portalFetch<AdminSnapshot>("/api/public/portal/admin"),
+    queryFn: async () => {
+      const r = await portalFetch<AdminSnapshot>("/api/public/portal/admin");
+      const arr = <T,>(v: T[] | undefined | null): T[] => (Array.isArray(v) ? v : []);
+      return {
+        ...r,
+        kpis: { ...((r?.kpis ?? {}) as AdminSnapshot["kpis"]) },
+        clients: arr(r?.clients),
+        servers: arr(r?.servers),
+        store_products: arr(r?.store_products),
+      } as AdminSnapshot;
+    },
     staleTime: 30_000,
     retry: 1,
   });
@@ -796,7 +866,9 @@ export function PortalAdminPanel({
         <AdminIptvSubView data={data} onBack={() => setSubView("home")} onChanged={invalidateAdmin} />
       )}
       {activeTab === "admin" && subView === "server_clients" && (
-        <AdminServerClientsSubView data={data} onBack={() => setSubView("home")} onChanged={invalidateAdmin} />
+        <CardErrorBoundary fallback={<div className="p-4 text-sm text-slate-500">Servidor RBOYS indisponível no momento.</div>}>
+          <AdminServerClientsSubView data={data} onBack={() => setSubView("home")} onChanged={invalidateAdmin} />
+        </CardErrorBoundary>
       )}
 
       {/* ===================================================================== */}
@@ -981,11 +1053,13 @@ export function PortalAdminPanel({
       {/* ===================================================================== */}
       {/* MODAIS: CADASTRAR/EDITAR CLIENTE + RENOVAR CLIENTE                    */}
       {/* ===================================================================== */}
+      <CardErrorBoundary fallback={null}>
       <OnlineConnectionsDialog
         open={onlineModalOpen}
         onOpenChange={setOnlineModalOpen}
         query={onlineConnectionsQuery}
       />
+      </CardErrorBoundary>
 
       <ClientFormDialog
         open={clientFormOpen}
@@ -2563,7 +2637,27 @@ function AdminServerClientsSubView({
         };
         clients: NormalizedServerClient[];
         error?: string;
-      }>("get_server_clients"),
+      }>("get_server_clients")
+        .then((r) => ({
+          ...(r ?? {}),
+          ok: Boolean(r?.ok),
+          server_name: String(r?.server_name ?? ""),
+          base_url: String(r?.base_url ?? ""),
+          total: Number(r?.total ?? 0) || 0,
+          kpis: r?.kpis && typeof r.kpis === "object"
+            ? {
+                total: Number(r.kpis.total ?? 0) || 0,
+                ativos: Number(r.kpis.ativos ?? 0) || 0,
+                vencidos: Number(r.kpis.vencidos ?? 0) || 0,
+                vencem_hoje: Number(r.kpis.vencem_hoje ?? 0) || 0,
+              }
+            : undefined,
+          clients: (Array.isArray(r?.clients) ? r.clients : []).map((c) => ({
+            ...c,
+            username: String(c?.username ?? ""),
+          })) as NormalizedServerClient[],
+          error: r?.error,
+        })),
     staleTime: 1000 * 30,
     refetchOnWindowFocus: false,
   });
