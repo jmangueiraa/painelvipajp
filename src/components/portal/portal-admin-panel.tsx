@@ -46,6 +46,7 @@ import {
   Users,
   Wallet,
   X,
+  Radio,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -2665,7 +2666,7 @@ function AdminServerClientsSubView({
   // Mutação para importar ou atualizar vínculo mantendo data exata do servidor
   const importClient = useMutation({
     mutationFn: (client: NormalizedServerClient) => {
-      setPendingClientId(client.id);
+      setPendingClientId(String(client.id));
       return adminPost("import_server_client", { client });
     },
     onSuccess: (_, client) => {

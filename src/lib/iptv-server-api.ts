@@ -12,8 +12,8 @@ export type NormalizedServerClient = {
   name?: string;
   phone?: string;
   notes?: string;
-  type: "IPTV" | "P2P";
-  status: "active" | "expired" | "no_expiration";
+  type: "IPTV" | "P2P" | "iptv" | "p2p";
+  status: "active" | "expired" | "no_expiration" | "ativo" | "vencido" | "vencem_hoje";
   expires_at: string | null;      // String ISO ou original vinda da API
   formatted_due: string;         // "DD/MM/AAAA" ou "Sem vencimento"
   formatted_due_time: string;    // "HH:mm" ou ""
@@ -322,7 +322,7 @@ export type NormalizedServerConnection = {
   username: string;
   name?: string;
   channel: string;               // Canal / Conteúdo assistido
-  type: "IPTV" | "P2P";
+  type: "IPTV" | "P2P" | "iptv" | "p2p";
   ip?: string;
   device?: string;               // Dispositivo / Player / User Agent
   connected_at?: string;         // Horário de início formatado
@@ -428,7 +428,7 @@ export function normalizeServerConnection(
 export type NormalizedServerPlan = {
   id: string | number;
   name: string;
-  type: "IPTV" | "P2P";
+  type: "IPTV" | "P2P" | "iptv" | "p2p";
   is_trial: boolean;
   duration_days?: number;
   duration_hours?: number;
@@ -486,7 +486,7 @@ export function normalizeServerPlan(item: any, defaultType: "IPTV" | "P2P" = "IP
 }
 
 export type CreateServerClientInput = {
-  type: "IPTV" | "P2P";
+  type: "IPTV" | "P2P" | "iptv" | "p2p";
   is_trial: boolean;
   plan_id?: string | number;
   name: string;
@@ -503,7 +503,7 @@ export type CreatedServerClientResult = {
   local_client_id?: string;
   username: string;
   password: string;
-  type: "IPTV" | "P2P";
+  type: "IPTV" | "P2P" | "iptv" | "p2p";
   is_trial: boolean;
   expires_at: string | null;
   formatted_due: string;
@@ -519,7 +519,7 @@ export function buildFallbackClientAccessMessage(data: {
   name: string;
   username: string;
   password: string;
-  type: "IPTV" | "P2P";
+  type: "IPTV" | "P2P" | "iptv" | "p2p";
   is_trial: boolean;
   display_due: string;
   dns?: string;
