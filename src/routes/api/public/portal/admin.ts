@@ -452,6 +452,40 @@ export const Route = createFileRoute("/api/public/portal/admin")({
             return json(data, request);
           }
 
+          if (action === "get_server_plans") {
+            const { fetchServerPlans } = await import("@/lib/iptv-server-api.server");
+            const type = (body.type as any) || "ALL";
+            const data = await fetchServerPlans(ownerId, type);
+            return json(data, request);
+          }
+
+          if (action === "create_server_client") {
+            const { createServerClient } = await import("@/lib/iptv-server-api.server");
+            const result = await createServerClient(ownerId, {
+              type: body.type === "P2P" ? "P2P" : "IPTV",
+              is_trial: Boolean(body.is_trial),
+              plan_id: body.plan_id,
+              name: String(body.name ?? "").trim(),
+              phone: String(body.phone ?? "").trim(),
+              username: body.username ? String(body.username).trim() : undefined,
+              password: body.password ? String(body.password).trim() : undefined,
+              notes: body.notes ? String(body.notes).trim() : undefined,
+              price_cents: body.price_cents !== undefined ? Number(body.price_cents) : undefined,
+            });
+            return json(result, request);
+          }
+
+          if (action === "send_client_whatsapp") {
+            const phone = String(body.phone ?? "").trim();
+            const message = String(body.message ?? "").trim();
+            if (!phone || !message) {
+              return json({ error: "Telefone e mensagem são obrigatórios." }, request, { status: 400 });
+            }
+            const { sendEvolutionText } = await import("@/lib/evolution-api.server");
+            await sendEvolutionText({ userId: ownerId, phone, message });
+            return json({ ok: true }, request);
+          }
+
           if (action === "get_online_connections") {
             const { fetchOnlineConnections } = await import("@/lib/iptv-server-api.server");
             const data = await fetchOnlineConnections(ownerId);

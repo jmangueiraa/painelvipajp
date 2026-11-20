@@ -387,3 +387,124 @@ export function normalizeServerConnection(
     raw: item,
   };
 }
+
+export type NormalizedServerPlan = {
+  id: string | number;
+  name: string;
+  type: "IPTV" | "P2P";
+  is_trial: boolean;
+  duration_days?: number;
+  duration_hours?: number;
+  price_cents?: number;
+  screens?: number;
+  raw?: any;
+};
+
+export function normalizeServerPlan(item: any, defaultType: "IPTV" | "P2P" = "IPTV"): NormalizedServerPlan {
+  const id = item.id ?? item.plan_id ?? item.package_id;
+  const name = String(item.name ?? item.title ?? item.plan_name ?? `Plano #${id}`).trim();
+
+  let type: "IPTV" | "P2P" = defaultType;
+  if (item.type) {
+    const t = String(item.type).toUpperCase();
+    if (t.includes("P2P")) type = "P2P";
+    else if (t.includes("IPTV")) type = "IPTV";
+  }
+
+  const isTrial = Boolean(
+    item.is_trial === true ||
+    item.trial === true ||
+    item.is_test === true ||
+    item.test === true ||
+    /teste|trial|gratis|grátis/i.test(name)
+  );
+
+  let durationDays: number | undefined = undefined;
+  let durationHours: number | undefined = undefined;
+
+  if (item.duration_days) durationDays = Number(item.duration_days);
+  else if (item.days) durationDays = Number(item.days);
+  else if (item.duration && Number(item.duration) >= 1 && !item.hours) durationDays = Number(item.duration);
+
+  if (item.duration_hours) durationHours = Number(item.duration_hours);
+  else if (item.hours) durationHours = Number(item.hours);
+
+  let priceCents: number | undefined = undefined;
+  if (item.price_cents !== undefined) priceCents = Number(item.price_cents);
+  else if (item.price !== undefined) priceCents = Math.round(Number(item.price) * 100);
+
+  const screens = Number(item.screens ?? item.telas ?? item.connections ?? item.max_connections ?? 1) || 1;
+
+  return {
+    id,
+    name,
+    type,
+    is_trial: isTrial,
+    duration_days: durationDays,
+    duration_hours: durationHours,
+    price_cents: priceCents,
+    screens,
+    raw: item,
+  };
+}
+
+export type CreateServerClientInput = {
+  type: "IPTV" | "P2P";
+  is_trial: boolean;
+  plan_id?: string | number;
+  name: string;
+  phone: string;
+  username?: string;
+  password?: string;
+  notes?: string;
+  price_cents?: number;
+};
+
+export type CreatedServerClientResult = {
+  ok: boolean;
+  server_client_id: string | number;
+  local_client_id?: string;
+  username: string;
+  password: string;
+  type: "IPTV" | "P2P";
+  is_trial: boolean;
+  expires_at: string | null;
+  formatted_due: string;
+  display_due: string;
+  due_date_str: string | null;
+  message: string;
+  dns?: string;
+  server_name: string;
+  raw?: any;
+};
+
+export function buildFallbackClientAccessMessage(data: {
+  name: string;
+  username: string;
+  password: string;
+  type: "IPTV" | "P2P";
+  is_trial: boolean;
+  display_due: string;
+  dns?: string;
+  server_name?: string;
+}): string {
+  const modalidade = data.is_trial ? "TESTE GRATUITO" : "ACESSO OFICIAL";
+  return [
+    `🎉 *SEU ACESSO ${data.type} ESTÁ PRONTO!* (${modalidade})`,
+    ``,
+    `Olá *${data.name}*, seus dados de acesso ao servidor foram gerados com sucesso:`,
+    ``,
+    `👤 *Usuário:* \`${data.username}\``,
+    `🔑 *Senha:* \`${data.password}\``,
+    `📅 *Vencimento:* *${data.display_due}*`,
+    data.dns ? `🌐 *Servidor / DNS:* \`${data.dns}\`` : null,
+    ``,
+    `📱 *Aplicativos recomendados:*`,
+    `Acesse nosso portal para instruções e download dos apps:`,
+    `👉 https://portalajp.com.br`,
+    ``,
+    `Qualquer dúvida estamos à disposição! 🚀`,
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
+}

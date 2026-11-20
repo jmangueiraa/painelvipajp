@@ -5,9 +5,15 @@ import {
   normalizeServerClientItem,
   sortServerClientsByDue,
   normalizeServerConnection,
+  normalizeServerPlan,
+  buildFallbackClientAccessMessage,
+  parseRboysDate,
   type IptvServerConfig,
   type NormalizedServerClient,
   type NormalizedServerConnection,
+  type NormalizedServerPlan,
+  type CreateServerClientInput,
+  type CreatedServerClientResult,
 } from "./iptv-server-api";
 
 export async function getIptvServerConfig(userId?: string): Promise<IptvServerConfig | null> {
@@ -538,5 +544,259 @@ export async function fetchOnlineConnections(userId?: string): Promise<{
     base_url: config.base_url,
     total: connectionsList.length,
     connections: connectionsList,
+  };
+}
+
+export async function fetchServerPlans(
+  userId?: string,
+  filterType?: "IPTV" | "P2P" | "ALL"
+): Promise<{
+  ok: boolean;
+  server_name: string;
+  plans: NormalizedServerPlan[];
+  error?: string;
+}> {
+  const config = await getIptvServerConfig(userId);
+  if (!config) {
+    return {
+      ok: false,
+      server_name: "RBOYS",
+      plans: [],
+      error: "Servidor IPTV / P2P não configurado.",
+    };
+  }
+
+  const headers = buildIptvHeaders(config.api_key);
+  const plansList: NormalizedServerPlan[] = [];
+  const seen = new Set<string>();
+
+  const fetchRoute = async (paths: string[], defaultType: "IPTV" | "P2P") => {
+    for (const path of paths) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(`${config.base_url}${path}`, {
+          headers,
+          signal: controller.signal,
+        }).finally(() => clearTimeout(timeout));
+
+        if (!res.ok) {
+          if (res.status === 404) continue;
+          return;
+        }
+
+        const data = await res.json().catch(() => ({}));
+        const items = extractClientsArray(data);
+        for (const item of items) {
+          const plan = normalizeServerPlan(item, defaultType);
+          const key = `${plan.type}-${plan.id}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            plansList.push(plan);
+          }
+        }
+        break;
+      } catch (err) {
+        console.warn(`[iptv-server] erro ao consultar planos em ${path}:`, err);
+      }
+    }
+  };
+
+  const tasks: Promise<any>[] = [];
+  if (!filterType || filterType === "ALL" || filterType === "IPTV") {
+    tasks.push(fetchRoute(["/iptv/plans", "/plans", "/packages"], "IPTV"));
+  }
+  if (!filterType || filterType === "ALL" || filterType === "P2P") {
+    tasks.push(fetchRoute(["/p2p/plans"], "P2P"));
+  }
+
+  await Promise.allSettled(tasks);
+
+  plansList.sort((a, b) => {
+    if (a.is_trial !== b.is_trial) return a.is_trial ? 1 : -1;
+    return a.name.localeCompare(b.name);
+  });
+
+  return {
+    ok: true,
+    server_name: config.server_name,
+    plans: plansList,
+  };
+}
+
+export async function createServerClient(
+  ownerId: string,
+  input: CreateServerClientInput
+): Promise<CreatedServerClientResult> {
+  if (!ownerId) throw new Error("Conta de administrador não identificada.");
+  if (!input.name || input.name.trim().length < 2) {
+    throw new Error("Informe o nome do cliente.");
+  }
+  if (!input.phone || input.phone.trim().length < 8) {
+    throw new Error("Informe um número de WhatsApp válido.");
+  }
+
+  const config = await getIptvServerConfig(ownerId);
+  if (!config) {
+    throw new Error(
+      "Servidor IPTV / P2P não configurado. Salve as credenciais em 'API e Integrações' antes de gerar acessos."
+    );
+  }
+
+  const endpoint = input.type === "P2P" ? "/p2p/clients" : "/iptv/clients";
+  const url = `${config.base_url}${endpoint}`;
+  const headers = buildIptvHeaders(config.api_key);
+
+  const payload: Record<string, any> = {
+    name: input.name.trim(),
+    notes: input.notes?.trim() || undefined,
+  };
+
+  if (input.plan_id) {
+    payload.plan_id = input.plan_id;
+    payload.package_id = input.plan_id;
+  }
+  if (input.username?.trim()) payload.username = input.username.trim();
+  if (input.password?.trim()) payload.password = input.password.trim();
+  if (input.is_trial) {
+    payload.is_trial = true;
+    payload.trial = true;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+
+  let resData: any = null;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeout));
+
+    resData = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      const errMsg =
+        resData?.message ||
+        resData?.error ||
+        `Erro do servidor HTTP ${res.status}`;
+      throw new Error(`Falha ao criar cliente no servidor ${config.server_name}: ${errMsg}`);
+    }
+  } catch (err: any) {
+    if (err.name === "AbortError") {
+      throw new Error("Tempo limite excedido ao comunicar com o servidor IPTV (15s).");
+    }
+    throw err;
+  }
+
+  const clientObj = resData?.data || resData?.client || resData;
+  const serverClientId =
+    clientObj.id ?? clientObj.client_id ?? clientObj.user_id ?? Math.random().toString(36).substring(7);
+
+  const username = String(
+    clientObj.username ?? clientObj.login ?? clientObj.user ?? input.username ?? `user_${serverClientId}`
+  ).trim();
+
+  const password = String(
+    clientObj.password ?? clientObj.senha ?? input.password ?? Math.random().toString(36).substring(7)
+  ).trim();
+
+  const rawExpiry =
+    clientObj.expires_at ??
+    clientObj.exp_date ??
+    clientObj.expiration ??
+    clientObj.due_date ??
+    clientObj.vencimento;
+
+  const parsed = parseRboysDate(rawExpiry);
+  const dns = clientObj.dns || clientObj.server_url || clientObj.host || undefined;
+
+  let message = clientObj.message || clientObj.text || clientObj.whatsapp_message;
+  if (!message || typeof message !== "string" || !message.trim()) {
+    message = buildFallbackClientAccessMessage({
+      name: input.name.trim(),
+      username,
+      password,
+      type: input.type,
+      is_trial: input.is_trial,
+      display_due: parsed.displayDue,
+      dns,
+      server_name: config.server_name,
+    });
+  }
+
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  const notesText = input.notes?.trim()
+    ? `${input.notes.trim()} | [${config.server_name} ${input.type}] ID: ${serverClientId}`
+    : `Criado no servidor ${config.server_name} (${input.type}) | ID: ${serverClientId}`;
+
+  const baseLocalRecord: Record<string, any> = {
+    user_id: ownerId,
+    name: input.name.trim(),
+    phone: input.phone.trim(),
+    iptv_login: username,
+    iptv_password: password,
+    due_date: parsed.dueDateStr,
+    status: parsed.isExpired ? "vencido" : "ativo",
+    price_cents: input.price_cents !== undefined ? Number(input.price_cents) : (input.is_trial ? 0 : 3000),
+    auto_charge: !input.is_trial,
+    points: 1,
+    notes: notesText,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  let localClientId: string | undefined = undefined;
+  try {
+    const fullRecord = {
+      ...baseLocalRecord,
+      server_client_id: String(serverClientId),
+      server_plan_id: input.plan_id ? String(input.plan_id) : null,
+      service_type: input.type.toLowerCase(),
+    };
+    const { data: insData, error: insErr } = await (supabaseAdmin as SupabaseClient)
+      .from("clients")
+      .insert(fullRecord)
+      .select("id")
+      .single();
+
+    if (insErr) {
+      if (insErr.message?.includes("column") || insErr.code === "42703") {
+        const { data: retryData, error: retryErr } = await (supabaseAdmin as SupabaseClient)
+          .from("clients")
+          .insert(baseLocalRecord)
+          .select("id")
+          .single();
+        if (retryErr) throw retryErr;
+        localClientId = retryData?.id;
+      } else {
+        throw insErr;
+      }
+    } else {
+      localClientId = insData?.id;
+    }
+  } catch (dbErr: any) {
+    console.error("[iptv-server] erro ao salvar cliente localmente:", dbErr);
+  }
+
+  return {
+    ok: true,
+    server_client_id: serverClientId,
+    local_client_id: localClientId,
+    username,
+    password,
+    type: input.type,
+    is_trial: input.is_trial,
+    expires_at: parsed.iso,
+    formatted_due: parsed.formattedDate,
+    display_due: parsed.displayDue,
+    due_date_str: parsed.dueDateStr,
+    message: message.trim(),
+    dns,
+    server_name: config.server_name,
+    raw: clientObj,
   };
 }

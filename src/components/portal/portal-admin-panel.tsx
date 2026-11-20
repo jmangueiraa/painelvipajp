@@ -35,6 +35,7 @@ import {
   ShieldCheck,
   ShoppingBag,
   Smartphone,
+  Sparkles,
   Trash2,
   TrendingUp,
   Tv,
@@ -61,7 +62,12 @@ import { Textarea } from "@/components/ui/textarea";
 import type { PortalTab } from "@/components/portal/portal-shell";
 import { brl, formatDateBR, formatDateTimeBR, parseBrlToCents, todayISO } from "@/lib/format";
 import { portalFetch } from "@/lib/portal-client";
-import type { NormalizedServerClient, NormalizedServerConnection } from "@/lib/iptv-server-api";
+import type {
+  NormalizedServerClient,
+  NormalizedServerConnection,
+  NormalizedServerPlan,
+  CreatedServerClientResult,
+} from "@/lib/iptv-server-api";
 import {
   buildChargeMessage,
   buildWhatsAppHref,
@@ -282,6 +288,7 @@ export function PortalAdminPanel({
   const [editingClient, setEditingClient] = useState<AdminClientRow | null>(null);
   const [renewTarget, setRenewTarget] = useState<AdminClientRow | null>(null);
   const [onlineModalOpen, setOnlineModalOpen] = useState(false);
+  const [createdServerAccess, setCreatedServerAccess] = useState<CreatedServerClientResult | null>(null);
 
   const onlineConnectionsQuery = useQuery({
     queryKey: ["portal", "admin", "online-connections"],
@@ -903,6 +910,12 @@ export function PortalAdminPanel({
         servers={data.servers}
         defaultDue={data.today || todayISO()}
         onSaved={invalidateAdmin}
+        onCreatedServerAccess={(res) => setCreatedServerAccess(res)}
+      />
+
+      <CreatedAccessDialog
+        access={createdServerAccess}
+        onClose={() => setCreatedServerAccess(null)}
       />
 
       <RenewClientDialog
@@ -2820,6 +2833,7 @@ function ClientFormDialog({
   servers,
   defaultDue,
   onSaved,
+  onCreatedServerAccess,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -2828,6 +2842,7 @@ function ClientFormDialog({
   servers: AdminServerRow[];
   defaultDue: string;
   onSaved: () => void;
+  onCreatedServerAccess?: (result: CreatedServerClientResult) => void;
 }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -2841,6 +2856,52 @@ function ClientFormDialog({
   const [autoCharge, setAutoCharge] = useState(true);
   const [notes, setNotes] = useState("");
   const [referredByCode, setReferredByCode] = useState("");
+
+  // Integração com Servidor RBOYS
+  const [createOnServer, setCreateOnServer] = useState(true);
+  const [serviceType, setServiceType] = useState<"IPTV" | "P2P">("IPTV");
+  const [modality, setModality] = useState<"client" | "trial">("client");
+  const [serverPlanId, setServerPlanId] = useState("");
+
+  // Consulta de planos disponíveis no servidor em tempo real
+  const serverPlansQuery = useQuery({
+    queryKey: ["portal", "admin", "server-plans", serviceType],
+    queryFn: () =>
+      adminPost<{
+        ok: boolean;
+        server_name: string;
+        plans: NormalizedServerPlan[];
+      }>("get_server_plans", { type: serviceType }),
+    staleTime: 60000,
+    enabled: open && !editing,
+  });
+
+  const availablePlans = useMemo(() => {
+    const list = serverPlansQuery.data?.plans ?? [];
+    if (modality === "trial") {
+      const trials = list.filter((p) => p.is_trial);
+      return trials.length > 0 ? trials : list;
+    }
+    const regulars = list.filter((p) => !p.is_trial);
+    return regulars.length > 0 ? regulars : list;
+  }, [serverPlansQuery.data?.plans, modality]);
+
+  // Pré-seleciona o primeiro plano e ajusta valor sugerido
+  React.useEffect(() => {
+    if (!open || editing) return;
+    if (availablePlans.length > 0) {
+      const currentSelected = availablePlans.find((p) => String(p.id) === String(serverPlanId));
+      if (!currentSelected) {
+        const first = availablePlans[0];
+        setServerPlanId(String(first.id));
+        if (first.price_cents !== undefined) {
+          setPrice((first.price_cents / 100).toFixed(2).replace(".", ","));
+        } else if (modality === "trial") {
+          setPrice("0,00");
+        }
+      }
+    }
+  }, [open, editing, availablePlans, serverPlanId, modality]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -2857,6 +2918,7 @@ function ClientFormDialog({
       setAutoCharge(editing.auto_charge !== false);
       setNotes(editing.notes ?? "");
       setReferredByCode(editing.referred_by_code ?? "");
+      setCreateOnServer(false);
     } else {
       setName("");
       setPhone("");
@@ -2870,12 +2932,32 @@ function ClientFormDialog({
       setAutoCharge(true);
       setNotes("");
       setReferredByCode("");
+      setCreateOnServer(true);
+      setModality("client");
+      setServiceType("IPTV");
     }
   }, [open, editing, defaultDue]);
 
   const save = useMutation({
-    mutationFn: () =>
-      adminPost(editing ? "update_client" : "create_client", {
+    mutationFn: async () => {
+      // Criação automatizada direto no servidor RBOYS
+      if (!editing && createOnServer) {
+        const res = await adminPost<CreatedServerClientResult>("create_server_client", {
+          type: serviceType,
+          is_trial: modality === "trial",
+          plan_id: serverPlanId || undefined,
+          name: name.trim(),
+          phone: phone.trim(),
+          username: iptvLogin.trim() || undefined,
+          password: iptvPassword.trim() || undefined,
+          notes: notes.trim() || undefined,
+          price_cents: parseBrlToCents(price),
+        });
+        return { isServer: true, result: res };
+      }
+
+      // Criação ou edição padrão local
+      await adminPost(editing ? "update_client" : "create_client", {
         id: editing?.id,
         name,
         phone,
@@ -2891,11 +2973,22 @@ function ClientFormDialog({
         status: editing?.status,
         referred_by_code: referredByCode.trim().toUpperCase(),
         clear_referral: Boolean(editing?.referred_by_code && !referredByCode.trim()),
-      }),
-    onSuccess: () => {
-      toast.success(editing ? "Cliente atualizado!" : "Cliente cadastrado!");
+      });
+      return { isServer: false };
+    },
+    onSuccess: (data) => {
       onOpenChange(false);
       onSaved();
+      if (data.isServer && data.result) {
+        toast.success(
+          data.result.is_trial
+            ? "Teste gerado com sucesso no servidor!"
+            : "Cliente criado e vinculado com sucesso!"
+        );
+        onCreatedServerAccess?.(data.result);
+      } else {
+        toast.success(editing ? "Cliente atualizado!" : "Cliente cadastrado!");
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -2921,7 +3014,146 @@ function ClientFormDialog({
         />
 
         <div className="p-4 space-y-3 overflow-y-auto max-h-[calc(90dvh-142px)]">
-          {/* Dados Básicos */}
+          {/* Opção de Geração Automática no Servidor */}
+          {!editing && (
+            <div className="bg-gradient-to-r from-orange-50/70 via-white to-amber-50/70 rounded-2xl p-3.5 shadow-sm border border-orange-100 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="h-4 w-4 text-[#FF5500]" />
+                    <p className="text-xs font-black text-slate-900 tracking-tight">
+                      Criar acesso automaticamente no Servidor (RBOYS)
+                    </p>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Gera login, senha e vencimento exato via API do servidor
+                  </p>
+                </div>
+                <Switch
+                  checked={createOnServer}
+                  onCheckedChange={setCreateOnServer}
+                  className={PORTAL_SWITCH_CLASS}
+                />
+              </div>
+
+              {createOnServer && (
+                <div className="space-y-2.5 pt-2 border-t border-orange-100/70 animate-in fade-in duration-150">
+                  {/* Tipo de Serviço: IPTV vs P2P */}
+                  <div>
+                    <Label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                      Tipo de Serviço
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setServiceType("IPTV")}
+                        className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                          serviceType === "IPTV"
+                            ? "bg-sky-600 text-white shadow-sm"
+                            : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        <Tv className="h-3.5 w-3.5" />
+                        IPTV
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setServiceType("P2P")}
+                        className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                          serviceType === "P2P"
+                            ? "bg-purple-600 text-white shadow-sm"
+                            : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        <Radio className="h-3.5 w-3.5" />
+                        P2P
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Modalidade: Oficial vs Teste */}
+                  <div>
+                    <Label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                      Modalidade do Acesso
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setModality("client");
+                          setAutoCharge(true);
+                        }}
+                        className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                          modality === "client"
+                            ? "bg-emerald-600 text-white shadow-sm"
+                            : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        <UserCheck className="h-3.5 w-3.5" />
+                        Cliente Oficial
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setModality("trial");
+                          setPrice("0,00");
+                          setAutoCharge(false);
+                        }}
+                        className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                          modality === "trial"
+                            ? "bg-amber-600 text-white shadow-sm"
+                            : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Teste Grátis
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Plano no Servidor */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <Label className={PORTAL_LABEL_CLASS}>Plano no Servidor (RBOYS)</Label>
+                      {serverPlansQuery.isFetching && (
+                        <span className="text-[10px] text-[#FF5500] font-semibold flex items-center gap-1">
+                          <Loader2 className="h-3 w-3 animate-spin" /> Atualizando planos...
+                        </span>
+                      )}
+                    </div>
+                    <select
+                      value={serverPlanId}
+                      onChange={(e) => {
+                        const id = e.target.value;
+                        setServerPlanId(id);
+                        const sel = availablePlans.find((p) => String(p.id) === id);
+                        if (sel && sel.price_cents !== undefined) {
+                          setPrice((sel.price_cents / 100).toFixed(2).replace(".", ","));
+                        }
+                      }}
+                      className={PORTAL_SELECT_CLASS}
+                    >
+                      {availablePlans.length === 0 ? (
+                        <option value="">
+                          {serverPlansQuery.isLoading ? "Carregando planos..." : "Nenhum plano retornado pela API"}
+                        </option>
+                      ) : (
+                        availablePlans.map((p) => (
+                          <option key={String(p.id)} value={String(p.id)}>
+                            {p.name}
+                            {p.price_cents ? ` (${brl(p.price_cents)})` : ""}
+                            {p.duration_days ? ` - ${p.duration_days} dias` : p.duration_hours ? ` - ${p.duration_hours}h` : ""}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Dados do Assinante */}
           <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-3">
             <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
               Dados do Assinante
@@ -2931,86 +3163,95 @@ function ClientFormDialog({
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Nome do assinante"
+                placeholder="Nome do assinante ou apelido"
                 className={PORTAL_INPUT_CLASS}
               />
             </div>
             <div>
-              <Label className={PORTAL_LABEL_CLASS}>WhatsApp *</Label>
+              <Label className={PORTAL_LABEL_CLASS}>WhatsApp (com DDD) *</Label>
               <Input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="11999999999"
+                placeholder="Ex.: 16997855438"
                 inputMode="tel"
                 className={PORTAL_INPUT_CLASS}
               />
+              <p className="text-[10px] text-slate-400 mt-1">
+                Utilizado para envio da mensagem de acesso e lembretes automáticos.
+              </p>
             </div>
           </div>
 
           {/* Plano, Servidor e IPTV */}
           <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-3">
             <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
-              Plano, Servidor e IPTV
+              {createOnServer ? "Credenciais e Valores" : "Plano, Servidor e IPTV"}
             </p>
 
-            <div className="grid grid-cols-2 gap-2.5">
-              <div>
-                <Label className={PORTAL_LABEL_CLASS}>Plano</Label>
-                <select
-                  value={planId}
-                  onChange={(e) => {
-                    const id = e.target.value;
-                    setPlanId(id);
-                    const found = plans.find((p) => p.id === id);
-                    if (found) setPrice((found.price_cents / 100).toFixed(2).replace(".", ","));
-                  }}
-                  className={PORTAL_SELECT_CLASS}
-                >
-                  <option value="">
-                    {plans.length > 0 ? "Selecionar plano..." : "Sem planos"}
-                  </option>
-                  {plans.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({brl(p.price_cents)})
+            {!createOnServer && (
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <Label className={PORTAL_LABEL_CLASS}>Plano Local</Label>
+                  <select
+                    value={planId}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setPlanId(id);
+                      const found = plans.find((p) => p.id === id);
+                      if (found) setPrice((found.price_cents / 100).toFixed(2).replace(".", ","));
+                    }}
+                    className={PORTAL_SELECT_CLASS}
+                  >
+                    <option value="">
+                      {plans.length > 0 ? "Selecionar plano..." : "Sem planos"}
                     </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label className={PORTAL_LABEL_CLASS}>Servidor</Label>
-                <select
-                  value={serverId}
-                  onChange={(e) => setServerId(e.target.value)}
-                  className={PORTAL_SELECT_CLASS}
-                >
-                  <option value="">
-                    {servers.length > 0 ? "Selecionar servidor..." : "Sem servidores"}
-                  </option>
-                  {servers.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
+                    {plans.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({brl(p.price_cents)})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label className={PORTAL_LABEL_CLASS}>Servidor</Label>
+                  <select
+                    value={serverId}
+                    onChange={(e) => setServerId(e.target.value)}
+                    className={PORTAL_SELECT_CLASS}
+                  >
+                    <option value="">
+                      {servers.length > 0 ? "Selecionar servidor..." : "Sem servidores"}
                     </option>
-                  ))}
-                </select>
+                    {servers.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2.5">
               <div>
-                <Label className={PORTAL_LABEL_CLASS}>Login IPTV</Label>
+                <Label className={PORTAL_LABEL_CLASS}>
+                  Login {createOnServer ? "(Opcional)" : "IPTV"}
+                </Label>
                 <Input
                   value={iptvLogin}
                   onChange={(e) => setIptvLogin(e.target.value)}
-                  placeholder="Usuário"
+                  placeholder={createOnServer ? "Deixe vazio para gerar" : "Usuário"}
                   className={PORTAL_INPUT_CLASS}
                 />
               </div>
               <div>
-                <Label className={PORTAL_LABEL_CLASS}>Senha IPTV</Label>
+                <Label className={PORTAL_LABEL_CLASS}>
+                  Senha {createOnServer ? "(Opcional)" : "IPTV"}
+                </Label>
                 <Input
                   value={iptvPassword}
                   onChange={(e) => setIptvPassword(e.target.value)}
-                  placeholder="Senha"
+                  placeholder={createOnServer ? "Deixe vazio para gerar" : "Senha"}
                   className={PORTAL_INPUT_CLASS}
                 />
               </div>
@@ -3041,15 +3282,23 @@ function ClientFormDialog({
                 </select>
               </div>
               <div>
-                <Label className={PORTAL_LABEL_CLASS}>Vencimento</Label>
+                <Label className={PORTAL_LABEL_CLASS}>
+                  Vencimento {createOnServer ? "(Automático)" : ""}
+                </Label>
                 <Input
                   type="date"
                   value={dueDate}
+                  disabled={createOnServer}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className={PORTAL_INPUT_CLASS}
+                  className={`${PORTAL_INPUT_CLASS} ${createOnServer ? "opacity-60 bg-slate-100" : ""}`}
                 />
               </div>
             </div>
+            {createOnServer && (
+              <p className="text-[10px] text-slate-400">
+                A data de vencimento será calculada e gravada exatamente conforme retornado pela API do RBOYS.
+              </p>
+            )}
           </div>
 
           {/* Indicação & Cobrança */}
@@ -3107,9 +3356,246 @@ function ClientFormDialog({
             disabled={save.isPending}
             className="w-full bg-[#FF5500] hover:bg-[#E04B00] text-white rounded-xl font-extrabold h-11 shadow-md shadow-[#FF5500]/25 cursor-pointer"
           >
-            {save.isPending ? "Salvando..." : editing ? "Salvar Alterações" : "Cadastrar Cliente"}
+            {save.isPending ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {createOnServer ? "Criando no servidor..." : "Salvando..."}
+              </span>
+            ) : editing ? (
+              "Salvar Alterações"
+            ) : createOnServer ? (
+              modality === "trial" ? "Gerar Teste Grátis no Servidor" : "Cadastrar Cliente no Servidor"
+            ) : (
+              "Cadastrar Cliente"
+            )}
           </Button>
         </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ========================================================================== */
+/* MODAL: RESUMO DO ACESSO CRIADO (SUCESSO & WHATSAPP)                        */
+/* ========================================================================== */
+function CreatedAccessDialog({
+  access,
+  onClose,
+}: {
+  access: CreatedServerClientResult | null;
+  onClose: () => void;
+}) {
+  const [sendingWhatsapp, setSendingWhatsapp] = useState(false);
+
+  if (!access) return null;
+
+  const handleCopyMessage = async () => {
+    try {
+      await navigator.clipboard.writeText(access.message);
+      toast.success("Mensagem completa de acesso copiada com sucesso!");
+    } catch {
+      toast.error("Não foi possível copiar automaticamente.");
+    }
+  };
+
+  const handleSendWhatsappEvolution = async () => {
+    setSendingWhatsapp(true);
+    try {
+      // Tenta enviar diretamente pela Evolution API configurada
+      await adminPost("send_client_whatsapp", {
+        phone: access.raw?.phone || access.username,
+        message: access.message,
+      });
+      toast.success("Mensagem enviada com sucesso no WhatsApp do cliente!");
+    } catch (err: any) {
+      toast.error(err.message || "Falha ao enviar pelo WhatsApp Evolution.");
+    } finally {
+      setSendingWhatsapp(false);
+    }
+  };
+
+  const handleOpenWhatsappWeb = () => {
+    const rawPhone = access.raw?.phone || "";
+    const cleanPhone = rawPhone.replace(/\D/g, "");
+    const targetPhone = cleanPhone.length >= 10 && !cleanPhone.startsWith("55") ? `55${cleanPhone}` : cleanPhone;
+    const url = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(access.message)}`;
+    window.open(url, "_blank");
+  };
+
+  return (
+    <Dialog open={!!access} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg w-[95vw] max-h-[90vh] p-0 overflow-hidden rounded-3xl flex flex-col gap-0 border-slate-100">
+        <div className="p-4 sm:p-5 bg-gradient-to-b from-emerald-50/80 via-white to-white border-b border-slate-100 flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 tracking-tight">
+                  Acesso Criado com Sucesso!
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Gerado no servidor <span className="font-bold text-slate-700">{access.server_name}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span
+              className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                access.type === "IPTV"
+                  ? "bg-sky-50 text-sky-700 border border-sky-100"
+                  : "bg-purple-50 text-purple-700 border border-purple-100"
+              }`}
+            >
+              {access.type}
+            </span>
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                access.is_trial
+                  ? "bg-amber-50 text-amber-700 border border-amber-100"
+                  : "bg-emerald-50 text-emerald-700 border border-emerald-100"
+              }`}
+            >
+              {access.is_trial ? "Teste Grátis" : "Oficial"}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 max-h-[60vh]">
+          {/* Cartão de Credenciais */}
+          <div className="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-100 space-y-2.5">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Credenciais de Acesso
+            </p>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-white rounded-xl p-2.5 border border-slate-200/80 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] text-slate-400">Usuário</p>
+                  <p className="font-mono font-bold text-xs text-slate-900 mt-0.5 select-all">
+                    {access.username}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  title="Copiar usuário"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(access.username);
+                    toast.success("Usuário copiado!");
+                  }}
+                  className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded cursor-pointer"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              <div className="bg-white rounded-xl p-2.5 border border-slate-200/80 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] text-slate-400">Senha</p>
+                  <p className="font-mono font-bold text-xs text-slate-900 mt-0.5 select-all">
+                    {access.password}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  title="Copiar senha"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(access.password);
+                    toast.success("Senha copiada!");
+                  }}
+                  className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded cursor-pointer"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-white rounded-xl p-2.5 border border-slate-200/80">
+                <p className="text-[10px] text-slate-400">Vencimento (Brasília)</p>
+                <p className="font-bold text-slate-900 mt-0.5">
+                  {access.display_due}
+                </p>
+              </div>
+              {access.dns ? (
+                <div className="bg-white rounded-xl p-2.5 border border-slate-200/80">
+                  <p className="text-[10px] text-slate-400">DNS / Servidor</p>
+                  <p className="font-mono text-[11px] text-slate-900 mt-0.5 truncate select-all">
+                    {access.dns}
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl p-2.5 border border-slate-200/80">
+                  <p className="text-[10px] text-slate-400">Status Local</p>
+                  <p className="font-bold text-emerald-600 mt-0.5">Vinculado no AJPVIP</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Preview da Mensagem Pronta para WhatsApp */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label className={PORTAL_LABEL_CLASS}>
+                Mensagem Pronta para Envio (WhatsApp)
+              </Label>
+              <button
+                type="button"
+                onClick={handleCopyMessage}
+                className="text-[11px] font-bold text-[#FF5500] hover:text-[#E04B00] flex items-center gap-1 cursor-pointer"
+              >
+                <Copy className="h-3 w-3" /> Copiar texto
+              </button>
+            </div>
+            <textarea
+              readOnly
+              value={access.message}
+              rows={6}
+              className="w-full text-xs font-mono bg-slate-50 border border-slate-200 rounded-2xl p-3 focus:outline-none select-all text-slate-800 leading-relaxed"
+            />
+          </div>
+        </div>
+
+        {/* Rodapé com Ações de Envio e Fechamento */}
+        <div className="p-3 sm:px-5 bg-white border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="rounded-xl text-xs font-bold order-2 sm:order-1"
+          >
+            Concluir
+          </Button>
+
+          <div className="flex items-center gap-2 order-1 sm:order-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCopyMessage}
+              className="flex-1 sm:flex-none rounded-xl text-xs font-bold border-slate-200 hover:bg-slate-50 cursor-pointer"
+            >
+              <Copy className="h-3.5 w-3.5 mr-1 text-slate-600" />
+              Copiar Mensagem
+            </Button>
+
+            <Button
+              type="button"
+              disabled={sendingWhatsapp}
+              onClick={handleSendWhatsappEvolution}
+              className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-emerald-600/20 cursor-pointer"
+            >
+              {sendingWhatsapp ? (
+                <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+              ) : (
+                <Send className="h-3.5 w-3.5 mr-1" />
+              )}
+              Enviar no WhatsApp agora
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
