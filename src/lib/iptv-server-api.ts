@@ -13,7 +13,7 @@ export type NormalizedServerClient = {
   phone?: string;
   notes?: string;
   type: "IPTV" | "P2P" | "iptv" | "p2p";
-  status: "active" | "expired" | "no_expiration" | "ativo" | "vencido" | "vencem_hoje";
+  status: "active" | "expired" | "no_expiration" | "ativo" | "vencido" | "vencem_hoje" | "sem_vencimento";
   expires_at: string | null;      // String ISO ou original vinda da API
   formatted_due: string;         // "DD/MM/AAAA" ou "Sem vencimento"
   formatted_due_time: string;    // "HH:mm" ou ""
@@ -245,11 +245,15 @@ export function normalizeServerClientItem(
 
   const parsed = parseRboysDate(rawExpiry);
 
-  let status: "active" | "expired" | "no_expiration" = "active";
-  if (!parsed.dueDateStr) {
-    status = "no_expiration";
+  let status: "ativo" | "vencido" | "vencem_hoje" | "sem_vencimento" = "ativo";
+  if (!parsed.dueDateStr || parsed.displayDue === "Sem vencimento") {
+    status = "sem_vencimento";
+  } else if (parsed.isDueToday) {
+    status = "vencem_hoje";
   } else if (parsed.isExpired) {
-    status = "expired";
+    status = "vencido";
+  } else {
+    status = "ativo";
   }
 
   if (
@@ -259,7 +263,7 @@ export function normalizeServerClientItem(
     item.active === false ||
     item.enabled === false
   ) {
-    if (parsed.dueDateStr) status = "expired";
+    if (parsed.dueDateStr) status = "vencido";
   }
 
   const connections = Number(item.max_connections ?? item.connections ?? item.screens ?? item.telas ?? 1) || 1;

@@ -2685,20 +2685,49 @@ function AdminServerClientsSubView({
   const allClients = serverQuery.data?.clients ?? [];
   const kpis = serverQuery.data?.kpis ?? {
     total: allClients.length,
-    ativos: allClients.filter((c) => c.status === "ativo").length,
-    vencidos: allClients.filter((c) => c.status === "vencido").length,
-    vencem_hoje: allClients.filter((c) => c.status === "vencem_hoje").length,
+    ativos: allClients.filter(
+      (c) =>
+        (!c.is_expired && c.due_date_str !== null && !c.is_due_today) ||
+        c.status === "ativo" ||
+        c.status === "active"
+    ).length,
+    vencidos: allClients.filter(
+      (c) => c.is_expired || c.status === "vencido" || c.status === "expired"
+    ).length,
+    vencem_hoje: allClients.filter(
+      (c) => c.is_due_today || c.status === "vencem_hoje"
+    ).length,
   };
 
   // Filtragem
   const filteredClients = useMemo(() => {
     const term = search.trim().toLowerCase();
     return allClients.filter((client) => {
-      if (typeFilter !== "todos" && client.type !== typeFilter) {
-        return false;
+      if (typeFilter !== "todos") {
+        const clientType = String(client.type || "").toLowerCase();
+        if (clientType !== typeFilter) {
+          return false;
+        }
       }
-      if (statusFilter !== "todos" && client.status !== statusFilter) {
-        return false;
+      if (statusFilter !== "todos") {
+        if (statusFilter === "ativos") {
+          const isAtivo =
+            (!client.is_expired &&
+              client.due_date_str !== null &&
+              !client.is_due_today) ||
+            client.status === "ativo" ||
+            client.status === "active";
+          if (!isAtivo) return false;
+        } else if (statusFilter === "vencem_hoje") {
+          const isHoje = client.is_due_today || client.status === "vencem_hoje";
+          if (!isHoje) return false;
+        } else if (statusFilter === "vencidos") {
+          const isVencido =
+            client.is_expired ||
+            client.status === "vencido" ||
+            client.status === "expired";
+          if (!isVencido) return false;
+        }
       }
       if (term) {
         const matchesUser = client.username.toLowerCase().includes(term);
@@ -2918,25 +2947,38 @@ function AdminServerClientsSubView({
                       >
                         {client.type.toUpperCase()}
                       </span>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          client.status === "ativo"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                            : client.status === "vencem_hoje"
-                            ? "bg-amber-50 text-amber-700 border border-amber-100"
-                            : client.status === "vencido"
-                            ? "bg-rose-50 text-rose-700 border border-rose-100"
-                            : "bg-slate-50 text-slate-600 border border-slate-100"
-                        }`}
-                      >
-                        {client.status === "ativo"
-                          ? "Ativo"
-                          : client.status === "vencem_hoje"
-                          ? "Vence Hoje"
-                          : client.status === "vencido"
-                          ? "Vencido"
-                          : "Sem Vencimento"}
-                      </span>
+                      {(() => {
+                        const isDueToday = client.is_due_today || client.status === "vencem_hoje";
+                        const isExpired = client.is_expired || client.status === "vencido" || client.status === "expired";
+                        const hasDate = Boolean(client.due_date_str && client.display_due && client.display_due !== "Sem vencimento");
+
+                        if (!hasDate) {
+                          return (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-100">
+                              Sem Vencimento
+                            </span>
+                          );
+                        }
+                        if (isDueToday) {
+                          return (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                              Vence Hoje
+                            </span>
+                          );
+                        }
+                        if (isExpired) {
+                          return (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                              Vencido
+                            </span>
+                          );
+                        }
+                        return (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Ativo
+                          </span>
+                        );
+                      })()}
                     </div>
 
                     {(client.name || client.notes) && (
