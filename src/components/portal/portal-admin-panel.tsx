@@ -9,6 +9,7 @@ import {
   CalendarClock,
   CheckCircle2,
   Clock,
+  Coins,
   Copy,
   Download,
   ExternalLink,
@@ -68,6 +69,7 @@ import type {
   NormalizedServerPlan,
   CreatedServerClientResult,
   ServerTestResult,
+  ServerCreditsSummary,
 } from "@/lib/iptv-server-api";
 import {
   buildChargeMessage,
@@ -307,6 +309,13 @@ export function PortalAdminPanel({
     staleTime: 15000,
   });
 
+  const serverCreditsQuery = useQuery<ServerCreditsSummary>({
+    queryKey: ["portal", "admin", "server-credits"],
+    queryFn: () => adminPost<ServerCreditsSummary>("get_server_credits"),
+    staleTime: 30000,
+    retry: 1,
+  });
+
   const { data, isLoading, isFetching, error, refetch } = useQuery<AdminSnapshot>({
     queryKey: ["portal", "admin", "snapshot"],
     queryFn: () => portalFetch<AdminSnapshot>("/api/public/portal/admin"),
@@ -317,6 +326,7 @@ export function PortalAdminPanel({
   const invalidateAdmin = () => {
     void qc.invalidateQueries({ queryKey: ["portal", "admin"] });
     void qc.invalidateQueries({ queryKey: ["portal", "me"] });
+    void serverCreditsQuery.refetch();
   };
 
   function openClientsWithFilter(filter: ClientFilter) {
@@ -410,7 +420,7 @@ export function PortalAdminPanel({
           <div className="space-y-2.5">
             <h3 className="text-sm font-extrabold text-slate-900 px-0.5">Visão geral do negócio</h3>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <button
                 type="button"
                 onClick={() => openClientsWithFilter("todos")}
@@ -446,9 +456,9 @@ export function PortalAdminPanel({
               <button
                 type="button"
                 onClick={() => setOnlineModalOpen(true)}
-                className="col-span-2 sm:col-span-1 bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between text-left hover:border-emerald-200 active:scale-[0.98] transition cursor-pointer relative group"
+                className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex items-center justify-between text-left hover:border-emerald-200 active:scale-[0.98] transition cursor-pointer relative group"
               >
-                <div className="min-w-0 pr-2">
+                <div className="min-w-0 pr-1">
                   <div className="flex items-center gap-1.5">
                     <p className="text-[11px] font-medium text-slate-600 truncate">Clientes Online</p>
                     <span className="relative flex h-2 w-2 shrink-0">
@@ -494,6 +504,80 @@ export function PortalAdminPanel({
                   </div>
                 </div>
               </button>
+
+              <div
+                className={`bg-white rounded-2xl p-3.5 shadow-sm border transition flex items-center justify-between text-left relative ${
+                  serverCreditsQuery.data?.is_low_balance
+                    ? "border-amber-300 bg-amber-50/20 ring-1 ring-amber-200"
+                    : "border-slate-100 hover:border-slate-200"
+                }`}
+              >
+                <div className="min-w-0 pr-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[11px] font-medium text-slate-600 truncate">Créditos RBOYS</p>
+                    {serverCreditsQuery.data?.is_low_balance && (
+                      <span className="text-[9px] font-extrabold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full border border-amber-200 leading-none">
+                        Saldo baixo
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-baseline gap-1 mt-0.5">
+                    <p
+                      className={`text-2xl font-black leading-none ${
+                        serverCreditsQuery.data?.is_low_balance ? "text-amber-600" : "text-slate-900"
+                      }`}
+                    >
+                      {serverCreditsQuery.isLoading ? (
+                        <Loader2 className="h-6 w-6 animate-spin text-slate-300 inline" />
+                      ) : !serverCreditsQuery.data?.configured ? (
+                        <span className="text-xs font-bold text-slate-400">Não config.</span>
+                      ) : (
+                        serverCreditsQuery.data?.formatted_credits ?? "0.00"
+                      )}
+                    </p>
+                    {serverCreditsQuery.data?.configured && (
+                      <span className="text-[10px] font-semibold text-slate-500 leading-none">
+                        créditos
+                      </span>
+                    )}
+                  </div>
+                  {serverCreditsQuery.data?.name && (
+                    <p className="text-[10px] text-slate-500 truncate mt-0.5" title={serverCreditsQuery.data.name}>
+                      {serverCreditsQuery.data.name}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    title="Atualizar saldo de créditos"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void serverCreditsQuery.refetch();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.stopPropagation();
+                        void serverCreditsQuery.refetch();
+                      }
+                    }}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${serverCreditsQuery.isFetching ? "animate-spin text-[#FF5500]" : ""}`} />
+                  </span>
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                      serverCreditsQuery.data?.is_low_balance
+                        ? "bg-amber-100 text-amber-600"
+                        : "bg-blue-50 text-blue-600"
+                    }`}
+                  >
+                    <Coins className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-2.5">

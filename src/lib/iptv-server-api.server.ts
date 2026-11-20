@@ -16,6 +16,7 @@ import {
   type CreatedServerClientResult,
   type ServerTestResult,
   type ServerAccountDetails,
+  type ServerCreditsSummary,
 } from "./iptv-server-api";
 
 export async function getIptvServerConfig(userId?: string): Promise<IptvServerConfig | null> {
@@ -265,6 +266,70 @@ export async function testIptvServerConnection(config: {
 
   if (lastError) throw lastError;
   throw new Error(`Falha ao conectar no endpoint /me do servidor (${usedUrl}).`);
+}
+
+/**
+ * Consulta em tempo real o saldo de créditos da conta no servidor (RBOYS)
+ * Lê dinamicamente as credenciais da tabela iptv_server_integrations
+ */
+export async function fetchServerCredits(userId?: string): Promise<ServerCreditsSummary> {
+  const config = await getIptvServerConfig(userId);
+  if (!config) {
+    return {
+      ok: false,
+      configured: false,
+      server_name: "RBOYS",
+      credits: null,
+      formatted_credits: "0.00",
+      is_low_balance: false,
+      error: "Servidor IPTV / P2P não configurado.",
+    };
+  }
+
+  try {
+    const testRes = await testIptvServerConnection({
+      base_url: config.base_url,
+      api_key: config.api_key,
+    });
+
+    const creditsRaw = testRes.account?.credits;
+    let creditsNum: number | null = null;
+    if (creditsRaw !== null && creditsRaw !== undefined) {
+      const parsed = typeof creditsRaw === "number" ? creditsRaw : parseFloat(String(creditsRaw).replace(",", "."));
+      if (!isNaN(parsed)) creditsNum = parsed;
+    }
+
+    const formatted = creditsNum != null ? creditsNum.toFixed(2) : "0.00";
+    const isLow = creditsNum != null && creditsNum < 5;
+
+    return {
+      ok: true,
+      configured: true,
+      server_name: config.server_name || "RBOYS",
+      base_url: config.base_url,
+      credits: creditsNum,
+      formatted_credits: formatted,
+      is_low_balance: isLow,
+      balance: testRes.account?.balance ?? null,
+      name: testRes.account?.name ?? null,
+      username: testRes.account?.username ?? null,
+      email: testRes.account?.email ?? null,
+      active_clients: testRes.account?.active_clients != null ? Number(testRes.account.active_clients) : null,
+      raw: testRes.account?.raw,
+    };
+  } catch (err: any) {
+    console.warn("[fetchServerCredits error]", err);
+    return {
+      ok: false,
+      configured: true,
+      server_name: config.server_name || "RBOYS",
+      base_url: config.base_url,
+      credits: null,
+      formatted_credits: "0.00",
+      is_low_balance: false,
+      error: err.message || "Falha ao consultar créditos no servidor.",
+    };
+  }
 }
 
 /**

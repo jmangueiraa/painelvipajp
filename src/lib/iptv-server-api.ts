@@ -46,6 +46,23 @@ export type ServerTestResult = {
   account?: ServerAccountDetails;
 };
 
+export type ServerCreditsSummary = {
+  ok: boolean;
+  configured: boolean;
+  server_name: string;
+  base_url?: string;
+  credits: number | null;
+  formatted_credits: string;
+  is_low_balance: boolean;
+  balance?: number | string | null;
+  name?: string | null;
+  username?: string | null;
+  email?: string | null;
+  active_clients?: number | null;
+  error?: string;
+  raw?: any;
+};
+
 export function normalizeIptvBaseUrl(raw: string): string {
   let url = (raw || "").trim();
   if (!url) return "";
