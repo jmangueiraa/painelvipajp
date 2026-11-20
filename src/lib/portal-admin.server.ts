@@ -459,6 +459,13 @@ export async function getAdminFullSnapshot() {
     const { getEvolutionConfig } = await import("./evolution-api.server");
     evolutionMetadata = await getEvolutionConfig(ownerId);
   } catch { /* External schema may not yet be applied; other integrations remain usable. */ }
+
+  let iptvServerMetadata: { server_name?: string; base_url?: string; api_key?: string } | null = null;
+  try {
+    const { getIptvServerConfig } = await import("./iptv-server-api.server");
+    iptvServerMetadata = await getIptvServerConfig(ownerId);
+  } catch { /* External schema may not yet be applied; other integrations remain usable. */ }
+
   const safeSettings = {
     whatsapp_instance: settingsRow?.whatsapp_instance ?? "",
     support_message: settingsRow?.support_message ?? "",
@@ -468,6 +475,9 @@ export async function getAdminFullSnapshot() {
     evolution_base_url: evolutionMetadata?.base_url ?? "",
     evolution_instance_name: evolutionMetadata?.instance_name ?? "",
     evolution_configured: Boolean(evolutionMetadata?.api_key),
+    iptv_server_name: iptvServerMetadata?.server_name ?? "RBOYS",
+    iptv_base_url: iptvServerMetadata?.base_url ?? "https://cms.rboys02.click/api",
+    iptv_api_configured: Boolean(iptvServerMetadata?.api_key && iptvServerMetadata?.base_url),
     app_android_url: settingsRow?.app_android_url ?? "",
     app_ios_url: settingsRow?.app_ios_url ?? "",
     updates_movies_text: settingsRow?.updates_movies_text ?? "",

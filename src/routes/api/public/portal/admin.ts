@@ -415,6 +415,37 @@ export const Route = createFileRoute("/api/public/portal/admin")({
             return json(await evolutionConnectionAction(ownerId, op), request);
           }
 
+          if (action === "save_iptv_server") {
+            const { saveIptvServerConfig } = await import("@/lib/iptv-server-api.server");
+            const server_name = String(body.server_name ?? "").trim() || "RBOYS";
+            const base_url = String(body.base_url ?? "").trim();
+            const api_key = body.api_key ? String(body.api_key).trim() : undefined;
+            if (!base_url) return json({ error: "Informe a URL Base da API do servidor." }, request, { status: 400 });
+            return json(await saveIptvServerConfig(ownerId, { server_name, base_url, api_key }), request);
+          }
+
+          if (action === "test_iptv_server") {
+            const { testIptvServerConnection, getIptvServerConfig } = await import("@/lib/iptv-server-api.server");
+            let base_url = String(body.base_url ?? "").trim();
+            let api_key = String(body.api_key ?? "").trim();
+
+            if (!base_url || !api_key) {
+              const saved = await getIptvServerConfig(ownerId);
+              if (!base_url && saved?.base_url) base_url = saved.base_url;
+              if (!api_key && saved?.api_key) api_key = saved.api_key;
+            }
+
+            if (!base_url) {
+              return json({ error: "Informe a URL Base da API para testar a conexão." }, request, { status: 400 });
+            }
+            if (!api_key) {
+              return json({ error: "Informe ou salve a Chave API (X-API-Key) para testar a conexão." }, request, { status: 400 });
+            }
+
+            const result = await testIptvServerConnection({ base_url, api_key });
+            return json(result, request);
+          }
+
           if (action === "test_telegram") {
             const s = await portalAdmin.getAdminSettingsRow(ownerId);
             const botToken = String(s?.telegram_bot_token ?? "").trim();

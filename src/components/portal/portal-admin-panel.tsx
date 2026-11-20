@@ -230,6 +230,9 @@ type AdminSnapshot = {
     evolution_base_url: string;
     evolution_instance_name: string;
     evolution_configured: boolean;
+    iptv_server_name?: string;
+    iptv_base_url?: string;
+    iptv_api_configured?: boolean;
     app_android_url: string;
     app_ios_url: string;
     updates_movies_text: string;
@@ -1530,6 +1533,11 @@ function AdminApisSubView({
   const [zCli, setZCli] = useState(data.settings.evolution_base_url ?? "");
   const [showSecrets, setShowSecrets] = useState(false);
 
+  const [serverName, setServerName] = useState(data.settings.iptv_server_name || "RBOYS");
+  const [serverUrl, setServerUrl] = useState(data.settings.iptv_base_url || "https://cms.rboys02.click/api");
+  const [serverApiKey, setServerApiKey] = useState("");
+  const isServerConfigured = Boolean(data.settings.iptv_api_configured);
+
   const savePatch = useMutation({
     mutationFn: (patch: Record<string, any>) => adminPost("save_settings", { patch }),
     onSuccess: () => {
@@ -1542,6 +1550,34 @@ function AdminApisSubView({
   const testTg = useMutation({
     mutationFn: () => adminPost("test_telegram"),
     onSuccess: () => toast.success("Mensagem de teste enviada ao Telegram!"),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const saveServer = useMutation({
+    mutationFn: () =>
+      adminPost("save_iptv_server", {
+        server_name: serverName,
+        base_url: serverUrl,
+        api_key: serverApiKey,
+      }),
+    onSuccess: () => {
+      toast.success("Servidor IPTV salvo com sucesso!");
+      setServerApiKey("");
+      onChanged();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const testServer = useMutation({
+    mutationFn: () =>
+      adminPost<{ ok: boolean; message: string; status: number; latencyMs: number }>("test_iptv_server", {
+        server_name: serverName,
+        base_url: serverUrl,
+        api_key: serverApiKey,
+      }),
+    onSuccess: (res) => {
+      toast.success(res?.message || "Conexão com servidor IPTV bem-sucedida!");
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -1564,7 +1600,7 @@ function AdminApisSubView({
     <div className="space-y-3 animate-in fade-in duration-200">
       <SubViewHeader
         title="API e Integrações"
-        subtitle="Mercado Pago, Telegram e WhatsApp Evolution API"
+        subtitle="Mercado Pago, Telegram, Evolution API e Servidor IPTV"
         onBack={onBack}
         rightAction={
           <button
@@ -1663,6 +1699,82 @@ function AdminApisSubView({
         showSecrets={showSecrets} status={zapiStatus} qr={zapiQr}
         onChanged={onChanged}
       />
+
+      {/* Servidor IPTV / P2P (API) */}
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ServerIcon className="h-4 w-4 text-[#FF5500]" />
+            <p className="text-xs font-extrabold text-slate-900">Servidor IPTV / P2P (API)</p>
+          </div>
+          <span
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+              isServerConfigured ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+            }`}
+          >
+            {isServerConfigured ? "Configurado" : "Não configurado"}
+          </span>
+        </div>
+        <div className="space-y-2.5">
+          <div>
+            <Label className={PORTAL_LABEL_CLASS}>Nome do Servidor</Label>
+            <Input
+              value={serverName}
+              onChange={(e) => setServerName(e.target.value)}
+              placeholder="Ex: RBOYS"
+              className={PORTAL_INPUT_CLASS}
+            />
+          </div>
+          <div>
+            <Label className={PORTAL_LABEL_CLASS}>URL Base da API</Label>
+            <Input
+              value={serverUrl}
+              onChange={(e) => setServerUrl(e.target.value)}
+              placeholder="https://cms.rboys02.click/api"
+              className={PORTAL_INPUT_CLASS}
+            />
+          </div>
+          <div>
+            <Label className={PORTAL_LABEL_CLASS}>Chave API (X-API-Key)</Label>
+            <Input
+              type={showSecrets ? "text" : "password"}
+              value={serverApiKey}
+              onChange={(e) => setServerApiKey(e.target.value)}
+              placeholder={isServerConfigured ? "•••••••••••••••• (Preenchida — digite para alterar)" : "Cole a sua X-API-Key aqui"}
+              className={PORTAL_INPUT_CLASS}
+            />
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 pt-1">
+          <Button
+            size="sm"
+            disabled={saveServer.isPending}
+            onClick={() => saveServer.mutate()}
+            className="h-9 bg-[#FF5500] hover:bg-[#E04B00] text-white rounded-xl text-xs font-bold shadow-sm shadow-[#FF5500]/20 cursor-pointer"
+          >
+            {saveServer.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+            ) : (
+              <Save className="h-3.5 w-3.5 mr-1" />
+            )}
+            Salvar Servidor
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={testServer.isPending}
+            onClick={() => testServer.mutate()}
+            className="h-9 rounded-xl text-xs font-bold bg-white border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer"
+          >
+            {testServer.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+            ) : (
+              <Plug className="h-3.5 w-3.5 mr-1" />
+            )}
+            Testar Conexão
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
