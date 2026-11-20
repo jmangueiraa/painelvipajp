@@ -452,6 +452,12 @@ export const Route = createFileRoute("/api/public/portal/admin")({
             return json(data, request);
           }
 
+          if (action === "get_online_connections") {
+            const { fetchOnlineConnections } = await import("@/lib/iptv-server-api.server");
+            const data = await fetchOnlineConnections(ownerId);
+            return json(data, request);
+          }
+
           if (action === "import_server_client") {
             const { importServerClient } = await import("@/lib/iptv-server-api.server");
             const result = await importServerClient(ownerId, {

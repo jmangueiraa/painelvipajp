@@ -4,8 +4,10 @@ import {
   buildIptvHeaders,
   normalizeServerClientItem,
   sortServerClientsByDue,
+  normalizeServerConnection,
   type IptvServerConfig,
   type NormalizedServerClient,
+  type NormalizedServerConnection,
 } from "./iptv-server-api";
 
 export async function getIptvServerConfig(userId?: string): Promise<IptvServerConfig | null> {
@@ -466,5 +468,75 @@ export async function importServerClient(
     linked: false,
     id: insData?.id,
     name,
+  };
+}
+
+export async function fetchOnlineConnections(userId?: string): Promise<{
+  ok: boolean;
+  server_name: string;
+  base_url: string;
+  total: number;
+  connections: NormalizedServerConnection[];
+  error?: string;
+}> {
+  const config = await getIptvServerConfig(userId);
+  if (!config) {
+    return {
+      ok: false,
+      server_name: "RBOYS",
+      base_url: "",
+      total: 0,
+      connections: [],
+      error: "Servidor IPTV / P2P não configurado.",
+    };
+  }
+
+  const headers = buildIptvHeaders(config.api_key);
+  const connectionsList: NormalizedServerConnection[] = [];
+  const seen = new Set<string>();
+
+  const fetchRoute = async (paths: string[], defaultType: "IPTV" | "P2P") => {
+    for (const path of paths) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(`${config.base_url}${path}`, {
+          headers,
+          signal: controller.signal,
+        }).finally(() => clearTimeout(timeout));
+
+        if (!res.ok) {
+          if (res.status === 404) continue;
+          return;
+        }
+
+        const data = await res.json().catch(() => ({}));
+        const items = extractClientsArray(data);
+        for (const item of items) {
+          const conn = normalizeServerConnection(item, defaultType, config.server_name);
+          const key = `${conn.type}-${conn.id}-${conn.username}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            connectionsList.push(conn);
+          }
+        }
+        break;
+      } catch (err) {
+        console.warn(`[iptv-server] erro ao consultar conexões em ${path}:`, err);
+      }
+    }
+  };
+
+  await Promise.allSettled([
+    fetchRoute(["/iptv/connections", "/connections", "/iptv/live-connections", "/live-connections"], "IPTV"),
+    fetchRoute(["/p2p/connections", "/p2p/live-connections"], "P2P"),
+  ]);
+
+  return {
+    ok: true,
+    server_name: config.server_name,
+    base_url: config.base_url,
+    total: connectionsList.length,
+    connections: connectionsList,
   };
 }

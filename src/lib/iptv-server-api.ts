@@ -279,3 +279,111 @@ export function sortServerClientsByDue(clients: NormalizedServerClient[]): Norma
     return a.username.localeCompare(b.username);
   });
 }
+
+export type NormalizedServerConnection = {
+  id: string | number;
+  username: string;
+  name?: string;
+  channel: string;               // Canal / Conteúdo assistido
+  type: "IPTV" | "P2P";
+  ip?: string;
+  device?: string;               // Dispositivo / Player / User Agent
+  connected_at?: string;         // Horário de início formatado
+  duration?: string;             // Tempo online (ex: "45 min", "1h 12m", "30s")
+  duration_seconds?: number;
+  server_name: string;
+  raw?: any;
+};
+
+export function formatDurationSeconds(sec: number): string {
+  if (sec < 0) sec = 0;
+  if (sec < 60) return `${sec}s`;
+  const minutes = Math.floor(sec / 60);
+  if (minutes < 60) {
+    const s = sec % 60;
+    return s > 0 ? `${minutes}m ${s}s` : `${minutes} min`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remMinutes = minutes % 60;
+  return remMinutes > 0 ? `${hours}h ${remMinutes}m` : `${hours}h`;
+}
+
+export function normalizeServerConnection(
+  item: any,
+  defaultType: "IPTV" | "P2P" = "IPTV",
+  serverName: string = "RBOYS"
+): NormalizedServerConnection {
+  const id = item.id ?? item.user_id ?? item.sub_id ?? item.client_id ?? Math.random().toString(36).substring(7);
+  const username = String(
+    item.username ?? item.login ?? item.user ?? item.client_username ?? item.name ?? `user_${id}`
+  ).trim();
+
+  const channel = String(
+    item.stream_name ??
+    item.channel_name ??
+    item.channel ??
+    item.stream_display_name ??
+    item.now_playing ??
+    item.content_title ??
+    item.content ??
+    item.title ??
+    item.stream ??
+    "Canal ao vivo"
+  ).trim();
+
+  let type: "IPTV" | "P2P" = defaultType;
+  if (item.type) {
+    const t = String(item.type).toUpperCase();
+    if (t.includes("P2P")) type = "P2P";
+    else if (t.includes("IPTV")) type = "IPTV";
+  }
+
+  const ip = item.ip ?? item.user_ip ?? item.client_ip ?? item.ip_address ?? undefined;
+  const device = item.user_agent ?? item.device ?? item.player ?? item.app_name ?? item.client ?? undefined;
+
+  let durationStr: string | undefined = undefined;
+  let durationSec: number | undefined = undefined;
+  let connectedAtStr: string | undefined = undefined;
+
+  const rawStart = item.connected_at ?? item.start_time ?? item.started_at ?? item.date_start ?? item.online_since ?? item.login_time;
+  if (rawStart) {
+    const startMs = typeof rawStart === "number"
+      ? (rawStart > 1e11 ? rawStart : rawStart * 1000)
+      : new Date(String(rawStart)).getTime();
+    if (!isNaN(startMs) && startMs > 0) {
+      durationSec = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
+      durationStr = formatDurationSeconds(durationSec);
+      connectedAtStr = new Intl.DateTimeFormat("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }).format(new Date(startMs));
+    }
+  }
+
+  if (!durationStr) {
+    const rawUptime = item.duration ?? item.uptime ?? item.online_time ?? item.time;
+    if (typeof rawUptime === "number") {
+      durationSec = rawUptime;
+      durationStr = formatDurationSeconds(rawUptime);
+    } else if (typeof rawUptime === "string" && rawUptime.trim()) {
+      durationStr = rawUptime.trim();
+    }
+  }
+
+  return {
+    id,
+    username,
+    name: item.name && item.name !== username ? item.name : undefined,
+    channel,
+    type,
+    ip: ip ? String(ip).trim() : undefined,
+    device: device ? String(device).trim() : undefined,
+    connected_at: connectedAtStr,
+    duration: durationStr || "Recente",
+    duration_seconds: durationSec,
+    server_name: serverName,
+    raw: item,
+  };
+}
