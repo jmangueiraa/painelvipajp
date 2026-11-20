@@ -194,6 +194,47 @@
   border-color: color-mix(in oklab, var(--invoice-muted) 24%, transparent);
 }
 .evolution-portal-input::placeholder { color: var(--invoice-muted); }
+.server-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (min-width: 520px) {
+  .server-metrics-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.server-metric-card {
+  --metric-tone: var(--invoice-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  height: 106px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in oklab, var(--invoice-muted) 14%, transparent);
+  background: var(--invoice-surface);
+  color: var(--invoice-foreground);
+  box-shadow: 0 1px 3px color-mix(in oklab, var(--invoice-foreground) 8%, transparent);
+  white-space: normal;
+  text-align: left;
+  letter-spacing: 0;
+}
+.server-metric-card[data-tone="success"] { --metric-tone: var(--invoice-success); }
+.server-metric-card[data-tone="warning"] { --metric-tone: var(--warning); }
+.server-metric-card[data-tone="danger"] { --metric-tone: var(--destructive); }
+.server-metric-card[data-tone="info"] { --metric-tone: var(--info); }
+.server-metric-card:hover {
+  background: var(--invoice-surface);
+  color: var(--invoice-foreground);
+  border-color: var(--metric-tone);
+}
+.server-metric-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; min-width: 0; }
+.server-metric-label { font-size: 11px; line-height: 1.35; font-weight: 500; color: var(--invoice-muted); overflow-wrap: anywhere; }
+.server-metric-icon { display: flex; align-items: center; justify-content: center; flex: 0 0 28px; height: 28px; border-radius: 8px; background: color-mix(in oklab, var(--metric-tone) 12%, var(--invoice-surface)); color: var(--metric-tone); }
+.server-metric-icon svg { width: 16px; height: 16px; }
+.server-metric-value { font-size: 24px; line-height: 1.15; font-weight: 800; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .renewal-success-art { animation: renewal-success-enter 650ms ease-out both; }
 .renewal-success-check {
   stroke-dasharray: 60;

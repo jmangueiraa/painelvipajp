@@ -1,5 +1,9 @@
 # Preparação Android TWA
 
+## Cards da visão geral RBOYS
+- [x] Padronizar sete cards sem sobreposição, compartilhar dados do servidor e abrir os filtros correspondentes sem alterar APIs ou regras de pagamento.
+- [x] Validar 12 testes e apresentação com dados simulados em 360, 680 e 1280 px; consulta autenticada real não verificada nesta sessão.
+
 ## Ações dos clientes RBOYS
 - [x] Adicionar seis ações sem player, modais e confirmações, com servidor central do portal protegido (não Edge Function externa) e envio Evolution ao telefone vinculado.
 - [x] Validar 8 testes de contratos; painel autenticado com 175 menus, 19 planos e mensagem de acesso real; celular sem transbordamento e alteração simulada atualizando lista/créditos, sem alterar clientes nem consumir créditos reais.

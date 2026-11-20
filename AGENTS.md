@@ -17,6 +17,8 @@
 - Keep renewal confirmation in a dedicated portal component with semantic invoice tokens; normalize the existing status response client-side without changing payment processing.
 
 ## RBOYS client actions
+- Share the normalized server-client query between overview cards and server lists; this keeps displayed totals consistent without exposing provider credentials.
+- Keep overview metrics in a dedicated component with fixed-height, semantic-token cards; this prevents labels, values and icons from overlapping on small screens.
 - Route client operations through the existing admin-token-verified portal endpoint and a validated server-only action adapter, never a browser API key or a second payment engine; this preserves portal authentication and owner-scoped integrations.
 - Keep each client's actions in an isolated menu/dialog component and invalidate server clients, access messages and credits after mutations; provider failures must stay local to the action.
 

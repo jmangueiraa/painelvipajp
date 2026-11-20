@@ -1,5 +1,7 @@
 import React, { Component, type ReactNode, useMemo, useState } from "react";
 import { EvolutionPortalCard } from "@/components/portal/evolution-portal-card";
+import { ServerOverviewCards } from "@/components/portal/server-overview-cards";
+import { dueThisMonth, serverClientsQueryOptions, type ServerClientStatusFilter } from "@/lib/server-client-summary";
 import { ServerClientActions } from "@/components/portal/server-client-actions";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -316,6 +318,7 @@ export function PortalAdminPanel({
 }: PortalAdminPanelProps) {
   const qc = useQueryClient();
   const [subView, setSubView] = useState<AdminSubView>("home");
+  const [serverClientFilter, setServerClientFilter] = useState<ServerClientStatusFilter>("todos");
   const [clientFilter, setClientFilter] = useState<ClientFilter>("todos");
   const [clientSearch, setClientSearch] = useState("");
   const [clientFormOpen, setClientFormOpen] = useState(false);
@@ -471,6 +474,7 @@ export function PortalAdminPanel({
                 void refetch();
                 void onlineConnectionsQuery.refetch();
                 void serverCreditsQuery.refetch();
+                void qc.invalidateQueries({ queryKey: ["portal", "admin", "server-clients"] });
               }}
               aria-label="Atualizar dados do painel"
               className="w-9 h-9 rounded-xl bg-white border border-slate-200/80 shadow-sm flex items-center justify-center text-slate-600 hover:text-[#FF5500] cursor-pointer"
@@ -556,134 +560,15 @@ export function PortalAdminPanel({
             </div>
           </div>
 
-          {/* Visão geral do negócio */}
-          <div className="space-y-2.5">
-            <h3 className="text-sm font-extrabold text-slate-900 px-0.5">Visão geral do negócio</h3>
-
-            <div className="grid grid-cols-3 gap-2.5">
-              <button
-                type="button"
-                onClick={() => openClientsWithFilter("todos")}
-                className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between text-left hover:border-slate-200 active:scale-[0.98] transition cursor-pointer"
-              >
-                <div>
-                  <p className="text-[11px] font-medium text-slate-600 leading-tight">Total de clientes</p>
-                  <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1 leading-none">
-                    {data.kpis.total}
-                  </p>
-                </div>
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
-                  <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => openClientsWithFilter("ativos")}
-                className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between text-left hover:border-emerald-200 active:scale-[0.98] transition cursor-pointer"
-              >
-                <div>
-                  <p className="text-[11px] font-medium text-slate-600 leading-tight">Clientes ativos</p>
-                  <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1 leading-none">
-                    {data.kpis.ativos}
-                  </p>
-                </div>
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0">
-                  <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setOnlineModalOpen(true)}
-                className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between text-left hover:border-emerald-200 active:scale-[0.98] transition cursor-pointer relative group"
-              >
-                <div className="min-w-0 pr-1">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-[11px] font-medium text-slate-600 truncate leading-tight">Clientes Online</p>
-                    <span className="relative flex h-2 w-2 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-1.5 mt-1">
-                    <p className="text-xl sm:text-2xl font-black text-slate-900 leading-none">
-                      {onlineConnectionsQuery.isLoading ? (
-                        <Loader2 className="h-5 w-5 animate-spin text-slate-300 inline" />
-                      ) : (
-                        onlineConnectionsQuery.data?.total ?? 0
-                      )}
-                    </p>
-                    <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100/60 leading-none">
-                      Ao vivo
-                    </span>
-                  </div>
-                </div>
-
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0">
-                  <Tv className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2.5">
-              <button
-                type="button"
-                onClick={() => openClientsWithFilter("vencidos")}
-                className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between text-left hover:border-rose-200 active:scale-[0.98] transition cursor-pointer"
-              >
-                <div>
-                  <p className="text-[11px] font-medium text-slate-600 leading-tight">Vencidos</p>
-                  <p className="text-xl font-black text-slate-900 mt-1 leading-none">
-                    {data.kpis.vencidos}
-                  </p>
-                </div>
-                <div className="w-9 h-9 rounded-xl bg-rose-100/80 text-rose-500 flex items-center justify-center shrink-0">
-                  <AlertTriangle className="h-4 w-4" />
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => openClientsWithFilter("vencem_hoje")}
-                className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between text-left hover:border-amber-200 active:scale-[0.98] transition cursor-pointer"
-              >
-                <div>
-                  <p className="text-[11px] font-medium text-slate-600 leading-tight">
-                    Vencem
-                    <br />
-                    hoje
-                  </p>
-                  <p className="text-xl font-black text-slate-900 mt-0.5 leading-none">
-                    {data.kpis.hoje}
-                  </p>
-                </div>
-                <div className="w-9 h-9 rounded-xl bg-amber-100/80 text-amber-600 flex items-center justify-center shrink-0">
-                  <CalendarClock className="h-4 w-4" />
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => openClientsWithFilter("a_vencer_mes")}
-                className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between text-left hover:border-sky-200 active:scale-[0.98] transition cursor-pointer"
-              >
-                <div>
-                  <p className="text-[11px] font-medium text-slate-600 leading-tight">
-                    A vencer no
-                    <br />
-                    mês
-                  </p>
-                  <p className="text-xl font-black text-slate-900 mt-0.5 leading-none">
-                    {data.kpis.mes}
-                  </p>
-                </div>
-                <div className="w-9 h-9 rounded-xl bg-sky-100/80 text-sky-600 flex items-center justify-center shrink-0">
-                  <Calendar className="h-4 w-4" />
-                </div>
-              </button>
-            </div>
-          </div>
+          <CardErrorBoundary>
+            <ServerOverviewCards
+              online={onlineConnectionsQuery.data?.total ?? 0}
+              credits={serverCreditsQuery.data?.ok ? serverCreditsQuery.data.formatted_credits : "--"}
+              onClients={(filter) => { setServerClientFilter(filter); setSubView("server_clients"); }}
+              onOnline={() => setOnlineModalOpen(true)}
+              onCredits={() => setSubView("apis")}
+            />
+          </CardErrorBoundary>
 
           {/* Acesso rápido (Grid 4x2 exatamente igual à imagem) */}
           <div className="space-y-2.5">
@@ -713,7 +598,7 @@ export function PortalAdminPanel({
                 subLabel="RBOYS"
                 badgeClass="bg-sky-100/80 text-sky-600"
                 icon={<ServerIcon className="h-5 w-5" />}
-                onClick={() => setSubView("server_clients")}
+                onClick={() => { setServerClientFilter("todos"); setSubView("server_clients"); }}
               />
               <QuickActionTile
                 label="Faturamento"
@@ -843,7 +728,7 @@ export function PortalAdminPanel({
       )}
       {activeTab === "admin" && subView === "server_clients" && (
         <CardErrorBoundary fallback={<div className="p-4 text-sm text-slate-500">Servidor RBOYS indisponível no momento.</div>}>
-          <AdminServerClientsSubView data={data} onBack={() => setSubView("home")} onChanged={invalidateAdmin} />
+          <AdminServerClientsSubView data={data} initialFilter={serverClientFilter} onBack={() => setSubView("home")} onChanged={invalidateAdmin} />
         </CardErrorBoundary>
       )}
 
@@ -2572,15 +2457,17 @@ function AdminIptvSubView({
 /* ========================================================================== */
 function AdminServerClientsSubView({
   data,
+  initialFilter,
   onBack,
   onChanged,
 }: {
   data: AdminSnapshot;
+  initialFilter: ServerClientStatusFilter;
   onBack: () => void;
   onChanged: () => void;
 }) {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"todos" | "ativos" | "vencem_hoje" | "vencidos">("todos");
+  const [statusFilter, setStatusFilter] = useState<ServerClientStatusFilter>(initialFilter);
   const [typeFilter, setTypeFilter] = useState<"todos" | "iptv" | "p2p">("todos");
   const [showSecrets, setShowSecrets] = useState(false);
   const [pendingClientId, setPendingClientId] = useState<string | null>(null);
@@ -2596,47 +2483,7 @@ function AdminServerClientsSubView({
     return map;
   }, [data.clients]);
 
-  // Consulta em tempo real à API do servidor RBOYS
-  const serverQuery = useQuery({
-    queryKey: ["portal", "admin", "server-clients"],
-    queryFn: () =>
-      adminPost<{
-        ok: boolean;
-        server_name: string;
-        base_url: string;
-        total: number;
-        kpis: {
-          total: number;
-          ativos: number;
-          vencidos: number;
-          vencem_hoje: number;
-        };
-        clients: NormalizedServerClient[];
-        error?: string;
-      }>("get_server_clients")
-        .then((r) => ({
-          ...(r ?? {}),
-          ok: Boolean(r?.ok),
-          server_name: String(r?.server_name ?? ""),
-          base_url: String(r?.base_url ?? ""),
-          total: Number(r?.total ?? 0) || 0,
-          kpis: r?.kpis && typeof r.kpis === "object"
-            ? {
-                total: Number(r.kpis.total ?? 0) || 0,
-                ativos: Number(r.kpis.ativos ?? 0) || 0,
-                vencidos: Number(r.kpis.vencidos ?? 0) || 0,
-                vencem_hoje: Number(r.kpis.vencem_hoje ?? 0) || 0,
-              }
-            : undefined,
-          clients: (Array.isArray(r?.clients) ? r.clients : []).map((c) => ({
-            ...c,
-            username: String(c?.username ?? ""),
-          })) as NormalizedServerClient[],
-          error: r?.error,
-        })),
-    staleTime: 1000 * 30,
-    refetchOnWindowFocus: false,
-  });
+  const serverQuery = useQuery(serverClientsQueryOptions);
 
   // Mutação para importar ou atualizar vínculo mantendo data exata do servidor
   const importClient = useMutation({
@@ -2684,6 +2531,7 @@ function AdminServerClientsSubView({
         }
       }
       if (statusFilter !== "todos") {
+        if (statusFilter === "a_vencer_mes" && !dueThisMonth(client, data.today || todayISO())) return false;
         if (statusFilter === "ativos") {
           const isAtivo =
             (!client.is_expired &&
@@ -2793,6 +2641,9 @@ function AdminServerClientsSubView({
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
           {/* Filtro Status */}
           <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+            {statusFilter === "a_vencer_mes" && (
+              <span className="text-xs text-invoice-muted">A vencer no mês</span>
+            )}
             <button
               type="button"
               onClick={() => setStatusFilter("todos")}
