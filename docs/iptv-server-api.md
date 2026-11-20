@@ -8,9 +8,14 @@ Foi adicionado ao **Painel ADM** (seção **API e Integrações**) o card **"Ser
 
 ## 2. Teste de Conexão em Tempo Real
 Ao clicar em **"Testar Conexão"**:
-1. O backend realiza um teste HTTP contra a URL Base fornecida com timeout de 10 segundos.
+1. O backend realiza uma requisição `GET {base_url}/me` (ou `GET {base_url}/v1/me`, conforme o endpoint oficial `https://cms.rboys02.click/api/v1/me`) com timeout de 10 segundos.
 2. Envia o header `X-API-Key` (e `Authorization: Bearer`).
-3. Retorna feedback imediato em toast (tempo de resposta em ms, código HTTP ou aviso de chave inválida / erro de rede).
+3. Quando a conexão é bem-sucedida, extrai e exibe na hora os dados da conta retornados pelo servidor:
+   - **Saldo / Créditos disponíveis** (ex: `50 créditos` ou `R$ 150,00`)
+   - **Conta / Usuário** (nome e username)
+   - **Clientes Ativos**
+   - **E-mail** cadastrado no servidor
+   - Status HTTP e tempo de resposta em milissegundos (latência).
 
 ## 3. Arquitetura Centralizada (Single Source of Truth)
 Conforme solicitado, **nenhuma chave ou URL fica fixa (hardcoded) no código**:

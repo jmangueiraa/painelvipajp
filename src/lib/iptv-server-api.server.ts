@@ -14,6 +14,8 @@ import {
   type NormalizedServerPlan,
   type CreateServerClientInput,
   type CreatedServerClientResult,
+  type ServerTestResult,
+  type ServerAccountDetails,
 } from "./iptv-server-api";
 
 export async function getIptvServerConfig(userId?: string): Promise<IptvServerConfig | null> {
@@ -144,7 +146,7 @@ export async function saveIptvServerConfig(
 export async function testIptvServerConnection(config: {
   base_url: string;
   api_key: string;
-}): Promise<{ ok: boolean; message: string; status: number; latencyMs: number }> {
+}): Promise<ServerTestResult> {
   const base_url = normalizeIptvBaseUrl(config.base_url);
   if (!base_url) throw new Error("URL Base da API do servidor obrigatória.");
   if (!config.api_key?.trim()) throw new Error("Chave API (X-API-Key) obrigatória para o teste.");
@@ -152,46 +154,117 @@ export async function testIptvServerConnection(config: {
   const headers = buildIptvHeaders(config.api_key);
   const startTime = Date.now();
 
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
+  // Candidatos de URL para o endpoint oficial /me
+  // 1. https://cms.rboys02.click/api/v1/me (ou {base_url}/me se base_url já contiver /v1)
+  // 2. {base_url}/me (fallback direto)
+  const cleanBase = base_url.replace(/\/+$/, "");
+  const candidates: string[] = [];
 
-    const res = await fetch(base_url, {
-      method: "GET",
-      headers,
-      signal: controller.signal,
-    }).finally(() => clearTimeout(timeout));
+  if (cleanBase.endsWith("/v1")) {
+    candidates.push(`${cleanBase}/me`);
+    candidates.push(`${cleanBase.replace(/\/v1$/, "")}/me`);
+  } else {
+    // Endpoint oficial da documentação RBOYS: https://cms.rboys02.click/api/v1/me
+    candidates.push(`${cleanBase}/v1/me`);
+    candidates.push(`${cleanBase}/me`);
+  }
 
-    const latencyMs = Date.now() - startTime;
+  let usedUrl = candidates[0];
+  let lastError: any = null;
 
-    if (res.status === 401 || res.status === 403) {
-      throw new Error(`Chave API (X-API-Key) não autorizada pelo servidor (HTTP ${res.status}). Verifique a chave informada.`);
-    }
+  for (const targetUrl of candidates) {
+    try {
+      usedUrl = targetUrl;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
 
-    if (res.ok) {
-      return {
-        ok: true,
-        status: res.status,
-        latencyMs,
-        message: `Conexão estabelecida com sucesso! Servidor respondeu HTTP ${res.status} em ${latencyMs}ms.`,
-      };
-    }
+      const res = await fetch(targetUrl, {
+        method: "GET",
+        headers,
+        signal: controller.signal,
+      }).finally(() => clearTimeout(timeout));
 
-    return {
-      ok: true,
-      status: res.status,
-      latencyMs,
-      message: `Servidor acessível (HTTP ${res.status} em ${latencyMs}ms). Conexão de rede validada.`,
-    };
-  } catch (err: any) {
-    if (err.name === "AbortError") {
-      throw new Error("Tempo limite de conexão excedido (10s). Verifique se a URL Base está acessível na internet.");
-    }
-    if (err.message?.includes("X-API-Key") || err.message?.includes("HTTP 401") || err.message?.includes("HTTP 403")) {
+      if (res.status === 401 || res.status === 403) {
+        throw new Error(
+          `Chave API (X-API-Key) não autorizada pelo servidor (HTTP ${res.status}). Verifique se a chave informada está correta e ativa no painel RBOYS.`
+        );
+      }
+
+      // Se for 404 e tivermos outro candidato, tenta o próximo
+      if (res.status === 404 && targetUrl !== candidates[candidates.length - 1]) {
+        continue;
+      }
+
+      if (res.ok) {
+        const latencyMs = Date.now() - startTime;
+        const data = await res.json().catch(() => null);
+
+        const accountObj = (data && typeof data === "object"
+          ? (data.data || data.user || data.account || data.reseller || data)
+          : {}) as Record<string, any>;
+
+        let credits: number | string | null = null;
+        if (accountObj.credits !== undefined && accountObj.credits !== null) credits = accountObj.credits;
+        else if (accountObj.credit !== undefined && accountObj.credit !== null) credits = accountObj.credit;
+        else if (accountObj.balance !== undefined && accountObj.balance !== null) credits = accountObj.balance;
+        else if (accountObj.saldo !== undefined && accountObj.saldo !== null) credits = accountObj.saldo;
+        else if (accountObj.points !== undefined && accountObj.points !== null) credits = accountObj.points;
+
+        const balance = accountObj.balance !== undefined && accountObj.balance !== null ? accountObj.balance : null;
+        const name = String(accountObj.name || accountObj.nome || "").trim();
+        const username = String(accountObj.username || accountObj.usuario || accountObj.login || accountObj.user || "").trim();
+        const email = String(accountObj.email || "").trim();
+        const role = String(accountObj.role || accountObj.profile || accountObj.tipo || "").trim();
+        const activeClients = accountObj.active_clients ?? accountObj.clients_count ?? accountObj.total_clients ?? accountObj.active_connections ?? null;
+
+        let message = `Conexão estabelecida com sucesso (HTTP ${res.status} em ${latencyMs}ms)!`;
+        const parts: string[] = [];
+        if (credits !== null) parts.push(`Saldo: ${credits} crédito(s)`);
+        if (name || username) parts.push(`Conta: ${name || username}`);
+        if (parts.length > 0) {
+          message = `Conexão bem-sucedida! ${parts.join(" • ")} (${latencyMs}ms)`;
+        }
+
+        return {
+          ok: true,
+          status: res.status,
+          latencyMs,
+          url: targetUrl,
+          message,
+          account: {
+            name: name || null,
+            username: username || null,
+            credits: credits !== null ? credits : null,
+            balance: balance !== null ? balance : null,
+            email: email || null,
+            role: role || null,
+            active_clients: activeClients,
+            raw: data,
+          },
+        };
+      }
+
+      // Se respondeu status HTTP de erro (não 404 recuperável)
+      const errBody = await res.json().catch(() => ({}));
+      const serverErrMsg = (errBody && (errBody.message || errBody.error)) || `HTTP ${res.status}`;
+      throw new Error(`Servidor respondeu ${serverErrMsg} ao consultar ${targetUrl}`);
+    } catch (err: any) {
+      lastError = err;
+      if (err.name === "AbortError") {
+        throw new Error(`Tempo limite de conexão excedido (10s) ao consultar ${targetUrl}. Verifique se o servidor está acessível na internet.`);
+      }
+      if (err.message?.includes("X-API-Key") || err.message?.includes("HTTP 401") || err.message?.includes("HTTP 403")) {
+        throw err;
+      }
+      if (targetUrl !== candidates[candidates.length - 1]) {
+        continue;
+      }
       throw err;
     }
-    throw new Error(`Falha ao conectar na URL Base (${err.message || "Erro de rede"}). Verifique se o endereço é válido e está online.`);
   }
+
+  if (lastError) throw lastError;
+  throw new Error(`Falha ao conectar no endpoint /me do servidor (${usedUrl}).`);
 }
 
 /**

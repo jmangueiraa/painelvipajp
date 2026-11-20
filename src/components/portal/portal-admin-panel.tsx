@@ -67,6 +67,7 @@ import type {
   NormalizedServerConnection,
   NormalizedServerPlan,
   CreatedServerClientResult,
+  ServerTestResult,
 } from "@/lib/iptv-server-api";
 import {
   buildChargeMessage,
@@ -1646,6 +1647,7 @@ function AdminApisSubView({
   const [serverUrl, setServerUrl] = useState(data.settings.iptv_base_url || "https://cms.rboys02.click/api");
   const [serverApiKey, setServerApiKey] = useState("");
   const isServerConfigured = Boolean(data.settings.iptv_api_configured);
+  const [serverTestResult, setServerTestResult] = useState<ServerTestResult | null>(null);
 
   const savePatch = useMutation({
     mutationFn: (patch: Record<string, any>) => adminPost("save_settings", { patch }),
@@ -1679,15 +1681,19 @@ function AdminApisSubView({
 
   const testServer = useMutation({
     mutationFn: () =>
-      adminPost<{ ok: boolean; message: string; status: number; latencyMs: number }>("test_iptv_server", {
+      adminPost<ServerTestResult>("test_iptv_server", {
         server_name: serverName,
         base_url: serverUrl,
         api_key: serverApiKey,
       }),
     onSuccess: (res) => {
+      setServerTestResult(res);
       toast.success(res?.message || "Conexão com servidor IPTV bem-sucedida!");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      setServerTestResult(null);
+      toast.error(e.message);
+    },
   });
 
   const zapiStatus = useQuery({
@@ -1883,6 +1889,62 @@ function AdminApisSubView({
             Testar Conexão
           </Button>
         </div>
+
+        {/* Exibição dos dados da conta e saldo do teste de conexão */}
+        {serverTestResult && (
+          <div className="mt-3 p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/70 text-slate-900 space-y-2.5 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between text-xs font-semibold text-emerald-800">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                <span>Conexão Ativa (HTTP {serverTestResult.status} • {serverTestResult.latencyMs}ms)</span>
+              </div>
+              <span className="text-[10px] text-emerald-700 font-mono bg-emerald-100/80 px-2 py-0.5 rounded">
+                GET {serverTestResult.url?.split("/").slice(-2).join("/") || "v1/me"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-0.5">
+              <div className="bg-white border border-emerald-100 rounded-lg p-2.5 shadow-xs">
+                <p className="text-[10px] uppercase font-bold text-slate-500">Saldo / Créditos</p>
+                <p className="text-base font-extrabold text-emerald-700">
+                  {serverTestResult.account?.credits !== null && serverTestResult.account?.credits !== undefined
+                    ? `${serverTestResult.account.credits} créditos`
+                    : serverTestResult.account?.balance !== null && serverTestResult.account?.balance !== undefined
+                    ? `R$ ${serverTestResult.account.balance}`
+                    : "Ativo"}
+                </p>
+              </div>
+
+              <div className="bg-white border border-emerald-100 rounded-lg p-2.5 shadow-xs">
+                <p className="text-[10px] uppercase font-bold text-slate-500">Conta / Usuário</p>
+                <p
+                  className="text-xs font-bold text-slate-800 truncate"
+                  title={serverTestResult.account?.name || serverTestResult.account?.username || "Autenticado"}
+                >
+                  {serverTestResult.account?.name || serverTestResult.account?.username || "Autenticado"}
+                </p>
+                {serverTestResult.account?.username && serverTestResult.account?.name && (
+                  <p className="text-[10px] text-slate-500 truncate">@{serverTestResult.account.username}</p>
+                )}
+              </div>
+
+              {serverTestResult.account?.active_clients !== null && serverTestResult.account?.active_clients !== undefined && (
+                <div className="bg-white border border-emerald-100 rounded-lg p-2.5 shadow-xs col-span-2 sm:col-span-1">
+                  <p className="text-[10px] uppercase font-bold text-slate-500">Clientes Ativos</p>
+                  <p className="text-sm font-extrabold text-slate-800">
+                    {serverTestResult.account.active_clients}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {serverTestResult.account?.email && (
+              <p className="text-[11px] text-slate-600">
+                <span className="font-semibold text-slate-700">E-mail:</span> {serverTestResult.account.email}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -26,6 +26,26 @@ export type NormalizedServerClient = {
   raw?: any;
 };
 
+export type ServerAccountDetails = {
+  name: string | null;
+  username: string | null;
+  credits: number | string | null;
+  balance: number | string | null;
+  email: string | null;
+  role?: string | null;
+  active_clients?: number | string | null;
+  raw?: any;
+};
+
+export type ServerTestResult = {
+  ok: boolean;
+  status: number;
+  latencyMs: number;
+  url: string;
+  message: string;
+  account?: ServerAccountDetails;
+};
+
 export function normalizeIptvBaseUrl(raw: string): string {
   let url = (raw || "").trim();
   if (!url) return "";
