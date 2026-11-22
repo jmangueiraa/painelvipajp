@@ -1,7 +1,7 @@
 import type { NormalizedServerClient } from "@/lib/iptv-server-api";
 import { portalFetch } from "@/lib/portal-client";
 
-export type ServerClientStatusFilter = "todos" | "ativos" | "vencidos" | "vencem_hoje" | "a_vencer_mes";
+export type ServerClientStatusFilter = "todos" | "ativos" | "desativados" | "vencidos" | "vencem_hoje" | "a_vencer_mes";
 
 export function dueThisMonth(client: NormalizedServerClient, today: string): boolean {
   const due = client.due_date_str;
@@ -19,6 +19,12 @@ export function normalizeServerClients(response: unknown) {
     .filter((c): c is NormalizedServerClient => c != null && typeof c === "object")
     .map(c => ({ ...c, username: String(c.username ?? "") }));
   const k = r["kpis"] && typeof r["kpis"] === "object" ? r["kpis"] as Record<string, unknown> : {};
+
+  const desativadosCount = clients.filter(c => c.is_disabled || c.status === "desativado" || c.status === "disabled").length;
+  const vencidosCount = clients.filter(c => !c.is_disabled && c.status !== "desativado" && (c.is_expired || c.status === "vencido" || c.status === "expired") && !c.is_due_today).length;
+  const vencemHojeCount = clients.filter(c => !c.is_disabled && c.status !== "desativado" && (c.is_due_today || c.status === "vencem_hoje")).length;
+  const ativosCount = clients.filter(c => !c.is_disabled && c.status !== "desativado" && c.status !== "disabled" && (!c.is_expired || c.is_due_today)).length;
+
   return {
     ok: Boolean(r["ok"]),
     server_name: String(r["server_name"] ?? ""),
@@ -28,9 +34,10 @@ export function normalizeServerClients(response: unknown) {
     clients,
     kpis: {
       total: count(k["total"], clients.length),
-      ativos: count(k["ativos"], clients.filter(c => c.status === "active" || c.status === "ativo" || (!c.is_expired && Boolean(c.due_date_str) && !c.is_due_today)).length),
-      vencidos: count(k["vencidos"], clients.filter(c => c.is_expired || c.status === "expired" || c.status === "vencido").length),
-      vencem_hoje: count(k["vencem_hoje"], clients.filter(c => c.is_due_today || c.status === "vencem_hoje").length),
+      ativos: count(k["ativos"], ativosCount),
+      desativados: count(k["desativados"], desativadosCount),
+      vencidos: count(k["vencidos"], vencidosCount),
+      vencem_hoje: count(k["vencem_hoje"], vencemHojeCount),
     },
   };
 }

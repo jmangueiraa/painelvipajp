@@ -13,7 +13,9 @@ export type NormalizedServerClient = {
   phone?: string;
   notes?: string;
   type: "IPTV" | "P2P" | "iptv" | "p2p";
-  status: "active" | "expired" | "no_expiration" | "ativo" | "vencido" | "vencem_hoje" | "sem_vencimento";
+  status: "active" | "expired" | "no_expiration" | "ativo" | "vencido" | "vencem_hoje" | "sem_vencimento" | "desativado";
+  is_active?: boolean;
+  is_disabled?: boolean;
   expires_at: string | null;      // String ISO ou original vinda da API
   formatted_due: string;         // "DD/MM/AAAA" ou "Sem vencimento"
   formatted_due_time: string;    // "HH:mm" ou ""
@@ -245,25 +247,36 @@ export function normalizeServerClientItem(
 
   const parsed = parseRboysDate(rawExpiry);
 
-  let status: "ativo" | "vencido" | "vencem_hoje" | "sem_vencimento" = "ativo";
-  if (!parsed.dueDateStr || parsed.displayDue === "Sem vencimento") {
+  const rawStatus = String(item.status ?? item.estado ?? "").toLowerCase().trim();
+  const rawActive = item.is_active ?? item.active ?? item.enabled ?? item.is_enabled;
+  const isExplicitlyDisabled =
+    rawStatus === "desativado" ||
+    rawStatus === "disabled" ||
+    rawStatus === "inactive" ||
+    rawStatus === "inativo" ||
+    rawStatus === "bloqueado" ||
+    rawStatus === "blocked" ||
+    rawActive === false ||
+    rawActive === 0 ||
+    rawActive === "0" ||
+    item.disabled === true ||
+    item.disabled === 1 ||
+    item.disabled === "1" ||
+    item.blocked === true ||
+    item.blocked === 1 ||
+    item.blocked === "1";
+
+  let status: "ativo" | "vencido" | "vencem_hoje" | "sem_vencimento" | "desativado" = "ativo";
+  if (isExplicitlyDisabled) {
+    status = "desativado";
+  } else if (!parsed.dueDateStr || parsed.displayDue === "Sem vencimento") {
     status = "sem_vencimento";
   } else if (parsed.isDueToday) {
     status = "vencem_hoje";
-  } else if (parsed.isExpired) {
+  } else if (parsed.isExpired || rawStatus === "expired" || rawStatus === "vencido") {
     status = "vencido";
   } else {
     status = "ativo";
-  }
-
-  if (
-    item.status === "expired" ||
-    item.status === "vencido" ||
-    item.is_active === false ||
-    item.active === false ||
-    item.enabled === false
-  ) {
-    if (parsed.dueDateStr) status = "vencido";
   }
 
   const connections = Number(item.max_connections ?? item.connections ?? item.screens ?? item.telas ?? 1) || 1;
@@ -277,6 +290,8 @@ export function normalizeServerClientItem(
     notes,
     type,
     status,
+    is_active: !isExplicitlyDisabled,
+    is_disabled: isExplicitlyDisabled,
     expires_at: parsed.iso,
     formatted_due: parsed.formattedDate,
     formatted_due_time: parsed.formattedTime,

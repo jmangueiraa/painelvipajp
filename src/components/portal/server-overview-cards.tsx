@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Calendar, CalendarClock, Coins, Tv, UserCheck, Users } from "lucide-react";
+import { AlertTriangle, Calendar, CalendarClock, Coins, Tv, UserCheck, Users, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { todayISO } from "@/lib/format";
 import { dueThisMonth, serverClientsQueryOptions, type ServerClientStatusFilter } from "@/lib/server-client-summary";
@@ -37,8 +37,8 @@ export function ServerOverviewCards({ online, onClients, onOnline }: {
         <span className="text-[10px] font-semibold text-invoice-muted">{summary?.server_name || "RBOYS"}</span>
       </div>
       <div className="server-metrics-grid">
-        <MetricCard label="Total de clientes" value={kpis?.total ?? "--"} icon={<Users />} onClick={() => onClients("todos")} />
-        <MetricCard label="Clientes ativos" value={kpis?.ativos ?? "--"} icon={<UserCheck />} tone="success" onClick={() => onClients("ativos")} />
+        <MetricCard label="Ativos" value={kpis?.ativos ?? "--"} icon={<UserCheck />} tone="success" onClick={() => onClients("ativos")} />
+        <MetricCard label="Desativados" value={kpis?.desativados ?? "--"} icon={<UserX />} tone="neutral" onClick={() => onClients("desativados")} />
         <MetricCard label="Clientes online" value={online} icon={<Tv />} tone="success" onClick={onOnline} />
         <MetricCard label="Vencidos" value={kpis?.vencidos ?? "--"} icon={<AlertTriangle />} tone="danger" onClick={() => onClients("vencidos")} />
         <MetricCard label="Vencem hoje" value={kpis?.vencem_hoje ?? "--"} icon={<CalendarClock />} tone="warning" onClick={() => onClients("vencem_hoje")} />

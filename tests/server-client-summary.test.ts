@@ -6,12 +6,12 @@ describe("RBOYS overview data", () => {
     for (const response of [null, undefined, { ok: false, clients: null }, { clients: [null] }]) {
       const result = normalizeServerClients(response);
       expect(result.clients).toEqual([]);
-      expect(result.kpis).toEqual({ total: 0, ativos: 0, vencidos: 0, vencem_hoje: 0 });
+      expect(result.kpis).toEqual({ total: 0, ativos: 0, desativados: 0, vencidos: 0, vencem_hoje: 0 });
     }
   });
   test("uses provider counts instead of local portal counts", () => {
-    const result = normalizeServerClients({ ok: true, kpis: { total: 175, ativos: "125", vencidos: 2, vencem_hoje: 25 } });
-    expect(result.kpis).toEqual({ total: 175, ativos: 125, vencidos: 2, vencem_hoje: 25 });
+    const result = normalizeServerClients({ ok: true, kpis: { total: 175, ativos: "125", desativados: 1, vencidos: 2, vencem_hoje: 25 } });
+    expect(result.kpis).toEqual({ total: 175, ativos: 125, desativados: 1, vencidos: 2, vencem_hoje: 25 });
   });
   test("nonfinite counts are replaced rather than rendered", () => {
     expect(normalizeServerClients({ kpis: { total: "bad", ativos: Infinity } }).kpis.total).toBe(0);

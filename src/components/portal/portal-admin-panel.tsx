@@ -2434,16 +2434,16 @@ function AdminServerClientsSubView({
   const kpis = serverQuery.data?.kpis ?? {
     total: allClients.length,
     ativos: allClients.filter(
-      (c) =>
-        (!c.is_expired && c.due_date_str !== null && !c.is_due_today) ||
-        c.status === "ativo" ||
-        c.status === "active"
+      (c) => !c.is_disabled && c.status !== "desativado" && (!c.is_expired || c.is_due_today)
+    ).length,
+    desativados: allClients.filter(
+      (c) => c.is_disabled || c.status === "desativado"
     ).length,
     vencidos: allClients.filter(
-      (c) => c.is_expired || c.status === "vencido" || c.status === "expired"
+      (c) => !c.is_disabled && c.status !== "desativado" && c.is_expired && !c.is_due_today
     ).length,
     vencem_hoje: allClients.filter(
-      (c) => c.is_due_today || c.status === "vencem_hoje"
+      (c) => !c.is_disabled && c.status !== "desativado" && (c.is_due_today || c.status === "vencem_hoje")
     ).length,
   };
 
@@ -2459,22 +2459,27 @@ function AdminServerClientsSubView({
       }
       if (statusFilter !== "todos") {
         if (statusFilter === "a_vencer_mes" && !dueThisMonth(client, data.today || todayISO())) return false;
-        if (statusFilter === "ativos") {
+        if (statusFilter === "desativados") {
+          const isDesativado = client.is_disabled || client.status === "desativado";
+          if (!isDesativado) return false;
+        } else if (statusFilter === "ativos") {
           const isAtivo =
-            (!client.is_expired &&
-              client.due_date_str !== null &&
-              !client.is_due_today) ||
-            client.status === "ativo" ||
-            client.status === "active";
+            !client.is_disabled &&
+            client.status !== "desativado" &&
+            (!client.is_expired || client.is_due_today);
           if (!isAtivo) return false;
         } else if (statusFilter === "vencem_hoje") {
-          const isHoje = client.is_due_today || client.status === "vencem_hoje";
+          const isHoje =
+            !client.is_disabled &&
+            client.status !== "desativado" &&
+            (client.is_due_today || client.status === "vencem_hoje");
           if (!isHoje) return false;
         } else if (statusFilter === "vencidos") {
           const isVencido =
-            client.is_expired ||
-            client.status === "vencido" ||
-            client.status === "expired";
+            !client.is_disabled &&
+            client.status !== "desativado" &&
+            client.is_expired &&
+            !client.is_due_today;
           if (!isVencido) return false;
         }
       }
@@ -2524,7 +2529,7 @@ function AdminServerClientsSubView({
       />
 
       {/* KPIs Cards Resumidos */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
         <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm">
           <p className="text-[11px] font-bold text-slate-500">Total no Servidor</p>
           <p className="text-xl font-extrabold text-slate-900 mt-0.5">{kpis.total}</p>
@@ -2532,6 +2537,10 @@ function AdminServerClientsSubView({
         <div className="bg-white rounded-2xl p-3 border border-emerald-100 shadow-sm bg-gradient-to-br from-white to-emerald-50/30">
           <p className="text-[11px] font-bold text-emerald-700">Ativos</p>
           <p className="text-xl font-extrabold text-emerald-600 mt-0.5">{kpis.ativos}</p>
+        </div>
+        <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm bg-gradient-to-br from-white to-slate-50/50">
+          <p className="text-[11px] font-bold text-slate-600">Desativados</p>
+          <p className="text-xl font-extrabold text-slate-700 mt-0.5">{kpis.desativados}</p>
         </div>
         <div className="bg-white rounded-2xl p-3 border border-amber-100 shadow-sm bg-gradient-to-br from-white to-amber-50/30">
           <p className="text-[11px] font-bold text-amber-700">Vencendo Hoje</p>
@@ -2588,6 +2597,15 @@ function AdminServerClientsSubView({
               }`}
             >
               Ativos ({kpis.ativos})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter("desativados")}
+              className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer ${
+                statusFilter === "desativados" ? "bg-slate-700 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              Desativados ({kpis.desativados})
             </button>
             <button
               type="button"
@@ -2700,6 +2718,13 @@ function AdminServerClientsSubView({
                         {client.type.toUpperCase()}
                       </span>
                       {(() => {
+                        if (client.is_disabled || client.status === "desativado") {
+                          return (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                              Desativado
+                            </span>
+                          );
+                        }
                         const isDueToday = client.is_due_today || client.status === "vencem_hoje";
                         const isExpired = client.is_expired || client.status === "vencido" || client.status === "expired";
                         const hasDate = Boolean(client.due_date_str && client.display_due && client.display_due !== "Sem vencimento");

@@ -493,9 +493,10 @@ export async function fetchServerClients(ownerId?: string): Promise<{
 
   const kpis = {
     total: sorted.length,
-    ativos: sorted.filter((c) => (!c.is_expired && c.due_date_str !== null && !c.is_due_today) || c.status === "ativo" || c.status === "active").length,
-    vencidos: sorted.filter((c) => c.is_expired || c.status === "vencido" || c.status === "expired").length,
-    vencem_hoje: sorted.filter((c) => c.is_due_today || c.status === "vencem_hoje").length,
+    ativos: sorted.filter((c) => !c.is_disabled && c.status !== "desativado" && (!c.is_expired || c.is_due_today)).length,
+    desativados: sorted.filter((c) => c.is_disabled || c.status === "desativado").length,
+    vencidos: sorted.filter((c) => !c.is_disabled && c.status !== "desativado" && c.is_expired && !c.is_due_today).length,
+    vencem_hoje: sorted.filter((c) => !c.is_disabled && c.status !== "desativado" && (c.is_due_today || c.status === "vencem_hoje")).length,
   };
 
   return {
