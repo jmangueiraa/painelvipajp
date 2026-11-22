@@ -47,6 +47,7 @@ import { PushNotificationCard } from "@/components/portal/push-notification-card
 import { ModernCardCheckout, type CardFormData } from "@/components/modern-card-checkout";
 import { supabase } from "@/integrations/supabase/client";
 import { RenewalSuccessCard } from "@/components/portal/renewal-success-card";
+import { ChangePlanModal } from "@/components/portal/change-plan-modal";
 import { invoicePaymentStatus } from "@/lib/portal-payment-status";
 import { triggerSendWhatsappEdgeFunction } from "@/lib/send-whatsapp-function";
 import { PriorityPaymentGate } from "@/components/portal/priority-payment-gate";
@@ -184,6 +185,7 @@ function PortalDashboard() {
   const [renewOpen, setRenewOpen] = useState(false);
   const [showCreds, setShowCreds] = useState(false);
   const [showCredsPassword, setShowCredsPassword] = useState(false);
+  const [changePlanOpen, setChangePlanOpen] = useState(false);
   const [showPeriodChange, setShowPeriodChange] = useState(true);
   const [chosenPeriod, setChosenPeriod] = useState<{ label: string; days: number; price_cents: number } | null>(null);
   const [method, setMethod] = useState<"pix" | "card" | null>(null);
@@ -1076,6 +1078,29 @@ function PortalDashboard() {
             </a>
           </div>
 
+          {/* Card de Troca de Plano de Canais / Conteúdo (Servidor RBOYS) */}
+          {(data.client.iptv_login || data.client.iptv_password) && (
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 shadow-sm border border-blue-100/60">
+                  <Tv className="h-5 w-5" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-900">Plano de Canais & Conteúdo</span>
+                  <span className="text-[11px] text-slate-500">COMPLETO, Sem Adulto ou Personalizado</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setChangePlanOpen(true)}
+                className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold shadow-sm shadow-blue-500/20 transition cursor-pointer shrink-0"
+              >
+                Mudar plano
+              </button>
+            </div>
+          )}
+
           {/* Visualização de Dados de Acesso IPTV (Discreta e Segura) */}
           {(data.client.iptv_login || data.client.iptv_password) && (
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
@@ -1139,6 +1164,21 @@ function PortalDashboard() {
                       </div>
                     </div>
                   )}
+
+                  {/* Opção para trocar plano de canais diretamente na conexão */}
+                  <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl text-xs">
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Pacote de Canais:</span>
+                      <span className="font-semibold text-slate-800">Opções de Conteúdo RBOYS</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setChangePlanOpen(true)}
+                      className="text-xs text-blue-600 font-bold hover:underline cursor-pointer"
+                    >
+                      Alterar plano
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -2171,6 +2211,15 @@ function PortalDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Troca de Plano de Canais / Conteúdo (Servidor RBOYS) */}
+      {data?.client && (
+        <ChangePlanModal
+          open={changePlanOpen}
+          onOpenChange={setChangePlanOpen}
+          username={data.client.iptv_login || data.client.name}
+        />
+      )}
     </PortalShell>
   );
 }

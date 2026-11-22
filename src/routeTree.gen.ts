@@ -44,6 +44,7 @@ import { Route as ApiPublicAppMpWebhookRouteImport } from './routes/api/public/a
 import { Route as ApiPublicHooksAutoChargesRouteImport } from './routes/api/public/hooks/auto-charges'
 import { Route as ApiPublicPortalAdminRouteImport } from './routes/api/public/portal/admin'
 import { Route as ApiPublicPortalAiAgentChatRouteImport } from './routes/api/public/portal/ai-agent-chat'
+import { Route as ApiPublicPortalChangePlanRouteImport } from './routes/api/public/portal/change-plan'
 import { Route as ApiPublicPortalLoginPasswordRouteImport } from './routes/api/public/portal/login-password'
 import { Route as ApiPublicPortalLogoutRouteImport } from './routes/api/public/portal/logout'
 import { Route as ApiPublicPortalMeRouteImport } from './routes/api/public/portal/me'
@@ -254,6 +255,12 @@ const ApiPublicPortalAiAgentChatRoute =
     path: '/api/public/portal/ai-agent-chat',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPortalChangePlanRoute =
+  ApiPublicPortalChangePlanRouteImport.update({
+    id: '/api/public/portal/change-plan',
+    path: '/api/public/portal/change-plan',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPortalLoginPasswordRoute =
   ApiPublicPortalLoginPasswordRouteImport.update({
     id: '/api/public/portal/login-password',
@@ -408,6 +415,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
   '/api/public/portal/admin': typeof ApiPublicPortalAdminRoute
   '/api/public/portal/ai-agent-chat': typeof ApiPublicPortalAiAgentChatRoute
+  '/api/public/portal/change-plan': typeof ApiPublicPortalChangePlanRoute
   '/api/public/portal/login-password': typeof ApiPublicPortalLoginPasswordRoute
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
   '/api/public/portal/me': typeof ApiPublicPortalMeRoute
@@ -465,6 +473,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
   '/api/public/portal/admin': typeof ApiPublicPortalAdminRoute
   '/api/public/portal/ai-agent-chat': typeof ApiPublicPortalAiAgentChatRoute
+  '/api/public/portal/change-plan': typeof ApiPublicPortalChangePlanRoute
   '/api/public/portal/login-password': typeof ApiPublicPortalLoginPasswordRoute
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
   '/api/public/portal/me': typeof ApiPublicPortalMeRoute
@@ -524,6 +533,7 @@ export interface FileRoutesById {
   '/api/public/hooks/auto-charges': typeof ApiPublicHooksAutoChargesRoute
   '/api/public/portal/admin': typeof ApiPublicPortalAdminRoute
   '/api/public/portal/ai-agent-chat': typeof ApiPublicPortalAiAgentChatRoute
+  '/api/public/portal/change-plan': typeof ApiPublicPortalChangePlanRoute
   '/api/public/portal/login-password': typeof ApiPublicPortalLoginPasswordRoute
   '/api/public/portal/logout': typeof ApiPublicPortalLogoutRoute
   '/api/public/portal/me': typeof ApiPublicPortalMeRoute
@@ -583,6 +593,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/auto-charges'
     | '/api/public/portal/admin'
     | '/api/public/portal/ai-agent-chat'
+    | '/api/public/portal/change-plan'
     | '/api/public/portal/login-password'
     | '/api/public/portal/logout'
     | '/api/public/portal/me'
@@ -640,6 +651,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/auto-charges'
     | '/api/public/portal/admin'
     | '/api/public/portal/ai-agent-chat'
+    | '/api/public/portal/change-plan'
     | '/api/public/portal/login-password'
     | '/api/public/portal/logout'
     | '/api/public/portal/me'
@@ -698,6 +710,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/auto-charges'
     | '/api/public/portal/admin'
     | '/api/public/portal/ai-agent-chat'
+    | '/api/public/portal/change-plan'
     | '/api/public/portal/login-password'
     | '/api/public/portal/logout'
     | '/api/public/portal/me'
@@ -738,6 +751,7 @@ export interface RootRouteChildren {
   ApiPublicHooksAutoChargesRoute: typeof ApiPublicHooksAutoChargesRoute
   ApiPublicPortalAdminRoute: typeof ApiPublicPortalAdminRoute
   ApiPublicPortalAiAgentChatRoute: typeof ApiPublicPortalAiAgentChatRoute
+  ApiPublicPortalChangePlanRoute: typeof ApiPublicPortalChangePlanRoute
   ApiPublicPortalLoginPasswordRoute: typeof ApiPublicPortalLoginPasswordRoute
   ApiPublicPortalLogoutRoute: typeof ApiPublicPortalLogoutRoute
   ApiPublicPortalMeRoute: typeof ApiPublicPortalMeRoute
@@ -1008,6 +1022,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPortalAiAgentChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/portal/change-plan': {
+      id: '/api/public/portal/change-plan'
+      path: '/api/public/portal/change-plan'
+      fullPath: '/api/public/portal/change-plan'
+      preLoaderRoute: typeof ApiPublicPortalChangePlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/portal/login-password': {
       id: '/api/public/portal/login-password'
       path: '/api/public/portal/login-password'
@@ -1249,6 +1270,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksAutoChargesRoute: ApiPublicHooksAutoChargesRoute,
   ApiPublicPortalAdminRoute: ApiPublicPortalAdminRoute,
   ApiPublicPortalAiAgentChatRoute: ApiPublicPortalAiAgentChatRoute,
+  ApiPublicPortalChangePlanRoute: ApiPublicPortalChangePlanRoute,
   ApiPublicPortalLoginPasswordRoute: ApiPublicPortalLoginPasswordRoute,
   ApiPublicPortalLogoutRoute: ApiPublicPortalLogoutRoute,
   ApiPublicPortalMeRoute: ApiPublicPortalMeRoute,

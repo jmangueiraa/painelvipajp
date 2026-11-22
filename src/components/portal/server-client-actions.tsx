@@ -96,6 +96,7 @@ export function ServerClientActions({ client, localClient, onChanged }: {
           <Label htmlFor={`plan-${client.type}-${client.id}`}>Plano no servidor</Label>
           {plans.isPending ? <Loader2 className="h-5 w-5 animate-spin" aria-label="Carregando planos" /> : plans.isError ? <p role="alert" className="text-sm text-destructive">{plans.error.message}<Button variant="ghost" onClick={() => void plans.refetch()}>Tentar novamente</Button></p> : availablePlans.length === 0 ? <p className="text-sm text-invoice-muted">Nenhum plano disponível.</p> :
             <Select value={planId} onValueChange={setPlanId}><SelectTrigger id={`plan-${client.type}-${client.id}`}><SelectValue placeholder="Escolha o plano" /></SelectTrigger><SelectContent>{availablePlans.map(plan => <SelectItem key={String(plan.id)} value={String(plan.id)}>{plan.name}</SelectItem>)}</SelectContent></Select>}
+          {mode === "plan" && <p className="text-xs text-invoice-muted">A troca de plano não altera o vencimento nem consome créditos.</p>}
         </div>}
         {mode === "notes" && <div className="space-y-2"><Label htmlFor={`notes-${client.type}-${client.id}`}>Nome / observação</Label><Input id={`notes-${client.type}-${client.id}`} maxLength={2000} value={notes} onChange={event => setNotes(event.target.value)} /></div>}
         {mode === "status" && <p className="text-sm">Confirmar {enabled ? "desativação" : "ativação"} de {client.username} no servidor?</p>}
