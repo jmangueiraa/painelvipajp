@@ -12,18 +12,19 @@ function json(data: unknown, request: Request, init?: ResponseInit) {
   });
 }
 
-const DEFAULT_SERVER_PLANS = [
-  { id: "completo_sem_adulto", name: "COMPLETO SEM ADULTO" },
-  { id: "completo", name: "COMPLETO" },
-  { id: "personalizado", name: "Personalizado (selecionar pacotes)" },
-];
+// Conforme tela oficial do RBOYS (Imagem 2), são exatamente e apenas estas 3 opções:
+export const RBOYS_CONTENT_PLANS = [
+  { id: "COMPLETO SEM ADULTO", name: "COMPLETO SEM ADULTO" },
+  { id: "COMPLETO", name: "COMPLETO" },
+  { id: "Personalizado (selecionar pacotes)", name: "Personalizado (selecionar pacotes)" },
+] as const;
 
 export const Route = createFileRoute("/api/public/portal/change-plan")({
   server: {
     handlers: {
       OPTIONS: async ({ request }) => portalOptions(request),
 
-      // GET: Busca os planos disponíveis e o plano atual do cliente no servidor RBOYS
+      // GET: Retorna estritamente as 3 opções de plano do RBOYS e o plano atual do cliente
       GET: async ({ request }) => {
         try {
           const portal = await import("@/integrations/portal/session.server");
@@ -39,7 +40,7 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
                 ok: false,
                 error: "Cliente não possui login do servidor cadastrado.",
                 username: client.name,
-                plans: DEFAULT_SERVER_PLANS,
+                plans: RBOYS_CONTENT_PLANS,
               },
               request,
               { status: 400 }
@@ -47,29 +48,9 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
           }
 
           const ownerId = client.user_id;
-          const { fetchServerPlans, fetchServerClients } = await import("@/lib/iptv-server-api.server");
+          const { fetchServerClients } = await import("@/lib/iptv-server-api.server");
 
-          // 1. Busca os planos cadastrados no servidor
-          let serverPlansList: Array<{ id: string | number; name: string }> = [];
-          try {
-            const plansRes = await fetchServerPlans(ownerId, "IPTV");
-            if (plansRes.ok && Array.isArray(plansRes.plans) && plansRes.plans.length > 0) {
-              serverPlansList = plansRes.plans.map((p) => ({
-                id: p.id,
-                name: p.name,
-              }));
-            }
-          } catch (e) {
-            console.warn("[portal change-plan] fetchServerPlans fallback:", e);
-          }
-
-          if (serverPlansList.length === 0) {
-            serverPlansList = DEFAULT_SERVER_PLANS;
-          }
-
-          // 2. Busca dados do cliente no servidor para saber qual plano está ativo
-          let currentPlanId: string | number | null = null;
-          let currentPlanName: string | null = null;
+          let currentPlanName = "COMPLETO";
 
           try {
             const serverClientsRes = await fetchServerClients(ownerId);
@@ -79,32 +60,27 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
 
             if (serverClient) {
               const raw = serverClient.raw || {};
-              currentPlanId =
-                serverClient.plan_id ??
-                raw.plan_id ??
-                raw.package_id ??
-                raw.plan?.id ??
-                raw.package?.id ??
-                null;
-              currentPlanName =
+              const rawPlan = String(
                 serverClient.plan_name ??
+                raw.plan ??
                 raw.plan_name ??
+                raw.package ??
                 raw.package_name ??
                 raw.plan?.name ??
                 raw.package?.name ??
-                null;
+                ""
+              ).toUpperCase();
+
+              if (rawPlan.includes("SEM ADULTO")) {
+                currentPlanName = "COMPLETO SEM ADULTO";
+              } else if (rawPlan.includes("PERSONALIZADO")) {
+                currentPlanName = "Personalizado (selecionar pacotes)";
+              } else if (rawPlan.includes("COMPLETO")) {
+                currentPlanName = "COMPLETO";
+              }
             }
           } catch (e) {
             console.warn("[portal change-plan] fetchServerClients fallback:", e);
-          }
-
-          // Se não identificou nome do plano, tenta inferir ou padrão "COMPLETO"
-          if (!currentPlanName && currentPlanId) {
-            const match = serverPlansList.find((p) => String(p.id) === String(currentPlanId));
-            if (match) currentPlanName = match.name;
-          }
-          if (!currentPlanName) {
-            currentPlanName = "COMPLETO";
           }
 
           return json(
@@ -112,9 +88,8 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
               ok: true,
               username: login,
               client_name: client.name,
-              current_plan_id: currentPlanId,
               current_plan_name: currentPlanName,
-              plans: serverPlansList,
+              plans: RBOYS_CONTENT_PLANS,
             },
             request
           );
@@ -145,16 +120,27 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
           }
 
           const body = (await request.json().catch(() => ({}))) as {
-            plan_id?: string | number;
+            plan_id?: string;
             plan_name?: string;
           };
 
+          const rawSelected = String(body.plan_name || body.plan_id || "").trim();
+          let targetPlanName: string = "COMPLETO";
+
+          if (rawSelected.toUpperCase().includes("SEM ADULTO")) {
+            targetPlanName = "COMPLETO SEM ADULTO";
+          } else if (rawSelected.toUpperCase().includes("PERSONALIZADO")) {
+            targetPlanName = "Personalizado (selecionar pacotes)";
+          } else {
+            targetPlanName = "COMPLETO";
+          }
+
           const ownerId = client.user_id;
-          const { fetchServerClients, fetchServerPlans } = await import("@/lib/iptv-server-api.server");
+          const { fetchServerClients, callIptvServerApi } = await import("@/lib/iptv-server-api.server");
           const { runServerClientAction } = await import("@/lib/server-client-actions.server");
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-          // 1. Localiza o cliente no servidor
+          // 1. Localiza o cliente no servidor RBOYS
           const serverClientsRes = await fetchServerClients(ownerId);
           const serverClient = serverClientsRes.clients.find(
             (c) => c.username.trim().toLowerCase() === login.toLowerCase()
@@ -170,54 +156,52 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
             );
           }
 
-          // 2. Resolve o plan_id no servidor
-          let targetPlanId = body.plan_id;
-          let targetPlanName = body.plan_name || "";
+          // 2. Executa a alteração no servidor RBOYS (sem alterar vencimento nem consumir créditos)
+          const serviceType = (serverClient.type || "iptv").toLowerCase() as "iptv" | "p2p";
+          let actionSuccess = false;
+          let lastActionErr: any = null;
 
-          // Se passou apenas nome do plano ou se plan_id for simbólico, resolve o ID real na API do servidor
-          if (!targetPlanId || isNaN(Number(targetPlanId))) {
+          // Tentativa 1: via runServerClientAction (PUT /{service_type}/clients/{client_id})
+          try {
+            await runServerClientAction(ownerId, {
+              client_id: serverClient.id,
+              service_type: serviceType,
+              operation: "plan",
+              plan_id: targetPlanName,
+            });
+            actionSuccess = true;
+          } catch (err: any) {
+            lastActionErr = err;
+            console.warn("[portal change-plan] runServerClientAction attempt warning:", err?.message);
+          }
+
+          // Tentativa 2 (fallback): PUT /clients/{client_id} direto conforme interface RBOYS
+          if (!actionSuccess) {
             try {
-              const plansRes = await fetchServerPlans(ownerId, serverClient.type);
-              const plansList = plansRes.plans || [];
-
-              // Procura correspondência exata ou parcial pelo nome
-              const searchName = (targetPlanName || String(targetPlanId || "")).toLowerCase().trim();
-              const match = plansList.find((p) => {
-                const pName = p.name.toLowerCase().trim();
-                return pName === searchName || (searchName && pName.includes(searchName));
+              await callIptvServerApi(`/clients/${serverClient.id}`, {
+                method: "PUT",
+                userId: ownerId,
+                body: {
+                  plan: targetPlanName,
+                  plan_name: targetPlanName,
+                  package: targetPlanName,
+                },
               });
-
-              if (match) {
-                targetPlanId = match.id;
-                targetPlanName = match.name;
-              } else if (plansList.length > 0) {
-                // Fallback para o primeiro plano que corresponda
-                targetPlanId = plansList[0].id;
-                targetPlanName = plansList[0].name;
+              actionSuccess = true;
+            } catch (fallbackErr: any) {
+              console.warn("[portal change-plan] fallback callIptvServerApi warning:", fallbackErr?.message);
+              if (!actionSuccess && lastActionErr) {
+                throw lastActionErr;
               }
-            } catch (pErr) {
-              console.warn("[portal change-plan] plan resolution fallback:", pErr);
             }
           }
 
-          if (targetPlanId === undefined || targetPlanId === null) {
-            return json({ error: "Escolha um plano válido." }, request, { status: 400 });
-          }
-
-          // 3. Executa a alteração de plano no servidor (PUT /{service_type}/clients/{client_id} com { plan_id })
-          await runServerClientAction(ownerId, {
-            client_id: serverClient.id,
-            service_type: serverClient.type.toLowerCase() as "iptv" | "p2p",
-            operation: "plan",
-            plan_id: targetPlanId,
-          });
-
-          // 4. Grava atualização no banco local para persistência rápida
+          // 3. Atualiza registro no banco local para persistência rápida
           try {
             await supabaseAdmin
               .from("clients")
               .update({
-                server_plan_id: String(targetPlanId),
+                server_plan_id: targetPlanName,
                 updated_at: new Date().toISOString(),
               })
               .eq("id", client.id);
@@ -229,8 +213,7 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
             {
               ok: true,
               message: "Plano atualizado com sucesso no servidor!",
-              plan_id: targetPlanId,
-              plan_name: targetPlanName || "Plano atualizado",
+              plan_name: targetPlanName,
             },
             request
           );

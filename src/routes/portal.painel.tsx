@@ -2218,6 +2218,7 @@ function PortalDashboard() {
           open={changePlanOpen}
           onOpenChange={setChangePlanOpen}
           username={data.client.iptv_login || data.client.name}
+          currentPlanName={data.client.server_plan_id || data.plan?.name}
         />
       )}
     </PortalShell>

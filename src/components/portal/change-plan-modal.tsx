@@ -6,7 +6,6 @@ import { portalFetch } from "@/lib/portal-client";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 
@@ -18,10 +17,14 @@ export interface ChangePlanModalProps {
   onSuccess?: (newPlanName: string) => void;
 }
 
-interface ServerPlanItem {
-  id: string | number;
-  name: string;
-}
+// Conforme tela oficial do RBOYS (Imagem 2), são exatamente e apenas estas 3 opções de plano/pacote de canais:
+export const RBOYS_CONTENT_PLANS = [
+  { id: "COMPLETO SEM ADULTO", name: "COMPLETO SEM ADULTO" },
+  { id: "COMPLETO", name: "COMPLETO" },
+  { id: "Personalizado (selecionar pacotes)", name: "Personalizado (selecionar pacotes)" },
+] as const;
+
+export type RboysContentPlanName = (typeof RBOYS_CONTENT_PLANS)[number]["name"];
 
 interface PlanApiResponse {
   ok: boolean;
@@ -29,15 +32,9 @@ interface PlanApiResponse {
   client_name?: string;
   current_plan_id?: string | number | null;
   current_plan_name?: string | null;
-  plans: ServerPlanItem[];
+  plans: Array<{ id: string | number; name: string }>;
   error?: string;
 }
-
-const FALLBACK_PLANS: ServerPlanItem[] = [
-  { id: "completo_sem_adulto", name: "COMPLETO SEM ADULTO" },
-  { id: "completo", name: "COMPLETO" },
-  { id: "personalizado", name: "Personalizado (selecionar pacotes)" },
-];
 
 export function ChangePlanModal({
   open,
@@ -47,8 +44,7 @@ export function ChangePlanModal({
   onSuccess,
 }: ChangePlanModalProps) {
   const qc = useQueryClient();
-  const [selectedPlanId, setSelectedPlanId] = useState<string>("");
-  const [selectedPlanName, setSelectedPlanName] = useState<string>("");
+  const [selectedPlan, setSelectedPlan] = useState<RboysContentPlanName>("COMPLETO");
 
   const planQuery = useQuery({
     queryKey: ["portal", "client-plan-options", username],
@@ -60,64 +56,36 @@ export function ChangePlanModal({
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
 
-  const availablePlans =
-    planQuery.data?.plans && planQuery.data.plans.length > 0
-      ? planQuery.data.plans
-      : FALLBACK_PLANS;
-
-  // Sincroniza a seleção inicial com o plano atual
+  // Sincroniza a seleção inicial com o plano atual do cliente
   useEffect(() => {
     if (!open) return;
 
-    const initialName =
+    const detected = (
       planQuery.data?.current_plan_name ||
       currentPlanName ||
-      "COMPLETO";
+      "COMPLETO"
+    )
+      .trim()
+      .toUpperCase();
 
-    const initialId = planQuery.data?.current_plan_id
-      ? String(planQuery.data.current_plan_id)
-      : "";
-
-    if (initialId) {
-      setSelectedPlanId(initialId);
-      const match = availablePlans.find((p) => String(p.id) === initialId);
-      setSelectedPlanName(match ? match.name : initialName);
+    if (detected.includes("SEM ADULTO")) {
+      setSelectedPlan("COMPLETO SEM ADULTO");
+    } else if (detected.includes("PERSONALIZADO")) {
+      setSelectedPlan("Personalizado (selecionar pacotes)");
     } else {
-      // Procura por nome correspondente
-      const match = availablePlans.find(
-        (p) => p.name.trim().toLowerCase() === initialName.trim().toLowerCase()
-      );
-      if (match) {
-        setSelectedPlanId(String(match.id));
-        setSelectedPlanName(match.name);
-      } else if (availablePlans.length > 0) {
-        // Padrão: primeiro plano ou COMPLETO
-        const completoMatch = availablePlans.find((p) =>
-          p.name.trim().toUpperCase().includes("COMPLETO") &&
-          !p.name.trim().toUpperCase().includes("SEM ADULTO")
-        );
-        const fallback = completoMatch || availablePlans[0];
-        setSelectedPlanId(String(fallback.id));
-        setSelectedPlanName(fallback.name);
-      }
+      setSelectedPlan("COMPLETO");
     }
-  }, [open, planQuery.data, currentPlanName, availablePlans]);
+  }, [open, planQuery.data, currentPlanName]);
 
   const changeMutation = useMutation({
-    mutationFn: async ({
-      planId,
-      planName,
-    }: {
-      planId: string;
-      planName: string;
-    }) => {
+    mutationFn: async (planToSet: RboysContentPlanName) => {
       const res = await portalFetch<{ ok: boolean; message?: string; error?: string }>(
         "/api/public/portal/change-plan",
         {
           method: "POST",
           body: JSON.stringify({
-            plan_id: planId,
-            plan_name: planName,
+            plan_id: planToSet,
+            plan_name: planToSet,
           }),
         }
       );
@@ -130,7 +98,7 @@ export function ChangePlanModal({
       toast.success(data.message || "Plano atualizado com sucesso no servidor!");
       qc.invalidateQueries({ queryKey: ["portal", "me"] });
       qc.invalidateQueries({ queryKey: ["portal", "client-plan-options"] });
-      onSuccess?.(selectedPlanName);
+      onSuccess?.(selectedPlan);
       onOpenChange(false);
     },
     onError: (err: Error) => {
@@ -139,21 +107,18 @@ export function ChangePlanModal({
   });
 
   const handleSave = () => {
-    if (!selectedPlanId && !selectedPlanName) return;
-    changeMutation.mutate({
-      planId: selectedPlanId,
-      planName: selectedPlanName,
-    });
+    if (!selectedPlan) return;
+    changeMutation.mutate(selectedPlan);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="w-[94vw] max-w-[420px] rounded-2xl bg-white p-6 shadow-xl border border-slate-100"
+        className="w-[92vw] max-w-[430px] rounded-3xl bg-white p-6 shadow-2xl border border-slate-100 sm:p-7"
       >
-        {/* Header idêntico à imagem: "Plano de {login}" + botão 'x' */}
-        <div className="flex items-center justify-between pb-3">
+        {/* Header idêntico à tela do RBOYS (Imagem 2): "Plano de {login}" + botão 'x' */}
+        <div className="flex items-center justify-between pb-4">
           <DialogTitle className="text-base sm:text-lg font-bold text-slate-800 tracking-tight">
             Plano de {username || "Cliente"}
           </DialogTitle>
@@ -168,80 +133,63 @@ export function ChangePlanModal({
           </button>
         </div>
 
-        {/* Corpo com opções de rádio */}
+        {/* Corpo com exatamente e apenas as 3 opções de rádio (Imagem 2) */}
         <div className="py-2 space-y-4">
-          {planQuery.isLoading ? (
-            <div className="py-8 flex flex-col items-center justify-center gap-2">
-              <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
-              <p className="text-xs text-slate-500 font-medium">Carregando planos do servidor...</p>
-            </div>
-          ) : (
-            <div className="space-y-3.5">
-              {availablePlans.map((plan) => {
-                const planIdStr = String(plan.id);
-                const isSelected =
-                  selectedPlanId === planIdStr ||
-                  (!selectedPlanId &&
-                    selectedPlanName.trim().toLowerCase() === plan.name.trim().toLowerCase());
+          <div className="space-y-4">
+            {RBOYS_CONTENT_PLANS.map((plan) => {
+              const isSelected = selectedPlan === plan.name;
 
-                return (
-                  <label
-                    key={planIdStr}
-                    onClick={() => {
-                      setSelectedPlanId(planIdStr);
-                      setSelectedPlanName(plan.name);
-                    }}
-                    className="flex items-center gap-3 cursor-pointer select-none group"
-                  >
-                    {/* Botão de rádio circular exatamente como no RBOYS */}
-                    <div className="relative flex items-center justify-center shrink-0">
-                      <input
-                        type="radio"
-                        name="rboys_plan_selection"
-                        checked={isSelected}
-                        onChange={() => {
-                          setSelectedPlanId(planIdStr);
-                          setSelectedPlanName(plan.name);
-                        }}
-                        className="sr-only"
-                      />
-                      <div
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                          isSelected
-                            ? "border-blue-600 bg-white"
-                            : "border-slate-300 bg-white group-hover:border-slate-400"
-                        }`}
-                      >
-                        {isSelected && (
-                          <div className="w-2.5 h-2.5 rounded-full bg-blue-600 shadow-xs" />
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Texto da opção */}
-                    <span
-                      className={`text-[13px] tracking-wide transition-colors ${
+              return (
+                <label
+                  key={plan.id}
+                  onClick={() => setSelectedPlan(plan.name)}
+                  className="flex items-center gap-3.5 cursor-pointer select-none group"
+                >
+                  {/* Botão de rádio circular exatamente idêntico ao RBOYS */}
+                  <div className="relative flex items-center justify-center shrink-0">
+                    <input
+                      type="radio"
+                      name="rboys_plan_selection"
+                      checked={isSelected}
+                      onChange={() => setSelectedPlan(plan.name)}
+                      className="sr-only"
+                    />
+                    <div
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
                         isSelected
-                          ? "text-slate-800 font-bold"
-                          : "text-slate-600 font-medium group-hover:text-slate-800"
+                          ? "border-[#0066FF] bg-white"
+                          : "border-slate-300 bg-white group-hover:border-slate-400"
                       }`}
                     >
-                      {plan.name}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-          )}
+                      {isSelected && (
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#0066FF] shadow-xs" />
+                      )}
+                    </div>
+                  </div>
 
-          {/* Subtítulo / Aviso oficial RBOYS: idêntico à imagem */}
-          <p className="text-xs text-slate-400 font-medium leading-relaxed pt-1">
+                  {/* Texto da opção */}
+                  <span
+                    className={`text-[13px] tracking-wide transition-colors ${
+                      isSelected
+                        ? "text-slate-800 font-semibold"
+                        : "text-slate-600 font-normal group-hover:text-slate-800"
+                    }`}
+                  >
+                    {plan.name}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+
+          {/* Subtítulo / Aviso oficial RBOYS idêntico à imagem */}
+          <p className="text-[12px] text-slate-400 font-normal leading-relaxed pt-2">
             A troca de plano não altera o vencimento nem consome créditos.
           </p>
         </div>
 
-        {/* Rodapé com botões Cancelar e Salvar exatamente como na imagem */}
-        <div className="flex items-center justify-end gap-2.5 pt-4 mt-2">
+        {/* Rodapé com botões Cancelar e Salvar exatamente como no RBOYS */}
+        <div className="flex items-center justify-end gap-3 pt-5 mt-2">
           <button
             type="button"
             onClick={() => onOpenChange(false)}
@@ -253,8 +201,8 @@ export function ChangePlanModal({
           <button
             type="button"
             onClick={handleSave}
-            disabled={changeMutation.isPending || (!selectedPlanId && !selectedPlanName)}
-            className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-xl shadow-sm shadow-blue-600/20 transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+            disabled={changeMutation.isPending}
+            className="px-5 py-2 text-xs font-bold text-white bg-[#0066FF] hover:bg-[#0055DD] active:scale-95 rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
           >
             {changeMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             <span>Salvar</span>

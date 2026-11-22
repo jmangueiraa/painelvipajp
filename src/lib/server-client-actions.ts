@@ -19,10 +19,20 @@ export function serverClientRequest(input: ServerClientAction): {
     case "plans": return { endpoint: `/${data.service_type}/plans`, method: "GET" };
     case "message": return { endpoint: `${base}/message`, method: "GET" };
     case "extend":
+      if (data.plan_id === undefined) throw new Error("Escolha um plano.");
+      return { endpoint: `${base}/extend`, method: "POST", body: { plan_id: data.plan_id } };
     case "plan":
       if (data.plan_id === undefined) throw new Error("Escolha um plano.");
-      return { endpoint: data.operation === "extend" ? `${base}/extend` : base,
-        method: data.operation === "extend" ? "POST" : "PUT", body: { plan_id: data.plan_id } };
+      return {
+        endpoint: base,
+        method: "PUT",
+        body: {
+          plan_id: data.plan_id,
+          plan: data.plan_id,
+          plan_name: data.plan_id,
+          package: data.plan_id,
+        },
+      };
     case "notes":
       if (data.notes === undefined) throw new Error("Informe a observação.");
       return { endpoint: `${base}/notes`, method: "PATCH", body: { notes: data.notes.trim() } };
