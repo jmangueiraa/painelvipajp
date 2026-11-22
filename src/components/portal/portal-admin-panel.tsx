@@ -8,6 +8,7 @@ import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
   ArrowLeft,
+  ArrowUpDown,
   Calendar,
   CalendarClock,
   CheckCircle2,
@@ -65,7 +66,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import type { PortalTab } from "@/components/portal/portal-shell";
-import { brl, formatDateBR, formatDateTimeBR, parseBrlToCents, todayISO } from "@/lib/format";
+import { addDaysISO, brl, formatDateBR, formatDateTimeBR, parseBrlToCents, todayISO } from "@/lib/format";
 import { portalFetch } from "@/lib/portal-client";
 import type {
   NormalizedServerClient,
@@ -2396,6 +2397,13 @@ function AdminServerClientsSubView({
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ServerClientStatusFilter>(initialFilter);
   const [typeFilter, setTypeFilter] = useState<"todos" | "iptv" | "p2p">("todos");
+  const [dueDateMode, setDueDateMode] = useState<
+    "todos" | "hoje" | "amanha" | "7dias" | "15dias" | "este_mes" | "proximo_mes" | "vencidos" | "sem_data" | "especifica" | "intervalo"
+  >("todos");
+  const [specificDueDate, setSpecificDueDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [sortBy, setSortBy] = useState<"padrao" | "vencimento_asc" | "vencimento_desc" | "login_asc">("padrao");
   const [showSecrets, setShowSecrets] = useState(false);
   const [pendingClientId, setPendingClientId] = useState<string | null>(null);
 
@@ -2447,18 +2455,29 @@ function AdminServerClientsSubView({
     ).length,
   };
 
-  // Filtragem
+  // Filtragem e Ordenação
   const filteredClients = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return allClients.filter((client) => {
+    const today = data.today || todayISO();
+    const tomorrow = addDaysISO(today, 1);
+    const limit7 = addDaysISO(today, 7);
+    const limit15 = addDaysISO(today, 15);
+    const currentMonth = today.slice(0, 7);
+    const [y, m] = today.split("-").map(Number);
+    const nextMonth = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, "0")}`;
+
+    const filtered = allClients.filter((client) => {
+      // 1. Tipo (Tudo, IPTV, P2P)
       if (typeFilter !== "todos") {
         const clientType = String(client.type || "").toLowerCase();
         if (clientType !== typeFilter) {
           return false;
         }
       }
+
+      // 2. Status Geral
       if (statusFilter !== "todos") {
-        if (statusFilter === "a_vencer_mes" && !dueThisMonth(client, data.today || todayISO())) return false;
+        if (statusFilter === "a_vencer_mes" && !dueThisMonth(client, today)) return false;
         if (statusFilter === "desativados") {
           const isDesativado = client.is_disabled || client.status === "desativado";
           if (!isDesativado) return false;
@@ -2483,6 +2502,40 @@ function AdminServerClientsSubView({
           if (!isVencido) return false;
         }
       }
+
+      // 3. Filtro por Data de Vencimento
+      if (dueDateMode !== "todos") {
+        const due = client.due_date_str;
+        if (dueDateMode === "hoje") {
+          const isHoje = due === today || client.is_due_today || client.status === "vencem_hoje";
+          if (!isHoje) return false;
+        } else if (dueDateMode === "amanha") {
+          if (due !== tomorrow) return false;
+        } else if (dueDateMode === "7dias") {
+          if (!due || due < today || due > limit7) return false;
+        } else if (dueDateMode === "15dias") {
+          if (!due || due < today || due > limit15) return false;
+        } else if (dueDateMode === "este_mes") {
+          if (!due || due.slice(0, 7) !== currentMonth) return false;
+        } else if (dueDateMode === "proximo_mes") {
+          if (!due || due.slice(0, 7) !== nextMonth) return false;
+        } else if (dueDateMode === "vencidos") {
+          const isVencido =
+            (client.is_expired && !client.is_due_today) ||
+            (Boolean(due) && due! < today);
+          if (!isVencido) return false;
+        } else if (dueDateMode === "sem_data") {
+          const isSemData = !due || client.display_due === "Sem vencimento";
+          if (!isSemData) return false;
+        } else if (dueDateMode === "especifica") {
+          if (specificDueDate && due !== specificDueDate) return false;
+        } else if (dueDateMode === "intervalo") {
+          if (startDate && (!due || due < startDate)) return false;
+          if (endDate && (!due || due > endDate)) return false;
+        }
+      }
+
+      // 4. Termo de Busca
       if (term) {
         const matchesUser = client.username.toLowerCase().includes(term);
         const matchesName = client.name?.toLowerCase().includes(term);
@@ -2493,7 +2546,41 @@ function AdminServerClientsSubView({
       }
       return true;
     });
-  }, [allClients, search, statusFilter, typeFilter]);
+
+    // Ordenação
+    if (sortBy === "vencimento_asc") {
+      return [...filtered].sort((a, b) => {
+        if (!a.due_date_str && !b.due_date_str) return 0;
+        if (!a.due_date_str) return 1;
+        if (!b.due_date_str) return -1;
+        return a.due_date_str.localeCompare(b.due_date_str);
+      });
+    }
+    if (sortBy === "vencimento_desc") {
+      return [...filtered].sort((a, b) => {
+        if (!a.due_date_str && !b.due_date_str) return 0;
+        if (!a.due_date_str) return 1;
+        if (!b.due_date_str) return -1;
+        return b.due_date_str.localeCompare(a.due_date_str);
+      });
+    }
+    if (sortBy === "login_asc") {
+      return [...filtered].sort((a, b) => a.username.localeCompare(b.username));
+    }
+
+    return filtered;
+  }, [
+    allClients,
+    search,
+    statusFilter,
+    typeFilter,
+    dueDateMode,
+    specificDueDate,
+    startDate,
+    endDate,
+    sortBy,
+    data.today,
+  ]);
 
   return (
     <div className="space-y-4">
@@ -2658,6 +2745,205 @@ function AdminServerClientsSubView({
             </button>
           </div>
         </div>
+
+        {/* Filtro por Data de Vencimento e Ordenação */}
+        <div className="pt-2.5 border-t border-slate-100 space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            {/* Título e Presets de Vencimento */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="flex items-center gap-1 text-[11px] font-bold text-slate-700">
+                <Calendar className="h-3.5 w-3.5 text-[#FF5500]" />
+                Vencimento:
+              </span>
+
+              <div className="flex items-center gap-1 overflow-x-auto pb-0.5 max-w-full">
+                {[
+                  { id: "todos" as const, label: "Todas" },
+                  { id: "hoje" as const, label: "Hoje" },
+                  { id: "amanha" as const, label: "Amanhã" },
+                  { id: "7dias" as const, label: "7 Dias" },
+                  { id: "15dias" as const, label: "15 Dias" },
+                  { id: "este_mes" as const, label: "Este Mês" },
+                  { id: "proximo_mes" as const, label: "Próx. Mês" },
+                  { id: "especifica" as const, label: "Data..." },
+                  { id: "intervalo" as const, label: "Período..." },
+                ].map((item) => {
+                  const isActive = dueDateMode === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setDueDateMode(item.id);
+                        if (
+                          item.id !== "todos" &&
+                          (statusFilter === "vencem_hoje" || statusFilter === "a_vencer_mes")
+                        ) {
+                          setStatusFilter("todos");
+                        }
+                      }}
+                      className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition cursor-pointer whitespace-nowrap ${
+                        isActive
+                          ? "bg-[#FF5500] text-white shadow-xs"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+
+                <select
+                  value={dueDateMode === "vencidos" || dueDateMode === "sem_data" ? dueDateMode : ""}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setDueDateMode(e.target.value as typeof dueDateMode);
+                      if (statusFilter === "vencem_hoje" || statusFilter === "a_vencer_mes") {
+                        setStatusFilter("todos");
+                      }
+                    }
+                  }}
+                  className="h-6 px-1.5 text-[10px] font-semibold bg-slate-100 border-none rounded-lg text-slate-600 focus:outline-none cursor-pointer"
+                >
+                  <option value="">Mais...</option>
+                  <option value="vencidos">Vencidos</option>
+                  <option value="sem_data">Sem Vencimento</option>
+                </select>
+              </div>
+
+              {dueDateMode !== "todos" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDueDateMode("todos");
+                    setSpecificDueDate("");
+                    setStartDate("");
+                    setEndDate("");
+                  }}
+                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-md transition cursor-pointer"
+                  title="Limpar filtro de data"
+                >
+                  <X className="h-3 w-3" />
+                  Limpar
+                </button>
+              )}
+            </div>
+
+            {/* Ordenação */}
+            <div className="flex items-center gap-1.5 text-[11px] shrink-0">
+              <span className="text-slate-400 font-semibold text-[10px] flex items-center gap-0.5">
+                <ArrowUpDown className="h-3 w-3" />
+                Ordenar:
+              </span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="h-6.5 px-2 text-[10px] font-semibold bg-slate-50 border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:border-[#FF5500] cursor-pointer"
+              >
+                <option value="padrao">Padrão</option>
+                <option value="vencimento_asc">Vencimento (Mais próximo)</option>
+                <option value="vencimento_desc">Vencimento (Mais distante)</option>
+                <option value="login_asc">Login (A-Z)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Campo Data Específica */}
+          {dueDateMode === "especifica" && (
+            <div className="flex flex-wrap items-center gap-2 text-xs bg-orange-50/60 p-2.5 rounded-xl border border-orange-100">
+              <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5 text-[#FF5500]" />
+                Selecione a data de vencimento:
+              </span>
+              <input
+                type="date"
+                value={specificDueDate}
+                onChange={(e) => setSpecificDueDate(e.target.value)}
+                className="h-7 px-2 text-xs bg-white border border-orange-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#FF5500]"
+              />
+              {specificDueDate && (
+                <span className="text-[11px] font-extrabold text-[#FF5500] bg-white px-2 py-0.5 rounded-md border border-orange-200">
+                  {formatDateBR(specificDueDate)}
+                </span>
+              )}
+              {specificDueDate && (
+                <button
+                  type="button"
+                  onClick={() => setSpecificDueDate("")}
+                  className="text-[10px] font-bold text-slate-500 hover:text-slate-800 underline ml-1 cursor-pointer"
+                >
+                  Limpar data
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Campo Intervalo de Datas (De / Até) */}
+          {dueDateMode === "intervalo" && (
+            <div className="flex flex-wrap items-center gap-2 text-xs bg-orange-50/60 p-2.5 rounded-xl border border-orange-100">
+              <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5 text-[#FF5500]" />
+                Período:
+              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold text-slate-500">De:</span>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="h-7 px-2 text-xs bg-white border border-orange-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#FF5500]"
+                />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold text-slate-500">Até:</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="h-7 px-2 text-xs bg-white border border-orange-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#FF5500]"
+                />
+              </div>
+              {(startDate || endDate) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStartDate("");
+                    setEndDate("");
+                  }}
+                  className="text-[10px] font-bold text-slate-500 hover:text-slate-800 underline ml-1 cursor-pointer"
+                >
+                  Limpar período
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Resumo da Contagem com Filtros Ativos */}
+      <div className="flex items-center justify-between px-1 text-xs text-slate-500">
+        <span>
+          Mostrando <strong className="text-slate-900 font-extrabold">{filteredClients.length}</strong> de{" "}
+          <strong className="text-slate-900 font-extrabold">{allClients.length}</strong> clientes
+        </span>
+        {(dueDateMode !== "todos" || statusFilter !== "todos" || typeFilter !== "todos" || search || specificDueDate || startDate || endDate) && (
+          <button
+            type="button"
+            onClick={() => {
+              setSearch("");
+              setStatusFilter("todos");
+              setTypeFilter("todos");
+              setDueDateMode("todos");
+              setSpecificDueDate("");
+              setStartDate("");
+              setEndDate("");
+              setSortBy("padrao");
+            }}
+            className="text-[11px] font-bold text-[#FF5500] hover:underline cursor-pointer"
+          >
+            Redefinir todos os filtros
+          </button>
+        )}
       </div>
 
       {/* Lista de Clientes */}
