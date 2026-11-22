@@ -15,6 +15,7 @@
 
 ## Portal invoice confirmation
 - Keep renewal confirmation in a dedicated portal component with semantic invoice tokens; normalize the existing status response client-side without changing payment processing.
+- Gate payment-priority content on a fresh token-matched session and a due unpaid contract; cached sessions and admin roles must never render temporary payment alerts or placeholders.
 
 ## RBOYS client actions
 - Share the normalized server-client query between overview cards and server lists; this keeps displayed totals consistent without exposing provider credentials.

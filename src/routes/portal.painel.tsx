@@ -38,7 +38,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { brl, formatDateBR } from "@/lib/format";
+import { brl, formatDateBR, todayISO } from "@/lib/format";
 import { clearPortalToken, getPortalToken, portalFetch, PortalFetchError, silentRefreshSession } from "@/lib/portal-client";
 import { PortalShell, type PortalTab } from "@/components/portal/portal-shell";
 import { PortalAdminPanel } from "@/components/portal/portal-admin-panel";
@@ -49,6 +49,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { RenewalSuccessCard } from "@/components/portal/renewal-success-card";
 import { invoicePaymentStatus } from "@/lib/portal-payment-status";
 import { triggerSendWhatsappEdgeFunction } from "@/lib/send-whatsapp-function";
+import { PriorityPaymentGate } from "@/components/portal/priority-payment-gate";
+import { canShowPriorityPayment, isPortalAdministrator } from "@/lib/portal-priority-payment";
 
 export const Route = createFileRoute("/portal/painel")({
   ssr: false,
@@ -79,6 +81,9 @@ export const Route = createFileRoute("/portal/painel")({
 
 type Me = {
   is_admin?: boolean;
+  isAdmin?: boolean;
+  role?: string | null;
+  _confirmedSessionToken?: string | null;
   admin?: { username: string; name: string };
   client: {
     id: string;
@@ -314,7 +319,7 @@ function PortalDashboard() {
     return () => window.clearTimeout(t);
   }, []);
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, isFetchedAfterMount: hasConfirmedSession, error, refetch } = useQuery({
     queryKey: ["portal", "me"],
     queryFn: async () => {
       const rawToken = getPortalToken();
@@ -327,7 +332,7 @@ function PortalDashboard() {
             try {
               localStorage.setItem("portal_cached_me", JSON.stringify(rpcData));
             } catch {}
-            return rpcData as unknown as Me;
+            return { ...(rpcData as unknown as Me), _confirmedSessionToken: rawToken };
           }
         } catch (supaErr) {
           console.warn("[portal direct get_session fallback]", supaErr);
@@ -339,7 +344,7 @@ function PortalDashboard() {
       try {
         localStorage.setItem("portal_cached_me", JSON.stringify(res));
       } catch {}
-      return res;
+      return { ...res, _confirmedSessionToken: rawToken };
     },
     initialData: () => {
       if (typeof window === "undefined") return undefined;
@@ -350,12 +355,13 @@ function PortalDashboard() {
           const t = getPortalToken();
           if (t?.startsWith("adm.") && !parsed?.is_admin) return undefined;
           if (!t?.startsWith("adm.") && parsed?.is_admin) return undefined;
-          return parsed;
+          return { ...parsed, _confirmedSessionToken: null };
         }
       } catch {}
       return undefined;
     },
     staleTime: 1000 * 20, // 20s para revalidação rápida
+    refetchOnMount: "always",
     refetchOnWindowFocus: false, // Gerenciado explicitamente pelo listener com renovação silenciosa
     retry: false,
   });
@@ -440,8 +446,8 @@ function PortalDashboard() {
   }, [error, navigate, qc, refetch]);
 
   useEffect(() => {
-    if (!data || !data.client) return;
-    if (data.is_admin) {
+    if (!data) return;
+    if (isPortalAdministrator(data, getPortalToken())) {
       if (!adminInitRef.current) {
         adminInitRef.current = true;
         setActiveTab("admin");
@@ -842,8 +848,8 @@ function PortalDashboard() {
     );
   }
 
-  if (data.is_admin || !data.client) {
-    if (!data.is_admin) {
+  if (isPortalAdministrator(data, getPortalToken()) || !data.client) {
+    if (!isPortalAdministrator(data, getPortalToken())) {
       return (
         <div className="min-h-dvh flex flex-col items-center justify-center bg-[#F4F5F7] text-slate-500 gap-3 p-4">
           <span className="text-sm font-semibold">Sessão inválida.</span>
@@ -932,6 +938,14 @@ function PortalDashboard() {
           </div>
 
           {/* Bloco "Priorizar Pagamento" (Idêntico ao card da Imagem 2) */}
+          <PriorityPaymentGate visible={canShowPriorityPayment({
+            session: data,
+            token: getPortalToken(),
+            sessionConfirmed: Boolean(hasConfirmedSession && data._confirmedSessionToken && data._confirmedSessionToken === getPortalToken()),
+            isLoading,
+            invoicesLoading: isValidatingInvoices && !hasConfirmedSession,
+            today: todayISO(),
+          })}>
           <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
               <AlertTriangle className="h-4 w-4 text-amber-500 fill-amber-500/20" />
@@ -940,19 +954,6 @@ function PortalDashboard() {
               </span>
             </div>
 
-            {isValidatingInvoices ? (
-              <div className="rounded-2xl p-5 space-y-4 opacity-0 pointer-events-none select-none" aria-hidden="true">
-                <div className="flex items-center justify-between">
-                  <div className="h-5 w-24" />
-                  <div className="h-4 w-28" />
-                </div>
-                <div className="space-y-2">
-                  <div className="h-8 w-36" />
-                  <div className="h-4 w-44" />
-                </div>
-                <div className="h-12 w-full" />
-              </div>
-            ) : (
               <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="bg-amber-100 text-amber-900 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">
@@ -988,8 +989,8 @@ function PortalDashboard() {
                   <span>Pagar agora</span>
                 </button>
               </div>
-            )}
           </div>
+          </PriorityPaymentGate>
 
           {/* Seção "Acesso Rápido" (Botões Circulares da Imagem 2) */}
           <div className="space-y-2 pt-2">

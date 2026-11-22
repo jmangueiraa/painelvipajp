@@ -1,5 +1,9 @@
 # Preparação Android TWA
 
+## Aviso de pagamento sem piscada
+- [x] Ocultar a seção inteira até confirmar sessão e fatura em aberto, impedir exibição para administradores e remover o espaço provisório.
+- [x] Validar 17 testes e recarga/troca de abas com quatro sessões simuladas e respostas demoradas; sessão real do proprietário não disponível nesta verificação.
+
 ## Cards da visão geral RBOYS
 - [x] Padronizar sete cards sem sobreposição, compartilhar dados do servidor e abrir os filtros correspondentes sem alterar APIs ou regras de pagamento.
 - [x] Validar 12 testes e apresentação com dados simulados em 360, 680 e 1280 px; consulta autenticada real não verificada nesta sessão.

@@ -20,10 +20,10 @@ export function normalizeServerClients(response: unknown) {
     .map(c => ({ ...c, username: String(c.username ?? "") }));
   const k = r["kpis"] && typeof r["kpis"] === "object" ? r["kpis"] as Record<string, unknown> : {};
 
-  const desativadosCount = clients.filter(c => c.is_disabled || c.status === "desativado" || c.status === "disabled").length;
+  const desativadosCount = clients.filter(c => c.is_disabled || c.status === "desativado" || String(c.status) === "disabled").length;
   const vencidosCount = clients.filter(c => !c.is_disabled && c.status !== "desativado" && (c.is_expired || c.status === "vencido" || c.status === "expired") && !c.is_due_today).length;
   const vencemHojeCount = clients.filter(c => !c.is_disabled && c.status !== "desativado" && (c.is_due_today || c.status === "vencem_hoje")).length;
-  const ativosCount = clients.filter(c => !c.is_disabled && c.status !== "desativado" && c.status !== "disabled" && (!c.is_expired || c.is_due_today)).length;
+  const ativosCount = clients.filter(c => !c.is_disabled && c.status !== "desativado" && String(c.status) !== "disabled" && (!c.is_expired || c.is_due_today)).length;
 
   return {
     ok: Boolean(r["ok"]),
