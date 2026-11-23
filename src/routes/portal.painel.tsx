@@ -50,8 +50,7 @@ import { RenewalSuccessCard } from "@/components/portal/renewal-success-card";
 import { ChangePlanModal } from "@/components/portal/change-plan-modal";
 import { invoicePaymentStatus } from "@/lib/portal-payment-status";
 import { triggerSendWhatsappEdgeFunction } from "@/lib/send-whatsapp-function";
-import { PriorityPaymentGate } from "@/components/portal/priority-payment-gate";
-import { canShowPriorityPayment, isPortalAdministrator } from "@/lib/portal-priority-payment";
+import { isPortalAdministrator } from "@/lib/portal-priority-payment";
 
 export const Route = createFileRoute("/portal/painel")({
   ssr: false,
@@ -939,15 +938,7 @@ function PortalDashboard() {
             </h1>
           </div>
 
-          {/* Bloco "Priorizar Pagamento" (Idêntico ao card da Imagem 2) */}
-          <PriorityPaymentGate visible={canShowPriorityPayment({
-            session: data,
-            token: getPortalToken(),
-            sessionConfirmed: Boolean(hasConfirmedSession && data._confirmedSessionToken && data._confirmedSessionToken === getPortalToken()),
-            isLoading,
-            invoicesLoading: isValidatingInvoices && !hasConfirmedSession,
-            today: todayISO(),
-          })}>
+          {/* Bloco "Priorizar Pagamento" / Card de Fatura Atual */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">
               <AlertTriangle className="h-4 w-4 text-amber-500 fill-amber-500/20" />
@@ -956,43 +947,46 @@ function PortalDashboard() {
               </span>
             </div>
 
-              <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="bg-amber-100 text-amber-900 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                    {overdue ? "Vencido" : "A vencer"}
-                  </span>
-                  <span className="text-xs text-slate-400 font-medium">
-                    {overdue ? `Vencido há ${Math.abs(dueDays)} dias` : `Faltam ${dueDays} dias`}
-                  </span>
-                </div>
-
-                <div>
-                  <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                    {brl(data.client.price_cents > 0 ? data.client.price_cents : data.plan?.price_cents || 3000)}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
-                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                    <span>Vencimento em {formatDateBR(data.client.due_date)}</span>
-                  </div>
-                </div>
-
-                {/* Botão Pagar Agora (Grande, Laranja, com Ícone) */}
-                <button
-                  type="button"
-                  onClick={handlePayNow}
-                  disabled={isRefreshingPaymentSession}
-                  className="w-full bg-[#FF5500] hover:bg-[#E04B00] active:scale-[0.99] text-white font-extrabold py-3.5 px-4 rounded-xl shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 text-sm sm:text-base transition-all cursor-pointer disabled:opacity-80"
-                >
-                  {isRefreshingPaymentSession ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <QrCode className="h-5 w-5" />
-                  )}
-                  <span>Pagar agora</span>
-                </button>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="bg-amber-100 text-amber-900 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                  {overdue ? "Vencido" : dueDays === 0 ? "Vence hoje" : "A vencer"}
+                </span>
+                <span className="text-xs text-slate-400 font-medium">
+                  {overdue
+                    ? `Vencido há ${Math.abs(dueDays)} dias`
+                    : dueDays === 0
+                    ? "Vence hoje!"
+                    : `Faltam ${dueDays} dias`}
+                </span>
               </div>
+
+              <div>
+                <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                  {brl(data.client.price_cents > 0 ? data.client.price_cents : data.plan?.price_cents || 3000)}
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
+                  <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                  <span>Vencimento em {formatDateBR(data.client.due_date)}</span>
+                </div>
+              </div>
+
+              {/* Botão Pagar Agora (Grande, Laranja, com Ícone) */}
+              <button
+                type="button"
+                onClick={handlePayNow}
+                disabled={isRefreshingPaymentSession}
+                className="w-full bg-[#FF5500] hover:bg-[#E04B00] active:scale-[0.99] text-white font-extrabold py-3.5 px-4 rounded-xl shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 text-sm sm:text-base transition-all cursor-pointer disabled:opacity-80"
+              >
+                {isRefreshingPaymentSession ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <QrCode className="h-5 w-5" />
+                )}
+                <span>Pagar agora</span>
+              </button>
+            </div>
           </div>
-          </PriorityPaymentGate>
 
           {/* Seção "Acesso Rápido" (Botões Circulares da Imagem 2) */}
           <div className="space-y-2 pt-2">
