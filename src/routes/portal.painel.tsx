@@ -909,7 +909,13 @@ function PortalDashboard() {
               <span className="text-sm sm:text-base font-extrabold text-slate-800 leading-snug">
                 {data.plan?.name ?? "Plano Mensal VIP"}
               </span>
-              {(data.client.iptv_login || data.client.iptv_password) ? (
+              {data.server && (
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
+                  <ServerIcon className="h-3 w-3 text-slate-400" />
+                  <span>{data.server.name}</span>
+                </div>
+              )}
+              {(data.client.iptv_login || data.client.iptv_password) && (
                 <button
                   type="button"
                   onClick={() => setChangePlanOpen(true)}
@@ -918,12 +924,7 @@ function PortalDashboard() {
                   <Tv className="h-3 w-3" />
                   Mudar plano
                 </button>
-              ) : data.server ? (
-                <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
-                  <ServerIcon className="h-3 w-3 text-slate-400" />
-                  <span>{data.server.name}</span>
-                </div>
-              ) : null}
+              )}
             </div>
 
             <div className="flex flex-col items-end">
@@ -1080,28 +1081,6 @@ function PortalDashboard() {
               Falar agora
             </a>
           </div>
-
-          {/* Card de Troca de Plano de Canais / Conteúdo (Servidor RBOYS) */}
-          {(data.client.iptv_login || data.client.iptv_password) && (
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 shadow-sm border border-blue-100/60">
-                  <Tv className="h-5 w-5" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-slate-900">Plano de Canais & Conteúdo</span>
-                  <span className="text-[11px] text-slate-500">COMPLETO, Sem Adulto ou Personalizado</span>
-                </div>
-              </div>
-
-              {data.server ? (
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 shrink-0">
-                  <ServerIcon className="h-3.5 w-3.5 text-slate-400" />
-                  <span>{data.server.name}</span>
-                </div>
-              ) : null}
-            </div>
-          )}
 
           {/* Visualização de Dados de Acesso IPTV (Discreta e Segura) */}
           {(data.client.iptv_login || data.client.iptv_password) && (
