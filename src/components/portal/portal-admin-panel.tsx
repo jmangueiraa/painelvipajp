@@ -1,4 +1,4 @@
-import React, { Component, type ReactNode, useMemo, useState } from "react";
+import React, { Component, type ReactNode, useEffect, useMemo, useState } from "react";
 import { EvolutionPortalCard } from "@/components/portal/evolution-portal-card";
 import { ServerOverviewCards } from "@/components/portal/server-overview-cards";
 import { dueThisMonth, serverClientsQueryOptions, type ServerClientStatusFilter } from "@/lib/server-client-summary";
@@ -80,7 +80,7 @@ import {
   normalizeBrPhone,
 } from "@/lib/whatsapp-message";
 
-export type AdminSubView = "home" | "loja" | "apis" | "apk" | "config" | "iptv" | "server_clients";
+export type AdminSubView = "home" | "loja" | "apis" | "apk" | "config" | "iptv" | "server_clients" | "local_clients";
 export type ClientFilter =
   | "todos"
   | "ativos"
@@ -402,9 +402,20 @@ export function PortalAdminPanel({
     void serverCreditsQuery.refetch();
   };
 
+  useEffect(() => {
+    if (activeTab !== "clientes" && subView !== "server_clients") {
+      setServerClientFilter("todos");
+    }
+  }, [activeTab, subView]);
+
   function openClientsWithFilter(filter: ClientFilter) {
-    setClientFilter(filter);
-    onTabChange("clientes");
+    if (filter === "vencidos") {
+      setServerClientFilter("vencidos");
+      onTabChange("clientes");
+    } else {
+      setClientFilter(filter);
+      goAdminSubView("local_clients");
+    }
   }
 
   function openNewClientModal() {
@@ -562,7 +573,7 @@ export function PortalAdminPanel({
             <ServerOverviewCards
               online={onlineConnectionsQuery.data?.total ?? 0}
               credits={serverCreditsQuery.data?.ok ? serverCreditsQuery.data.formatted_credits : "--"}
-              onClients={(filter) => { setServerClientFilter(filter); setSubView("server_clients"); }}
+              onClients={(filter) => { setServerClientFilter(filter); onTabChange("clientes"); }}
               onOnline={() => setOnlineModalOpen(true)}
               onCredits={() => setSubView("apis")}
             />
@@ -590,7 +601,7 @@ export function PortalAdminPanel({
                 subLabel="RBOYS"
                 badgeClass="bg-sky-100/80 text-sky-600"
                 icon={<ServerIcon className="h-5 w-5" />}
-                onClick={() => { setServerClientFilter("todos"); setSubView("server_clients"); }}
+                onClick={() => { setServerClientFilter("todos"); onTabChange("clientes"); }}
               />
               <QuickActionTile
                 label="Faturamento"
@@ -638,11 +649,7 @@ export function PortalAdminPanel({
           <AdminServerClientsSubView data={data} initialFilter={serverClientFilter} onBack={() => setSubView("home")} onChanged={invalidateAdmin} />
         </CardErrorBoundary>
       )}
-
-      {/* ===================================================================== */}
-      {/* TAB: CLIENTES (GERENCIAR CLIENTES)                                    */}
-      {/* ===================================================================== */}
-      {activeTab === "clientes" && (
+      {activeTab === "admin" && subView === "local_clients" && (
         <AdminClientsTab
           data={data}
           filter={clientFilter}
@@ -653,7 +660,25 @@ export function PortalAdminPanel({
           onEditClient={openEditClientModal}
           onRenewClient={setRenewTarget}
           onChanged={invalidateAdmin}
+          onBack={() => setSubView("home")}
         />
+      )}
+
+      {/* ===================================================================== */}
+      {/* TAB: CLIENTES (CLIENTES DO SERVIDOR RBOYS)                            */}
+      {/* ===================================================================== */}
+      {activeTab === "clientes" && (
+        <CardErrorBoundary fallback={<div className="p-4 text-sm text-slate-500">Servidor RBOYS indisponível no momento.</div>}>
+          <AdminServerClientsSubView
+            data={data}
+            initialFilter={serverClientFilter}
+            onBack={() => {
+              setSubView("home");
+              onTabChange("admin");
+            }}
+            onChanged={invalidateAdmin}
+          />
+        </CardErrorBoundary>
       )}
 
       {/* ===================================================================== */}
@@ -773,6 +798,7 @@ export function PortalAdminPanel({
 
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 divide-y divide-slate-100 overflow-hidden">
             {[
+              { label: "Gerenciar Clientes (Banco Local)", view: "local_clients" as AdminSubView, icon: Users },
               { label: "Loja (Produtos & Lucros)", view: "loja" as AdminSubView, icon: ShoppingBag },
               { label: "API e Integrações (MP, Telegram, Evolution API)", view: "apis" as AdminSubView, icon: Plug },
               { label: "APK Ativo & Adoção PWA", view: "apk" as AdminSubView, icon: Smartphone },
@@ -932,6 +958,7 @@ function AdminClientsTab({
   onEditClient,
   onRenewClient,
   onChanged,
+  onBack,
 }: {
   data: AdminSnapshot;
   filter: ClientFilter;
@@ -942,6 +969,7 @@ function AdminClientsTab({
   onEditClient: (c: AdminClientRow) => void;
   onRenewClient: (c: AdminClientRow) => void;
   onChanged: () => void;
+  onBack?: () => void;
 }) {
   const [limit, setLimit] = useState(30);
 
@@ -989,11 +1017,23 @@ function AdminClientsTab({
     <div className="space-y-3 animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <div>
-            <h2 className="text-base font-black text-slate-900">Gerenciar Clientes</h2>
-            <p className="text-[11px] text-slate-500">
-              {filtered.length} encontrado(s) de {data.kpis.total}
-            </p>
+          <div className="flex items-center gap-2">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="p-1.5 -ml-1 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                title="Voltar"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            )}
+            <div>
+              <h2 className="text-base font-black text-slate-900">Gerenciar Clientes (Banco Local)</h2>
+              <p className="text-[11px] text-slate-500">
+                {filtered.length} encontrado(s) de {data.kpis.total}
+              </p>
+            </div>
           </div>
           <Button
             size="sm"
@@ -2333,12 +2373,12 @@ function AdminIptvSubView({
 /* ========================================================================== */
 function AdminServerClientsSubView({
   data,
-  initialFilter,
+  initialFilter = "todos",
   onBack,
   onChanged,
 }: {
   data: AdminSnapshot;
-  initialFilter: ServerClientStatusFilter;
+  initialFilter?: ServerClientStatusFilter;
   onBack: () => void;
   onChanged: () => void;
 }) {
@@ -2347,6 +2387,10 @@ function AdminServerClientsSubView({
   const [typeFilter, setTypeFilter] = useState<"todos" | "iptv" | "p2p">("todos");
   const [showSecrets, setShowSecrets] = useState(false);
   const [pendingClientId, setPendingClientId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setStatusFilter(initialFilter);
+  }, [initialFilter]);
 
   // Mapa local para identificar quem já está cadastrado no AJPVIP (por iptv_login)
   const localMap = useMemo(() => {
