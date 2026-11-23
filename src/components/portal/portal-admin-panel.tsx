@@ -610,12 +610,6 @@ export function PortalAdminPanel({
                 icon={<Settings className="h-5 w-5" />}
                 onClick={() => setSubView("config")}
               />
-              <QuickActionTile
-                label="Status do IPTV"
-                badgeClass="bg-sky-100/80 text-sky-600"
-                icon={<Monitor className="h-5 w-5" />}
-                onClick={() => setSubView("iptv")}
-              />
             </div>
           </div>
         </div>
