@@ -191,7 +191,6 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
 
           // 5. Identifica o plano atual do cliente para pré-selecionar no modal
           const rawPlanName = String(
-            serverClient?.plan_name ??
             serverClient?.raw?.plan_name ??
             serverClient?.raw?.package_name ??
             serverClient?.raw?.plan?.name ??
@@ -270,7 +269,7 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
               service_type: serviceType.toLowerCase() as "iptv" | "p2p",
               screens: clientScreens,
               current_option: currentOption,
-              current_plan_name: serverClient?.plan_name || (client as any).server_plan_id || null,
+              current_plan_name: serverClient?.raw?.plan_name || (client as any).server_plan_id || null,
               options,
               whatsapp_url: whatsappUrl,
             },

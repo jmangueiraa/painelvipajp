@@ -31,7 +31,6 @@ import {
   Plug,
   Plus,
   QrCode,
-  Radio,
   RefreshCw,
   Save,
   Search,
@@ -41,7 +40,6 @@ import {
   ShieldCheck,
   ShoppingBag,
   Smartphone,
-  Sparkles,
   Trash2,
   TrendingUp,
   Tv,
@@ -589,12 +587,6 @@ export function PortalAdminPanel({
                 onClick={openNewClientModal}
               />
               <QuickActionTile
-                label="Gerenciar Clientes"
-                badgeClass="bg-orange-100/80 text-orange-600"
-                icon={<Users className="h-5 w-5" />}
-                onClick={() => openClientsWithFilter("todos")}
-              />
-              <QuickActionTile
                 label="CLIENTES"
                 subLabel="RBOYS"
                 badgeClass="bg-sky-100/80 text-sky-600"
@@ -612,12 +604,6 @@ export function PortalAdminPanel({
                 badgeClass="bg-amber-100/80 text-amber-600"
                 icon={<Plug className="h-5 w-5" />}
                 onClick={() => setSubView("apis")}
-              />
-              <QuickActionTile
-                label="APK Ativo"
-                badgeClass="bg-emerald-100/80 text-emerald-600"
-                icon={<span className="text-[11px] font-black tracking-tighter">APK</span>}
-                onClick={() => setSubView("apk")}
               />
               <QuickActionTile
                 label="Configurações ADM"
@@ -2139,37 +2125,6 @@ function AdminConfigSubView({
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3 text-xs">
-        <p className="font-extrabold text-slate-900">Novidades exibidas no Portal</p>
-        <div>
-          <Label className={PORTAL_LABEL_CLASS}>Filmes Adicionados</Label>
-          <Textarea
-            value={moviesText}
-            onChange={(e) => setMoviesText(e.target.value)}
-            rows={3}
-            className={`${PORTAL_TEXTAREA_CLASS} font-mono text-[11px]`}
-          />
-        </div>
-        <div>
-          <Label className={PORTAL_LABEL_CLASS}>Séries Adicionadas</Label>
-          <Textarea
-            value={seriesText}
-            onChange={(e) => setSeriesText(e.target.value)}
-            rows={3}
-            className={`${PORTAL_TEXTAREA_CLASS} font-mono text-[11px]`}
-          />
-        </div>
-        <div>
-          <Label className={PORTAL_LABEL_CLASS}>Jogos do Dia</Label>
-          <Textarea
-            value={gamesText}
-            onChange={(e) => setGamesText(e.target.value)}
-            rows={3}
-            className={`${PORTAL_TEXTAREA_CLASS} font-mono text-[11px]`}
-          />
-        </div>
-      </div>
-
       <Button
         disabled={saveCfg.isPending}
         onClick={() => saveCfg.mutate()}
@@ -3208,7 +3163,7 @@ function ClientFormDialog({
   const [referredByCode, setReferredByCode] = useState("");
 
   // Integração com Servidor RBOYS
-  const [createOnServer, setCreateOnServer] = useState(true);
+  const [createOnServer, setCreateOnServer] = useState(false);
   const [serviceType, setServiceType] = useState<"IPTV" | "P2P">("IPTV");
   const [modality, setModality] = useState<"client" | "trial">("client");
   const [serverPlanId, setServerPlanId] = useState("");
@@ -3282,7 +3237,7 @@ function ClientFormDialog({
       setAutoCharge(true);
       setNotes("");
       setReferredByCode("");
-      setCreateOnServer(true);
+      setCreateOnServer(false);
       setModality("client");
       setServiceType("IPTV");
     }
@@ -3364,145 +3319,6 @@ function ClientFormDialog({
         />
 
         <div className="p-4 space-y-3 overflow-y-auto max-h-[calc(90dvh-142px)]">
-          {/* Opção de Geração Automática no Servidor */}
-          {!editing && (
-            <div className="bg-gradient-to-r from-orange-50/70 via-white to-amber-50/70 rounded-2xl p-3.5 shadow-sm border border-orange-100 space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="h-4 w-4 text-[#FF5500]" />
-                    <p className="text-xs font-black text-slate-900 tracking-tight">
-                      Criar acesso automaticamente no Servidor (RBOYS)
-                    </p>
-                  </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Gera login, senha e vencimento exato via API do servidor
-                  </p>
-                </div>
-                <Switch
-                  checked={createOnServer}
-                  onCheckedChange={setCreateOnServer}
-                  className={PORTAL_SWITCH_CLASS}
-                />
-              </div>
-
-              {createOnServer && (
-                <div className="space-y-2.5 pt-2 border-t border-orange-100/70 animate-in fade-in duration-150">
-                  {/* Tipo de Serviço: IPTV vs P2P */}
-                  <div>
-                    <Label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
-                      Tipo de Serviço
-                    </Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setServiceType("IPTV")}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                          serviceType === "IPTV"
-                            ? "bg-sky-600 text-white shadow-sm"
-                            : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
-                        }`}
-                      >
-                        <Tv className="h-3.5 w-3.5" />
-                        IPTV
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setServiceType("P2P")}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                          serviceType === "P2P"
-                            ? "bg-purple-600 text-white shadow-sm"
-                            : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
-                        }`}
-                      >
-                        <Radio className="h-3.5 w-3.5" />
-                        P2P
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Modalidade: Oficial vs Teste */}
-                  <div>
-                    <Label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
-                      Modalidade do Acesso
-                    </Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setModality("client");
-                          setAutoCharge(true);
-                        }}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                          modality === "client"
-                            ? "bg-emerald-600 text-white shadow-sm"
-                            : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
-                        }`}
-                      >
-                        <UserCheck className="h-3.5 w-3.5" />
-                        Cliente Oficial
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setModality("trial");
-                          setPrice("0,00");
-                          setAutoCharge(false);
-                        }}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                          modality === "trial"
-                            ? "bg-amber-600 text-white shadow-sm"
-                            : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
-                        }`}
-                      >
-                        <Sparkles className="h-3.5 w-3.5" />
-                        Teste Grátis
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Plano no Servidor */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <Label className={PORTAL_LABEL_CLASS}>Plano no Servidor (RBOYS)</Label>
-                      {serverPlansQuery.isFetching && (
-                        <span className="text-[10px] text-[#FF5500] font-semibold flex items-center gap-1">
-                          <Loader2 className="h-3 w-3 animate-spin" /> Atualizando planos...
-                        </span>
-                      )}
-                    </div>
-                    <select
-                      value={serverPlanId}
-                      onChange={(e) => {
-                        const id = e.target.value;
-                        setServerPlanId(id);
-                        const sel = availablePlans.find((p) => String(p.id) === id);
-                        if (sel && sel.price_cents !== undefined) {
-                          setPrice((sel.price_cents / 100).toFixed(2).replace(".", ","));
-                        }
-                      }}
-                      className={PORTAL_SELECT_CLASS}
-                    >
-                      {availablePlans.length === 0 ? (
-                        <option value="">
-                          {serverPlansQuery.isLoading ? "Carregando planos..." : "Nenhum plano retornado pela API"}
-                        </option>
-                      ) : (
-                        availablePlans.map((p) => (
-                          <option key={String(p.id)} value={String(p.id)}>
-                            {p.name}
-                            {p.price_cents ? ` (${brl(p.price_cents)})` : ""}
-                            {p.duration_days ? ` - ${p.duration_days} dias` : p.duration_hours ? ` - ${p.duration_hours}h` : ""}
-                          </option>
-                        ))
-                      )}
-                    </select>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Dados do Assinante */}
           <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-3">
             <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">

@@ -1,5 +1,9 @@
 # Preparação Android TWA
 
+## Remoção de cards do Painel ADM
+- [x] Excluir os cards "Gerenciar Clientes", "APK Ativo", "Novidades exibidas no Portal" e "Criar acesso automaticamente no Servidor (RBOYS)" sem alterar layout, telas, usuários, senhas ou regras.
+- [x] Validar 18 testes, compilação limpa e painel no navegador com sessão simulada: sete atalhos restantes, configurações sem o bloco de novidades e cadastro abrindo direto no formulário manual.
+
 ## Aviso de pagamento sem piscada
 - [x] Ocultar a seção inteira até confirmar sessão e fatura em aberto, impedir exibição para administradores e remover o espaço provisório.
 - [x] Validar 17 testes e recarga/troca de abas com quatro sessões simuladas e respostas demoradas; sessão real do proprietário não disponível nesta verificação.
