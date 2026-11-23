@@ -113,10 +113,7 @@ export function ChangePlanModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        showCloseButton={false}
-        className="w-[92vw] max-w-[430px] rounded-3xl bg-white p-6 shadow-2xl border border-slate-100 sm:p-7"
-      >
+      <DialogContent className="w-[92vw] max-w-[430px] rounded-3xl bg-white p-6 shadow-2xl border border-slate-100 sm:p-7">
         {/* Header idêntico à tela do RBOYS (Imagem 2): "Plano de {login}" + botão 'x' */}
         <div className="flex items-center justify-between pb-4">
           <DialogTitle className="text-base sm:text-lg font-bold text-slate-800 tracking-tight">

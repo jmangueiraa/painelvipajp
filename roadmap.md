@@ -38,3 +38,7 @@
 ## Etapa manual posterior
 - Definir keystore, obter fingerprint SHA-256 real e publicar assetlinks.json no domínio.
 - Gerar, assinar e testar o APK localmente antes de distribuir.
+## Botão "Mudar plano" no card do contrato
+- [x] Mover o botão para o lugar do selo do servidor (RB) no card de contrato e levar o nome do servidor para o card "Plano de Canais & Conteúdo".
+- [x] Corrigir os erros de tipos que travavam a compilação (modal, rota change-plan, campo server_plan_id); build OK.
+- [x] Validar no portal com sessão simulada: botão abre o modal de troca de plano, servidor aparece no card de conteúdo.

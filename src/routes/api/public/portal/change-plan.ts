@@ -61,7 +61,6 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
             if (serverClient) {
               const raw = serverClient.raw || {};
               const rawPlan = String(
-                serverClient.plan_name ??
                 raw.plan ??
                 raw.plan_name ??
                 raw.package ??
@@ -198,12 +197,15 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
 
           // 3. Atualiza registro no banco local para persistência rápida
           try {
+            // A coluna server_plan_id existe no banco externo, mas os tipos gerados
+            // ainda não a incluem; o cast mantém a escrita sem alterar o esquema.
+            const planPatch = {
+              server_plan_id: targetPlanName,
+              updated_at: new Date().toISOString(),
+            } as unknown as Record<string, never>;
             await supabaseAdmin
               .from("clients")
-              .update({
-                server_plan_id: targetPlanName,
-                updated_at: new Date().toISOString(),
-              })
+              .update(planPatch)
               .eq("id", client.id);
           } catch (dbErr) {
             console.warn("[portal change-plan] local db update warning:", dbErr);
