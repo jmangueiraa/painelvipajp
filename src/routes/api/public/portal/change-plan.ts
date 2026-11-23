@@ -12,19 +12,12 @@ function json(data: unknown, request: Request, init?: ResponseInit) {
   });
 }
 
-// Conforme tela oficial do RBOYS (Imagem 2), são exatamente e apenas estas 3 opções:
-export const RBOYS_CONTENT_PLANS = [
-  { id: "COMPLETO SEM ADULTO", name: "COMPLETO SEM ADULTO" },
-  { id: "COMPLETO", name: "COMPLETO" },
-  { id: "Personalizado (selecionar pacotes)", name: "Personalizado (selecionar pacotes)" },
-] as const;
-
 export const Route = createFileRoute("/api/public/portal/change-plan")({
   server: {
     handlers: {
       OPTIONS: async ({ request }) => portalOptions(request),
 
-      // GET: Retorna estritamente as 3 opções de plano do RBOYS e o plano atual do cliente
+      // GET: Busca os planos reais da API do servidor RBOYS (GET /{service_type}/plans)
       GET: async ({ request }) => {
         try {
           const portal = await import("@/integrations/portal/session.server");
@@ -38,9 +31,9 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
             return json(
               {
                 ok: false,
-                error: "Cliente não possui login do servidor cadastrado.",
+                error: "Cliente não possui credenciais do servidor IPTV cadastradas.",
                 username: client.name,
-                plans: RBOYS_CONTENT_PLANS,
+                plans: [],
               },
               request,
               { status: 400 }
@@ -48,59 +41,97 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
           }
 
           const ownerId = client.user_id;
-          const { fetchServerClients } = await import("@/lib/iptv-server-api.server");
+          const { fetchServerClients, fetchServerPlans } = await import("@/lib/iptv-server-api.server");
 
-          let currentPlanName = "COMPLETO";
+          // 1. Localiza o cliente no servidor para identificar client_id, tipo de serviço e plano atual
+          const serverClientsRes = await fetchServerClients(ownerId);
+          const serverClient = serverClientsRes.clients.find(
+            (c) => c.username.trim().toLowerCase() === login.toLowerCase()
+          );
 
-          try {
-            const serverClientsRes = await fetchServerClients(ownerId);
-            const serverClient = serverClientsRes.clients.find(
-              (c) => c.username.trim().toLowerCase() === login.toLowerCase()
-            );
+          const serviceType = (serverClient?.type || "IPTV").toUpperCase() as "IPTV" | "P2P";
+          const clientUsername = serverClient?.username || login;
 
-            if (serverClient) {
-              const raw = serverClient.raw || {};
-              const rawPlan = String(
-                raw.plan ??
-                raw.plan_name ??
-                raw.package ??
-                raw.package_name ??
-                raw.plan?.name ??
-                raw.package?.name ??
-                ""
-              ).toUpperCase();
+          // 2. Busca os planos reais disponíveis na API do servidor (GET /iptv/plans ou GET /p2p/plans)
+          const plansRes = await fetchServerPlans(ownerId, serviceType);
+          const rawPlans = plansRes.plans || [];
 
-              if (rawPlan.includes("SEM ADULTO")) {
-                currentPlanName = "COMPLETO SEM ADULTO";
-              } else if (rawPlan.includes("PERSONALIZADO")) {
-                currentPlanName = "Personalizado (selecionar pacotes)";
-              } else if (rawPlan.includes("COMPLETO")) {
-                currentPlanName = "COMPLETO";
-              }
+          // 3. Filtra apenas os planos válidos retornados pelo servidor
+          // Exclui planos de teste/trial para listar apenas opções de assinatura válidas
+          let validPlans = rawPlans.filter((p) => {
+            if (p.id === undefined || p.id === null || p.id === "") return false;
+            if (p.is_trial) return false;
+            const lower = String(p.name || "").toLowerCase();
+            if (lower.includes("teste") || lower.includes("trial") || lower.includes("1 hora") || lower.includes("6 horas")) {
+              return false;
             }
-          } catch (e) {
-            console.warn("[portal change-plan] fetchServerClients fallback:", e);
+            return true;
+          });
+
+          // Se após o filtro não sobrou nenhum, usa todos que possuem id válido
+          if (validPlans.length === 0) {
+            validPlans = rawPlans.filter((p) => p.id !== undefined && p.id !== null && p.id !== "");
+          }
+
+          // 4. Regra 3: Tratamento da opção "Personalizado":
+          // Só exibe opção "Personalizado (selecionar pacotes)" se a rota GET /{service_type}/plans
+          // realmente retornar um plano personalizado com ID válido; caso contrário lista apenas os planos válidos.
+          const formattedPlans = validPlans.map((p) => {
+            let displayName = p.name;
+            const lower = displayName.toLowerCase();
+            if (lower.includes("personalizado") || lower.includes("personalizar")) {
+              displayName = "Personalizado (selecionar pacotes)";
+            }
+            return {
+              id: p.id, // Mantém o formato/tipo original exato (numérico ou string) retornado pela API
+              name: displayName,
+            };
+          });
+
+          // 5. Detecta o plano atual do cliente no servidor
+          let currentPlanId: string | number | null = null;
+          let currentPlanName: string | null = null;
+
+          if (serverClient) {
+            const raw = serverClient.raw || {};
+            currentPlanId =
+              raw.plan_id ??
+              raw.package_id ??
+              raw.plan?.id ??
+              raw.package?.id ??
+              (client as any).server_plan_id ??
+              null;
+
+            currentPlanName =
+              serverClient.plan_name ??
+              raw.plan_name ??
+              raw.package_name ??
+              raw.plan?.name ??
+              raw.package?.name ??
+              null;
           }
 
           return json(
             {
               ok: true,
-              username: login,
-              client_name: client.name,
+              username: clientUsername,
+              client_id: serverClient?.id,
+              service_type: serviceType.toLowerCase() as "iptv" | "p2p",
+              current_plan_id: currentPlanId,
               current_plan_name: currentPlanName,
-              plans: RBOYS_CONTENT_PLANS,
+              plans: formattedPlans,
             },
             request
           );
         } catch (err: any) {
           console.error("[portal change-plan GET error]", err);
-          return json({ error: err.message || "Falha ao carregar opções de plano." }, request, {
+          return json({ error: err.message || "Falha ao carregar planos do servidor." }, request, {
             status: 500,
           });
         }
       },
 
-      // POST: Executa a troca de plano no servidor RBOYS sem alterar vencimento nem consumir créditos
+      // POST: Executa a troca de plano enviando PUT /{service_type}/clients/{id} com plan_id e username
       POST: async ({ request }) => {
         try {
           const portal = await import("@/integrations/portal/session.server");
@@ -119,23 +150,16 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
           }
 
           const body = (await request.json().catch(() => ({}))) as {
-            plan_id?: string;
-            plan_name?: string;
+            plan_id?: string | number;
+            username?: string;
           };
 
-          const rawSelected = String(body.plan_name || body.plan_id || "").trim();
-          let targetPlanName: string = "COMPLETO";
-
-          if (rawSelected.toUpperCase().includes("SEM ADULTO")) {
-            targetPlanName = "COMPLETO SEM ADULTO";
-          } else if (rawSelected.toUpperCase().includes("PERSONALIZADO")) {
-            targetPlanName = "Personalizado (selecionar pacotes)";
-          } else {
-            targetPlanName = "COMPLETO";
+          if (body.plan_id === undefined || body.plan_id === null || body.plan_id === "") {
+            return json({ error: "Selecione um plano válido." }, request, { status: 400 });
           }
 
           const ownerId = client.user_id;
-          const { fetchServerClients, callIptvServerApi } = await import("@/lib/iptv-server-api.server");
+          const { fetchServerClients, fetchServerPlans, callIptvServerApi } = await import("@/lib/iptv-server-api.server");
           const { runServerClientAction } = await import("@/lib/server-client-actions.server");
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -155,18 +179,37 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
             );
           }
 
-          // 2. Executa a alteração no servidor RBOYS (sem alterar vencimento nem consumir créditos)
           const serviceType = (serverClient.type || "iptv").toLowerCase() as "iptv" | "p2p";
+          const clientUsername = body.username || serverClient.username || login;
+
+          // 2. Resolve o plan_id real mantendo o formato e tipo original exato da API
+          let targetPlanId: string | number = body.plan_id;
+          let targetPlanName = "";
+
+          try {
+            const plansRes = await fetchServerPlans(ownerId, serverClient.type as "IPTV" | "P2P");
+            const match = plansRes.plans?.find(
+              (p) => String(p.id) === String(body.plan_id) || p.name.trim().toLowerCase() === String(body.plan_id).trim().toLowerCase()
+            );
+            if (match) {
+              targetPlanId = match.id; // Mantém o ID e tipo exato que a API devolveu
+              targetPlanName = match.name;
+            }
+          } catch (pErr) {
+            console.warn("[portal change-plan] fetchServerPlans verification warning:", pErr);
+          }
+
+          // 3. Executa PUT /{service_type}/clients/{id} enviando { plan_id, username }
           let actionSuccess = false;
           let lastActionErr: any = null;
 
-          // Tentativa 1: via runServerClientAction (PUT /{service_type}/clients/{client_id})
           try {
             await runServerClientAction(ownerId, {
               client_id: serverClient.id,
               service_type: serviceType,
               operation: "plan",
-              plan_id: targetPlanName,
+              plan_id: targetPlanId,
+              username: clientUsername,
             });
             actionSuccess = true;
           } catch (err: any) {
@@ -174,16 +217,15 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
             console.warn("[portal change-plan] runServerClientAction attempt warning:", err?.message);
           }
 
-          // Tentativa 2 (fallback): PUT /clients/{client_id} direto conforme interface RBOYS
+          // Fallback para PUT /clients/{client_id} se a rota prefixada falhar
           if (!actionSuccess) {
             try {
               await callIptvServerApi(`/clients/${serverClient.id}`, {
                 method: "PUT",
                 userId: ownerId,
                 body: {
-                  plan: targetPlanName,
-                  plan_name: targetPlanName,
-                  package: targetPlanName,
+                  plan_id: targetPlanId,
+                  username: clientUsername,
                 },
               });
               actionSuccess = true;
@@ -195,12 +237,10 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
             }
           }
 
-          // 3. Atualiza registro no banco local para persistência rápida
+          // 4. Salva no banco local para persistência rápida
           try {
-            // A coluna server_plan_id existe no banco externo, mas os tipos gerados
-            // ainda não a incluem; o cast mantém a escrita sem alterar o esquema.
             const planPatch = {
-              server_plan_id: targetPlanName,
+              server_plan_id: String(targetPlanId),
               updated_at: new Date().toISOString(),
             } as unknown as Record<string, never>;
             await supabaseAdmin
@@ -215,6 +255,7 @@ export const Route = createFileRoute("/api/public/portal/change-plan")({
             {
               ok: true,
               message: "Plano atualizado com sucesso no servidor!",
+              plan_id: targetPlanId,
               plan_name: targetPlanName,
             },
             request

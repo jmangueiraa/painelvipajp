@@ -5,6 +5,7 @@ export const serverClientActionSchema = z.object({
   service_type: z.enum(["iptv", "p2p"]),
   client_id: z.union([z.string().trim().min(1).max(200), z.number().finite()]),
   plan_id: z.union([z.string().trim().min(1), z.number().finite()]).optional(),
+  username: z.string().trim().optional(),
   notes: z.string().max(2000).optional(),
   enabled: z.boolean().optional(),
 });
@@ -28,9 +29,7 @@ export function serverClientRequest(input: ServerClientAction): {
         method: "PUT",
         body: {
           plan_id: data.plan_id,
-          plan: data.plan_id,
-          plan_name: data.plan_id,
-          package: data.plan_id,
+          ...(data.username ? { username: data.username } : {}),
         },
       };
     case "notes":

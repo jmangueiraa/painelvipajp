@@ -69,7 +69,7 @@ export function ServerClientActions({ client, localClient, onChanged }: {
     if (!mode || mode === "message") return;
     const selectedPlan = plans.data?.plans?.find(plan => String(plan.id) === planId);
     mutation.mutate({ ...identity, operation: mode,
-      ...(mode === "extend" || mode === "plan" ? { plan_id: selectedPlan?.id } : {}),
+      ...(mode === "extend" || mode === "plan" ? { plan_id: selectedPlan?.id, username: client.username } : {}),
       ...(mode === "notes" ? { notes } : {}), ...(mode === "status" ? { enabled: !enabled } : {}),
     });
   };
