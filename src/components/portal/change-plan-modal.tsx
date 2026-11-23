@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, X } from "lucide-react";
+import { Loader2, MessageCircle, X } from "lucide-react";
 import { toast } from "sonner";
 import { portalFetch } from "@/lib/portal-client";
 import {
@@ -17,9 +17,16 @@ export interface ChangePlanModalProps {
   onSuccess?: (newPlanName: string) => void;
 }
 
-export interface ServerPlanItem {
-  id: string | number;
-  name: string;
+export type PlanOptionKey = "com_adultos" | "sem_adultos" | "personalizado";
+
+export interface PlanOptionItem {
+  key: PlanOptionKey;
+  label: string;
+  plan_id: string | number | null;
+  matched_plan_name?: string | null;
+  available: boolean;
+  has_server_plan?: boolean;
+  whatsapp_url?: string;
 }
 
 interface PlanApiResponse {
@@ -27,11 +34,19 @@ interface PlanApiResponse {
   username: string;
   client_id?: string | number;
   service_type?: "iptv" | "p2p";
-  current_plan_id?: string | number | null;
+  screens?: number;
+  current_option?: PlanOptionKey;
   current_plan_name?: string | null;
-  plans: ServerPlanItem[];
+  options: PlanOptionItem[];
+  whatsapp_url?: string;
   error?: string;
 }
+
+const DEFAULT_OPTIONS: PlanOptionItem[] = [
+  { key: "com_adultos", label: "Com Adultos", plan_id: null, available: true },
+  { key: "sem_adultos", label: "Sem Adultos", plan_id: null, available: true },
+  { key: "personalizado", label: "Lista Personalizada", plan_id: null, available: true, has_server_plan: false },
+];
 
 export function ChangePlanModal({
   open,
@@ -41,10 +56,9 @@ export function ChangePlanModal({
   onSuccess,
 }: ChangePlanModalProps) {
   const qc = useQueryClient();
-  const [selectedPlanId, setSelectedPlanId] = useState<string | number | "">("");
-  const [selectedPlanName, setSelectedPlanName] = useState<string>("");
+  const [selectedKey, setSelectedKey] = useState<PlanOptionKey>("com_adultos");
 
-  // Busca dinamicamente os planos reais da API do servidor RBOYS (GET /{service_type}/plans)
+  // Busca dinamicamente as 3 opções mapeadas da API do servidor
   const planQuery = useQuery({
     queryKey: ["portal", "client-plan-options", username],
     queryFn: async () => {
@@ -52,60 +66,49 @@ export function ChangePlanModal({
       return res;
     },
     enabled: open,
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 1000 * 60 * 3, // 3 minutos
   });
 
-  const availablePlans = planQuery.data?.plans || [];
+  const options = planQuery.data?.options && planQuery.data.options.length > 0
+    ? planQuery.data.options
+    : DEFAULT_OPTIONS;
 
   // Sincroniza a seleção inicial com o plano atual do cliente retornado pelo servidor
   useEffect(() => {
-    if (!open || availablePlans.length === 0) return;
+    if (!open) return;
 
-    // 1. Tenta correspondência pelo plan_id atual do servidor
-    const currentId = planQuery.data?.current_plan_id;
-    if (currentId !== undefined && currentId !== null && currentId !== "") {
-      const matchById = availablePlans.find((p) => String(p.id) === String(currentId));
-      if (matchById) {
-        setSelectedPlanId(matchById.id);
-        setSelectedPlanName(matchById.name);
-        return;
-      }
+    if (planQuery.data?.current_option) {
+      setSelectedKey(planQuery.data.current_option);
+      return;
     }
 
-    // 2. Tenta correspondência pelo nome do plano
-    const detectedName = (
+    const detected = (
       planQuery.data?.current_plan_name ||
       currentPlanName ||
       ""
     ).trim().toLowerCase();
 
-    if (detectedName) {
-      const matchByName = availablePlans.find((p) => {
-        const pName = p.name.trim().toLowerCase();
-        return pName === detectedName || pName.includes(detectedName) || detectedName.includes(pName);
-      });
-
-      if (matchByName) {
-        setSelectedPlanId(matchByName.id);
-        setSelectedPlanName(matchByName.name);
-        return;
-      }
+    if (detected.includes("sem adulto") || detected.includes("sem adultos") || detected.includes("sem_adulto")) {
+      setSelectedKey("sem_adultos");
+    } else if (detected.includes("personalizado") || detected.includes("personalizada")) {
+      setSelectedKey("personalizado");
+    } else {
+      setSelectedKey("com_adultos");
     }
+  }, [open, planQuery.data, currentPlanName]);
 
-    // 3. Fallback: seleciona o primeiro plano retornado pela API
-    if (availablePlans.length > 0) {
-      setSelectedPlanId(availablePlans[0].id);
-      setSelectedPlanName(availablePlans[0].name);
-    }
-  }, [open, planQuery.data, currentPlanName, availablePlans]);
+  const selectedOption = options.find((opt) => opt.key === selectedKey) || options[0];
+  const isCustomWithoutPlan = selectedKey === "personalizado" && !selectedOption?.has_server_plan;
 
-  // Mutação para salvar: envia o plan_id com o tipo exato (string ou number) e o username
+  // Mutação para salvar a opção selecionada no servidor
   const changeMutation = useMutation({
     mutationFn: async ({
+      optionKey,
       planId,
       user,
     }: {
-      planId: string | number;
+      optionKey: PlanOptionKey;
+      planId?: string | number | null;
       user: string;
     }) => {
       const res = await portalFetch<{ ok: boolean; message?: string; error?: string }>(
@@ -113,7 +116,8 @@ export function ChangePlanModal({
         {
           method: "POST",
           body: JSON.stringify({
-            plan_id: planId,
+            option: optionKey,
+            plan_id: planId ?? undefined,
             username: user,
           }),
         }
@@ -127,7 +131,7 @@ export function ChangePlanModal({
       toast.success(data.message || "Plano atualizado com sucesso no servidor!");
       qc.invalidateQueries({ queryKey: ["portal", "me"] });
       qc.invalidateQueries({ queryKey: ["portal", "client-plan-options"] });
-      onSuccess?.(selectedPlanName);
+      onSuccess?.(selectedOption.label);
       onOpenChange(false);
     },
     onError: (err: Error) => {
@@ -135,14 +139,27 @@ export function ChangePlanModal({
     },
   });
 
-  const handleSave = () => {
-    if (selectedPlanId === "" || selectedPlanId === undefined || selectedPlanId === null) {
-      toast.error("Por favor, selecione um plano.");
+  const handleAction = () => {
+    // Se escolheu Lista Personalizada e o servidor não possui plano cadastrado, abre o WhatsApp
+    if (isCustomWithoutPlan) {
+      const targetUser = planQuery.data?.username || username || "cliente";
+      const waUrl =
+        selectedOption?.whatsapp_url ||
+        planQuery.data?.whatsapp_url ||
+        `https://wa.me/5519981356505?text=${encodeURIComponent(
+          `Olá! Gostaria de solicitar uma Lista Personalizada para o meu usuário ${targetUser}`
+        )}`;
+
+      window.open(waUrl, "_blank", "noopener,noreferrer");
+      toast.info("Redirecionando para o WhatsApp do suporte...");
+      onOpenChange(false);
       return;
     }
+
     const clientUser = planQuery.data?.username || username;
     changeMutation.mutate({
-      planId: selectedPlanId,
+      optionKey: selectedKey,
+      planId: selectedOption?.plan_id,
       user: clientUser,
     });
   };
@@ -166,17 +183,17 @@ export function ChangePlanModal({
           </button>
         </div>
 
-        {/* Corpo: renderização estritamente dinâmica dos planos reais da API */}
+        {/* Corpo: exatamente as 3 opções limpas */}
         <div className="py-2 space-y-4">
           {planQuery.isLoading ? (
             <div className="py-8 flex flex-col items-center justify-center gap-2">
               <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
-              <p className="text-xs text-slate-500 font-medium">Carregando planos do servidor...</p>
+              <p className="text-xs text-slate-500 font-medium">Carregando opções do servidor...</p>
             </div>
           ) : planQuery.isError || planQuery.data?.ok === false ? (
             <div className="py-6 text-center space-y-2">
               <p className="text-xs text-red-500 font-medium">
-                {planQuery.data?.error || planQuery.error?.message || "Erro ao carregar planos do servidor."}
+                {planQuery.data?.error || planQuery.error?.message || "Erro ao carregar opções do servidor."}
               </p>
               <button
                 type="button"
@@ -186,60 +203,64 @@ export function ChangePlanModal({
                 Tentar novamente
               </button>
             </div>
-          ) : availablePlans.length === 0 ? (
-            <div className="py-6 text-center text-xs text-slate-400">
-              Nenhum plano disponível no servidor.
-            </div>
           ) : (
-            <div className="space-y-4">
-              {availablePlans.map((plan) => {
-                const isSelected = String(selectedPlanId) === String(plan.id);
+            <div className="space-y-3.5">
+              {options.map((opt) => {
+                const isSelected = selectedKey === opt.key;
 
                 return (
-                  <label
-                    key={String(plan.id)}
-                    onClick={() => {
-                      setSelectedPlanId(plan.id);
-                      setSelectedPlanName(plan.name);
-                    }}
-                    className="flex items-center gap-3.5 cursor-pointer select-none group"
-                  >
-                    {/* Botão de rádio circular idêntico ao RBOYS */}
-                    <div className="relative flex items-center justify-center shrink-0">
-                      <input
-                        type="radio"
-                        name="rboys_real_plan_selection"
-                        checked={isSelected}
-                        onChange={() => {
-                          setSelectedPlanId(plan.id);
-                          setSelectedPlanName(plan.name);
-                        }}
-                        className="sr-only"
-                      />
-                      <div
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                  <div key={opt.key} className="space-y-1.5">
+                    <label
+                      onClick={() => setSelectedKey(opt.key)}
+                      className="flex items-center gap-3.5 cursor-pointer select-none group"
+                    >
+                      {/* Botão de rádio circular idêntico ao RBOYS */}
+                      <div className="relative flex items-center justify-center shrink-0">
+                        <input
+                          type="radio"
+                          name="rboys_clean_plan_selection"
+                          checked={isSelected}
+                          onChange={() => setSelectedKey(opt.key)}
+                          className="sr-only"
+                        />
+                        <div
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                            isSelected
+                              ? "border-[#0066FF] bg-white"
+                              : "border-slate-300 bg-white group-hover:border-slate-400"
+                          }`}
+                        >
+                          {isSelected && (
+                            <div className="w-2.5 h-2.5 rounded-full bg-[#0066FF] shadow-xs" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Nome limpo da opção (sem preços nem durações) */}
+                      <span
+                        className={`text-[13px] tracking-wide transition-colors ${
                           isSelected
-                            ? "border-[#0066FF] bg-white"
-                            : "border-slate-300 bg-white group-hover:border-slate-400"
+                            ? "text-slate-800 font-semibold"
+                            : "text-slate-600 font-normal group-hover:text-slate-800"
                         }`}
                       >
-                        {isSelected && (
-                          <div className="w-2.5 h-2.5 rounded-full bg-[#0066FF] shadow-xs" />
-                        )}
-                      </div>
-                    </div>
+                        {opt.label}
+                      </span>
+                    </label>
 
-                    {/* Nome do plano */}
-                    <span
-                      className={`text-[13px] tracking-wide transition-colors ${
-                        isSelected
-                          ? "text-slate-800 font-semibold"
-                          : "text-slate-600 font-normal group-hover:text-slate-800"
-                      }`}
-                    >
-                      {plan.name}
-                    </span>
-                  </label>
+                    {/* Aviso amigável caso selecione Lista Personalizada sem plano na API */}
+                    {opt.key === "personalizado" && isSelected && !opt.has_server_plan && (
+                      <div className="ml-7 p-3 rounded-2xl bg-orange-50/80 border border-orange-200/70 text-xs text-orange-800 space-y-1 animate-in fade-in-50 duration-200">
+                        <p className="font-semibold text-[12px] flex items-center gap-1.5 text-orange-900">
+                          <MessageCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                          Grade sob medida
+                        </p>
+                        <p className="text-[11px] text-orange-700 leading-relaxed">
+                          Para definir seus canais e remover categorias indesejadas, solicite a personalização diretamente com o suporte.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -251,7 +272,7 @@ export function ChangePlanModal({
           </p>
         </div>
 
-        {/* Rodapé com botões Cancelar e Salvar */}
+        {/* Rodapé com botões Cancelar e Salvar / Solicitar WhatsApp */}
         <div className="flex items-center justify-end gap-3 pt-5 mt-2">
           <button
             type="button"
@@ -261,21 +282,27 @@ export function ChangePlanModal({
           >
             Cancelar
           </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={
-              changeMutation.isPending ||
-              planQuery.isLoading ||
-              selectedPlanId === "" ||
-              selectedPlanId === undefined ||
-              selectedPlanId === null
-            }
-            className="px-5 py-2 text-xs font-bold text-white bg-[#0066FF] hover:bg-[#0055DD] active:scale-95 rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
-          >
-            {changeMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            <span>Salvar</span>
-          </button>
+
+          {isCustomWithoutPlan ? (
+            <button
+              type="button"
+              onClick={handleAction}
+              className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              <span>Solicitar no WhatsApp</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleAction}
+              disabled={changeMutation.isPending || planQuery.isLoading}
+              className="px-5 py-2 text-xs font-bold text-white bg-[#0066FF] hover:bg-[#0055DD] active:scale-95 rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+            >
+              {changeMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              <span>Salvar</span>
+            </button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
