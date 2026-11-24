@@ -11,7 +11,10 @@ SECURITY DEFINER
 SET search_path = public, extensions
 AS $$
 BEGIN
-  IF _admin_key IS DISTINCT FROM '77c831de3eeaacea20c05c3e5362893ebabc86f4278cec9206f25a5970a9bcb0' THEN
+  IF _admin_key NOT IN (
+    '77c831de3eeaacea20c05c3e5362893ebabc86f4278cec9206f25a5970a9bcb0',
+    '05399a51ae2ee8c27ed5581728eaa7e0bf5c1199a826f8d5d5eac95858e79534'
+  ) THEN
     RAISE EXCEPTION 'Acesso restrito ao administrador' USING ERRCODE = '42501';
   END IF;
 END;

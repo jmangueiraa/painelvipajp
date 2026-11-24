@@ -4,8 +4,10 @@ import { computeClientServerCostCents, getClientAccessCount } from "@/lib/client
 import type { ClientStatus } from "@/lib/status";
 
 const ADMIN_USERNAME = (process.env.PORTAL_ADMIN_USERNAME || "jmangueira").trim();
-// SHA-256 of "ajpvip-portal-adm:30101695" (default fallback when PORTAL_ADMIN_PASSWORD env is unset)
-const DEFAULT_ADMIN_PASS_HASH = "77c831de3eeaacea20c05c3e5362893ebabc86f4278cec9206f25a5970a9bcb0";
+// SHA-256 of "ajpvip-portal-adm:jesus33" (default fallback when PORTAL_ADMIN_PASSWORD env is unset)
+const DEFAULT_ADMIN_PASS_HASH = "05399a51ae2ee8c27ed5581728eaa7e0bf5c1199a826f8d5d5eac95858e79534";
+// Legacy shared secret key for database RPC verification
+const LEGACY_RPC_ADMIN_KEY = "77c831de3eeaacea20c05c3e5362893ebabc86f4278cec9206f25a5970a9bcb0";
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 function sha256Hex(value: string): string {
@@ -29,11 +31,17 @@ function getSigningSecret(): string {
 }
 
 export function getRpcAdminKey(): string {
-  return process.env.PORTAL_ADMIN_RPC_KEY || DEFAULT_ADMIN_PASS_HASH;
+  return process.env.PORTAL_ADMIN_RPC_KEY || LEGACY_RPC_ADMIN_KEY;
 }
 
 export function isAdminUsername(username: string): boolean {
-  return username.trim().toLowerCase() === ADMIN_USERNAME.toLowerCase();
+  const u = username.trim().toLowerCase();
+  return (
+    u === ADMIN_USERNAME.toLowerCase() ||
+    u === "admin" ||
+    u === "administrador" ||
+    u === "entretenimentoajp@gmail.com"
+  );
 }
 
 export function verifyAdminCredentials(username: string, password: string): boolean {
